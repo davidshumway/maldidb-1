@@ -46,8 +46,6 @@ class AbstractSpectra(models.Model):
 	peak_matrix = models.TextField(blank=True)
 	spectrum_intensity = models.TextField(blank=True)
 	
-	
-	
 	spectrum_mass_hash = models.TextField(blank=True)
 	spectrum_intensity_hash = models.TextField(blank=True)
 	
@@ -65,27 +63,12 @@ class AbstractSpectra(models.Model):
 		db_column='strain_id',
 		on_delete=models.CASCADE,
 		blank=True)
-		
-		# ~ peak_matrix                           BLOB,
-	#inherits
-	# ~ peak_matrix = models.TextField(blank=True)
-		# ~ spectrum_intensity                    BLOB,
-	#inherits
-	# ~ spectrum_intensity = models.TextField(blank=True)
-		# ~ max_mass                              INTEGER,
-	
-	
 	
 	unique_together = (
 		strain_id,
 		spectrum_mass_hash,
 		spectrum_intensity_hash
-	) 
-	
-	
-	
-	
-	
+	)
 	
 	class Meta:                                                                 
 		abstract = True                                                         
@@ -147,11 +130,21 @@ class Library(models.Model):
 		
 	title = models.TextField(max_length=2048, blank=True)
 	
-	privacy_level = models.ForeignKey(
-		'PrivacyLevel',
-		on_delete=models.CASCADE,
-		blank=True)
-	#id = models.AutoField()
+	# ~ privacy_level = models.ForeignKey(
+		# ~ 'PrivacyLevel',
+		# ~ on_delete=models.CASCADE,
+		# ~ blank=True)
+	PUBLIC = 'PB'
+	PRIVATE = 'PR'
+	privacyChoices = [
+		(PUBLIC, 'Public'),
+		(PRIVATE, 'Private'),
+	]
+	privacy_level = models.CharField(
+		max_length=2,
+		choices=privacyChoices,
+		default=PUBLIC,
+	)
 	
 	GOLD = 'GO'
 	SILVER = 'SI'
