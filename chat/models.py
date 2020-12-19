@@ -3,6 +3,11 @@ from django.conf import settings
 import uuid
 
 
+##
+# Main table / browse
+# Search form
+##
+
 class AbstractCosineScore(models.Model):
 	
 	score = models.DecimalField(
