@@ -48,5 +48,8 @@ A simple social Media Application for sharing images amongst users. This applica
 The application should be available at http://localhost:8000/ through your browser
 
 ## Todo
-- More Documentation
-- More Tests
+- ACS Django publications (~40) https://pubs-acs-org.proxy.cc.uic.edu/action/doSearch?AllField=%22django%22
+- Main table / browse
+- Search form
+- User management
+- Site layout (simplify)
