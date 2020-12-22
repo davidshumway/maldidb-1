@@ -25,8 +25,15 @@ from django.views.generic import TemplateView, ListView
 from django_tables2 import SingleTableView
 from .tables import LibraryTable
 
+import django_tables2 as tables
+
 # ~ class LibrariesListView(ListView):
 
+
+
+
+
+# TESTING R
 try:
   from rpy2.robjects import r as R
 
@@ -120,6 +127,18 @@ try:
 except:
   print('did not load R')
   pass
+
+
+
+# ~ class SimpleTable(tables.Table):
+	# ~ class Meta:
+    # ~ model = Library
+
+def simple_list(request):
+  queryset = Library.objects.all()
+  table = SimpleTable(queryset)
+  return render(request, 'chat/simple_list.html', {'table': table})
+
 
 class LibrariesListView(SingleTableView):
   model = Library
