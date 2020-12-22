@@ -27,14 +27,56 @@
       
       
     <div class="collapse navbar-collapse" id="navbarResponsive">
-      <ul class="navbar-nav mr-auto">
+		
+		<div class="dropdown">
+		  <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+			Menu
+		  </button>
+		  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+			<a class="dropdown-item" href="{% url 'chat:home' %}">Home</a>
+			<a class="dropdown-item" href="{% url 'chat:search_results' %}">Search</a>
+		  </div>
+		</div>
+		
+		<div class="dropdown">
+		  <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+			Browse
+		  </button>
+		  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+			<a class="dropdown-item" href="{% url 'chat:home' %}">Spectrum - All</a>
+			<a class="dropdown-item" href="{% url 'chat:home' %}">Spectrum - Replicates</a>
+			<a class="dropdown-item" href="{% url 'chat:home' %}">Spectrum - Collapsed</a>
+			<a class="dropdown-item" href="{% url 'chat:home' %}">Libraries</a>
+			<a class="dropdown-item" href="{% url 'chat:home' %}">Metadata</a>
+			<a class="dropdown-item" href="{% url 'chat:home' %}">Spectra SQLite</a>
+		  </div>
+		</div>
+		
+		<div class="dropdown">
+		  <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+			Add
+		  </button>
+		  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+			<a class="dropdown-item" href="{% url 'chat:home' %}">Spectrum - All</a>
+			<a class="dropdown-item" href="{% url 'chat:home' %}">Spectrum - Replicates</a>
+			<a class="dropdown-item" href="{% url 'chat:home' %}">Spectrum - Collapsed</a>
+			<a class="dropdown-item" href="{% url 'chat:home' %}">Library</a>
+			<a class="dropdown-item" href="{% url 'chat:home' %}">Metadata</a>
+			<a class="dropdown-item" href="{% url 'chat:home' %}">Spectra SQLite</a>
+		  </div>
+		</div>
+		
+
+      <!--<ul class="navbar-nav mr-auto">
         <li class="nav-item"><a href="" class="nav-link" title="">Home</a>
         </li>
         <li class="nav-item"><a href="" class="nav-link" title="">Search</a>
         </li>
         <li class="nav-item"><a href="" class="nav-link" title="">Browse</a>
         </li>
-      </ul>
+      </ul>-->
+      
+      
       <!-- Quick search -->
       <form action="{% url 'chat:search_results' %}" class="form-inline" method="get">
         <input name="q" class="form-control mr-sm-2" type="search" placeholder="Spectra ID" aria-label="Spectra ID" size=4 />
