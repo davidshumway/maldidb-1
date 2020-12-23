@@ -21,19 +21,9 @@ class AddLibraryForm(forms.ModelForm):
 		exclude = ()
 	
 class LoadSqliteForm(forms.Form):
-	##title = forms.CharField(max_length=50)
-	# ~ library = forms.ModelChoiceField(queryset=Library.objects.all(), empty_label="(Choose a library)", to_field_name="title")
 	library = forms.ModelMultipleChoiceField(
 		queryset = Library.objects.all(), to_field_name="title"
 	)
-
-	# ~ library = forms.ModelMultipleChoiceField(
-		# ~ queryset = Library.objects.all(), to_field_name='title' # todo: add more description per entry
-	# ~ )
-	# ~ library = forms.ModelMultipleChoiceField(
-		# ~ queryset = Library.objects.all(), to_field_name='title' # todo: add more description per entry
-	# ~ )
-	
 	user = forms.ModelMultipleChoiceField(
 		queryset = user.objects.all(), to_field_name="username"
 		 #User.objects.all() # todo: add more description per entry
@@ -66,7 +56,7 @@ class SpectraForm(forms.ModelForm):
 		
 	class Meta:
 		model = Spectra
-		#fields = ('picture', 'text', 'peaks', 'intensities', 'md')
+		#fields = ('peaks', 'intensities')
 		exclude = ()
 		widgets = {
 			'text': forms.Textarea(
@@ -110,7 +100,8 @@ class MetadataForm(forms.ModelForm):
 	                          
 	class Meta:
 		model = Metadata
-		fields = ('cKingdom','cPhylum','cClass','cOrder','cGenus','cSpecies')
+		#fields = ('cKingdom','cPhylum','cClass','cOrder','cGenus','cSpecies')
+		exclude = ()
 		widgets = {
 			'cKingdom': forms.Textarea(
 				attrs={'rows': 2, 'cols': 40, 'placeholder': ''}

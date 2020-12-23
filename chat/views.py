@@ -169,7 +169,10 @@ def add_sqlite(request):
   return render(request, 'chat/add_sqlite.html', {'form': form})
   
 def handle_uploaded_file(f, tmpForm):
-  '''works alongside upload_sqlite_file'''
+  '''
+    Works alongside upload_sqlite_file
+    Spectra is inserted last as it depends on XML and Metadata tables.
+    '''
   with open('/tmp/test.db', 'wb+') as destination:
     for chunk in f.chunks():
       destination.write(chunk)
@@ -187,65 +190,6 @@ def handle_uploaded_file(f, tmpForm):
   #p = tmpForm.cleaned_data['user'].filter(username=user) #objects.first()
   # ~ p1 = tmpForm.cleaned_data.get('library').value()
   
-  # Spectra
-  rows = cursor.execute("SELECT * FROM spectra").fetchall()
-  for row in rows:
-    data = {
-      #'user': 2,
-      'user':     tmpForm.cleaned_data['user'][0].id,#.User, #tmpForm['user'],
-      'library':  tmpForm.cleaned_data['library'][0].id,#.title, #tmpForm['library'],
-      'spectrum_mass_hash': row[0],
-      'spectrum_intensity_hash': row[1],
-      'xml_hash': row[2],
-      'strain_id': row[3],
-      'peak_matrix': row[4],
-      'spectrum_intensity': row[5],
-      'max_mass': row[6],
-      'min_mass': row[7],
-      'ignore': row[8],
-      'number': row[9],
-      'time_delay': row[10],
-      'time_delta': row[11],
-      'calibration_constants': row[12],
-      'v1_tof_calibration': row[13],
-      'data_type': row[14],
-      'data_system': row[15],
-      'spectrometer_type': row[16],
-      'inlet': row[17],
-      'ionization_mode': row[18],
-      'acquisition_method': row[19],
-      'acquisition_date': row[20],
-      'acquisition_mode': row[21],
-      'tof_mode': row[22],
-      'acquisition_operator_mode': row[23],
-      'laser_attenuation': row[24],
-      'digitizer_type': row[25],
-      'flex_control_version': row[26],
-      'cId': row[27],
-      'instrument': row[28],
-      'instrument_id': row[29],
-      'instrument_type': row[30],
-      'mass_error': row[31],
-      'laser_shots': row[32],
-      'patch': row[33],
-      'path': row[34],
-      'laser_repetition': row[35],
-      'spot': row[36],
-      'spectrum_type': row[37],
-      'target_count': row[38],
-      'target_id_string': row[39],
-      'target_serial_number': row[40],
-      'target_type_number': row[41],
-    }
-    form = SpectraForm(data)
-    # ~ form.cleaned_data['user'] = tmpForm.cleaned_data['user']
-    if form.is_valid():
-      entry = form.save(commit=False)
-      entry.save()
-    else:
-      form.non_field_errors()
-      field_errors = [ (field.label, field.errors) for field in form] 
-      raise ValueError('xxxxx')
   
   # Metadata
   rows = cursor.execute("SELECT * FROM metaData").fetchall()
@@ -328,7 +272,81 @@ def handle_uploaded_file(f, tmpForm):
     else:
         raise ValueError('xxxxx')
     
+  
+  # Spectra
+  rows = cursor.execute("SELECT * FROM spectra").fetchall()
+  for row in rows:
     
+    print(row[2] + '--2')
+    print(row[3] + '--3')
+    
+    smd = Metadata.objects.get(strain_id=row[3])
+    sxml = XML.objects.get(xml_hash=row[2])
+    
+    data = {
+      #'user': 2,
+      #'user':     tmpForm.cleaned_data['user'][0].id,#.User, #tmpForm['user'],
+      'created_by':     tmpForm.cleaned_data['user'][0].id,
+      'library':  tmpForm.cleaned_data['library'][0].id,
+      'spectrum_mass_hash': row[0],
+      'spectrum_intensity_hash': row[1],
+      
+      'xml_hash': smd.id,
+      'strain_id': sxml.id,
+      
+      'TESTxml_hash': row[2],
+      'TESTstrain_id': row[3],
+      # ~ 'xml_hash': row[2],
+      # ~ 'strain_id': row[3],
+      
+      
+      'peak_matrix': '', #TEMP row[4],
+      'spectrum_intensity': '',#TEMP row[5],
+      'max_mass': row[6],
+      'min_mass': row[7],
+      'ignore': row[8],
+      'number': row[9],
+      'time_delay': row[10],
+      'time_delta': row[11],
+      'calibration_constants': row[12],
+      'v1_tof_calibration': row[13],
+      'data_type': row[14],
+      'data_system': row[15],
+      'spectrometer_type': row[16],
+      'inlet': row[17],
+      'ionization_mode': row[18],
+      'acquisition_method': row[19],
+      'acquisition_date': row[20],
+      'acquisition_mode': row[21],
+      'tof_mode': row[22],
+      'acquisition_operator_mode': row[23],
+      'laser_attenuation': row[24],
+      'digitizer_type': row[25],
+      'flex_control_version': row[26],
+      'cId': row[27],
+      'instrument': row[28],
+      'instrument_id': row[29],
+      'instrument_type': row[30],
+      'mass_error': row[31],
+      'laser_shots': row[32],
+      'patch': row[33],
+      'path': row[34],
+      'laser_repetition': row[35],
+      'spot': row[36],
+      'spectrum_type': row[37],
+      'target_count': row[38],
+      'target_id_string': row[39],
+      'target_serial_number': row[40],
+      'target_type_number': row[41],
+    }
+    form = SpectraForm(data)
+    if form.is_valid():
+      entry = form.save(commit=False)
+      entry.save()
+    else:
+      form.non_field_errors()
+      field_errors = [ (field.label, field.errors) for field in form] 
+      raise ValueError('xxxxx')
     
 
 class SearchResultsView(ListView):

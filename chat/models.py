@@ -203,8 +203,7 @@ class Spectra(AbstractSpectra):
 	picture = models.ImageField(upload_to='spectra', blank=True)
 	text = models.TextField(max_length=2048, blank=True)
 	posted_date = models.DateTimeField(auto_now_add=True, blank=True)
-	
-	
+		
 	number = models.IntegerField(blank=True)
 		# ~ time_delay                            INTEGER,
 	time_delay = models.IntegerField(blank=True)
@@ -261,7 +260,12 @@ class Spectra(AbstractSpectra):
 	#spectraID = models.CharField(
 	#	max_length=100, blank=True, unique=True, default=uuid.uuid4)
 	
-	
+	# Todo
+	# foreign key to Metadata?
+	#strain_id = models.TextField(blank=True)
+	# Todo
+	# foreign key to XML?
+	#xml_hash = models.TextField(blank=True) 
 	
 	def __str__(self):
 		return f"{self.user.username}'s spectra"
