@@ -41,8 +41,10 @@ A simple social Media Application for sharing images amongst users. This applica
   pip install -r requirements.txt
 ```
 
-### Start Up server
+### Run migrations and start Up server
 ```bash
+  python manage.py makemigrations
+  python manage.py migrate
   python manage.py runserver
 ```
 The application should be available at http://localhost:8000/ through your browser
