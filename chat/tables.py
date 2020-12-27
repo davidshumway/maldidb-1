@@ -4,5 +4,5 @@ from .models import Library
 class LibraryTable(tables.Table):
   class Meta:
     model = Library
-    template_name = "django_tables2/bootstrap.html"
+    template_name = "django_tables2/bootstrap4.html"
     exclude = ()

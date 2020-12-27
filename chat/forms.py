@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Comment, Spectra, Metadata, XML, Locale, Version, Library
+from .models import Comment, Spectra, Metadata, XML, Locale, Version, Library, PrivacyLevel
 
 #from django.contrib.auth.models import User
 #from django.contrib.auth import User
@@ -29,6 +29,17 @@ class LoadSqliteForm(forms.Form):
 		 #User.objects.all() # todo: add more description per entry
 	)
 	file = forms.FileField()
+	PUBLIC = 'PB'
+	PRIVATE = 'PR'
+	privacyChoices = [
+		(PUBLIC, 'Public'),
+		(PRIVATE, 'Private'),
+	]
+	privacy_level = forms.MultipleChoiceField(choices = privacyChoices)
+	# ~ privacy_level = forms.ModelMultipleChoiceField(
+		# ~ queryset = PrivacyLevel.objects.all(), to_field_name="username"
+		 # ~ #User.objects.all() # todo: add more description per entry
+	# ~ )
 	
 	
 class SpectraForm(forms.ModelForm):

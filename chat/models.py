@@ -33,10 +33,22 @@ class SpectraCosineScore(AbstractCosineScore):
 	
 
 class AbstractSpectra(models.Model):
-	privacy_level = models.ForeignKey(
-		'PrivacyLevel',
-		on_delete=models.CASCADE,
-		blank=True)
+	# ~ privacy_level = models.ForeignKey(
+		# ~ 'PrivacyLevel',
+		# ~ on_delete=models.CASCADE,
+		# ~ blank=True)
+	PUBLIC = 'PB'
+	PRIVATE = 'PR'
+	privacyChoices = [
+		(PUBLIC, 'Public'),
+		(PRIVATE, 'Private'),
+	]
+	privacy_level = models.CharField(
+		max_length=2,
+		choices=privacyChoices,
+		default=PUBLIC,
+	)
+	
 	library = models.ForeignKey('Library', on_delete=models.CASCADE)
 	created_by = models.ForeignKey(
 		settings.AUTH_USER_MODEL,

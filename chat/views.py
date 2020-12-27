@@ -27,8 +27,13 @@ from .tables import LibraryTable
 
 import django_tables2 as tables
 
-# ~ class LibrariesListView(ListView):
 
+
+# ~ def library_list(request):
+  # ~ table = LibraryTable(Library.objects.all())
+  # ~ return render(request, "person_list.html", {
+      # ~ "table": table
+  # ~ })
 
 
 
@@ -277,8 +282,11 @@ def handle_uploaded_file(f, tmpForm):
   rows = cursor.execute("SELECT * FROM spectra").fetchall()
   for row in rows:
     
-    print(row[2] + '--2')
-    print(row[3] + '--3')
+    #print(row[2] + '--2')
+    #print(row[3] + '--3')
+    print(tmpForm.cleaned_data)
+    print(tmpForm.cleaned_data['privacy_level'])
+    print(tmpForm.cleaned_data['privacy_level'][0])
     
     smd = Metadata.objects.get(strain_id=row[3])
     sxml = XML.objects.get(xml_hash=row[2])
@@ -288,14 +296,18 @@ def handle_uploaded_file(f, tmpForm):
       #'user':     tmpForm.cleaned_data['user'][0].id,#.User, #tmpForm['user'],
       'created_by':     tmpForm.cleaned_data['user'][0].id,
       'library':  tmpForm.cleaned_data['library'][0].id,
+      
+      'privacy_level': tmpForm.cleaned_data['privacy_level'][0],
+      
       'spectrum_mass_hash': row[0],
       'spectrum_intensity_hash': row[1],
       
       'xml_hash': smd.id,
       'strain_id': sxml.id,
       
-      'TESTxml_hash': row[2],
-      'TESTstrain_id': row[3],
+      
+      #'TESTxml_hash': row[2],
+      #'TESTstrain_id': row[3],
       # ~ 'xml_hash': row[2],
       # ~ 'strain_id': row[3],
       
