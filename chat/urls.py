@@ -2,8 +2,7 @@
 
 from django.urls import path
 from . import views
-from .views import SearchResultsView
-from .views import LibrariesListView
+from .views import SearchResultsView, LibrariesListView, SpectraListView, MetadataListView
 
 
 app_name = 'chat'
@@ -16,5 +15,7 @@ urlpatterns = [
     path('comments/add/<post_id>', views.add_comment, name='add_comment'),
     path('search/', SearchResultsView.as_view(), name='search_results'),
     path('libraries/', LibrariesListView.as_view(), name='libraries_results'),
+    path('spectra/', SpectraListView.as_view(), name='spectra_results'),
+    path('metadata/', MetadataListView.as_view(), name='metadata_results'),
     #test
 ]

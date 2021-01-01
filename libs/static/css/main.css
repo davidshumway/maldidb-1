@@ -6,5 +6,8 @@ body {
 }
 .dropdown, .dropup {
 	margin-left: 10px !important;
-
+}
+.maintable {
+	font-size: smaller;
+	
 }

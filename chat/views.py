@@ -23,115 +23,12 @@ from django.db.models import Q
 from django.views.generic import TemplateView, ListView
 
 from django_tables2 import SingleTableView
-from .tables import LibraryTable
+from .tables import LibraryTable, SpectraTable, MetadataTable
 
 import django_tables2 as tables
 
 
 
-# ~ def library_list(request):
-  # ~ table = LibraryTable(Library.objects.all())
-  # ~ return render(request, "person_list.html", {
-      # ~ "table": table
-  # ~ })
-
-
-
-
-# TESTING R
-try:
-  from rpy2.robjects import r as R
-
-  print('loaded R')
-  
-  def getRConnection():
-    return R
-  
-  # define an R function
-  R('''
-    # create a function `f`
-    f <- function(r, verbose=FALSE) {
-        if (verbose) {
-            cat("I am calling f().\n")
-        }
-        2 * pi * r
-    }
-    # call the function `f` with argument value 3
-    f(3)
-    ''')
-  print("R['f'](3):", R['f'](3))
-  print("R['f'](3) vvv:", R['f'](3, True))
-  
-  # another one...
-  R('''
-    collapseReplicates <- function(checkedPool,
-                                   sampleIDs,
-                                   peakPercentPresence,
-                                   lowerMassCutoff,
-                                   upperMassCutoff, 
-                                   minSNR, 
-                                   tolerance = 0.002,
-                                   protein){
-      
-      validate(need(is.numeric(peakPercentPresence), "peakPercentPresence not numeric"))
-      validate(need(is.numeric(lowerMassCutoff), "lowerMassCutoff not numeric"))
-      validate(need(is.numeric(upperMassCutoff), "upperMassCutoff not numeric"))
-      validate(need(is.numeric(minSNR), "minSNR not numeric"))
-      validate(need(is.numeric(tolerance), "tolerance not numeric"))
-      validate(need(is.logical(protein), "protein not logical"))
-      
-      
-      
-      temp <- IDBacApp::getPeakData(checkedPool = checkedPool,
-                                    sampleIDs = sampleIDs,
-                                    protein = protein) 
-      req(length(temp) > 0)
-      # Binning peaks lists belonging to a single sample so we can filter 
-      # peaks outside the given threshold of presence 
-      
-      for (i in 1:length(temp)) {
-        snr1 <-  which(MALDIquant::snr(temp[[i]]) >= minSNR)
-        temp[[i]]@mass <- temp[[i]]@mass[snr1]
-        temp[[i]]@snr <- temp[[i]]@snr[snr1]
-        temp[[i]]@intensity <- temp[[i]]@intensity[snr1]
-      }
-      
-      specNotZero <- sapply(temp, function(x) length(x@mass) > 0)
-      
-      # Only binPeaks if spectra(um) has peaks.
-      # see: https://github.com/sgibb/MALDIquant/issues/61 for more info 
-      # note: MALDIquant::binPeaks does work if there is only one spectrum
-      if (any(specNotZero)) {
-        
-        temp <- temp[specNotZero]
-        temp <- MALDIquant::binPeaks(temp,
-                                     tolerance = tolerance, 
-                                     method = c("strict")) 
-        
-        temp <- MALDIquant::filterPeaks(temp,
-                                        minFrequency = peakPercentPresence / 100) 
-        
-        temp <- MALDIquant::mergeMassPeaks(temp, 
-                                           method = "mean") 
-        temp <- MALDIquant::trim(temp,
-                                 c(lowerMassCutoff,
-                                   upperMassCutoff))
-      } else {
-        temp <- MALDIquant::mergeMassPeaks(temp, 
-                                           method = "mean") 
-      }
-      
-      
-      return(temp)
-    }
-    ''')
-    
-  pi = R('pi')
-  print('pi:',pi[0])
-  
-except:
-  print('did not load R')
-  pass
 
 
 
@@ -147,7 +44,18 @@ def simple_list(request):
 
 class LibrariesListView(SingleTableView):
   model = Library
+  table_class = LibraryTable
   template_name = 'chat/libraries.html'
+
+class SpectraListView(SingleTableView):
+  model = Spectra
+  table_class = SpectraTable
+  template_name = 'chat/spectra.html'
+
+class MetadataListView(SingleTableView):
+  model = Metadata
+  table_class = MetadataTable
+  template_name = 'chat/metadata.html'
 
 def add_lib(request):
   if request.method == 'POST':
@@ -506,3 +414,103 @@ def add_comment(request, post_id):
     # in the CommentForm implementation
     comment = form.save(Spectra.objects.get(id=post_id), request.user)
   return redirect(reverse('chat:home'))
+
+
+
+# TESTING R
+try:
+  from rpy2.robjects import r as R
+
+  print('loaded R')
+  
+  def getRConnection():
+    return R
+  
+  # define an R function
+  R('''
+    # create a function `f`
+    f <- function(r, verbose=FALSE) {
+        if (verbose) {
+            cat("I am calling f().\n")
+        }
+        2 * pi * r
+    }
+    # call the function `f` with argument value 3
+    f(3)
+    ''')
+  print("R['f'](3):", R['f'](3))
+  print("R['f'](3) vvv:", R['f'](3, True))
+  
+  # another one...
+  R('''
+    collapseReplicates <- function(checkedPool,
+                                   sampleIDs,
+                                   peakPercentPresence,
+                                   lowerMassCutoff,
+                                   upperMassCutoff, 
+                                   minSNR, 
+                                   tolerance = 0.002,
+                                   protein){
+      
+      validate(need(is.numeric(peakPercentPresence), "peakPercentPresence not numeric"))
+      validate(need(is.numeric(lowerMassCutoff), "lowerMassCutoff not numeric"))
+      validate(need(is.numeric(upperMassCutoff), "upperMassCutoff not numeric"))
+      validate(need(is.numeric(minSNR), "minSNR not numeric"))
+      validate(need(is.numeric(tolerance), "tolerance not numeric"))
+      validate(need(is.logical(protein), "protein not logical"))
+      
+      
+      
+      temp <- IDBacApp::getPeakData(checkedPool = checkedPool,
+                                    sampleIDs = sampleIDs,
+                                    protein = protein) 
+      req(length(temp) > 0)
+      # Binning peaks lists belonging to a single sample so we can filter 
+      # peaks outside the given threshold of presence 
+      
+      for (i in 1:length(temp)) {
+        snr1 <-  which(MALDIquant::snr(temp[[i]]) >= minSNR)
+        temp[[i]]@mass <- temp[[i]]@mass[snr1]
+        temp[[i]]@snr <- temp[[i]]@snr[snr1]
+        temp[[i]]@intensity <- temp[[i]]@intensity[snr1]
+      }
+      
+      specNotZero <- sapply(temp, function(x) length(x@mass) > 0)
+      
+      # Only binPeaks if spectra(um) has peaks.
+      # see: https://github.com/sgibb/MALDIquant/issues/61 for more info 
+      # note: MALDIquant::binPeaks does work if there is only one spectrum
+      if (any(specNotZero)) {
+        
+        temp <- temp[specNotZero]
+        temp <- MALDIquant::binPeaks(temp,
+                                     tolerance = tolerance, 
+                                     method = c("strict")) 
+        
+        temp <- MALDIquant::filterPeaks(temp,
+                                        minFrequency = peakPercentPresence / 100) 
+        
+        temp <- MALDIquant::mergeMassPeaks(temp, 
+                                           method = "mean") 
+        temp <- MALDIquant::trim(temp,
+                                 c(lowerMassCutoff,
+                                   upperMassCutoff))
+      } else {
+        temp <- MALDIquant::mergeMassPeaks(temp, 
+                                           method = "mean") 
+      }
+      
+      
+      return(temp)
+    }
+    ''')
+    
+  pi = R('pi')
+  print('pi:',pi[0])
+  
+except:
+  print('did not load R')
+  pass
+
+
+
