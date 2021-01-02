@@ -10,4 +10,19 @@ body {
 .maintable {
 	font-size: smaller;
 	
+	
+}
+.maintable th {
+	max-width: 200px;
+/*
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+*/
+}
+.maintable td {
+	max-width: 200px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }

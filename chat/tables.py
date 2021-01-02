@@ -1,5 +1,5 @@
 import django_tables2 as tables
-from .models import Library, Spectra, Metadata
+from .models import Library, Spectra, Metadata, LabGroup
 
 class LibraryTable(tables.Table):
   class Meta:
@@ -18,6 +18,13 @@ class SpectraTable(tables.Table):
 class MetadataTable(tables.Table):
   class Meta:
     model = Metadata
+    attrs = {"class": "table maintable"}
+    template_name = "django_tables2/bootstrap4.html"
+    exclude = ("id",)
+
+class LabgroupTable(tables.Table):
+  class Meta:
+    model = LabGroup
     attrs = {"class": "table maintable"}
     template_name = "django_tables2/bootstrap4.html"
     exclude = ("id",)

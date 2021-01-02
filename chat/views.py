@@ -11,6 +11,7 @@ from .forms import XmlForm
 from .forms import LocaleForm
 from .forms import VersionForm
 from .forms import AddLibraryForm
+from .forms import AddLabGroupForm
 
 from .models import Spectra
 from .models import Metadata
@@ -18,19 +19,16 @@ from .models import XML
 from .models import Locale
 from .models import Version
 from .models import Library
+from .models import LabGroup
 
 from django.db.models import Q
 from django.views.generic import TemplateView, ListView
 
 from django_tables2 import SingleTableView
-from .tables import LibraryTable, SpectraTable, MetadataTable
+
+from .tables import LibraryTable, SpectraTable, MetadataTable, LabgroupTable
 
 import django_tables2 as tables
-
-
-
-
-
 
 # ~ class SimpleTable(tables.Table):
 	# ~ class Meta:
@@ -40,7 +38,6 @@ def simple_list(request):
   queryset = Library.objects.all()
   table = SimpleTable(queryset)
   return render(request, 'chat/simple_list.html', {'table': table})
-
 
 class LibrariesListView(SingleTableView):
   model = Library
@@ -57,41 +54,24 @@ class MetadataListView(SingleTableView):
   table_class = MetadataTable
   template_name = 'chat/metadata.html'
 
-def add_lib(request):
-  if request.method == 'POST':
-    form = AddLibraryForm(request.POST, request.FILES)
-    if form.is_valid():
-      entry = form.save(commit=False)
-      entry.save()
-      #handle_uploaded_file(request.FILES['file'])
-      #return HttpResponseRedirect('/success/url/')
-      return redirect('chat:home')
-  else:
-    form = AddLibraryForm()
-  return render(request, 'chat/add_lib.html', {'form': form})
+class LabgroupsListView(SingleTableView):
+  model = LabGroup
+  table_class = LabgroupTable
+  template_name = 'chat/labgroups.html'
 
-def add_sqlite(request):
-  '''goes into views.py'''
-  if request.method == 'POST':
-    form = LoadSqliteForm(request.POST, request.FILES)
-    if form.is_valid():
-      handle_uploaded_file(request.FILES['file'], form)
-      return redirect('chat:home')
-  else:
-    form = LoadSqliteForm()
-  return render(request, 'chat/add_sqlite.html', {'form': form})
-  
 def handle_uploaded_file(f, tmpForm):
   '''
-    Works alongside upload_sqlite_file
+    Works alongside upload_sqlite_file.
     Spectra is inserted last as it depends on XML and Metadata tables.
+    Requires json and sqlite3 libraries.
     '''
+  import json
+  import sqlite3
+  
   with open('/tmp/test.db', 'wb+') as destination:
     for chunk in f.chunks():
       destination.write(chunk)
       
-  # use sqlite3
-  import sqlite3
   connection = sqlite3.connect('/tmp/test.db')
   cursor = connection.cursor()
   
@@ -199,11 +179,14 @@ def handle_uploaded_file(f, tmpForm):
     smd = Metadata.objects.get(strain_id=row[3])
     sxml = XML.objects.get(xml_hash=row[2])
     
+    pm = json.loads(row[4])
+    
     data = {
       #'user': 2,
       #'user':     tmpForm.cleaned_data['user'][0].id,#.User, #tmpForm['user'],
       'created_by':     tmpForm.cleaned_data['user'][0].id,
       'library':  tmpForm.cleaned_data['library'][0].id,
+      'lab_name':  tmpForm.cleaned_data['lab_name'][0].id,
       
       'privacy_level': tmpForm.cleaned_data['privacy_level'][0],
       
@@ -213,6 +196,9 @@ def handle_uploaded_file(f, tmpForm):
       'xml_hash': smd.id,
       'strain_id': sxml.id,
       
+      'peak_mass': ",".join(map(str, pm['mass'])),
+      'peak_intensity': ",".join(map(str, pm['intensity'])),
+      'peak_snr': ",".join(map(str, pm['snr'])),
       
       #'TESTxml_hash': row[2],
       #'TESTstrain_id': row[3],
@@ -220,8 +206,8 @@ def handle_uploaded_file(f, tmpForm):
       # ~ 'strain_id': row[3],
       
       
-      'peak_matrix': '', #TEMP row[4],
-      'spectrum_intensity': '',#TEMP row[5],
+      # ~ 'peak_matrix': '', #TEMP row[4],
+      # ~ 'spectrum_intensity': '',#TEMP row[5],
       'max_mass': row[6],
       'min_mass': row[7],
       'ignore': row[8],
@@ -270,7 +256,7 @@ def handle_uploaded_file(f, tmpForm):
     
 
 class SearchResultsView(ListView):
-  """ The home news feed page """
+  """"""
   model = Spectra
   template_name = 'search_results.html'
   def get_queryset(self):
@@ -368,18 +354,52 @@ def home(request):
 
 
 @login_required
-def add_post(request):
-  """ create a new posts to user """
-  # handle only POSTed Data
+def add_lib(request):
   if request.method == 'POST':
-    form = SpectraForm(request.POST, request.FILES)
-    # validate form based on form definition
+    form = AddLibraryForm(request.POST, request.FILES)
+    if form.is_valid():
+      entry = form.save(commit=False)
+      entry.save()
+      #handle_uploaded_file(request.FILES['file'])
+      #return HttpResponseRedirect('/success/url/')
+      return redirect('chat:home')
+  else:
+    form = AddLibraryForm()
+  return render(request, 'chat/add_lib.html', {'form': form})
+
+@login_required
+def add_sqlite(request):
+  '''goes into views.py'''
+  if request.method == 'POST':
+    form = LoadSqliteForm(request.POST, request.FILES)
+    if form.is_valid():
+      handle_uploaded_file(request.FILES['file'], form)
+      return redirect('chat:home')
+  else:
+    form = LoadSqliteForm()
+  return render(request, 'chat/add_sqlite.html', {'form': form})
+  
+@login_required
+def add_labgroup(request):
+  """"""
+  if request.method == 'POST':
+    form = AddLabGroupForm(request.POST, request.FILES)
     if form.is_valid():
       post = form.save(commit=False)
-      # add the post user to the existing form
-      # this method can be declared in the postForm easily by overiding the save() method
-      # and adding user before saving.
-      # See implementation of CommentForm
+      post.user = request.user
+      post.save()
+      return redirect('chat:home')
+  else:
+    form = AddLabGroupForm()
+  return render(request, 'chat/add_labgroup.html', {'form': form})
+  
+@login_required
+def add_post(request):
+  """"""
+  if request.method == 'POST':
+    form = SpectraForm(request.POST, request.FILES)
+    if form.is_valid():
+      post = form.save(commit=False)
       post.user = request.user
       post.save()
       return redirect('chat:home')
@@ -390,10 +410,8 @@ def add_post(request):
 @login_required
 def add_metadata(request):
   """ create a new posts to user """
-  # handle only POSTed Data
   if request.method == 'POST':
     form = MetadataForm(request.POST, request.FILES)
-    # validate form based on form definition
     if form.is_valid():
       md = form.save(commit=False)
       md.user = request.user
@@ -407,7 +425,6 @@ def add_metadata(request):
 @require_POST
 def add_comment(request, post_id):
   """ Add a comment to a post """
-
   form = CommentForm(request.POST)
   if form.is_valid():
     # pass the post id to the comment save() method which was overriden
