@@ -1,17 +1,32 @@
+{% extends 'base.html' %}
+{% load render_table from django_tables2 %}
+
+
+{% block title %}
+	Lab Profile: {{ lab.lab_name }}
+{% endblock %}
+
+{% block content %}
+
+
+
+
+
 <div class="card">
-	{% if user.profile.picture %}
-		<img class="card-img-top" src='{{ user.profile.picture.url }}'>
+	{% if lab.picture %}
+		<img class="card-img-top" src='{{ lab.picture }}'>
 	{% else %}
 		<div class="container mt-1 text-center"><i class="fas fa-9x fa-user"></i></div>
 	{% endif %}
 	<div class="card-body">
 		<div class="card-title">
-			{{ user.first_name }} {{ user.last_name }}
+			{{ lab.lab_name }}
 		</div>
 		<div class="card-text">
-			{{ user.profile.bio }}
+			{{ lab.description }}
 		</div>
 	</div>
+<!--
 	<ul class="list-group list-group-flush">
 		<li class="list-group-item"><strong><i class="fa fa-fw fa-user-alt"></i></strong> {{ user.username }}</li>
 		<li class="list-group-item"><strong><i class="fa fa-fw fa-envelope"></i></strong> {{ user.email }}</li>
@@ -19,9 +34,11 @@
 		<li class="list-group-item"><strong><i class="fa fa-fw fa-globe"></i></strong> {{ user.profile.website }}</li>
 		<li class="list-group-item"><strong><i class="fa fa-fw fa-map-marker-alt"></i></strong> {{ user.profile.address }}</li>
 	</ul>
-	{% if request.user == user %}
+-->
+	{% if request.user == lab.owner %}
 		<div class="card-body">
-			<a href="{% url 'accounts:edit_profile' %}" class="card-link btn btn-danger">Edit Profile</a>
+			<a href="{% url 'chat:edit_labprofile' lab.id %}" class="card-link btn btn-danger">Edit Lab Profile</a>
 		</div>
 	{% endif %}
 </div>
+{% endblock %}

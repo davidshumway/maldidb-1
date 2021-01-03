@@ -6,5 +6,27 @@ body {
 }
 .dropdown, .dropup {
 	margin-left: 10px !important;
-
+}
+.maintable {
+	font-size: smaller;
+	
+	
+}
+.maintable th {
+	max-width: 200px;
+/*
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+*/
+}
+.maintable td {
+	max-width: 200px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+/* Override default table container to avoid expanding off the page */
+.table-container {
+	overflow: auto !important;
 }

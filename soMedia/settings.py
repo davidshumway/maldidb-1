@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'accounts',
     'chat',
     'django_tables2',
+    'django_filters',
+    'bootstrap4',
     ###'django_extensions',
     #'whitenoise.runserver_nostatic',
 ]

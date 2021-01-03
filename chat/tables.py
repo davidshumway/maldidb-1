@@ -9,6 +9,8 @@ class LibraryTable(tables.Table):
     exclude = ("id",)
 
 class SpectraTable(tables.Table):
+  created_by = tables.Column(linkify=True)
+  lab_name = tables.Column(linkify=True)
   class Meta:
     model = Spectra
     attrs = {"class": "table maintable"}

@@ -26,3 +26,7 @@ body {
 	text-overflow: ellipsis;
 	overflow: hidden;
 }
+/* Override default table container to avoid expanding off the page */
+.table-container {
+	overflow: auto !important;
+}

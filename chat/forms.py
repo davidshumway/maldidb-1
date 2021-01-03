@@ -7,7 +7,23 @@ from .models import Comment, Spectra, Metadata, XML, Locale, Version, Library, P
 from django.contrib.auth import get_user_model
 user = get_user_model()
 
+class LabProfileForm(forms.ModelForm):
+  class Meta:
+    model = LabGroup
+    exclude = ('id',) #fields=('picture', 'bio', 'phone', 'website', 'address')
 
+class SearchForm(forms.Form):
+  strain_id = forms.ModelChoiceField(queryset=Metadata.objects.all())
+  # ~ strain_id = Metadata.strain_id
+  # ~ class Meta:
+    # ~ model = Document
+
+  # ~ def __init__(self, *args, **kwargs):
+    # ~ #user = kwargs.pop('user','')
+    # ~ #super(DocumentForm, self).__init__(*args, **kwargs)
+    # ~ self.fields['strain_id'] = forms.ModelChoiceField(queryset=Metadata.objects.all())
+
+  
 class AddLabGroupForm(forms.ModelForm):
   class Meta:
     model = LabGroup

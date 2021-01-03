@@ -12,6 +12,7 @@ from .forms import LocaleForm
 from .forms import VersionForm
 from .forms import AddLibraryForm
 from .forms import AddLabGroupForm
+from .forms import LabProfileForm
 
 from .models import Spectra
 from .models import Metadata
@@ -24,30 +25,154 @@ from .models import LabGroup
 from django.db.models import Q
 from django.views.generic import TemplateView, ListView
 
-from django_tables2 import SingleTableView
-
 from .tables import LibraryTable, SpectraTable, MetadataTable, LabgroupTable
 
+import django_filters
+from django_filters.views import FilterView
+from django_tables2.views import SingleTableMixin
+from django_tables2 import SingleTableView
 import django_tables2 as tables
 
-# ~ class SimpleTable(tables.Table):
-	# ~ class Meta:
-    # ~ model = Library
+
+def lab_profile(request, lab_id):
+  """View profile of lab with lab_name"""
+  lab = LabGroup.objects.get(id=lab_id)
+  return render(request, 'chat/lab_profile.html', {'lab': lab})
+
+@login_required
+def edit_labprofile(request, lab_id):
+    """ edit profile of lab """    
+    if request.method == "POST":
+        # instance kwargs passed in sets the user on the modelForm
+        form = LabProfileForm(request.POST, request.FILES, instance=request.user)
+        # ~ form = LabProfileForm(request.POST, request.FILES, instance=request.user.profile)
+        if form.is_valid():
+            form.save()
+            return redirect(reverse('chat:view_lab', args=(lab_id, )))
+            # ~ return redirect(reverse('chat:view_lab', args=(request.lab.id, )))
+    else:
+        form = LabProfileForm(instance=request.user)
+        # ~ form = LabProfileForm(instance=request.user.profile)
+    return render(request, 'chat/edit_labprofile.html', {'form': form})
 
 def simple_list(request):
   queryset = Library.objects.all()
   table = SimpleTable(queryset)
   return render(request, 'chat/simple_list.html', {'table': table})
 
+#def search_spectra:
+  
+  
+class SearchResultsView(ListView):
+  """"""
+  model = Spectra
+  template_name = 'chat/search_results.html'
+  
+  def get_context_data(self, **kwargs):
+    context = super(SearchResultsView, self).get_context_data(**kwargs)
+    context.update({
+      'unique_strains': Metadata.objects.order_by().values('strain_id').distinct()
+    })
+    return context
+
+  def get_queryset(self):
+    
+    # all spectra from a given strain_id
+    strain_id = self.request.GET.get('strain_id')
+    object_list = Spectra.objects.filter(
+      strain_id__strain_id__exact = strain_id
+      # ~ Q(metadata__strain_id__exact = strain_id)
+    )
+    
+    ### All species
+    #species_list = Metadata.objects.order_by().values('strain_id').distinct()
+    
+    return object_list
+    #return object_list, species_list
+    
+  # ~ # Get users whose posts to display on news feed and add users account
+  # ~ users = list(request.user.followers.all())
+  # ~ users.append(request.user)
+
+  # ~ # Get posts from users accounts whose posts to display and order by latest
+  # ~ posts = Post.objects.filter(user__in=_users).order_by('-posted_date')
+  # ~ comment_form = CommentForm()
+  # ~ return render(request, 'chat/home.html', {'posts': posts, 'comment_form': comment_form})
+
+
+  # ~ model = Post
+  # ~ template_name = 'search_results.html'
+  # ~ def get_queryset(self):
+  # ~ query = self.request.GET.get('q')
+  # ~ object_list = Post.objects.filter(
+  # ~ Q(spectraID=query)
+  # ~ )
+  # ~ return object_list
+
 class LibrariesListView(SingleTableView):
   model = Library
   table_class = LibraryTable
   template_name = 'chat/libraries.html'
 
+class SpectraFilter(django_filters.FilterSet):
+  class Meta:
+    model = Spectra
+    exclude = ('id','picture') #fields = ['name', 'price', 'manufacturer']
+    
+# ~ def spectra_list(request):
+  # ~ filter = SpectraFilter(request.GET, queryset=Spectra.objects.all())
+  # ~ return render(request, 'chat/search_results.html', {'filter': filter})
+  
+class FilteredSpectraListView(SingleTableMixin, FilterView):
+  table_class = SpectraTable
+  model = Spectra
+  # ~ template_name = 'chat/spectra.html'
+  template_name = 'chat/search_results.html'
+  filterset_class = SpectraFilter
+  
+  # ~ def get_queryset(self):
+    # ~ filter = SpectraFilter(self.request.GET, queryset=Spectra.objects.all())
+    #return render(self.request, 'chat/spectra.html', {'filter': filter})
+    # ~ return render(self.request, 'chat/search_results.html', {'filter': filter})
+    
+  # ~ def get_queryset(self):
+    # ~ filter = SpectraFilter(request.GET, queryset=Spectra.objects.all())
+    # ~ return render(request, 'chat/spectra.html', {'filter': filter})
+    # all spectra from a given strain_id
+    # ~ strain_id = self.request.GET.get('strain_id')
+    # ~ object_list = Spectra.objects.filter(
+      # ~ strain_id__strain_id__exact = strain_id
+    # ~ )
+    
+    ### All species
+    #species_list = Metadata.objects.order_by().values('strain_id').distinct()
+    
+    # ~ return object_list
+
+
+    
 class SpectraListView(SingleTableView):
   model = Spectra
   table_class = SpectraTable
   template_name = 'chat/spectra.html'
+  
+  def get_queryset(self):
+    filter = SpectraFilter(request.GET, queryset=Spectra.objects.all())
+    return render(request, 'chat/spectra.html', {'filter': filter})
+    
+  # ~ def get_queryset(self):
+    
+    # ~ # all spectra from a given strain_id
+    # ~ strain_id = self.request.GET.get('strain_id')
+    # ~ object_list = Spectra.objects.filter(
+      # ~ strain_id__strain_id__exact = strain_id
+      # ~ ###Q(metadata__strain_id__exact = strain_id)
+    # ~ )
+    
+    # ~ ### All species
+    # ~ #species_list = Metadata.objects.order_by().values('strain_id').distinct()
+    
+    # ~ return object_list
 
 class MetadataListView(SingleTableView):
   model = Metadata
@@ -255,41 +380,7 @@ def handle_uploaded_file(f, tmpForm):
       raise ValueError('xxxxx')
     
 
-class SearchResultsView(ListView):
-  """"""
-  model = Spectra
-  template_name = 'search_results.html'
-  def get_queryset(self):
-    query = self.request.GET.get('q')
-    object_list = Spectra.objects.filter(
-      #Q(spectraID=query)
-    )
-    
-    # All species
-    species_list = Metadata.objects.order_by().values('species').distinct()
 
-    return object_list, species_list
-    
-  # ~ # Get users whose posts to display on news feed and add users account
-  # ~ users = list(request.user.followers.all())
-  # ~ users.append(request.user)
-
-  # ~ # Get posts from users accounts whose posts to display and order by latest
-  # ~ posts = Post.objects.filter(user__in=_users).order_by('-posted_date')
-  # ~ comment_form = CommentForm()
-  # ~ return render(request, 'chat/home.html', {'posts': posts, 'comment_form': comment_form})
-
-
-  # ~ model = Post
-  # ~ template_name = 'search_results.html'
-  # ~ def get_queryset(self):
-  # ~ query = self.request.GET.get('q')
-  # ~ object_list = Post.objects.filter(
-  # ~ Q(spectraID=query)
-  # ~ )
-  # ~ return object_list
-
-@login_required
 def search(request):
   """ search for spectraID """
 
@@ -300,9 +391,8 @@ def search(request):
   # Get posts from users accounts whose posts to display and order by latest
   posts = Spectra.objects.filter(user__in=users).order_by('-posted_date')
   comment_form = CommentForm()
-  return render(request, 'chat/home.html', {'spectra': spectra, 'comment_form': comment_form})
+  return render(request, 'chat/search.html', {'spectra': spectra, 'comment_form': comment_form})
   
-@login_required
 def home(request):
   """ The home news feed page """
 

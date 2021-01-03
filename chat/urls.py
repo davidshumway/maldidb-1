@@ -3,7 +3,7 @@
 from django.urls import path
 from . import views
 from .views import SearchResultsView, LibrariesListView, SpectraListView, MetadataListView, LabgroupsListView
-
+from .views import FilteredSpectraListView
 
 app_name = 'chat'
 urlpatterns = [
@@ -14,10 +14,20 @@ urlpatterns = [
     path('posts/add_lib', views.add_lib, name='add_lib'),
     path('posts/add_labgroup', views.add_labgroup, name='add_labgroup'),
     path('comments/add/<post_id>', views.add_comment, name='add_comment'),
-    path('search/', SearchResultsView.as_view(), name='search_results'),
+    
+    # ~ path('search/', views.search, name='search'),
+    # ~ path('search/', SearchResultsView.as_view(), name='search_results'),
+    path('search/', FilteredSpectraListView.as_view(), name='search_results'),
+    
     path('libraries/', LibrariesListView.as_view(), name='libraries_results'),
-    path('spectra/', SpectraListView.as_view(), name='spectra_results'),
+    
+    # ~ path('spectra/', SpectraListView.as_view(), name='spectra_results'),
+    path('spectra/', FilteredSpectraListView.as_view(), name='spectra_results'),
+    
     path('metadata/', MetadataListView.as_view(), name='metadata_results'),
     path('labgroups/', LabgroupsListView.as_view(), name='labgroups_results'),
     #test
+    
+    path('labs/<lab_id>/', views.lab_profile, name='view_lab'),
+    path('labs/edit/<lab_id>/', views.edit_labprofile, name='edit_labprofile'),
 ]

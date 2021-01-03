@@ -1,7 +1,24 @@
 from django.db import models
 from django.conf import settings
 import uuid
+from django.urls import reverse
 
+# ~ from django.contrib.auth.models import AbstractUser
+
+# ~ class User(AbstractUser):
+  # ~ last_online = models.DateTimeField(blank=True, null=True)
+
+  # ~ objects = UserManager()
+
+  # ~ class Meta:
+    # ~ ordering = ['username']
+
+  # ~ def get_absolute_url(self):
+    # ~ return reverse('users:profile', kwargs={'user': self.username})
+
+  # ~ def initials(self):
+    # ~ return get_initials(self)
+    
 
 class AbstractCosineScore(models.Model):
   
@@ -193,12 +210,18 @@ class Library(models.Model):
 class LabGroup(models.Model):
   lab_name = models.CharField(max_length=200)
   lab_description = models.TextField(blank=True)
+  owner = models.ForeignKey(
+    settings.AUTH_USER_MODEL,
+    on_delete = models.CASCADE)
   
   def __str__(self):
     return self.lab_name
   
   def get_fields(self):
     return [(field.verbose_name, field.value_to_string(self)) for field in LabGroup._meta.fields]
+    
+  def get_absolute_url(self):
+    return reverse('chat:view_lab', args=(self.id,))
     
 class Spectra(AbstractSpectra):
   """ Spectra Model
@@ -292,7 +315,7 @@ class Spectra(AbstractSpectra):
   #xml_hash = models.TextField(blank=True) 
   
   def __str__(self):
-    return f"{self.user.username}'s spectra"
+    return f"{self.created_by.username}'s spectra"
   
   def get_fields(self):
     return [(field.verbose_name, field.value_to_string(self)) for field in Spectra._meta.fields]
