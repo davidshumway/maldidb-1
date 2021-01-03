@@ -17,6 +17,9 @@ urlpatterns = [
     
     # ~ path('search/', views.search, name='search'),
     # ~ path('search/', SearchResultsView.as_view(), name='search_results'),
+    
+    
+    # ...
     path('search/', FilteredSpectraListView.as_view(), name='search_results'),
     
     path('libraries/', LibrariesListView.as_view(), name='libraries_results'),
@@ -24,9 +27,15 @@ urlpatterns = [
     # ~ path('spectra/', SpectraListView.as_view(), name='spectra_results'),
     path('spectra/', FilteredSpectraListView.as_view(), name='spectra_results'),
     
+    # All spectra from a library / filter
+    # ~ path('spectra/<library_id/', FilteredSpectraLibListView.as_view(), name='spectra_library_results'),
+    
     path('metadata/', MetadataListView.as_view(), name='metadata_results'),
     path('labgroups/', LabgroupsListView.as_view(), name='labgroups_results'),
     #test
+    
+    path('library/<library_id>/', views.library_profile, name='view_library'),
+    path('library/edit/<library_id>/', views.edit_libprofile, name='edit_libprofile'),
     
     path('labs/<lab_id>/', views.lab_profile, name='view_lab'),
     path('labs/edit/<lab_id>/', views.edit_labprofile, name='edit_labprofile'),

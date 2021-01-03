@@ -7,6 +7,11 @@ from .models import Comment, Spectra, Metadata, XML, Locale, Version, Library, P
 from django.contrib.auth import get_user_model
 user = get_user_model()
 
+class LibProfileForm(forms.ModelForm):
+  class Meta:
+    model = Library
+    exclude = ('id',) #fields=('picture', 'bio', 'phone', 'website', 'address')
+
 class LabProfileForm(forms.ModelForm):
   class Meta:
     model = LabGroup

@@ -3,21 +3,6 @@ from django.conf import settings
 import uuid
 from django.urls import reverse
 
-# ~ from django.contrib.auth.models import AbstractUser
-
-# ~ class User(AbstractUser):
-  # ~ last_online = models.DateTimeField(blank=True, null=True)
-
-  # ~ objects = UserManager()
-
-  # ~ class Meta:
-    # ~ ordering = ['username']
-
-  # ~ def get_absolute_url(self):
-    # ~ return reverse('users:profile', kwargs={'user': self.username})
-
-  # ~ def initials(self):
-    # ~ return get_initials(self)
     
 
 class AbstractCosineScore(models.Model):
@@ -170,10 +155,6 @@ class Library(models.Model):
   title = models.CharField(max_length=200)
   description = models.TextField(blank=True)
   
-  # ~ privacy_level = models.ForeignKey(
-    # ~ 'PrivacyLevel',
-    # ~ on_delete=models.CASCADE,
-    # ~ blank=True)
   PUBLIC = 'PB'
   PRIVATE = 'PR'
   privacyChoices = [
@@ -206,13 +187,20 @@ class Library(models.Model):
   
   def get_fields(self):
     return [(field.verbose_name, field.value_to_string(self)) for field in Library._meta.fields]
-    
+  
+  def get_absolute_url(self):
+    return reverse('chat:view_library', args=(self.id,))
+      
 class LabGroup(models.Model):
+  '''At least one owner. Zero or more members.'''
   lab_name = models.CharField(max_length=200)
   lab_description = models.TextField(blank=True)
-  owner = models.ForeignKey(
-    settings.AUTH_USER_MODEL,
-    on_delete = models.CASCADE)
+  owners = models.ManyToManyField(settings.AUTH_USER_MODEL)
+  members = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name="lab_members")
+  
+    #models.ForeignKey(
+    #settings.AUTH_USER_MODEL,
+    #on_delete = models.CASCADE)
   
   def __str__(self):
     return self.lab_name
@@ -222,7 +210,22 @@ class LabGroup(models.Model):
     
   def get_absolute_url(self):
     return reverse('chat:view_lab', args=(self.id,))
-    
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+#import accounts.models as m
+@receiver(post_save, sender=LabGroup, dispatch_uid=None)
+def update_stock(sender, instance, **kwargs):
+  '''Add each owner to the group as a member when creating the group.
+  TODO: This only adds the owners when the LabGroup is first created.
+        When updating the lab group, the form's values override this.'''
+  for owner in instance.owners.all():
+    instance.members.add(owner)
+    #instance.members.add(m.User.objects.get(username=str(owner)))
+  post_save.disconnect(update_stock, sender=LabGroup)
+  instance.save()
+  post_save.connect(update_stock, sender=LabGroup)
+ 
 class Spectra(AbstractSpectra):
   """ Spectra Model
   -- Sqlite NUMERIC data type: 'Type affinity is the recommended type

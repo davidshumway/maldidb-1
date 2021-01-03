@@ -34,25 +34,55 @@ from django_tables2 import SingleTableView
 import django_tables2 as tables
 
 
+def library_profile(request, library_id):
+  """View library"""
+  lib = Library.objects.get(id=library_id)
+  lab = LabGroup.objects.get(lab_name=lib.lab_name)
+  s = Spectra.objects.filter(library__exact=lib)
+  return render(
+      request,
+      'chat/library_profile.html',
+      {'library': lib, 'lab': lab, 'spectra': s}
+  )
+
 def lab_profile(request, lab_id):
   """View profile of lab with lab_name"""
   lab = LabGroup.objects.get(id=lab_id)
   return render(request, 'chat/lab_profile.html', {'lab': lab})
 
 @login_required
+def edit_libprofile(request, lib_id):
+    """ edit details of library """    
+    if request.method == "POST":
+      # instance kwargs passed in sets the user on the modelForm
+      form = LibProfileForm(request.POST, request.FILES, instance=Library.objects.get(id=lib_id))
+      if form.is_valid():
+        form.save()
+        return redirect(reverse('chat:view_lab', args=(lib_id, )))
+    else:
+      form = LibProfileForm(instance=Library.objects.get(id=lib_id))
+    return render(request, 'chat/edit_libprofile.html', {'form': form})
+    
+@login_required
 def edit_labprofile(request, lab_id):
     """ edit profile of lab """    
     if request.method == "POST":
-        # instance kwargs passed in sets the user on the modelForm
-        form = LabProfileForm(request.POST, request.FILES, instance=request.user)
-        # ~ form = LabProfileForm(request.POST, request.FILES, instance=request.user.profile)
-        if form.is_valid():
-            form.save()
-            return redirect(reverse('chat:view_lab', args=(lab_id, )))
-            # ~ return redirect(reverse('chat:view_lab', args=(request.lab.id, )))
+      # instance kwargs passed in sets the user on the modelForm
+      form = LabProfileForm(request.POST, request.FILES, instance=LabGroup.objects.get(id=lab_id))
+      # ~ form = LabProfileForm(request.POST, request.FILES, instance=request.user.profile)
+      if form.is_valid():
+        form.save()
+        return redirect(reverse('chat:view_lab', args=(lab_id, )))
+        # ~ return redirect(reverse('chat:view_lab', args=(request.lab.id, )))
     else:
-        form = LabProfileForm(instance=request.user)
-        # ~ form = LabProfileForm(instance=request.user.profile)
+      # ~ import pprint
+      # ~ pp = pprint.PrettyPrinter(indent=4)
+      # ~ pp.pprint(request)
+      # ~ print(request.user)
+      # ~ print(request)
+      # ~ print(request.lab_id)
+      form = LabProfileForm(instance=LabGroup.objects.get(id=lab_id))
+      # ~ form = LabProfileForm(instance=request.user.profile)
     return render(request, 'chat/edit_labprofile.html', {'form': form})
 
 def simple_list(request):
@@ -123,10 +153,18 @@ class SpectraFilter(django_filters.FilterSet):
   # ~ filter = SpectraFilter(request.GET, queryset=Spectra.objects.all())
   # ~ return render(request, 'chat/search_results.html', {'filter': filter})
   
+# ~ class FilteredSpectraListView(SingleTableMixin, FilterView):
+  # ~ table_class = SpectraTable
+  # ~ model = Spectra
+  # ~ template_name = 'chat/spectra.html'
+  # ~ template_name = 'chat/search_results.html'
+  # ~ filterset_class = SpectraFilter
+  
+  
+  
 class FilteredSpectraListView(SingleTableMixin, FilterView):
   table_class = SpectraTable
   model = Spectra
-  # ~ template_name = 'chat/spectra.html'
   template_name = 'chat/search_results.html'
   filterset_class = SpectraFilter
   
@@ -450,8 +488,6 @@ def add_lib(request):
     if form.is_valid():
       entry = form.save(commit=False)
       entry.save()
-      #handle_uploaded_file(request.FILES['file'])
-      #return HttpResponseRedirect('/success/url/')
       return redirect('chat:home')
   else:
     form = AddLibraryForm()
@@ -475,9 +511,16 @@ def add_labgroup(request):
   if request.method == 'POST':
     form = AddLabGroupForm(request.POST, request.FILES)
     if form.is_valid():
-      post = form.save(commit=False)
-      post.user = request.user
-      post.save()
+      g = form.save(commit=False)
+      g.user = request.user
+      g.save() # first save before using the m2m owners rel.
+      g.owners.add(request.user)
+      g.save()
+      #print(request)
+      #print(request.user)
+      #print(request.POST) # 'owners': ['1']}
+      #print(request.POST['owners'])
+      
       return redirect('chat:home')
   else:
     form = AddLabGroupForm()

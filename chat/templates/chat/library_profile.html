@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load render_table from django_tables2 %}
+
+
+{% block title %}
+	Library Details: {{ library.title }}
+{% endblock %}
+
+{% block content %}
+
+
+
+
+
+<div class="card">
+	<div class="card-body">
+		<div class="card-title">
+			Title: {{ library.title }}
+		</div>
+		<div class="card-title">
+			Description: {{ library.description }}
+		</div>
+		<div class="card-title">
+			Privacy Setting: {{ library.privacy_level }}
+		</div>
+		<div class="card-title">
+			Quality: {{ library.quality_rating }}
+		</div>
+		<div class="card-title">
+			Created by: {{ library.created_by }}
+		</div>
+		<div class="card-title">
+			Lab: {{ library.lab_name }}
+		</div>
+		<div class="card-title"><!--TODO: href best practice?-->
+			Spectra:
+			<a href="{% url 'chat:spectra_results' %}?library={{library.id}}" class="card-link">
+				{{ spectra|length }}</a>
+		</div>
+	</div>
+<!--
+	only lab owners can add/update/remove libraries
+-->
+	{% if request.user in lab.owners.all %}
+		<div class="card-body">
+			<a href="{% url 'chat:edit_libprofile' library.id %}" class="card-link btn btn-danger">
+				Edit Library Details</a>
+		</div>
+	{% endif %}
+</div>
+{% endblock %}

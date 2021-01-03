@@ -2,6 +2,10 @@ import django_tables2 as tables
 from .models import Library, Spectra, Metadata, LabGroup
 
 class LibraryTable(tables.Table):
+  created_by = tables.Column(linkify=True)
+  lab_name = tables.Column(linkify=True)
+  title = tables.Column(linkify=True)
+  #test = tables.CheckBoxColumn(accessor='test')
   class Meta:
     model = Library
     attrs = {"class": "table maintable"}
@@ -11,6 +15,7 @@ class LibraryTable(tables.Table):
 class SpectraTable(tables.Table):
   created_by = tables.Column(linkify=True)
   lab_name = tables.Column(linkify=True)
+  library = tables.Column(linkify=True)
   class Meta:
     model = Spectra
     attrs = {"class": "table maintable"}
@@ -25,6 +30,7 @@ class MetadataTable(tables.Table):
     exclude = ("id",)
 
 class LabgroupTable(tables.Table):
+  lab_name = tables.Column(linkify=True)
   class Meta:
     model = LabGroup
     attrs = {"class": "table maintable"}

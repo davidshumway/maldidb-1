@@ -23,7 +23,13 @@
 			{{ lab.lab_name }}
 		</div>
 		<div class="card-text">
-			{{ lab.description }}
+			{{ lab.lab_description }}
+		</div>
+		<div class="card-text">
+			Moderators: {{ lab.owners.all|join:", "}}
+		</div>
+		<div class="card-text">
+			Members: {{ lab.members.all|length }}
 		</div>
 	</div>
 <!--
@@ -35,7 +41,7 @@
 		<li class="list-group-item"><strong><i class="fa fa-fw fa-map-marker-alt"></i></strong> {{ user.profile.address }}</li>
 	</ul>
 -->
-	{% if request.user == lab.owner %}
+	{% if request.user in lab.owners.all %}
 		<div class="card-body">
 			<a href="{% url 'chat:edit_labprofile' lab.id %}" class="card-link btn btn-danger">Edit Lab Profile</a>
 		</div>
