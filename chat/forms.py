@@ -17,11 +17,13 @@ class LabProfileForm(forms.ModelForm):
     model = LabGroup
     exclude = ('id',) #fields=('picture', 'bio', 'phone', 'website', 'address')
 
-class SearchForm(forms.Form):
-  strain_id = forms.ModelChoiceField(queryset=Metadata.objects.all())
+class SearchForm(forms.ModelForm):
+  """Search by peaks/intensities, or upload mzXML or mzML file."""
+  #strain_id = forms.ModelChoiceField(queryset=Metadata.objects.all())
   # ~ strain_id = Metadata.strain_id
-  # ~ class Meta:
-    # ~ model = Document
+  class Meta:
+    model = Spectra
+    exclude = ('id',)
 
   # ~ def __init__(self, *args, **kwargs):
     # ~ #user = kwargs.pop('user','')

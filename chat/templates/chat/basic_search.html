@@ -1,0 +1,123 @@
+
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}
+	Search
+{% endblock %}
+
+{% block content %}
+
+<!--extended/advanced search-->
+<!-- Quick search -->
+
+{% load render_table from django_tables2 %}
+{% load bootstrap4 %}
+
+<!-- Add search functionality here -->
+
+{% if filter %}
+  {% bootstrap_button 'show filters' %}
+  <form action="" method="get" class="form form-inline" style="display:none;">
+    {% bootstrap_form filter.form layout='inline' %}
+    {% bootstrap_button 'filter' %}
+  </form>
+{% endif %}
+
+{% if results %}
+  <div class="row">
+  {% render_table table %}
+  </div>
+{% endif %}
+
+================
+------------------
+================
+
+
+
+
+
+
+<form action="{% url 'chat:basic_search' %}" class="form-inline" method="get">
+  
+  Search:
+  
+  {% if filter %}
+    {% bootstrap_form filter.form layout='inline' %}
+  {% endif %}
+  
+  <table>
+    
+    <tr>
+      <td>
+        {% if unique_strains %} 
+        Strain select: 
+        <select placeholder="Species" name="strain_id" multiple="true">
+          <!--all species in DB goes here-->
+          {% for s in unique_strains %}
+            <option>
+              {{ s.strain_id }}
+            </option>
+          {% endfor %}
+        </select>
+        {% else %}
+          No strains in database!
+        {% endif %}
+      </td>
+    </tr>
+    
+    <tr>
+      <td>
+        {% if species_list %} 
+        Strain select: 
+        <select placeholder="Species" name="strain_id" multiple="true">
+          <!--all species in DB goes here-->
+          {% for species in species_list %}
+            <option>
+              {{ species.strain_id }}
+            </option>
+          {% endfor %}
+        </select>
+        {% else %}
+          No strains in database!
+        {% endif %}
+      </td>
+    </tr>
+    
+    <tr><td>
+      (optional)<br>
+      Search database for unknown strain<br>
+      Upload mzXML or mzML: -file upload-<br>
+      OR<br>
+      Enter peaks and intensities:
+      <input name="peaks" placeholder="peaks" />
+      <input name="intensities" placeholder="intensities" />
+    </td></tr>
+    
+    <tr><td>
+      <button class="btn btn-outline-success my-2 my-sm-0" type="submit">
+        Go</button>
+    </td></tr>
+    
+  </table>
+</form>
+
+{% if object_list %}               
+<h5>Search Results</h5>
+  <ul>
+    {% for post in object_list %}
+      <li>
+        {{ post.user }}, {{ post.text }}, {{ post.posted_date }},
+        {{ post.peaks }}, {{ post.intensities }}, {{ post.picture }},
+        {{ post.user }}
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  No search results!
+{% endif %}
+
+
+{% endblock %}
+

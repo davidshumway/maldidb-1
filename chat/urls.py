@@ -2,8 +2,9 @@
 
 from django.urls import path
 from . import views
-from .views import SearchResultsView, LibrariesListView, SpectraListView, MetadataListView, LabgroupsListView
-from .views import FilteredSpectraListView
+from .views import SearchResultsView, LibrariesListView, SpectraListView
+from .views import MetadataListView, LabgroupsListView
+from .views import FilteredSpectraListView, FilteredSpectraSearchListView
 
 app_name = 'chat'
 urlpatterns = [
@@ -19,8 +20,9 @@ urlpatterns = [
     # ~ path('search/', SearchResultsView.as_view(), name='search_results'),
     
     
-    # ...
-    path('search/', FilteredSpectraListView.as_view(), name='search_results'),
+    # basic / advanced search
+    path('search/', FilteredSpectraSearchListView.as_view(), name='basic_search'),
+    # ~ path('search/', FilteredSpectraListView.as_view(), name='search_results'),
     
     path('libraries/', LibrariesListView.as_view(), name='libraries_results'),
     

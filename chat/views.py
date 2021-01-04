@@ -153,12 +153,11 @@ class SpectraFilter(django_filters.FilterSet):
   # ~ filter = SpectraFilter(request.GET, queryset=Spectra.objects.all())
   # ~ return render(request, 'chat/search_results.html', {'filter': filter})
   
-# ~ class FilteredSpectraListView(SingleTableMixin, FilterView):
-  # ~ table_class = SpectraTable
-  # ~ model = Spectra
-  # ~ template_name = 'chat/spectra.html'
-  # ~ template_name = 'chat/search_results.html'
-  # ~ filterset_class = SpectraFilter
+class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
+  table_class = SpectraTable
+  model = Spectra
+  template_name = 'chat/basic_search.html'
+  filterset_class = SpectraFilter
   
   
   
@@ -168,7 +167,8 @@ class FilteredSpectraListView(SingleTableMixin, FilterView):
   template_name = 'chat/search_results.html'
   filterset_class = SpectraFilter
   
-  # ~ def get_queryset(self):
+  def get_queryset(self):
+    print('Got a GET', self.request.GET)
     # ~ filter = SpectraFilter(self.request.GET, queryset=Spectra.objects.all())
     #return render(self.request, 'chat/spectra.html', {'filter': filter})
     # ~ return render(self.request, 'chat/search_results.html', {'filter': filter})

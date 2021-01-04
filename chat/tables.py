@@ -19,7 +19,7 @@ class SpectraTable(tables.Table):
   class Meta:
     model = Spectra
     attrs = {"class": "table maintable"}
-    template_name = "django_tables2/bootstrap4.html"
+    template_name = "chat/bootstrap4_mod.html"
     exclude = ("id",)
 
 class MetadataTable(tables.Table):
