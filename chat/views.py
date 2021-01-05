@@ -13,8 +13,12 @@ from .forms import VersionForm
 from .forms import AddLibraryForm
 from .forms import AddLabGroupForm
 from .forms import LabProfileForm
+from .forms import SearchForm
 
 from .models import Spectra
+from .models import SearchSpectra
+from .models import SpectraCosineScore
+from .models import SearchSpectraCosineScore
 from .models import Metadata
 from .models import XML
 from .models import Locale
@@ -25,7 +29,7 @@ from .models import LabGroup
 from django.db.models import Q
 from django.views.generic import TemplateView, ListView
 
-from .tables import LibraryTable, SpectraTable, MetadataTable, LabgroupTable
+from .tables import LibraryTable, SpectraTable, MetadataTable, LabgroupTable, CosineSearchTable
 
 import django_filters
 from django_filters.views import FilterView
@@ -49,6 +53,11 @@ def lab_profile(request, lab_id):
   """View profile of lab with lab_name"""
   lab = LabGroup.objects.get(id=lab_id)
   return render(request, 'chat/lab_profile.html', {'lab': lab})
+  
+def spectra_profile(request, spectra_id):
+  """View profile of lab with lab_name"""
+  spectra = Spectra.objects.get(id=spectra_id)
+  return render(request, 'chat/spectra_profile.html', {'spectra': spectra})
 
 @login_required
 def edit_libprofile(request, lib_id):
@@ -154,12 +163,100 @@ class SpectraFilter(django_filters.FilterSet):
   # ~ return render(request, 'chat/search_results.html', {'filter': filter})
   
 class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
-  table_class = SpectraTable
-  model = Spectra
+  table_class = CosineSearchTable
+  model = SearchSpectraCosineScore
   template_name = 'chat/basic_search.html'
   filterset_class = SpectraFilter
   
-  
+  def get_queryset(self):
+    '''Utilizes distMatrix from IDBac'''
+    
+    print('Get queryset:', self.request)
+    # ~ print('self.table_data', self.table_data)
+    # ~ print('self.get_table_kwargs()', self.get_table_kwargs())
+    
+    # ~ qs = super().get_queryset()
+    #>>> qs1.union(qs2, qs3)
+    
+    #for item in qs:
+    #  print("Key : {} , Value : {}".format(item, qs[item]))
+      
+    # ~ print('self.get_table_data()', self.get_table_data())
+    # ~ for item in self:
+      # ~ print("Key : {} , Value : {}".format(item, self[item]))
+    
+    # Basic: Make a new spectra and then generate SpectraCosineScore.
+    sp = self.request.GET.get('peaks')
+    si = self.request.GET.get('intensities')
+    if sp and si:
+      obj = SearchSpectra.objects.create(
+        peak_mass = sp,
+        peak_intensity = si,
+        created_by = self.request.user
+        # ~ strain_id = None
+      )
+      obj.save()
+      # Compare with all
+      n = Spectra.objects.all()
+      for spectra in n:
+        obj2 = SearchSpectraCosineScore.objects.create(
+          spectra1 = obj,
+          spectra2 = spectra,
+          score = 999.99
+        )
+        obj2.save()
+        # update qs ?
+        #qs.intersection(obj2)
+        #qs = chain(qs, obj2s)
+      #o = SearchSpectraCosineScore.objects.filter(spectra1=obj)
+      #qs = chain(qs, o)
+      #qs = Spectra.objects.raw('SELECT * FROM chat_spectra c1 RIGHT JOIN chat_searchspectrasosinescore c2 ON c1.id = c2.spectra2')
+      q = SearchSpectraCosineScore.objects.filter(spectra1=obj)
+      return q
+    # ~ return SearchSpectraCosineScore.objects.filter(spectra1 = obj) #self.queryset
+    
+    # Run this: SpectraCosineScore
+    #Spectra.objects.all()
+    
+      
+    # 
+    #strain_ids = self.request.GET.get('strain_ids')
+    #if strain_ids:
+    #  print('strain_ids:',strain_ids)
+    
+    # 
+    
+    
+    # All species
+    #species_list = Metadata.objects.order_by().values('strain_id').distinct()
+    
+    #filter = SpectraFilter(request.GET, queryset=Spectra.objects.all())
+    #search_results = []
+    
+    # ~ filter = SpectraFilter(self.request.GET, queryset=Spectra.objects.all())
+    # ~ r = render(self.request, 'chat/basic_search.html', {'filter': filter})
+    # ~ r.model = Spectra
+    # ~ r.all = None
+    
+    #n = list(Spectra.objects.all())
+    #for spectra in n:
+    #  spectra.cosine_score = 11.1
+      #n[spectra].cosine_score = 11.1
+      
+    
+    # ~ return n#self.queryset #Metadata.objects.all()
+    
+    #return search_results, species_list
+    # ~ if self.request.method == 'POST':
+      # ~ form = SearchForm(request.POST, request.FILES)
+      #if form.is_valid():
+        #entry = form.save(commit=False)
+        #entry.save()
+        #return redirect('chat:basic_search')
+    # ~ else:
+      # ~ form = SearchForm()
+    #return render(self.request, 'chat/add_lib.html', {'form': form})
+    # ~ return form
   
 class FilteredSpectraListView(SingleTableMixin, FilterView):
   table_class = SpectraTable
@@ -169,6 +266,7 @@ class FilteredSpectraListView(SingleTableMixin, FilterView):
   
   def get_queryset(self):
     print('Got a GET', self.request.GET)
+    
     # ~ filter = SpectraFilter(self.request.GET, queryset=Spectra.objects.all())
     #return render(self.request, 'chat/spectra.html', {'filter': filter})
     # ~ return render(self.request, 'chat/search_results.html', {'filter': filter})
@@ -177,7 +275,7 @@ class FilteredSpectraListView(SingleTableMixin, FilterView):
     # ~ filter = SpectraFilter(request.GET, queryset=Spectra.objects.all())
     # ~ return render(request, 'chat/spectra.html', {'filter': filter})
     # all spectra from a given strain_id
-    # ~ strain_id = self.request.GET.get('strain_id')
+    # ~ 
     # ~ object_list = Spectra.objects.filter(
       # ~ strain_id__strain_id__exact = strain_id
     # ~ )
@@ -657,6 +755,32 @@ try:
     
   pi = R('pi')
   print('pi:',pi[0])
+  
+  R('''
+    library(IDBacApp)
+    distMatrix <- function(data,
+                           method,
+                           booled){
+       validate(need(nrow(data) > 2, "Need >2 samples to cluster")) 
+       data <- base::as.matrix(data)
+       # Change empty to 0
+       data[base::is.na(data)] <- 0
+       data[base::is.null(data)] <- 0
+       
+       if (booled == "TRUE") {
+         data[data > 0] <- 1
+       }
+      
+      if (method == "cosine") {
+        return(stats::as.dist(1 - coop::tcosine(data)))
+      }else{
+        return(stats::dist(data, method = method))
+      }
+    }
+  ''')
+  
+  # ~ pi = R('distMatrix')
+  print(R['distMatrix']([[0,0,0],[1,1,1],[2,2,2]], 'cosine', True))
   
 except:
   print('did not load R')

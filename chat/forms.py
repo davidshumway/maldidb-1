@@ -25,10 +25,10 @@ class SearchForm(forms.ModelForm):
     model = Spectra
     exclude = ('id',)
 
-  # ~ def __init__(self, *args, **kwargs):
-    # ~ #user = kwargs.pop('user','')
-    # ~ #super(DocumentForm, self).__init__(*args, **kwargs)
-    # ~ self.fields['strain_id'] = forms.ModelChoiceField(queryset=Metadata.objects.all())
+  def __init__(self, *args, **kwargs):
+    #user = kwargs.pop('user','')
+    #super(DocumentForm, self).__init__(*args, **kwargs)
+    self.fields['metadata_strain_ids'] = forms.ModelChoiceField(queryset=Metadata.objects.all())
 
   
 class AddLabGroupForm(forms.ModelForm):

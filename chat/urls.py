@@ -36,6 +36,8 @@ urlpatterns = [
     path('labgroups/', LabgroupsListView.as_view(), name='labgroups_results'),
     #test
     
+    path('spectra/<spectra_id>/', views.spectra_profile, name='view_spectra'),
+    
     path('library/<library_id>/', views.library_profile, name='view_library'),
     path('library/edit/<library_id>/', views.edit_libprofile, name='edit_libprofile'),
     

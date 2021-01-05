@@ -6,7 +6,6 @@ from django.urls import reverse
     
 
 class AbstractCosineScore(models.Model):
-  
   score = models.DecimalField(
     max_digits=10, decimal_places=6, blank=False)
     
@@ -22,7 +21,9 @@ class CollapsedCosineScore(AbstractCosineScore):
     'CollapsedSpectra',
     related_name='spectra2',
     on_delete=models.CASCADE)
-    
+  # ~ score = models.DecimalField(
+    # ~ max_digits=10, decimal_places=6, blank=False)
+      
 class SpectraCosineScore(AbstractCosineScore):
   spectra1 = models.ForeignKey(
     'Spectra',
@@ -32,8 +33,19 @@ class SpectraCosineScore(AbstractCosineScore):
     'Spectra',
     related_name='spectra2',
     on_delete=models.CASCADE)
-  
+  # ~ score = models.DecimalField(
+    # ~ max_digits=10, decimal_places=6, blank=False)
 
+class SearchSpectraCosineScore(AbstractCosineScore):
+  spectra1 = models.ForeignKey(
+    'SearchSpectra',
+    related_name='search_spectra1',
+    on_delete=models.CASCADE)
+  spectra2 = models.ForeignKey(
+    'Spectra',
+    related_name='search_spectra2',
+    on_delete=models.CASCADE)
+    
 class AbstractSpectra(models.Model):
   # ~ privacy_level = models.ForeignKey(
     # ~ 'PrivacyLevel',
@@ -51,14 +63,23 @@ class AbstractSpectra(models.Model):
     default=PUBLIC,
   )
   
-  library = models.ForeignKey('Library', on_delete=models.CASCADE)
+  library = models.ForeignKey(
+    'Library',
+    on_delete=models.CASCADE,
+    blank=True,
+    null=True)
   
   created_by = models.ForeignKey(
     settings.AUTH_USER_MODEL,
     # ~ related_name='created_by',
-    on_delete=models.CASCADE)
-    
-  lab_name = models.ForeignKey('LabGroup', on_delete=models.CASCADE)
+    on_delete=models.CASCADE,
+    blank=True)
+  
+  lab_name = models.ForeignKey(
+    'LabGroup',
+    on_delete=models.CASCADE,
+    blank=True,
+    null=True)
   
   # Averaged m/z and intensity values in case of collapse spectra
   # ~ peak_matrix = models.TextField(blank=True)
@@ -76,7 +97,9 @@ class AbstractSpectra(models.Model):
     'XML',
     # ~ related_name='uploaded_by',
     db_column='xml_hash',
-    on_delete=models.CASCADE)
+    on_delete=models.CASCADE, 
+    blank=True,
+    null=True)
     
   # ~ strain_id = models.TextField(blank=True)
   strain_id = models.ForeignKey(
@@ -84,17 +107,20 @@ class AbstractSpectra(models.Model):
     # ~ related_name='has_metadata',
     db_column='strain_id',
     on_delete=models.CASCADE,
-    blank=True)
+    blank=True,
+    null=True)
   
-  unique_together = (
-    strain_id,
-    spectrum_mass_hash,
-    spectrum_intensity_hash
-  )
+  # ~ unique_together = (
+    # ~ strain_id,
+    # ~ spectrum_mass_hash,
+    # ~ spectrum_intensity_hash
+  # ~ )
   
   class Meta:                                                                 
     abstract = True                                                         
-
+  
+  def get_absolute_url(self):
+    return reverse('chat:view_spectra', args=(self.id,))
   
 class CollapsedSpectra(AbstractSpectra):
   # e.g., cs.spectra.add(s1, s2, ..., sN)
@@ -226,6 +252,15 @@ def update_stock(sender, instance, **kwargs):
   instance.save()
   post_save.connect(update_stock, sender=LabGroup)
  
+class SearchSpectra(AbstractSpectra):
+  peak_mass = models.TextField(blank=True)
+  peak_intensity = models.TextField(blank=True)
+  created_by = models.ForeignKey(
+    settings.AUTH_USER_MODEL,
+    # ~ related_name='created_by',
+    on_delete=models.CASCADE,
+    blank=True)
+  
 class Spectra(AbstractSpectra):
   """ Spectra Model
   -- Sqlite NUMERIC data type: 'Type affinity is the recommended type

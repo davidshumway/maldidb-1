@@ -8,14 +8,10 @@
 
 {% block content %}
 
-<!--extended/advanced search-->
-<!-- Quick search -->
-
 {% load render_table from django_tables2 %}
 {% load bootstrap4 %}
 
-<!-- Add search functionality here -->
-
+<!--
 {% if filter %}
   {% bootstrap_button 'show filters' %}
   <form action="" method="get" class="form form-inline" style="display:none;">
@@ -23,20 +19,7 @@
     {% bootstrap_button 'filter' %}
   </form>
 {% endif %}
-
-{% if results %}
-  <div class="row">
-  {% render_table table %}
-  </div>
-{% endif %}
-
-================
-------------------
-================
-
-
-
-
+-->
 
 
 <form action="{% url 'chat:basic_search' %}" class="form-inline" method="get">
@@ -44,18 +27,21 @@
   Search:
   
   {% if filter %}
+  {% bootstrap_button 'show filters' %}
+  <div style="display:none;">
     {% bootstrap_form filter.form layout='inline' %}
+  </div>
   {% endif %}
   
   <table>
     
     <tr>
       <td>
-        {% if unique_strains %} 
+        {% if metadata_strain_ids %} 
         Strain select: 
-        <select placeholder="Species" name="strain_id" multiple="true">
+        <select placeholder="Species" name="strain_ids" multiple="true">
           <!--all species in DB goes here-->
-          {% for s in unique_strains %}
+          {% for s in metadata_strain_ids %}
             <option>
               {{ s.strain_id }}
             </option>
@@ -67,12 +53,12 @@
       </td>
     </tr>
     
+<!--
     <tr>
       <td>
         {% if species_list %} 
         Strain select: 
         <select placeholder="Species" name="strain_id" multiple="true">
-          <!--all species in DB goes here-->
           {% for species in species_list %}
             <option>
               {{ species.strain_id }}
@@ -84,6 +70,7 @@
         {% endif %}
       </td>
     </tr>
+-->
     
     <tr><td>
       (optional)<br>
@@ -103,6 +90,7 @@
   </table>
 </form>
 
+<!--
 {% if object_list %}               
 <h5>Search Results</h5>
   <ul>
@@ -116,6 +104,14 @@
   </ul>
 {% else %}
   No search results!
+{% endif %}
+-->
+
+
+{% if table %}<!-- if search results, minimize search form -->
+  <div class="row">
+  {% render_table table %}
+  </div>
 {% endif %}
 
 
