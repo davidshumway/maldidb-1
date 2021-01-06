@@ -37,6 +37,15 @@ from django_tables2.views import SingleTableMixin
 from django_tables2 import SingleTableView
 import django_tables2 as tables
 
+# For distance measurement
+from sklearn.metrics.pairwise import cosine_similarity
+
+# R/json for binning
+from rpy2.robjects import r as R
+import rpy2.robjects as robjects
+print('loaded R')
+import json
+
 
 def library_profile(request, library_id):
   """View library"""
@@ -161,7 +170,29 @@ class SpectraFilter(django_filters.FilterSet):
 # ~ def spectra_list(request):
   # ~ filter = SpectraFilter(request.GET, queryset=Spectra.objects.all())
   # ~ return render(request, 'chat/search_results.html', {'filter': filter})
-  
+
+
+R('''
+  suppressPackageStartupMessages(library(IDBacApp))
+  allSpectra <- list()
+  binnedPeaks <- F
+  appendSpectra <- function(m, i) {
+    #print(class(m))
+    #print(m)
+    # <<-: assign upward
+    allSpectra <<- append(
+      allSpectra,
+      MALDIquant::createMassPeaks(mass=m, intensity=i)
+    )
+  }
+  binSpectra <- function() {
+    print('length')
+    print(length(allSpectra))
+    binnedPeaks <- MALDIquant::binPeaks(allSpectra, tolerance=0.002)
+    # try making the cosine sim. matrix from this.
+  }
+''')
+
 class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
   table_class = CosineSearchTable
   model = SearchSpectraCosineScore
@@ -171,7 +202,10 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
   def get_queryset(self):
     '''Utilizes distMatrix from IDBac'''
     
+    
+    
     print('Get queryset:', self.request)
+    
     # ~ print('self.table_data', self.table_data)
     # ~ print('self.get_table_kwargs()', self.get_table_kwargs())
     
@@ -185,6 +219,8 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     # ~ for item in self:
       # ~ print("Key : {} , Value : {}".format(item, self[item]))
     
+    
+    
     # Basic: Make a new spectra and then generate SpectraCosineScore.
     sp = self.request.GET.get('peaks')
     si = self.request.GET.get('intensities')
@@ -196,7 +232,28 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
         # ~ strain_id = None
       )
       obj.save()
+      
+      
+
+      print('start adding')
+      n = Spectra.objects.all()
+      for spectra in n:
+        pm = json.loads('['+spectra.peak_mass+']')
+        pi = json.loads('['+spectra.peak_intensity+']')
+        R['appendSpectra'](
+          robjects.FloatVector(pm),
+          robjects.FloatVector(pi)
+        )
+      print('end adding')
+      print('start binning')
+      R['binSpectra']()
+      print('end binning')
+
+      
       # Compare with all
+      # But first we need to "bin peaks". That is, represent the vectors
+      # using similar length vectors. E.g., 0,4,10 doesn't match with  
+      # 0,4. In this case, binPeaks will add an NA value: 0,4,NA
       n = Spectra.objects.all()
       for spectra in n:
         obj2 = SearchSpectraCosineScore.objects.create(
@@ -667,10 +724,6 @@ def add_comment(request, post_id):
 
 # TESTING R
 try:
-  from rpy2.robjects import r as R
-
-  print('loaded R')
-  
   def getRConnection():
     return R
   
@@ -686,8 +739,8 @@ try:
     # call the function `f` with argument value 3
     f(3)
     ''')
-  print("R['f'](3):", R['f'](3))
-  print("R['f'](3) vvv:", R['f'](3, True))
+  print("R['f'](4):", R['f'](4))
+  print("R['f'](4) vvv:", R['f'](4, True))
   
   # another one...
   R('''
@@ -756,21 +809,55 @@ try:
   pi = R('pi')
   print('pi:',pi[0])
   
-  R('''
-    library(IDBacApp)
-    distMatrix <- function(data,
+  #f <- function(r, verbose=FALSE) {
+  R('''    
+    toSpectrum <- function(input) {
+      if (class(input) == "list") {
+        print('list')
+        input <- lapply(input, 
+          function(x) {
+            MALDIquant::createMassSpectrum(
+              mass = x[ , 1],
+              intensity = x[ , 2])
+          })
+      } else if (class(input) == "matrix") {
+        print('matrix')
+        input <- MALDIquant::createMassSpectrum(
+          mass = input[ , 1],
+          intensity = input[ , 2])
+        input <- list(input)
+      } # else, dataframe?
+      else if (class(input) == "data.frame") {
+        #apply(input, 1, fxx) #apply: 1=rows, 2=columns 
+        input <- MALDIquant::createMassSpectrum(
+          mass = input[ , 1],
+          intensity = input[ , 2])
+      }
+      ###return input
+    }
+    
+
+
+    distMatrix <- function(datax, datay,
                            method,
                            booled){
-       validate(need(nrow(data) > 2, "Need >2 samples to cluster")) 
-       data <- base::as.matrix(data)
-       # Change empty to 0
-       data[base::is.na(data)] <- 0
-       data[base::is.null(data)] <- 0
-       
-       if (booled == "TRUE") {
-         data[data > 0] <- 1
-       }
-      
+      #data <- toSpectrum(data)
+      data <- MALDIquant::createMassSpectrum(
+          mass = datax,
+          intensity = datay)
+      print(data)
+      data <- list(data)
+      print(nrow(data))
+      validate(need(nrow(data) > 2, "Need >2 samples to cluster")) 
+      data <- base::as.matrix(data)
+      # Change empty to 0
+      data[base::is.na(data)] <- 0
+      data[base::is.null(data)] <- 0
+
+      if (booled == "TRUE") {
+       data[data > 0] <- 1
+      }
+
       if (method == "cosine") {
         return(stats::as.dist(1 - coop::tcosine(data)))
       }else{
@@ -780,7 +867,54 @@ try:
   ''')
   
   # ~ pi = R('distMatrix')
-  print(R['distMatrix']([[0,0,0],[1,1,1],[2,2,2]], 'cosine', True))
+  #print('x')
+  # ~ print("R['distMatrix']:", R['g'](1))
+  
+  #n = [[0,1,2,3,4,5],[0,0,0,0,0,0]]
+  
+  
+  
+  # sample data is a matrix: x: col1, col2, colN, y: mazda, honda, carN.
+  # ~ d = {'x': robjects.IntVector((1,2,3)), 'y': robjects.IntVector((4,5,6))}
+  # ~ dataf1 = robjects.DataFrame(d)
+  # ~ dataf2 = robjects.DataFrame(d)
+  # ~ dataf3 = robjects.DataFrame(d)
+  # ~ print(dataf1)
+  # ~ d2 = {'spectra': [dataf1, dataf2, dataf3]}
+  # ~ n = robjects.DataFrame(d2)
+  # ~ print(n)
+  #n = [dataf1, dataf2, dataf3]
+  
+  # ~ d = {'x': robjects.IntVector((1,2,3)), 'y': robjects.IntVector((4,5,6))}
+  # ~ n = robjects.DataFrame(d)
+  
+  # ~ d2 = {'spectra': robjects.DataFrame([d, d, d])}
+  # ~ d2 = {'spectra': (d, d, d)}
+  # ~ d2 = {'spectra': [d, d, d]}
+  # ~ n = robjects.DataFrame(d2)
+  # ~ print(n)
+  
+  # ~ v1 = robjects.FloatVector([1.1, 2.2, 1.2, 2.3])
+  # ~ v2 = robjects.FloatVector([1.1, 2.2, 1.2, 2.3])
+  
+  
+  # ~ v1 = robjects.FloatVector([1.1, 2.2, 1.2, 2.3])
+  # ~ v2 = robjects.FloatVector([1.1, 2.2, 1.2, 2.3])
+  # ~ v3 = robjects.FloatVector([1.1, 2.2, 1.2, 2.3])
+  # ~ m1 = R['matrix'](v1, nrow = 2)
+  # ~ m2 = R['matrix'](v2, nrow = 2)
+  # ~ m3 = R['matrix'](v3, nrow = 2)
+  # ~ print(m1)
+  # ~ n = R['matrix']([m1,m2,m3], nrow=1)
+  # ~ # n = R['matrix']([v1,v2,v3])
+  # ~ # n = robjects.DataFrame()
+  # ~ print(n)
+
+  # ~ print(R['distMatrix'](
+      # ~ v1, v2,
+      # ~ 'cosine',
+      # ~ True
+    # ~ ))
   
 except:
   print('did not load R')
@@ -788,3 +922,12 @@ except:
 
 
 
+'''
+  
+    
+    
+    
+
+
+
+       '''
