@@ -5,6 +5,7 @@ from . import views
 from .views import SearchResultsView, LibrariesListView, SpectraListView
 from .views import MetadataListView, LabgroupsListView
 from .views import FilteredSpectraListView, FilteredSpectraSearchListView
+# ~ from .views import PersonList
 
 app_name = 'chat'
 urlpatterns = [
@@ -23,6 +24,7 @@ urlpatterns = [
     
     
     # basic / advanced search
+    # ~ path('test/', PersonList.as_view(), name='testxyz'),
     path('search/', FilteredSpectraSearchListView.as_view(), name='basic_search'),
     # ~ path('search/', FilteredSpectraListView.as_view(), name='search_results'),
     

@@ -21,14 +21,20 @@
 {% endif %}
 -->
 
-
+<script type="text/javascript">
+function show_filter(e) {
+  document.getElementById('filters').style.display='block';
+  e.preventDefault();
+  e.stopPropagation();
+}
+</script>
 <form action="{% url 'chat:basic_search' %}" class="form-inline" method="get">
   
   Search:
   
   {% if filter %}
-  {% bootstrap_button 'show filters' %}
-  <div style="display:none;">
+  <div class="btn btn-primary" onclick="show_filter()">show filters</div>
+  <div style="display:none;" id="filters">
     {% bootstrap_form filter.form layout='inline' %}
   </div>
   {% endif %}

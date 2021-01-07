@@ -191,9 +191,12 @@ R('''
   allSpectra <- list()
   allPeaks <- list()
   binnedPeaks <- F
+  resetGlobal <- function() {
+    allSpectra <<- list()
+    allPeaks <<- list()
+    binnedPeaks <<- F
+  }
   appendSpectra <- function(m, i) {
-    #print(class(m))
-    #print(m)
     # <<-: assign upward
     allSpectra <<- append(
       allSpectra,
@@ -203,18 +206,43 @@ R('''
       allPeaks,
       MALDIquant::createMassPeaks(mass=m, intensity=i)
     )
+    # ~ allIds <<- append(id)
   }
   binSpectra <- function() {
-    # ~ print('length')
-    # ~ print(length(allSpectra))
+    # Only scores in first row are relevant, i.e., input spectra
+    # Finally, order the row by score decreasing
     binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance=0.002)
-    #im <- MALDIquant::intensityMatrix(binnedPeaks)
     featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
-    print('nrow')
-    print(nrow(featureMatrix))
-    similarity <- coop::cosine(t(featureMatrix))
-    # ~ d <- as.dist(1-similarity)
-    d <- as.dist(similarity)
+    d <- stats::as.dist(coop::tcosine(featureMatrix))
+    d <- as.matrix(d)
+    d <- round(d, 3)
+    
+    # Don't reorder now, leave it to Python
+    #d <- d[,order(d[,1],decreasing=T)]
+    
+    # Discard symmetric part of matrix
+    d[lower.tri(d, diag = FALSE)] <- NA
+    
+    d <- d[1,] # first column
+    #print(d)
+  }
+  
+  # heatmap code
+  binSpectraOLD <- function() {
+    binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance=0.002)
+    featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
+    
+    
+    # Utilizing: github.com/strejcem/MALDIvs16S/blob/master/R/MALDIbacteria.R
+    # ~ similarity <- coop::cosine(t(featureMatrix))
+    # ~ d <- as.dist(1-similarity) ### ???
+    # ~ d <- as.dist(similarity)
+    
+    # IDBac: stats::as.dist(1 - coop::tcosine(data))
+    # ~ d <- stats::as.dist(1 - coop::tcosine(featureMatrix))
+    d <- stats::as.dist(coop::tcosine(featureMatrix))
+    
+    
     x <- as.matrix(d)
     x <- round(x, 2)
     #print('d')
@@ -251,18 +279,33 @@ R('''
     png(file="test3-med.png", width=1200, height=1200, res=300, pointsize=6)
     y <- x
     y[lower.tri(x, diag = FALSE)] <- NA
-    # ~ gplots::heatmap.2(y[1:32,1:32], symm = FALSE, Colv = NA, Rowv = NA, cellnote=y[1:32,1:32], notecex=0.5, trace="none")
-    gplots::heatmap.2(y[1:32,1:32], symm = FALSE, cellnote=y[1:32,1:32], notecex=0.5, trace="none")
+    gplots::heatmap.2(y[1:32,1:32], symm = FALSE, Colv = NA, Rowv = NA, cellnote=y[1:32,1:32], notecex=0.5, trace="none")
     dev.off()
     
     png(file="test3-full.png", width=3000, height=3000, res=300, pointsize=6)
     y <- x
     y[lower.tri(x, diag = FALSE)] <- NA
-    # ~ gplots::heatmap.2(y, symm = FALSE, Colv = NA, Rowv = NA, trace="none")
-    gplots::heatmap.2(y, symm = FALSE, trace="none")
+    gplots::heatmap.2(y, symm = FALSE, Colv = NA, Rowv = NA, trace="none")
     dev.off()
     
-    print(dim(x)) # 272x272
+    
+    png(file="test4-sm.png", width=1200, height=1200, res=300, pointsize=6)
+    y <- x
+    y[y == 0] <- 1
+    gplots::heatmap.2(y[1:16,1:16], symm = FALSE, cellnote=y[1:16,1:16], notecex=0.5, trace="none")
+    dev.off()
+    
+    png(file="test4-med.png", width=1200, height=1200, res=300, pointsize=6)
+    y <- x
+    y[y == 0] <- 1
+    gplots::heatmap.2(y[1:32,1:32], symm = FALSE, cellnote=y[1:32,1:32], notecex=0.5, trace="none")
+    dev.off()
+    
+    png(file="test4-full.png", width=3000, height=3000, res=300, pointsize=6)
+    y <- x
+    y[y == 0] <- 1
+    gplots::heatmap.2(y, symm = FALSE, trace="none")
+    dev.off()
     
   }
 ''')
@@ -296,21 +339,55 @@ def view_cosine(request):
     form = ViewCosineForm(instance=None)
   return render(request, 'chat/view_cosine.html', {'form': form})
   
+  
+
+
+# ~ from django_tables2 import SingleTableView
+# ~ #class Person(models.Model):
+# ~ #    first_name = models.CharField(max_length=200)
+# ~ #    last_name = models.CharField(max_length=200)
+# ~ class PersonTable(tables.Table):
+  # ~ score = tables.Column()
+  # ~ def render_score(self, value):
+    # ~ print('run render_score')
+    # ~ return value + '---'
+  # ~ class Meta:
+    # ~ model = Spectra
+# ~ class PersonList(SingleTableView):
+  # ~ model = Spectra
+  # ~ table_class = PersonTable
+  # ~ template_name = 'chat/basic_search.html'
+
+
+
 class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
+  '''
+  todo: combine filter.form and table
+  '''
   table_class = CosineSearchTable
-  model = SearchSpectraCosineScore
+  model = Spectra
   template_name = 'chat/basic_search.html'
   filterset_class = SpectraFilter
   
-  def get_queryset(self):
-    '''Utilizes distMatrix from IDBac'''
-    
-    
-    
-    print('Get queryset:', self.request)
-    
+  def get_context_data(self, **kwargs):
+    context = super().get_context_data(**kwargs)
+    # ~ print(f'gcdkw: {kwargs}' ) # 
+    # ~ print('self.get_table_data()', self.get_table_data())
     # ~ print('self.table_data', self.table_data)
-    # ~ print('self.get_table_kwargs()', self.get_table_kwargs())
+    # ~ print('self.get_table_kwargs()  2 ', self.get_table_kwargs())
+    print('self.table',context.get('table'))
+    return context
+  
+  def get(self, *args, **kwargs):
+    # ~ print('Processing GET request')
+    resp = super().get(*args, **kwargs)
+    print(f'get-args: {args}' ) # 
+    print(f'get-kw: {kwargs}' ) # 
+    # ~ print('Finished processing GET request')
+    return resp
+    
+  def get_queryset(self):
+    '''calling queryset.update does not update the model.'''
     
     # ~ qs = super().get_queryset()
     #>>> qs1.union(qs2, qs3)
@@ -323,18 +400,21 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       # ~ print("Key : {} , Value : {}".format(item, self[item]))
     
     
-    
     # Basic: Make a new spectra and then generate SpectraCosineScore.
     sp = self.request.GET.get('peaks')
     si = self.request.GET.get('intensities')
     if sp and si:
-      obj = SearchSpectra.objects.create(
+      
+      # reset R globals
+      R['resetGlobal']()
+      
+      obj, created = SearchSpectra.objects.get_or_create(
         peak_mass = sp,
         peak_intensity = si,
         created_by = self.request.user
         # ~ strain_id = None
       )
-      obj.save()
+      #obj.save()
       R['appendSpectra'](
         robjects.FloatVector(json.loads(sp)),
         robjects.FloatVector(json.loads(si))
@@ -342,8 +422,9 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       
       # small and large molecules combined, or large only
       print('start adding')
-      # ~ n = Spectra.objects.all()
       n = Spectra.objects.all().filter(tof_mode__exact='LINEAR').order_by('xml_hash')
+      idx = {}
+      count = 0
       for spectra in n:
         pm = json.loads('['+spectra.peak_mass+']')
         pi = json.loads('['+spectra.peak_intensity+']')
@@ -351,11 +432,73 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
           robjects.FloatVector(pm),
           robjects.FloatVector(pi)
         )
+        idx[count] = spectra
+        count += 1
       print('end adding')
       print('start binning')
-      R['binSpectra']()
+      result = R['binSpectra']()
+      print(result)
       print('end binning')
+      print(idx)
       
+      sorted_list = []
+      pk_list = []
+      # ~ q = self.queryset
+      scores = {}
+      first = True
+      for key, value in result.items():
+        if first: # skip first
+          first = False
+          continue
+        # ~ print('key:',key,'value:',value)
+        k = int(key) - 2 # starts with 1, and 1st is search spectra
+        print(k)
+        sorted_list.append({'id': idx[k].id, 'score': float(value)})
+        scores[idx[k].id] = float(value)
+      
+      sorted_list.sort(key=sort_func, reverse=True)
+      
+      pk_list = [key.get('id') for key in sorted_list]
+      
+      from django.db.models import Case, When
+      # ~ pk_list = list(result.keys())
+      preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(pk_list)])
+      q = Spectra.objects.filter(id__in=pk_list).order_by(preserved)
+      
+      # normal:   -kw: {'data': <QuerySet [
+      # Then:
+      #  self.table_data = {'extra': '12345'
+      # result:   -kw: {'data': {'extra': '12345'
+      # overwrite the table data to add some custom data, i.e., the score
+      self.table_data = {'scores': scores, 'queryset': q}
+      
+      # ~ print('Get queryset:', self.request)
+      # ~ print('self.table_data', self.table_data)
+      # ~ print('self.get_table_kwargs()', self.get_table_kwargs())
+      return q
+      
+      #q.annotate(score=Value('xxx', output_field=CharField()))
+      
+      # ~ self.tent = 1
+      # ~ for i, c in enumerate(q):
+        #setattr(q[i], 'score', result[i])
+        # ~ setattr(c, 'score', result[i])
+        # ~ print(i, c, type(c))
+        # ~ c.score = result[i]
+        # ~ c.update(score=result[i])
+      # ~ q.update()
+      
+      # ~ qo = list(q)
+      # ~ for mod in qo:
+        # ~ setattr(q, 'score', value)
+        
+      # ~ for key, value in result.items():
+        # ~ setattr(q, 'score', value)
+        
+      # ~ for name in update_data:
+      # ~ q.update(**{'score': result})
+      
+      return q
       
       return SearchSpectraCosineScore.objects.filter(spectra1=obj)
       
@@ -423,6 +566,9 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       # ~ form = SearchForm()
     #return render(self.request, 'chat/add_lib.html', {'form': form})
     # ~ return form
+
+def sort_func(e):
+  return e['score']
   
 class FilteredSpectraListView(SingleTableMixin, FilterView):
   table_class = SpectraTable
