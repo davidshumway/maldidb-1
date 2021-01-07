@@ -38,11 +38,13 @@ class SpectraTable(tables.Table):
   created_by = tables.Column(linkify=True)
   lab_name = tables.Column(linkify=True)
   library = tables.Column(linkify=True)
+  id = tables.Column(linkify=True)
   class Meta:
     model = Spectra
     attrs = {"class": "table maintable"}
     template_name = "chat/bootstrap4_mod.html"
-    exclude = ("id",)
+    # ~ exclude = ("id",)
+    exclude = ()
 
 class MetadataTable(tables.Table):
   class Meta:

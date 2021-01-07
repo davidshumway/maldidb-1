@@ -14,6 +14,7 @@ from .forms import AddLibraryForm
 from .forms import AddLabGroupForm
 from .forms import LabProfileForm
 from .forms import SearchForm
+from .forms import ViewCosineForm
 
 from .models import Spectra
 from .models import SearchSpectra
@@ -69,39 +70,52 @@ def spectra_profile(request, spectra_id):
   return render(request, 'chat/spectra_profile.html', {'spectra': spectra})
 
 @login_required
+def edit_spectra(request, spectra_id):
+  """ edit details of library """    
+  if request.method == "POST":
+    # instance kwargs passed in sets the user on the modelForm
+    form = SpectraEditForm(request.POST, request.FILES, instance=Spectra.objects.get(id=spectra_id))
+    if form.is_valid():
+      form.save()
+      return redirect(reverse('chat:view_spectra', args=(lib_id, )))
+  else:
+    form = SpectraEditForm(instance=Spectra.objects.get(id=spectra_id))
+  return render(request, 'chat/edit_spectra.html', {'form': form})
+
+@login_required
 def edit_libprofile(request, lib_id):
-    """ edit details of library """    
-    if request.method == "POST":
-      # instance kwargs passed in sets the user on the modelForm
-      form = LibProfileForm(request.POST, request.FILES, instance=Library.objects.get(id=lib_id))
-      if form.is_valid():
-        form.save()
-        return redirect(reverse('chat:view_lab', args=(lib_id, )))
-    else:
-      form = LibProfileForm(instance=Library.objects.get(id=lib_id))
-    return render(request, 'chat/edit_libprofile.html', {'form': form})
+  """ edit details of library """    
+  if request.method == "POST":
+    # instance kwargs passed in sets the user on the modelForm
+    form = LibProfileForm(request.POST, request.FILES, instance=Library.objects.get(id=lib_id))
+    if form.is_valid():
+      form.save()
+      return redirect(reverse('chat:view_lab', args=(lib_id, )))
+  else:
+    form = LibProfileForm(instance=Library.objects.get(id=lib_id))
+  return render(request, 'chat/edit_libprofile.html', {'form': form})
     
 @login_required
 def edit_labprofile(request, lab_id):
-    """ edit profile of lab """    
-    if request.method == "POST":
-      # instance kwargs passed in sets the user on the modelForm
-      form = LabProfileForm(request.POST, request.FILES, instance=LabGroup.objects.get(id=lab_id))
-      # ~ form = LabProfileForm(request.POST, request.FILES, instance=request.user.profile)
-      if form.is_valid():
-        form.save()
-        return redirect(reverse('chat:view_lab', args=(lab_id, )))
-        # ~ return redirect(reverse('chat:view_lab', args=(request.lab.id, )))
-    else:
-      # ~ import pprint
-      # ~ pp = pprint.PrettyPrinter(indent=4)
-      # ~ pp.pprint(request)
-      # ~ print(request.user)
-      # ~ print(request)
-      # ~ print(request.lab_id)
-      form = LabProfileForm(instance=LabGroup.objects.get(id=lab_id))
-      # ~ form = LabProfileForm(instance=request.user.profile)
-    return render(request, 'chat/edit_labprofile.html', {'form': form})
+  """ edit profile of lab """    
+  if request.method == "POST":
+    # instance kwargs passed in sets the user on the modelForm
+    form = LabProfileForm(request.POST, request.FILES, instance=LabGroup.objects.get(id=lab_id))
+    # ~ form = LabProfileForm(request.POST, request.FILES, instance=request.user.profile)
+    if form.is_valid():
+      form.save()
+      return redirect(reverse('chat:view_lab', args=(lab_id, )))
+      # ~ return redirect(reverse('chat:view_lab', args=(request.lab.id, )))
+  else:
+    # ~ import pprint
+    # ~ pp = pprint.PrettyPrinter(indent=4)
+    # ~ pp.pprint(request)
+    # ~ print(request.user)
+    # ~ print(request)
+    # ~ print(request.lab_id)
+    form = LabProfileForm(instance=LabGroup.objects.get(id=lab_id))
+    # ~ form = LabProfileForm(instance=request.user.profile)
+  return render(request, 'chat/edit_labprofile.html', {'form': form})
 
 def simple_list(request):
   queryset = Library.objects.all()
@@ -175,6 +189,7 @@ class SpectraFilter(django_filters.FilterSet):
 R('''
   suppressPackageStartupMessages(library(IDBacApp))
   allSpectra <- list()
+  allPeaks <- list()
   binnedPeaks <- F
   appendSpectra <- function(m, i) {
     #print(class(m))
@@ -182,17 +197,105 @@ R('''
     # <<-: assign upward
     allSpectra <<- append(
       allSpectra,
+      MALDIquant::createMassSpectrum(mass=m, intensity=i)
+    )
+    allPeaks <<- append(
+      allPeaks,
       MALDIquant::createMassPeaks(mass=m, intensity=i)
     )
   }
   binSpectra <- function() {
-    print('length')
-    print(length(allSpectra))
-    binnedPeaks <- MALDIquant::binPeaks(allSpectra, tolerance=0.002)
-    # try making the cosine sim. matrix from this.
+    # ~ print('length')
+    # ~ print(length(allSpectra))
+    binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance=0.002)
+    #im <- MALDIquant::intensityMatrix(binnedPeaks)
+    featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
+    print('nrow')
+    print(nrow(featureMatrix))
+    similarity <- coop::cosine(t(featureMatrix))
+    # ~ d <- as.dist(1-similarity)
+    d <- as.dist(similarity)
+    x <- as.matrix(d)
+    x <- round(x, 2)
+    #print('d')
+    #print(d)
+    
+    #jpeg(file="test.jpg", quality=100, width=2000, height=2000)
+    png(file="test.png", width=3000, height=3000, res=300, pointsize=6)
+    # ~ heatmap(d) #, col = palette, symm = TRUE)
+    # ~ heatmap(as.matrix(d[, -1])) #, col = palette, symm = TRUE)
+    heatmap(x, symm = FALSE, Colv = NA, Rowv = NA) #, col = palette, symm = TRUE)
+    # ~ heatmap.2(as.matrix(d), symm = FALSE) #, col = palette, symm = TRUE)
+    dev.off()
+    
+    # small section
+    png(file="test-sm.png", width=1000, height=1000, res=300, pointsize=6)
+    heatmap(x[1:16,1:16], symm = FALSE, Colv = NA, Rowv = NA) #, col = palette, symm = TRUE)
+    dev.off()
+    
+    library(gplots)
+    png(file="test2-sm.png", width=1200, height=1200, res=300, pointsize=6)
+    gplots::heatmap.2(x[1:16,1:16], symm = FALSE, Colv = NA, Rowv = NA, cellnote=x[1:16,1:16], notecex=0.5, trace="none")
+    dev.off()
+    
+    png(file="test2-med.png", width=1200, height=1200, res=300, pointsize=6)
+    gplots::heatmap.2(x[1:32,1:32], symm = FALSE, Colv = NA, Rowv = NA, cellnote=x[1:32,1:32], notecex=0.5, trace="none")
+    dev.off()
+    
+    png(file="test3-sm.png", width=1200, height=1200, res=300, pointsize=6)
+    y <- x
+    y[lower.tri(x, diag = FALSE)] <- NA
+    gplots::heatmap.2(y[1:16,1:16], symm = FALSE, Colv = NA, Rowv = NA, cellnote=y[1:16,1:16], notecex=0.5, trace="none")
+    dev.off()
+    
+    png(file="test3-med.png", width=1200, height=1200, res=300, pointsize=6)
+    y <- x
+    y[lower.tri(x, diag = FALSE)] <- NA
+    # ~ gplots::heatmap.2(y[1:32,1:32], symm = FALSE, Colv = NA, Rowv = NA, cellnote=y[1:32,1:32], notecex=0.5, trace="none")
+    gplots::heatmap.2(y[1:32,1:32], symm = FALSE, cellnote=y[1:32,1:32], notecex=0.5, trace="none")
+    dev.off()
+    
+    png(file="test3-full.png", width=3000, height=3000, res=300, pointsize=6)
+    y <- x
+    y[lower.tri(x, diag = FALSE)] <- NA
+    # ~ gplots::heatmap.2(y, symm = FALSE, Colv = NA, Rowv = NA, trace="none")
+    gplots::heatmap.2(y, symm = FALSE, trace="none")
+    dev.off()
+    
+    print(dim(x)) # 272x272
+    
   }
 ''')
 
+def view_cosine(request):
+  """ edit profile of lab """
+  # small and large molecules combined, or large only
+  print('start adding')
+  # ~ n = Spectra.objects.all()
+  n = Spectra.objects.all().filter(tof_mode__exact='LINEAR').order_by('xml_hash')
+  for spectra in n:
+    pm = json.loads('['+spectra.peak_mass+']')
+    pi = json.loads('['+spectra.peak_intensity+']')
+    R['appendSpectra'](
+      robjects.FloatVector(pm),
+      robjects.FloatVector(pi)
+    )
+  print('end adding')
+  print('start binning')
+  R['binSpectra']()
+  print('end binning')
+  
+  
+  if request.method == "POST":
+    form = ViewCosineForm(request.POST, request.FILES, instance=None)
+    if form.is_valid():
+      #form.save()
+      
+      return redirect(reverse('chat:view_cosine'))
+  else:
+    form = ViewCosineForm(instance=None)
+  return render(request, 'chat/view_cosine.html', {'form': form})
+  
 class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
   table_class = CosineSearchTable
   model = SearchSpectraCosineScore
@@ -232,11 +335,15 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
         # ~ strain_id = None
       )
       obj.save()
+      R['appendSpectra'](
+        robjects.FloatVector(json.loads(sp)),
+        robjects.FloatVector(json.loads(si))
+      )
       
-      
-
+      # small and large molecules combined, or large only
       print('start adding')
-      n = Spectra.objects.all()
+      # ~ n = Spectra.objects.all()
+      n = Spectra.objects.all().filter(tof_mode__exact='LINEAR').order_by('xml_hash')
       for spectra in n:
         pm = json.loads('['+spectra.peak_mass+']')
         pi = json.loads('['+spectra.peak_intensity+']')
@@ -248,7 +355,9 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       print('start binning')
       R['binSpectra']()
       print('end binning')
-
+      
+      
+      return SearchSpectraCosineScore.objects.filter(spectra1=obj)
       
       # Compare with all
       # But first we need to "bin peaks". That is, represent the vectors

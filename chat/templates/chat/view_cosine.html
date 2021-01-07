@@ -3,7 +3,7 @@
 
 
 {% block title %}
-	Spectra Details: {{ Spectra.strain_id.strain_id }}
+	Detail
 {% endblock %}
 
 {% block content %}
@@ -19,19 +19,7 @@
 -->
 	<div class="card-body">
 		<div class="card-title">
-			Strain: {{ spectra.strain_id.strain_id }}
-		</div>
-		<div class="card-text">
-			<div class="form-group">
-				<label for="comment">Mass:</label>
-				<textarea class="form-control" rows="5" id="spm" readonly>{{ spectra.peak_mass }}</textarea>
-			</div>
-		</div>
-		<div class="card-text">
-			<div class="form-group">
-				<label for="comment">Intensity:</label>
-				<textarea class="form-control" rows="5" id="spi" readonly>{{ spectra.peak_intensity }}</textarea>
-			</div>
+			
 		</div>
 		<div class="card-text">
 			
@@ -47,12 +35,14 @@
 	</ul>
 -->
 
+<!--
 
 	{% if request.user in lab.owners.all %}
 		<div class="card-body">
 			<a href="{% url 'chat:edit_spectra' spectra.id %}" class="card-link btn btn-danger">Edit Spectra</a>
 		</div>
 	{% endif %}
+-->
 	
 </div>
 {% endblock %}

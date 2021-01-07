@@ -9,6 +9,8 @@ from .views import FilteredSpectraListView, FilteredSpectraSearchListView
 app_name = 'chat'
 urlpatterns = [
     path('', views.home, name='home'),
+    path('cosine/', views.view_cosine, name='view_cosine'),
+    
     path('posts/add', views.add_post, name='add_post'),
     path('posts/add_metadata', views.add_metadata, name='add_metadata'),
     path('posts/add_sqlite', views.add_sqlite, name='add_sqlite'),
@@ -37,6 +39,7 @@ urlpatterns = [
     #test
     
     path('spectra/<spectra_id>/', views.spectra_profile, name='view_spectra'),
+    path('spectra/edit/<spectra_id>/', views.edit_spectra, name='edit_spectra'),
     
     path('library/<library_id>/', views.library_profile, name='view_library'),
     path('library/edit/<library_id>/', views.edit_libprofile, name='edit_libprofile'),

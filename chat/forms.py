@@ -1,21 +1,30 @@
 from django import forms
 
-from .models import Comment, Spectra, Metadata, XML, Locale, Version, Library, PrivacyLevel, LabGroup
+from .models import Comment, Spectra, Metadata, XML, Locale, Version
+from .models import Library, PrivacyLevel, LabGroup, SpectraCosineScore
 
-#from django.contrib.auth.models import User
-#from django.contrib.auth import User
 from django.contrib.auth import get_user_model
 user = get_user_model()
+
+class ViewCosineForm(forms.ModelForm):
+  class Meta:
+    model = SpectraCosineScore
+    exclude = ('id',) 
+
+class SpectraEditForm(forms.ModelForm):
+  class Meta:
+    model = Spectra
+    exclude = ('id',) 
 
 class LibProfileForm(forms.ModelForm):
   class Meta:
     model = Library
-    exclude = ('id',) #fields=('picture', 'bio', 'phone', 'website', 'address')
+    exclude = ('id',) 
 
 class LabProfileForm(forms.ModelForm):
   class Meta:
     model = LabGroup
-    exclude = ('id',) #fields=('picture', 'bio', 'phone', 'website', 'address')
+    exclude = ('id',) 
 
 class SearchForm(forms.ModelForm):
   """Search by peaks/intensities, or upload mzXML or mzML file."""
@@ -110,33 +119,12 @@ class XmlForm(forms.ModelForm):
   class Meta:
     model = XML
     fields = ('xml_hash','xml','manufacturer','model','ionization','analyzer','detector','instrument_metafile')
-    # ~ widgets = {
-      # ~ 'cKingdom': forms.Textarea(
-        # ~ attrs={'rows': 2, 'cols': 40, 'placeholder': ''}
-      # ~ ),
-      # ~ 'cPhylum': forms.Textarea(
-        # ~ attrs={'rows': 2, 'cols': 40, 'placeholder': ''}
-      # ~ ),
-      # ~ 'cClass': forms.Textarea(
-        # ~ attrs={'rows': 2, 'cols': 40, 'placeholder': ''}
-      # ~ ),
-      # ~ 'cOrder': forms.Textarea(
-        # ~ attrs={'rows': 2, 'cols': 40, 'placeholder': ''}
-      # ~ ),
-      # ~ 'cGenus': forms.Textarea(
-        # ~ attrs={'rows': 2, 'cols': 40, 'placeholder': ''}
-      # ~ ),
-      # ~ 'cSpecies': forms.Textarea(
-        # ~ attrs={'rows': 2, 'cols': 40, 'placeholder': ''}
-      # ~ ),
-    # ~ }
     
 class MetadataForm(forms.ModelForm):
   """ Form for handling addition of metadata """
                             
   class Meta:
     model = Metadata
-    #fields = ('cKingdom','cPhylum','cClass','cOrder','cGenus','cSpecies')
     exclude = ()
     widgets = {
       'cKingdom': forms.Textarea(
