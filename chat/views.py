@@ -396,7 +396,7 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     
   def get_queryset(self):
     '''calling queryset.update does not update the model.'''
-    # Basic: Make a new spectra and then generate SpectraCosineScore.
+    # Basic: Make a new SearchSpectra and then compare to all Spectra
     
     sp = self.request.GET.get('peaks')
     si = self.request.GET.get('intensities')
@@ -417,6 +417,7 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       )
       
       # small and large molecules combined, or large only
+      # use GET query variables to adjust .filter()
       print('start adding')
       n = Spectra.objects.all().filter(tof_mode__exact='LINEAR').order_by('xml_hash')
       idx = {}
