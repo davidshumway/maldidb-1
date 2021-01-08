@@ -28,16 +28,21 @@ function show_filter(e) {
   e.stopPropagation();
 }
 </script>
+
+{% if filter %}
+<!--
+<div class="btn btn-primary" onclick="show_filter()">show filters</div>
+<div style="display:none;" id="filters">
+  {% bootstrap_form filter.form layout='inline' %}
+</div>
+-->
+{% endif %}
+
 <form action="{% url 'chat:basic_search' %}" class="form-inline" method="get">
   
   Search:
   
-  {% if filter %}
-  <div class="btn btn-primary" onclick="show_filter()">show filters</div>
-  <div style="display:none;" id="filters">
-    {% bootstrap_form filter.form layout='inline' %}
-  </div>
-  {% endif %}
+  
   
   <table>
     

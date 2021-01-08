@@ -2,9 +2,10 @@
 {% load i18n %}
 {% block table-wrapper %}
 
-{% if filter %}
-bbb
-<form action="" method="get" class="form form-inline">
+{% if table.sfilter %}
+    bbb
+    <form action="" method="get" class="form form-inline">
+    {% csrf_token %}
 {% endif %}
                         
 <div class="table-container">
@@ -21,15 +22,35 @@ bbb
                         {% else %}
                             {{ column.header }}
                         {% endif %}
+                        
+<!--
+                        
+-->
+                        {{column.w}}
                         <!--Add filter here.-->
-    {% if filter %}
-    {% with name="{{column.header}}" %}
-    
-    {% for key, value in filter.form.items %}
-      <li>{{ key }} : {{ value }}</li>
-    {% endfor %}
-    
-    {% endwith %}
+    {% if table.sfilter %}
+        
+        {% with x="{{column.header}}" %}
+<!--
+         table.sfilter.form.fields.x.label 
+         render table.sfilter.form.fields.x
+        render table.sfilter.form.fields.x.widget 
+         render table.sfilter.form.fields.score 
+-->
+        
+        {% endwith %}
+        
+        {% with name="{{column.header}}" %}
+        
+        
+        
+<!--
+        {% for key, value in table.sfilter.form.fields.items %}
+          <li>{{ key }} : {{ value.render }}</li>
+        {% endfor %}
+-->
+        
+        {% endwith %}
     {% endif %}
     
                     </th>
@@ -113,6 +134,6 @@ bbb
 </div>
 {% endblock table-wrapper %}
 
-{% if filter %}
+{% if table.sfilter %}
 </form>
 {% endif %}

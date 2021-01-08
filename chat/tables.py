@@ -17,7 +17,7 @@ class CosineSearchTable(tables.Table):
   # Provide verbose name for score, otherwise it defaults to ID
   score = tables.Column(accessor='id', verbose_name='Score')
   
-  testing_data = None
+  testing_data = {}
   
   def render_strain_id(self, value):
     return value.strain_id
@@ -27,41 +27,18 @@ class CosineSearchTable(tables.Table):
     record: entire record for the row from the table data
     '''
     print('render_score:', record)
-    # ~ print('bc',bound_column)
-    # ~ return ''
-    return self.testing_data.get(record.id)#'++++'
-    # ~ return self.testing_data.get(str(record.id))#'++++'
+    return self.testing_data.get(record.id, None)
   
   def __init__(self, *args, **kwargs):
     '''generate the scores here
     then each row can access them.
     '''
-    #
-    # ~ d = kwargs.get('data')
     
-    d = kwargs.pop('data', None)
-    # ~ print(f'-d: {d}' )
-    self.testing_data = d.get('scores')
-    kwargs.setdefault('data', d.get('queryset'))
+    if kwargs.get('data'):
+      d = kwargs.pop('data', None)
+      self.testing_data = d.get('scores', None)
+      kwargs.setdefault('data', d.get('queryset', None))
     
-    # ~ ex = []
-    # ~ for obj in d:
-      # ~ ex.append(('scores',tables.Column()))
-    # ~ kwargs.update({
-      # ~ 'extra_columns': ex
-    # ~ })
-
-
-    # ~ '''
-    # ~ kwargs: {'data': <QuerySet [<Spectra..>, <Spectra..>, ...]>}
-    # ~ becomes
-    # ~ kwargs: {'data': {'extra': '12345', ...}
-    # ~ '''
-    # ~ # print('args', *args) # none
-    # ~ print(f'-args: {args}' ) # prints: 
-    # ~ print(f'-kw: {kwargs}' ) # prints: kw: {'data': <QuerySet [<Spectra..>, <Spectra..>, ...]>}
-    # ~ # d = kwargs.pop('data', None)
-    # ~ # kwargs.setdefault('data', d.get('queryset'))
     super().__init__(*args, **kwargs)
     
 

@@ -372,35 +372,32 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
   def get_context_data(self, **kwargs):
     context = super().get_context_data(**kwargs)
     # ~ print(f'gcdkw: {kwargs}' ) # 
-    # ~ print('self.get_table_data()', self.get_table_data())
-    # ~ print('self.table_data', self.table_data)
-    # ~ print('self.get_table_kwargs()  2 ', self.get_table_kwargs())
-    print('self.table',context.get('table'))
+    
+    for attr, value in context.get('filter').form.fields.items():#.__dict__.items():
+      # print(attr, value)
+      context['table'].columns[attr].w = value.widget.render(attr,'')
+    
+      # ~ for attr2, value2 in value.__dict__.items():
+        # ~ widget = value2.widget
+        # ~ context['table'].columns[widget.name] = widget.render()
+        # ~ print(attr2, value2)
+        # ~ pass
+        
+    
+    context['table'].sfilter = context.get('filter') #self.filter #
+    
     return context
   
   def get(self, *args, **kwargs):
-    # ~ print('Processing GET request')
     resp = super().get(*args, **kwargs)
     print(f'get-args: {args}' ) # 
     print(f'get-kw: {kwargs}' ) # 
-    # ~ print('Finished processing GET request')
     return resp
     
   def get_queryset(self):
     '''calling queryset.update does not update the model.'''
-    
-    # ~ qs = super().get_queryset()
-    #>>> qs1.union(qs2, qs3)
-    
-    #for item in qs:
-    #  print("Key : {} , Value : {}".format(item, qs[item]))
-      
-    # ~ print('self.get_table_data()', self.get_table_data())
-    # ~ for item in self:
-      # ~ print("Key : {} , Value : {}".format(item, self[item]))
-    
-    
     # Basic: Make a new spectra and then generate SpectraCosineScore.
+    
     sp = self.request.GET.get('peaks')
     si = self.request.GET.get('intensities')
     if sp and si:
@@ -412,7 +409,6 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
         peak_mass = sp,
         peak_intensity = si,
         created_by = self.request.user
-        # ~ strain_id = None
       )
       #obj.save()
       R['appendSpectra'](
@@ -443,14 +439,12 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       
       sorted_list = []
       pk_list = []
-      # ~ q = self.queryset
       scores = {}
       first = True
       for key, value in result.items():
         if first: # skip first
           first = False
           continue
-        # ~ print('key:',key,'value:',value)
         k = int(key) - 2 # starts with 1, and 1st is search spectra
         print(k)
         sorted_list.append({'id': idx[k].id, 'score': float(value)})
@@ -461,7 +455,6 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       pk_list = [key.get('id') for key in sorted_list]
       
       from django.db.models import Case, When
-      # ~ pk_list = list(result.keys())
       preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(pk_list)])
       q = Spectra.objects.filter(id__in=pk_list).order_by(preserved)
       
@@ -472,100 +465,10 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       # overwrite the table data to add some custom data, i.e., the score
       self.table_data = {'scores': scores, 'queryset': q}
       
-      # ~ print('Get queryset:', self.request)
-      # ~ print('self.table_data', self.table_data)
-      # ~ print('self.get_table_kwargs()', self.get_table_kwargs())
       return q
-      
-      #q.annotate(score=Value('xxx', output_field=CharField()))
-      
-      # ~ self.tent = 1
-      # ~ for i, c in enumerate(q):
-        #setattr(q[i], 'score', result[i])
-        # ~ setattr(c, 'score', result[i])
-        # ~ print(i, c, type(c))
-        # ~ c.score = result[i]
-        # ~ c.update(score=result[i])
-      # ~ q.update()
-      
-      # ~ qo = list(q)
-      # ~ for mod in qo:
-        # ~ setattr(q, 'score', value)
-        
-      # ~ for key, value in result.items():
-        # ~ setattr(q, 'score', value)
-        
-      # ~ for name in update_data:
-      # ~ q.update(**{'score': result})
-      
-      return q
-      
-      return SearchSpectraCosineScore.objects.filter(spectra1=obj)
-      
-      # Compare with all
-      # But first we need to "bin peaks". That is, represent the vectors
-      # using similar length vectors. E.g., 0,4,10 doesn't match with  
-      # 0,4. In this case, binPeaks will add an NA value: 0,4,NA
-      n = Spectra.objects.all()
-      for spectra in n:
-        obj2 = SearchSpectraCosineScore.objects.create(
-          spectra1 = obj,
-          spectra2 = spectra,
-          score = 999.99
-        )
-        obj2.save()
-        # update qs ?
-        #qs.intersection(obj2)
-        #qs = chain(qs, obj2s)
-      #o = SearchSpectraCosineScore.objects.filter(spectra1=obj)
-      #qs = chain(qs, o)
-      #qs = Spectra.objects.raw('SELECT * FROM chat_spectra c1 RIGHT JOIN chat_searchspectrasosinescore c2 ON c1.id = c2.spectra2')
-      q = SearchSpectraCosineScore.objects.filter(spectra1=obj)
-      return q
-    # ~ return SearchSpectraCosineScore.objects.filter(spectra1 = obj) #self.queryset
-    
-    # Run this: SpectraCosineScore
-    #Spectra.objects.all()
-    
-      
-    # 
-    #strain_ids = self.request.GET.get('strain_ids')
-    #if strain_ids:
-    #  print('strain_ids:',strain_ids)
-    
-    # 
-    
-    
-    # All species
-    #species_list = Metadata.objects.order_by().values('strain_id').distinct()
-    
-    #filter = SpectraFilter(request.GET, queryset=Spectra.objects.all())
-    #search_results = []
-    
-    # ~ filter = SpectraFilter(self.request.GET, queryset=Spectra.objects.all())
-    # ~ r = render(self.request, 'chat/basic_search.html', {'filter': filter})
-    # ~ r.model = Spectra
-    # ~ r.all = None
-    
-    #n = list(Spectra.objects.all())
-    #for spectra in n:
-    #  spectra.cosine_score = 11.1
-      #n[spectra].cosine_score = 11.1
-      
-    
-    # ~ return n#self.queryset #Metadata.objects.all()
-    
-    #return search_results, species_list
-    # ~ if self.request.method == 'POST':
-      # ~ form = SearchForm(request.POST, request.FILES)
-      #if form.is_valid():
-        #entry = form.save(commit=False)
-        #entry.save()
-        #return redirect('chat:basic_search')
-    # ~ else:
-      # ~ form = SearchForm()
-    #return render(self.request, 'chat/add_lib.html', {'form': form})
-    # ~ return form
+    # Empty queryset
+    return Spectra.objects.none()
+    # ~ return self.queryset  
 
 def sort_func(e):
   return e['score']
