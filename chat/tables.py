@@ -16,17 +16,32 @@ class CosineSearchTable(tables.Table):
   
   # Provide verbose name for score, otherwise it defaults to ID
   score = tables.Column(accessor='id', verbose_name='Score')
+  id = tables.Column(linkify=True)
+  xml_hash = tables.Column(linkify=True)
+  
+  # Abbreviate col. names
+  strain_id = tables.Column(verbose_name='Strain ID')
+  v1_tof_calibration = tables.Column(verbose_name='V1 TOF cal.')
+  spectrometer_type = tables.Column(verbose_name='Spec. type')
+  ionization_mode = tables.Column(verbose_name='Ion. mode')
+  acquisition_mode = tables.Column(verbose_name='Acq. mode')
+  # ~ tof_mode = tables.Column(verbose_name='TM')
+  acquisition_operator_mode = tables.Column(verbose_name='Acq. op. mode')
+  laser_attenuation = tables.Column(verbose_name='Las. att.')
   
   testing_data = {}
   
   def render_strain_id(self, value):
     return value.strain_id
+  
+  def render_xml_hash(self, value):
+    return value.xml_hash
     
   def render_score(self, record):
     '''
     record: entire record for the row from the table data
     '''
-    print('render_score:', record)
+    # ~ print('render_score:', record)
     return self.testing_data.get(record.id, None)
   
   def __init__(self, *args, **kwargs):
@@ -46,8 +61,11 @@ class CosineSearchTable(tables.Table):
     model = Spectra
     attrs = {"class": "table maintable"}
     template_name = "chat/bootstrap4_mod.html"
-    exclude = ()#'spectra1')
-    sequence = ('score', 'strain_id', '...')
+    exclude = ('picture',)#'spectra1')
+    sequence = ('id', 'score', 'strain_id', '...')
+    row_attrs = {
+      'valign': 'top'
+    }
 
 class SpectraTable(tables.Table):
   created_by = tables.Column(linkify=True)

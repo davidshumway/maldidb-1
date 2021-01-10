@@ -48,6 +48,16 @@ print('loaded R')
 import json
 
 
+def xml_profile(request, xml_hash):
+  """View library"""
+  xml = XML.objects.get(xml_hash=xml_hash)
+  lab = LabGroup.objects.get(lab_name=xml.lab_name)
+  return render(
+      request,
+      'chat/xml_profile.html',
+      {'xml': xml, 'lab': lab}
+  )
+
 def library_profile(request, library_id):
   """View library"""
   lib = Library.objects.get(id=library_id)
@@ -68,6 +78,19 @@ def spectra_profile(request, spectra_id):
   """View profile of lab with lab_name"""
   spectra = Spectra.objects.get(id=spectra_id)
   return render(request, 'chat/spectra_profile.html', {'spectra': spectra})
+
+@login_required
+def edit_xml(request, xml_hash):
+  """ edit details of xml"""    
+  if request.method == "POST":
+    # instance kwargs passed in sets the user on the modelForm
+    form = XmlForm(request.POST, request.FILES, instance=XML.objects.get(xml_hash=xml_hash))
+    if form.is_valid():
+      form.save()
+      return redirect(reverse('chat:view_xml', args=(xml_hash, )))
+  else:
+    form = XmlForm(instance=Spectra.objects.get(id=spectra_id))
+  return render(request, 'chat/edit_xml.html', {'form': form})
 
 @login_required
 def edit_spectra(request, spectra_id):
@@ -398,6 +421,9 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     '''calling queryset.update does not update the model.'''
     # Basic: Make a new SearchSpectra and then compare to all Spectra
     
+    print(f'gq-ag: {self.args}' ) # 
+    print(f'gq-kw: {self.request.GET}' ) # 
+
     sp = self.request.GET.get('peaks')
     si = self.request.GET.get('intensities')
     if sp and si:
@@ -405,12 +431,19 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       # reset R globals
       R['resetGlobal']()
       
-      obj, created = SearchSpectra.objects.get_or_create(
-        peak_mass = sp,
-        peak_intensity = si,
-        created_by = self.request.user
-      )
-      #obj.save()
+      # Create a search object for user, or anonymous user
+      try:
+        obj, created = SearchSpectra.objects.get_or_create(
+          peak_mass = sp,
+          peak_intensity = si,
+          created_by = self.request.user
+        )
+      except:
+        obj, created = SearchSpectra.objects.get_or_create(
+          peak_mass = sp,
+          peak_intensity = si,
+          created_by = None
+        )
       R['appendSpectra'](
         robjects.FloatVector(json.loads(sp)),
         robjects.FloatVector(json.loads(si))
@@ -418,8 +451,11 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       
       # small and large molecules combined, or large only
       # use GET query variables to adjust .filter()
-      print('start adding')
+      # ~ n = Spectra.objects.all().filter(tof_mode__exact='LINEAR').order_by('xml_hash')
+      #self.kwargs.get('project_id')
       n = Spectra.objects.all().filter(tof_mode__exact='LINEAR').order_by('xml_hash')
+      # ~ print(self.filter)
+      # ~ n = self.queryset
       idx = {}
       count = 0
       for spectra in n:
@@ -431,12 +467,8 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
         )
         idx[count] = spectra
         count += 1
-      print('end adding')
-      print('start binning')
       result = R['binSpectra']()
-      print(result)
       print('end binning')
-      print(idx)
       
       sorted_list = []
       pk_list = []

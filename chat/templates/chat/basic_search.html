@@ -38,12 +38,23 @@ function show_filter(e) {
 -->
 {% endif %}
 
-<form action="{% url 'chat:basic_search' %}" class="form-inline" method="get">
+<form action="{% url 'chat:basic_search' %}" class="form-inline" method="get" style="padding: 0;margin">
   
-  Search:
+  <div class="row">
+    Upload mzXML or mzML: -file upload-
+        OR
+        Enter peaks and intensities:
+        <input name="peaks" placeholder="peaks" />
+        <input name="intensities" placeholder="intensities" />
+      
+      <button class="btn btn-outline-success my-2 my-sm-0" type="submit">
+          Go</button>
+            
+  </div>
   
   
   
+<!--
   <table>
     
     <tr>
@@ -51,7 +62,6 @@ function show_filter(e) {
         {% if metadata_strain_ids %} 
         Strain select: 
         <select placeholder="Species" name="strain_ids" multiple="true">
-          <!--all species in DB goes here-->
           {% for s in metadata_strain_ids %}
             <option>
               {{ s.strain_id }}
@@ -63,6 +73,7 @@ function show_filter(e) {
         {% endif %}
       </td>
     </tr>
+-->
     
 <!--
     <tr>
@@ -83,22 +94,10 @@ function show_filter(e) {
     </tr>
 -->
     
-    <tr><td>
-      (optional)<br>
-      Search database for unknown strain<br>
-      Upload mzXML or mzML: -file upload-<br>
-      OR<br>
-      Enter peaks and intensities:
-      <input name="peaks" placeholder="peaks" />
-      <input name="intensities" placeholder="intensities" />
-    </td></tr>
     
-    <tr><td>
-      <button class="btn btn-outline-success my-2 my-sm-0" type="submit">
-        Go</button>
-    </td></tr>
-    
+<!--
   </table>
+-->
 
 
 <!--

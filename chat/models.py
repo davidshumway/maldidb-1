@@ -259,7 +259,8 @@ class SearchSpectra(AbstractSpectra):
     settings.AUTH_USER_MODEL,
     # ~ related_name='created_by',
     on_delete=models.CASCADE,
-    blank=True)
+    blank=True,
+    null=True)
   
 class Spectra(AbstractSpectra):
   """ Spectra Model
@@ -332,7 +333,7 @@ class Spectra(AbstractSpectra):
     # ~ min_mass                              INTEGER,
   min_mass = models.IntegerField(blank=True)
     # ~ ignore                               INTEGER,
-  ignore = models.IntegerField(blank=True)
+  # ~ ignore = models.IntegerField(blank=True)
     # ~ number                               INTEGER,
     
     
@@ -405,8 +406,17 @@ class XML(models.Model):
   #############################
   instrument_metafile = models.TextField(blank=True)
   
+  created_by = models.ForeignKey(
+    settings.AUTH_USER_MODEL,
+    on_delete=models.CASCADE)
+  
+  lab_name = models.ForeignKey('LabGroup', on_delete=models.CASCADE)
+  
   def get_fields(self):
     return [(field.verbose_name, field.value_to_string(self)) for field in XML._meta.fields]
+  
+  def get_absolute_url(self):
+    return reverse('chat:view_xml', args=(self.xml_hash,))
     
 class Version(models.Model):
   idbac_version = models.CharField(max_length=200, blank=True)

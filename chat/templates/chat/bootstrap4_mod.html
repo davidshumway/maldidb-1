@@ -9,7 +9,49 @@
     {% csrf_token %}
 -->
 {% endif %}
-                        
+
+
+<!-- Trigger the modal with a button -->
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">
+  Show/hide columns</button>
+
+<!-- Modal -->
+<div id="myModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Modal Header</h4>
+      </div>
+      <div class="modal-body">
+        <!--<p>Some text in the modal.</p>-->
+        
+        <table style="font-sizer: xx-small;">
+            <tr>
+        {% for column in table.columns %}
+                <td>
+                    <input type="checkbox" name="" id="" />
+                </td>
+                <td>
+                    <label for="">{{ column.header }}</label>
+                </td>
+        {% endfor %}
+            </tr>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- show columns -->
+
 <div class="table-container">
     {% block table %}
         <table {% render_attrs table.attrs class="table" %}>
@@ -24,37 +66,14 @@
                         {% else %}
                             {{ column.header }}
                         {% endif %}
-                        
-<!--
-                        
--->
+                    </th>
+                {% endfor %}
+                </tr>
+                <!--Add filter here.-->
+                <tr>
+                {% for column in table.columns %}
+                    <th {{ column.attrs.th.as_html }}>
                         {{column.w}}
-                        <!--Add filter here.-->
-    {% if table.sfilter %}
-        
-        {% with x="{{column.header}}" %}
-<!--
-         table.sfilter.form.fields.x.label 
-         render table.sfilter.form.fields.x
-        render table.sfilter.form.fields.x.widget 
-         render table.sfilter.form.fields.score 
--->
-        
-        {% endwith %}
-        
-        {% with name="{{column.header}}" %}
-        
-        
-        
-<!--
-        {% for key, value in table.sfilter.form.fields.items %}
-          <li>{{ key }} : {{ value.render }}</li>
-        {% endfor %}
--->
-        
-        {% endwith %}
-    {% endif %}
-    
                     </th>
                 {% endfor %}
                 </tr>
@@ -140,4 +159,22 @@
 {% if table.sfilter %}
 </form>
 {% endif %}
+-->
+
+<!-- After the table has rendered, add a mouseover for TH links 
+  spectrometer_type = tables.Column(verbose_name='SP')
+  ionization_mode = tables.Column(verbose_name='IM')
+  acquisition_mode = tables.Column(verbose_name='AM')
+  tof_mode = tables.Column(verbose_name='TM')
+  acquisition_operator_mode = tables.Column(verbose_name='AOM')
+  laser_attenuation = tables.Column(verbose_name='LA')
+-->
+<!--
+<script type="text/javascript">
+    var x = document.getElementsByClassName('orderable');
+    for (var i=0; i<x.length; i++) {
+        var y = x[i].getElementsByTagName('a')[0];
+        ...
+    }
+</script>
 -->

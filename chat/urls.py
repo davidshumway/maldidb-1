@@ -40,6 +40,9 @@ urlpatterns = [
     path('labgroups/', LabgroupsListView.as_view(), name='labgroups_results'),
     #test
     
+    path('xml/<xml_hash>/', views.xml_profile, name='view_xml'),
+    path('xml/edit/<xml_hash>/', views.edit_xml, name='edit_xml'),
+    
     path('spectra/<spectra_id>/', views.spectra_profile, name='view_spectra'),
     path('spectra/edit/<spectra_id>/', views.edit_spectra, name='edit_spectra'),
     

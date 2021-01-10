@@ -118,7 +118,8 @@ class SpectraForm(forms.ModelForm):
 class XmlForm(forms.ModelForm):
   class Meta:
     model = XML
-    fields = ('xml_hash','xml','manufacturer','model','ionization','analyzer','detector','instrument_metafile')
+    exclude = ('id',)
+    # ~ fields = ('xml_hash','xml','manufacturer','model','ionization','analyzer','detector','instrument_metafile')
     
 class MetadataForm(forms.ModelForm):
   """ Form for handling addition of metadata """
