@@ -255,6 +255,7 @@ def update_stock(sender, instance, **kwargs):
 class SearchSpectra(AbstractSpectra):
   peak_mass = models.TextField(blank=True)
   peak_intensity = models.TextField(blank=True)
+  peak_snr = models.TextField(blank=True)
   created_by = models.ForeignKey(
     settings.AUTH_USER_MODEL,
     # ~ related_name='created_by',

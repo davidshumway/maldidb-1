@@ -15,11 +15,10 @@
 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">
   Show/hide columns</button>
 
-<!-- Modal -->
+<!-- Modal - Overwrite margin/width to adjust modal size -->
 <div id="myModal" class="modal fade" role="dialog">
-  <div class="modal-dialog">
+  <div class="modal-dialog" style="margin: 2.5rem !important; max-width: none !important;">
 
-    <!-- Modal content-->
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -27,15 +26,17 @@
       </div>
       <div class="modal-body">
         <!--<p>Some text in the modal.</p>-->
-        
-        <table style="font-sizer: xx-small;">
+        <table class="modal-table-cols">
             <tr>
         {% for column in table.columns %}
+          {% if forloop.counter0|divisibleby:6  %}
+            </tr><tr>
+          {% endif %}
                 <td>
-                    <input type="checkbox" name="" id="" />
+                    <input type="checkbox" name="" id="table_cols_{{ column.name }}" />
                 </td>
                 <td>
-                    <label for="">{{ column.header }}</label>
+                    <label for="table_cols_{{ column.name }}">{{ column.verbose_name }}</label>
                 </td>
         {% endfor %}
             </tr>
@@ -54,7 +55,7 @@
 
 <div class="table-container">
     {% block table %}
-        <table {% render_attrs table.attrs class="table" %}>
+        <table {% render_attrs table.attrs class="table table-hover table-bordered table-responsive" %}>
             {% block table.thead %}
             {% if table.show_header %}
                 <thead {{ table.attrs.thead.as_html }}>

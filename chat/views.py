@@ -15,6 +15,7 @@ from .forms import AddLabGroupForm
 from .forms import LabProfileForm
 from .forms import SearchForm
 from .forms import ViewCosineForm
+from .forms import SpectraSearchForm
 
 from .models import Spectra
 from .models import SearchSpectra
@@ -211,6 +212,7 @@ class SpectraFilter(django_filters.FilterSet):
 
 R('''
   suppressPackageStartupMessages(library(IDBacApp))
+  # Some globals
   allSpectra <- list()
   allPeaks <- list()
   binnedPeaks <- F
@@ -219,17 +221,21 @@ R('''
     allPeaks <<- list()
     binnedPeaks <<- F
   }
-  appendSpectra <- function(m, i) {
+  appendSpectra <- function(m, i, s) {
     # <<-: assign upward
+    # allPeaks: Used for binPeaks, intensityMatrix
+    # allSpectra: Used for intensityMatrix
+    # todo: createMassPeaks -- snr = as.numeric(x$snr))
     allSpectra <<- append(
       allSpectra,
       MALDIquant::createMassSpectrum(mass=m, intensity=i)
     )
     allPeaks <<- append(
       allPeaks,
-      MALDIquant::createMassPeaks(mass=m, intensity=i)
+      MALDIquant::createMassPeaks(
+        mass=m, intensity=i, snr=as.numeric(s)
+      )
     )
-    # ~ allIds <<- append(id)
   }
   binSpectra <- function() {
     # Only scores in first row are relevant, i.e., input spectra
@@ -393,12 +399,13 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
   filterset_class = SpectraFilter
   
   def get_context_data(self, **kwargs):
+    '''Render filter widget to pass to the table template.
+    '''
     context = super().get_context_data(**kwargs)
     # ~ print(f'gcdkw: {kwargs}' ) # 
     
-    for attr, value in context.get('filter').form.fields.items():#.__dict__.items():
-      # print(attr, value)
-      context['table'].columns[attr].w = value.widget.render(attr,'')
+    for attr, value in context.get('filter').form.fields.items():
+      context['table'].columns[attr].w = value.widget.render(attr, '')
     
       # ~ for attr2, value2 in value.__dict__.items():
         # ~ widget = value2.widget
@@ -406,8 +413,17 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
         # ~ print(attr2, value2)
         # ~ pass
         
-    
     context['table'].sfilter = context.get('filter') #self.filter #
+    
+    if self.request.POST:
+      form = SpectraSearchForm(self.request.POST, self.request.FILES)
+      if form.is_valid():
+        pass
+      else:
+        pass
+    else:
+      form = SpectraSearchForm()
+    context['form'] = form
     
     return context
   
@@ -417,16 +433,45 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     print(f'get-kw: {kwargs}' ) # 
     return resp
     
-  def get_queryset(self):
+  def get_queryset(self, *args, **kwargs):
     '''calling queryset.update does not update the model.'''
     # Basic: Make a new SearchSpectra and then compare to all Spectra
     
+    
+    print(f'gq-args: {args}' ) # 
+    print(f'gq-kw: {kwargs}' ) # 
+    print(f'gq-sr: {self.request}' ) # 
+    
+    # ~ form = AddLibraryForm(request.POST, request.FILES)
+    # ~ if form.is_valid():
+      # ~ entry = form.save(commit=False)
+      # ~ entry.save()
+      # ~ return redirect('chat:home')
+    # ~ else:
+      # ~ form = AddLibraryForm()
+    # ~ return render(request, 'chat/add_lib.html', {'form': form})
+    
+    
     print(f'gq-ag: {self.args}' ) # 
-    print(f'gq-kw: {self.request.GET}' ) # 
+    print(f'gq-get: {self.request.GET}' ) # 
+    print(f'gq-post: {self.request.POST}' ) # 
 
-    sp = self.request.GET.get('peaks')
-    si = self.request.GET.get('intensities')
-    if sp and si:
+    # ~ sp = self.request.POST.get('peak_mass')
+    # ~ si = self.request.POST.get('peak_intensity')
+    # ~ sn = self.request.POST.get('peak_snr')
+    if self.request.POST is False:
+      return self.queryset
+    
+    form = SpectraSearchForm(self.request.POST, self.request.FILES)
+    if form.is_valid():
+      pass
+    else:
+      pass
+          
+    sm = form.cleaned_data['peak_mass']
+    si = form.cleaned_data['peak_intensity']
+    sn = form.cleaned_data['peak_snr']
+    if sm and si and sn:
       
       # reset R globals
       R['resetGlobal']()
@@ -434,41 +479,43 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       # Create a search object for user, or anonymous user
       try:
         obj, created = SearchSpectra.objects.get_or_create(
-          peak_mass = sp,
+          peak_mass = sm,
           peak_intensity = si,
+          peak_snr = sn,
           created_by = self.request.user
         )
       except:
         obj, created = SearchSpectra.objects.get_or_create(
-          peak_mass = sp,
+          peak_mass = sm,
           peak_intensity = si,
+          peak_snr = sn,
           created_by = None
         )
       R['appendSpectra'](
-        robjects.FloatVector(json.loads(sp)),
-        robjects.FloatVector(json.loads(si))
+        robjects.FloatVector(json.loads(sm)),
+        robjects.FloatVector(json.loads(si)),
+        robjects.FloatVector(json.loads(sn))
       )
       
       # small and large molecules combined, or large only
       # use GET query variables to adjust .filter()
-      # ~ n = Spectra.objects.all().filter(tof_mode__exact='LINEAR').order_by('xml_hash')
-      #self.kwargs.get('project_id')
-      n = Spectra.objects.all().filter(tof_mode__exact='LINEAR').order_by('xml_hash')
-      # ~ print(self.filter)
-      # ~ n = self.queryset
+      
+      n = Spectra.objects.all().filter(tof_mode__exact='LINEAR')
+      n = n.order_by('xml_hash')
       idx = {}
       count = 0
       for spectra in n:
         pm = json.loads('['+spectra.peak_mass+']')
         pi = json.loads('['+spectra.peak_intensity+']')
+        ps = json.loads('['+spectra.peak_snr+']')
         R['appendSpectra'](
           robjects.FloatVector(pm),
-          robjects.FloatVector(pi)
+          robjects.FloatVector(pi),
+          robjects.FloatVector(ps)
         )
         idx[count] = spectra
         count += 1
       result = R['binSpectra']()
-      print('end binning')
       
       sorted_list = []
       pk_list = []

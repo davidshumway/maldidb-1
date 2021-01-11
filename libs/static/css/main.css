@@ -28,7 +28,9 @@ body {
 	text-overflow: ellipsis;
 	overflow: hidden;
 	padding: 0 !important;
+/*
 	border: 1px solid #bbb;
+*/
 }
 /* Override default table container to avoid expanding off the page */
 .table-container {
@@ -45,7 +47,23 @@ body {
 .toggle-tbl-col-filter label {
 	font-size: x-small;
 }
-
+/* Modal table for table cols */
+.modal-table-cols {
+	font-size: small;
+	width: 100%;	
+}
+/* Align left */
+.modal-table-cols label {
+	display: block;
+}
+/* Align left */
+.search-peakrow div {
+	height: 60px;
+}
+/**/
+.spectra-search-tbl ul {
+	list-style-type: none;
+}
 
 
 

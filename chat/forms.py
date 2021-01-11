@@ -6,6 +6,79 @@ from .models import Library, PrivacyLevel, LabGroup, SpectraCosineScore
 from django.contrib.auth import get_user_model
 user = get_user_model()
 
+class SpectraSearchForm(forms.ModelForm):
+  '''Replicated, Collapsed, all
+  Small molecule, Protein, all [or range, e.g., 3k-8k]
+  Processed spectra, raw spectra (run pipeline?)'''
+  
+  prefix = 'spectra_search'
+  
+  spectra_file = forms.FileField(
+    label = 'Upload a spectrum file',
+    required = False
+  )
+  
+  choices = [
+    ('replicate', 'Replicates'),
+    ('collapsed', 'Collapsed Spectra'),
+    ('all', 'All'),
+  ]
+  replicates = forms.CharField(
+    label = 'Spectrum type',
+    widget = forms.RadioSelect(choices = choices),
+    required = True)
+  
+  choices = [
+    ('small', 'Small Molecule'),
+    ('protein', 'Protein'),
+    ('all', 'All'),
+    ('custom', 'Custom'),
+  ]
+  spectrum_cutoff = forms.CharField(
+    label = 'Spectrum cutoff',
+    widget = forms.RadioSelect(choices = choices),
+    required = True)
+  # on custom, then allow for a range
+  spectrum_cutoff_low = forms.IntegerField(
+    label = 'Minimum M/Z',
+    min_value = 0, disabled = True,
+    required = False)
+  spectrum_cutoff_high = forms.IntegerField(
+    label = 'Maximum M/Z',
+    min_value = 0, disabled = True,
+    required = False)
+  
+  choices = [
+    ('processed', 'Processed Spectrum'),
+    ('raw', 'Raw Spectrum'),
+  ]
+  preprocessing = forms.CharField(
+    label = 'Spectrum state:',
+    widget = forms.RadioSelect(choices = choices))
+  # on raw, include preprocessing options
+  
+  
+  class Meta:
+    model = Spectra
+    exclude = ('id',)
+    widgets = {
+      'peak_mass': forms.TextInput(
+        attrs={'size': 2, 'placeholder': '', 'class': 'form-control'}
+      ),
+      'peak_intensity': forms.TextInput(
+        attrs={'size': 2, 'placeholder': '', 'class': 'form-control'}
+      ),
+      'peak_snr': forms.TextInput(
+        attrs={'size': 2, 'placeholder': '', 'class': 'form-control'}
+      ),
+      'spectrum_cutoff_low': forms.TextInput(
+        attrs={'size': 6, 'placeholder': 'Min. M/Z', 'class': 'form-control'}
+      ),
+      'spectrum_cutoff_high': forms.TextInput(
+        attrs={'size': 6, 'placeholder': 'Max. M/Z', 'class': 'form-control'}
+      ),
+    }
+    
 class ViewCosineForm(forms.ModelForm):
   class Meta:
     model = SpectraCosineScore
