@@ -4,3 +4,5 @@ venv
 venv/
 db.*
 db.sqlite3
+.Rhistory
+.RData
