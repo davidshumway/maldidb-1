@@ -39,11 +39,16 @@ function show_filter(e) {
 {% endif %}
 
 
-<form action="{% url 'chat:basic_search' %}" class="" method="POST" style="">
+<form action="{% url 'chat:basic_search' %}" class="" method="GET" style="">
     
 
   <div class="card">
-    <div class="card-body">
+<!--
+    <div class="card-body" id="">
+    
+    </div>
+-->
+    <div class="card-body" id="search_initial" style="display: none;">
     
       
   
@@ -70,22 +75,17 @@ function show_filter(e) {
       </td>
       <td class="search-peakrow" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
         <div>{{ f }}
-        {% if f.help_text %}
-          <p class="help">{{ f.help_text|safe }}</p>
-        {% endif %}
         </div>
         <div>{{ g }}
-        {% if g.help_text %}
-          <p class="help">{{ g.help_text|safe }}</p>
-        {% endif %}
         </div>
         <div>{{ h }}
-        {% if h.help_text %}
-          <p class="help">{{ h.help_text|safe }}</p>
-        {% endif %}
         </div>
       </td>
       {% endwith %}
+      
+      <td colspan=2 align="center" valign="middle">
+        - OR -
+      </td>
       
       {% with f=form.spectra_file %}
       <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
@@ -154,13 +154,13 @@ function show_filter(e) {
         {% for c in f %}
         {% if c.choice_label != "Custom" %}
           <li>{{ c.tag }}
-            <label for="id_spectra_search-spectrum_cutoff_{{ forloop.counter0 }}">
+            <label for="id_spectrum_cutoff_{{ forloop.counter0 }}">
               {{ c.choice_label }}</label>
           </li>
         {% else %}
-          <li>
-            <input type="radio" name="spectra_search-spectrum_cutoff" value="{{ c.choice_value }}" required="" id="id_spectra_search-spectrum_cutoff_{{ forloop.counter0 }}" />
-            <label for="id_spectra_search-spectrum_cutoff_{{ forloop.counter0 }}" onclick="toggleCutoff();">
+          <li id="spectra-search-tbl-cutoff">
+            <input type="radio" name="spectrum_cutoff" value="{{ c.choice_value }}" required="" id="id_spectrum_cutoff_{{ forloop.counter0 }}" />
+            <label for="id_spectrum_cutoff_{{ forloop.counter0 }}" onclick="toggleCutoff();">
               {{ c.choice_label }}</label>
               {{ g }}
               {{ h }}
@@ -314,23 +314,22 @@ function show_filter(e) {
 
 
 
-{% if table %}<!-- if search results, minimize search form -->
+  <!-- if search results, minimize search form -->
   <div class="row">
-  {% render_table table %}
+    <input type="button" class="btn btn-primary" id="search_toggle" style="display: none; width: 180px;" value="Edit Search" />
+    &nbsp;
+  {% if form.show_tbl %}  
+    {% render_table table %}
+  {% endif %}
   </div>
-{% endif %}
 
 </form>
 
 <script type="text/javascript">
-var y = document.getElementsByName('spectra_search-spectrum_cutoff');
-for (var i=0; i<y.length; i++) {
-  y[i].onclick = toggleCutoff;
-}
 function toggleCutoff(e) {
-  var x1 = document.getElementById('id_spectra_search-spectrum_cutoff_low');
-  var x2 = document.getElementById('id_spectra_search-spectrum_cutoff_high');
-  if (this.id == 'id_spectra_search-spectrum_cutoff_3') {
+  var x1 = document.getElementById('id_spectrum_cutoff_low');
+  var x2 = document.getElementById('id_spectrum_cutoff_high');
+  if (this.id == 'id_spectrum_cutoff_3') {
     if (x1.disabled) {
       x1.disabled = false;
       x2.disabled = false;
@@ -343,12 +342,49 @@ function toggleCutoff(e) {
     x2.disabled = true;
   }  
 }
-var x1 = document.getElementById('id_spectra_search-spectrum_cutoff_low');
-var x2 = document.getElementById('id_spectra_search-spectrum_cutoff_high');
-x1.setAttribute('placeholder', 'Min. M/Z');
-x2.setAttribute('placeholder', 'Max. M/Z');
-x1.setAttribute('max', '999999');
-x2.setAttribute('max', '999999');
+function toggleSearchForm(e) {
+  console.log(e);
+  var st = $('#search_toggle');
+  var si = $('#search_initial');
+  if (st.css('display') == 'none') {
+    st.css('display', 'block');
+    si.css('display', 'none');
+  } else {
+    st.css('display', 'none');
+    si.css('display', 'block');
+  }
+}
+
+/* spectra tooltip */
+//~ $(document).ready(function(){
+window.addEventListener('DOMContentLoaded', (event) => {
+  //~ $('[data-toggle="tooltip"]').tooltip();
+  
+  var y = document.getElementsByName('spectrum_cutoff');
+  //~ var y = $("input[name='spectra_search-spectrum_cutoff']");
+  for (var i=0; i<y.length; i++) {
+    y[i].onclick = toggleCutoff;
+  }
+  var x1 = $('#id_spectrum_cutoff_low');
+  var x2 = $('#id_spectrum_cutoff_high');
+  x1.attr({'placeholder': 'Min. M/Z', 'max': '999999'});
+  x2.attr({'placeholder': 'Max. M/Z', 'max': '999999'});
+  
+  var show_tbl = {{ form.show_tbl|lower }};
+  var st = $('#search_toggle');
+  var si = $('#search_initial');
+  if (show_tbl) {
+    st.css('display', 'block');
+    si.css('display', 'none');
+  } else {
+    st.css('display', 'none');
+    si.css('display', 'block');
+  }
+  st.click(toggleSearchForm);
+//~ });
+
+});
+
 </script>
 
 {% endblock %}

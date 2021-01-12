@@ -11,7 +11,7 @@ class SpectraSearchForm(forms.ModelForm):
   Small molecule, Protein, all [or range, e.g., 3k-8k]
   Processed spectra, raw spectra (run pipeline?)'''
   
-  prefix = 'spectra_search'
+  # ~ prefix = 'fm'
   
   spectra_file = forms.FileField(
     label = 'Upload a spectrum file',
@@ -59,17 +59,26 @@ class SpectraSearchForm(forms.ModelForm):
   
   
   class Meta:
+    '''
+    jquery tooltip utilizes data-toggle and title attrs
+    '''
     model = Spectra
     exclude = ('id',)
     widgets = {
       'peak_mass': forms.TextInput(
-        attrs={'size': 2, 'placeholder': '', 'class': 'form-control'}
+        attrs={'placeholder': '1,2,3', 'class': 'form-control',
+          'data-toggle': 'tooltip',
+          'title': 'A list of comma separated values, e.g., "1,2,3"'}
       ),
       'peak_intensity': forms.TextInput(
-        attrs={'size': 2, 'placeholder': '', 'class': 'form-control'}
+        attrs={'placeholder': '1,2,3', 'class': 'form-control',
+          'data-toggle': 'tooltip',
+          'title': 'A list of comma separated values, e.g., "1,2,3"'}
       ),
       'peak_snr': forms.TextInput(
-        attrs={'size': 2, 'placeholder': '', 'class': 'form-control'}
+        attrs={'placeholder': '1,2,3', 'class': 'form-control',
+          'data-toggle': 'tooltip',
+          'title': 'A list of comma separated values, e.g., "1,2,3"'}
       ),
       'spectrum_cutoff_low': forms.TextInput(
         attrs={'size': 6, 'placeholder': 'Min. M/Z', 'class': 'form-control'}
@@ -148,7 +157,13 @@ class LoadSqliteForm(forms.Form):
      # ~ #User.objects.all() # todo: add more description per entry
   # ~ )
   
-  
+
+
+class MetadataModelChoiceField(forms.ModelChoiceField):
+  def label_from_instance(self, obj):
+    # ~ return "My Object #%i" % obj.id
+    return obj.strain_id
+    
 class SpectraForm(forms.ModelForm):
   """ Form for handling addition of posts """
   
@@ -171,20 +186,41 @@ class SpectraForm(forms.ModelForm):
     # ~ instance.user = usr[0]
     # ~ instance.save(commit)
     # ~ return instance
-    
+  
+  # overwrite strain_id to alter label from {Metadata-object} to
+  # {Metadata-object}.strain_id 
+  # ~ strain_id = MetadataModelChoiceField(
+    # ~ queryset = Metadata.objects.all(),
+    # ~ empty_label = None,
+    # ~ required = False,
+    # ~ to_field_name = 'strain_id',
+    # ~ label = 'Strain ID',
+    # ~ widget = forms.ModelMultipleChoiceField()
+    # ~ #SelectMultiple
+  # ~ )
+
   class Meta:
     model = Spectra
     #fields = ('peaks', 'intensities')
-    exclude = ()
+    exclude = ('created_by',)
     widgets = {
-      'text': forms.Textarea(
-        attrs={'rows': 2, 'cols': 40, 'placeholder': 'General description.'}
+      'description': forms.Textarea(
+        attrs={'rows': 1, 'cols': 40, 'placeholder': 'General description of the spectra.'}
       ),
-      'peaks': forms.Textarea(
-        attrs={'rows': 2, 'cols': 40, 'placeholder': 'A comma-separated list, e.g., "167.06,179.07,193.07".'}
+      'peak_mass': forms.Textarea(
+        attrs={'rows': 1, 'cols': 40, 'placeholder': 'A comma-separated list, e.g., "110.1,112.2".'}
       ),
-      'intensities': forms.Textarea(
-        attrs={'rows': 2, 'cols': 40, 'placeholder': 'A comma-separated list, e.g., "0.4,0.2,0.6".'}
+      'peak_intensity': forms.Textarea(
+        attrs={'rows': 1, 'cols': 40, 'placeholder': 'A comma-separated list, e.g., "4.1,4.2".'}
+      ),
+      'peak_snr': forms.Textarea(
+        attrs={'rows': 1, 'cols': 40, 'placeholder': 'A comma-separated list, e.g., "1.1,1.2".'}
+      ),
+      'calibration_constants': forms.Textarea(
+        attrs={'rows': 1, 'cols': 40, 'placeholder': ''}
+      ),
+      'v1_tof_calibration': forms.Textarea(
+        attrs={'rows': 1, 'cols': 40, 'placeholder': ''}
       ),
     }
 

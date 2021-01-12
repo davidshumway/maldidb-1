@@ -9,3 +9,4 @@ dj_database_url
 django-filter
 django-bootstrap4
 sklearn
+django-jquery

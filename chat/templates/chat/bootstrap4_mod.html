@@ -74,7 +74,9 @@
                 <tr>
                 {% for column in table.columns %}
                     <th {{ column.attrs.th.as_html }}>
-                        {{column.w}}
+<!--
+                        {{ column.w }}
+-->
                     </th>
                 {% endfor %}
                 </tr>

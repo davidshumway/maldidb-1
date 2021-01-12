@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django_tables2',
     'django_filters',
     'bootstrap4',
+    'jquery',
     ###'django_extensions',
     #'whitenoise.runserver_nostatic',
 ]

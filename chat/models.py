@@ -61,6 +61,8 @@ class AbstractSpectra(models.Model):
     max_length=2,
     choices=privacyChoices,
     default=PUBLIC,
+    blank=True,
+    null=True
   )
   
   library = models.ForeignKey(
@@ -73,7 +75,8 @@ class AbstractSpectra(models.Model):
     settings.AUTH_USER_MODEL,
     # ~ related_name='created_by',
     on_delete=models.CASCADE,
-    blank=True)
+    blank=True,
+    null=True)
   
   lab_name = models.ForeignKey(
     'LabGroup',
@@ -85,12 +88,15 @@ class AbstractSpectra(models.Model):
   # ~ peak_matrix = models.TextField(blank=True)
   # ~ spectrum_intensity = models.TextField(blank=True)
   
-  peak_mass = models.TextField(blank=True)
-  peak_intensity = models.TextField(blank=True)
-  peak_snr = models.TextField(blank=True)
+  peak_mass = models.TextField(blank=True,
+    help_text = 'A list of comma separated values, e.g., "1,2,3"')
+  peak_intensity = models.TextField(blank=True,
+    help_text = 'A list of comma separated values, e.g., "1,2,3"')
+  peak_snr = models.TextField(blank=True,
+    help_text = 'A list of comma separated values, e.g., "1,2,3"')
   
-  spectrum_mass_hash = models.TextField(blank=True)
-  spectrum_intensity_hash = models.TextField(blank=True)
+  spectrum_mass_hash = models.CharField(max_length=255, blank=True)
+  spectrum_intensity_hash = models.CharField(max_length=255, blank=True)
   
   # ~ xml_hash = models.TextField(blank=True)
   xml_hash = models.ForeignKey(
@@ -270,8 +276,22 @@ class Spectra(AbstractSpectra):
   data as you wish, these types are recommended not required.'
   -- DecimalField: Using parameters max_digits=30, decimal_places=20
   -- IntegerField: -2147483648 to 2147483647
+  
+  -- Original columns that were integer / numeric:
+      time_delay                            INTEGER,
+      time_delta                            NUMERIC,
+      laser_attenuation                     INTEGER,
+      mass_error                            NUMERIC,
+      laser_shots                           INTEGER,
+      min_mass                              INTEGER,
+      ignore                               INTEGER,
+      number                               INTEGER,
+  -- Original name of cId is "id"
   """
+  
+  
   # UNIQUE(strain_id, spectrum_mass_hash, spectrum_intensity_hash) 
+  
   
   # Each spectra belongs to one library.
   # Each library contains many spectra.
@@ -287,56 +307,48 @@ class Spectra(AbstractSpectra):
     # ~ on_delete=models.CASCADE,
     # ~ blank=True)
     
-  picture = models.ImageField(upload_to='spectra', blank=True)
+  picture = models.ImageField(upload_to='spectra_images', blank=True)
   description = models.TextField(max_length=2048, blank=True)
   posted_date = models.DateTimeField(auto_now_add=True, blank=True)
-    
-  number = models.IntegerField(blank=True)
-    # ~ time_delay                            INTEGER,
+  
+  max_mass = models.IntegerField(blank=True)
+  min_mass = models.IntegerField(blank=True)
+  ignore = models.IntegerField(blank=True)
+  number = models.IntegerField(blank=True)  
   time_delay = models.IntegerField(blank=True)
-    # ~ time_delta                            NUMERIC,
   time_delta = models.DecimalField(max_digits=30, decimal_places=20, blank=True)
   calibration_constants = models.TextField(blank=True)
   v1_tof_calibration = models.TextField(blank=True)
-  data_type = models.TextField(blank=True)
-  data_system = models.TextField(blank=True)
-  spectrometer_type = models.TextField(blank=True)
-  inlet = models.TextField(blank=True)
-  ionization_mode = models.TextField(blank=True)
-  acquisition_method = models.TextField(blank=True)
-  acquisition_date = models.TextField(blank=True)
-  acquisition_mode = models.TextField(blank=True)
-  tof_mode = models.TextField(blank=True)
-  acquisition_operator_mode = models.TextField(blank=True)
-    # ~ laser_attenuation                     INTEGER,
+  data_type = models.CharField(max_length=255, blank=True)
+  data_system = models.CharField(max_length=255, blank=True)
+  spectrometer_type = models.CharField(max_length=255, blank=True)
+  inlet = models.CharField(max_length=255, blank=True)
+  ionization_mode = models.CharField(max_length=255, blank=True)
+  acquisition_method = models.CharField(max_length=255, blank=True)
+  acquisition_date = models.DateTimeField(auto_now_add=False)
+  acquisition_mode = models.CharField(max_length=255, blank=True)
+  tof_mode = models.CharField(max_length=255, blank=True)
+  acquisition_operator_mode = models.CharField(max_length=255, blank=True)
   laser_attenuation = models.IntegerField(blank=True)
-  digitizer_type = models.TextField(blank=True)
-  flex_control_version = models.TextField(blank=True)
-  # Original name is "id"
-  cId = models.TextField(blank=True)
-  instrument = models.TextField(blank=True)
-  instrument_id = models.TextField(blank=True)
-  instrument_type = models.TextField(blank=True)
-    # ~ mass_error                            NUMERIC,
+  digitizer_type = models.CharField(max_length=255, blank=True)
+  flex_control_version = models.CharField(max_length=255, blank=True)
+  cId = models.CharField(max_length=255, blank=True) # appears to be a key to another table ???
+  instrument = models.CharField(max_length=255, blank=True)
+  instrument_id = models.CharField(max_length=255, blank=True)
+  instrument_type = models.CharField(max_length=255, blank=True)
   mass_error = models.DecimalField(max_digits=30, decimal_places=20, blank=True)
-    # ~ laser_shots                           INTEGER,
   laser_shots = models.IntegerField(blank=True)
-  patch = models.TextField(blank=True)
-  path = models.TextField(blank=True)
-  laser_repetition = models.TextField(blank=True)
-  spot = models.TextField(blank=True)
-  spectrum_type = models.TextField(blank=True)
-  target_count = models.TextField(blank=True)
-  target_id_string = models.TextField(blank=True)
-  target_serial_number = models.TextField(blank=True)
-  target_type_number = models.TextField(blank=True)
-  max_mass = models.IntegerField(blank=True)
-    # ~ min_mass                              INTEGER,
-  min_mass = models.IntegerField(blank=True)
-    # ~ ignore                               INTEGER,
-  # ~ ignore = models.IntegerField(blank=True)
-    # ~ number                               INTEGER,
-    
+  patch = models.CharField(max_length=255, blank=True)
+  path = models.CharField(max_length=255, blank=True)
+  laser_repetition = models.DecimalField(max_digits=20, decimal_places=6, blank=True)
+  spot = models.CharField(max_length=255, blank=True)
+  spectrum_type = models.CharField(max_length=255, blank=True)
+  target_count = models.DecimalField(max_digits=10, decimal_places=4, blank=True)
+  target_id_string = models.CharField(max_length=255, blank=True)
+  target_serial_number = models.CharField(max_length=255, blank=True)
+  target_type_number = models.CharField(max_length=255, blank=True)
+  
+  
     
   # Peaks/Intens.
   # In the format of comma-separated fields: "peak1,peak2,...,peakN"
@@ -389,6 +401,10 @@ class Metadata(models.Model):
   
   def get_fields(self):
     return [(field.verbose_name, field.value_to_string(self)) for field in Metadata._meta.fields]
+  
+  def __str__(self):
+    #return f"{self.user.username}'s library"
+    return self.strain_id
     
 class XML(models.Model):
   '''UNIQUE(xml_hash) ---- removed '''
@@ -418,6 +434,10 @@ class XML(models.Model):
   
   def get_absolute_url(self):
     return reverse('chat:view_xml', args=(self.xml_hash,))
+  
+  def __str__(self):
+    #return f"{self.user.username}'s library"
+    return self.xml_hash
     
 class Version(models.Model):
   idbac_version = models.CharField(max_length=200, blank=True)

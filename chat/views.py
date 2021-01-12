@@ -397,34 +397,36 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
   model = Spectra
   template_name = 'chat/basic_search.html'
   filterset_class = SpectraFilter
+  show_tbl = False
   
   def get_context_data(self, **kwargs):
     '''Render filter widget to pass to the table template.
     '''
     context = super().get_context_data(**kwargs)
-    # ~ print(f'gcdkw: {kwargs}' ) # 
+
+    f = SpectraFilter(self.request.GET, queryset=self.queryset)
+    context['filter'] = f
+    print(f)
     
-    for attr, value in context.get('filter').form.fields.items():
-      context['table'].columns[attr].w = value.widget.render(attr, '')
-    
+    for attr, field in f.form.fields.items():
+      context['table'].columns[attr].w = field.widget.render(attr, '')
+      # ~ print(attr, field)
       # ~ for attr2, value2 in value.__dict__.items():
         # ~ widget = value2.widget
         # ~ context['table'].columns[widget.name] = widget.render()
         # ~ print(attr2, value2)
         # ~ pass
-        
-    context['table'].sfilter = context.get('filter') #self.filter #
     
-    if self.request.POST:
-      form = SpectraSearchForm(self.request.POST, self.request.FILES)
-      if form.is_valid():
-        pass
-      else:
-        pass
+    context['table'].sfilter = f #context.get('filter')
+    if self.show_tbl is True:
+      form = SpectraSearchForm(self.request.GET, self.request.FILES)
+      form.show_tbl = True
+      context['form'] = form
     else:
-      form = SpectraSearchForm()
-    context['form'] = form
-    
+      form = SpectraSearchForm(self.request.GET, self.request.FILES)
+      form.show_tbl = False
+      context['form'] = form
+      
     return context
   
   def get(self, *args, **kwargs):
@@ -432,12 +434,32 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     print(f'get-args: {args}' ) # 
     print(f'get-kw: {kwargs}' ) # 
     return resp
+  
+  # ~ def post(self, request, *args, **kwargs):
+    # ~ form = SpectraSearchForm(self.request.POST, self.request.FILES)
+    # ~ if form.is_valid():
+      # ~ form.show_tbl = True
+      # ~ print('form is valid')
+      # ~ pass
+    # ~ else:
+      # ~ print('form is invalid')
+      # ~ print(form)
+      # ~ print(form.errors)
+      # ~ pass
+    # ~ return render(request, self.template_name, {'form': form})
     
+    # ~ if form.is_valid():
+      # ~ return HttpResponseRedirect('/success/')
+    # ~ return render(request, self.template_name, {'form': form})
+
+
   def get_queryset(self, *args, **kwargs):
     '''calling queryset.update does not update the model.'''
     # Basic: Make a new SearchSpectra and then compare to all Spectra
     
-    
+    if len(self.request.GET) == 0:
+      return Spectra.objects.none()
+      
     print(f'gq-args: {args}' ) # 
     print(f'gq-kw: {kwargs}' ) # 
     print(f'gq-sr: {self.request}' ) # 
@@ -452,26 +474,35 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     # ~ return render(request, 'chat/add_lib.html', {'form': form})
     
     
-    print(f'gq-ag: {self.args}' ) # 
     print(f'gq-get: {self.request.GET}' ) # 
-    print(f'gq-post: {self.request.POST}' ) # 
+    # ~ print(f'gq-post: {self.request.POST}' ) # 
 
     # ~ sp = self.request.POST.get('peak_mass')
     # ~ si = self.request.POST.get('peak_intensity')
     # ~ sn = self.request.POST.get('peak_snr')
-    if self.request.POST is False:
-      return self.queryset
+    # ~ if self.request.POST is False:
+      # ~ return self.queryset
     
-    form = SpectraSearchForm(self.request.POST, self.request.FILES)
+    form = SpectraSearchForm(self.request.GET, self.request.FILES)
     if form.is_valid():
+      # ~ self.show_tbl = True
+      print('valid form')
       pass
     else:
-      pass
-          
-    sm = form.cleaned_data['peak_mass']
-    si = form.cleaned_data['peak_intensity']
-    sn = form.cleaned_data['peak_snr']
-    if sm and si and sn:
+      print(form.errors)
+      return self.queryset
+    
+    # http://127.0.0.1:8000/search/?peak_mass=1919%2C1939
+    # &peak_intensity=1%2C2&peak_snr=1%2C2&spectra_file=
+    # &replicates=replicate&spectrum_cutoff=small&preprocessing=processed
+    sm = form.cleaned_data['peak_mass'];
+    si = form.cleaned_data['peak_intensity'];
+    sn = form.cleaned_data['peak_snr'];
+    srep = form.cleaned_data['replicates'];
+    scut = form.cleaned_data['spectrum_cutoff'];
+    if sm and si and sn and srep and scut:
+      print('valid data')
+      self.show_tbl = True
       
       # reset R globals
       R['resetGlobal']()
@@ -492,16 +523,25 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
           created_by = None
         )
       R['appendSpectra'](
-        robjects.FloatVector(json.loads(sm)),
-        robjects.FloatVector(json.loads(si)),
-        robjects.FloatVector(json.loads(sn))
+        robjects.FloatVector(json.loads('[' + sm + ']')),
+        robjects.FloatVector(json.loads('[' + si + ']')),
+        robjects.FloatVector(json.loads('[' + sn + ']'))
       )
       
       # small and large molecules combined, or large only
       # use GET query variables to adjust .filter()
       
-      n = Spectra.objects.all().filter(tof_mode__exact='LINEAR')
+      n = Spectra.objects.all()
+      
+      if scut == 'small':
+        n = n.filter(tof_mode__exact='REFLECTOR')
+      elif scut == 'protein': # protein
+        n = n.filter(tof_mode__exact='LINEAR')
+      else: # protein
+        pass
+        
       n = n.order_by('xml_hash')
+      
       idx = {}
       count = 0
       for spectra in n:
@@ -526,7 +566,6 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
           first = False
           continue
         k = int(key) - 2 # starts with 1, and 1st is search spectra
-        print(k)
         sorted_list.append({'id': idx[k].id, 'score': float(value)})
         scores[idx[k].id] = float(value)
       
@@ -548,7 +587,6 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       return q
     # Empty queryset
     return Spectra.objects.none()
-    # ~ return self.queryset  
 
 def sort_func(e):
   return e['score']
@@ -736,7 +774,7 @@ def handle_uploaded_file(f, tmpForm):
     sxml = XML.objects.get(xml_hash=row[2])
     
     pm = json.loads(row[4])
-    
+
     data = {
       #'user': 2,
       #'user':     tmpForm.cleaned_data['user'][0].id,#.User, #tmpForm['user'],
@@ -828,8 +866,8 @@ def home(request):
   """ The home news feed page """
 
   # Get users whose posts to display on news feed and add users account
-  users = list(request.user.followers.all())
-  users.append(request.user)
+  # ~ users = list(request.user.followers.all())
+  # ~ users.append(request.user)
 
   # Get posts from users accounts whose posts to display and order by latest
   #posts = Post.objects.filter(user__in=users).order_by('-posted_date')
