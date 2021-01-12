@@ -10,3 +10,5 @@ django-filter
 django-bootstrap4
 sklearn
 django-jquery
+psycopg2
+psycopg2-binary
