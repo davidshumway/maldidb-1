@@ -37,6 +37,7 @@ A simple social Media Application for sharing images amongst users. This applica
 ```
 
 ### Install Requirements
+Requires R and IDBacApp (R) to be installed.
 ```bash
   pip install -r requirements.txt
 ```
@@ -47,7 +48,8 @@ A simple social Media Application for sharing images amongst users. This applica
   python manage.py migrate
   python manage.py runserver
 ```
-The application should be available at http://localhost:8000/ through your browser
+The application should be available through your browser at
+http://localhost:8000/.
 
 ### Overview
 - ACS Django publications (~40) https://pubs-acs-org.proxy.cc.uic.edu/action/doSearch?AllField=%22django%22
@@ -56,3 +58,8 @@ The application should be available at http://localhost:8000/ through your brows
 - Search form
 - User management 
 - Site layout (modify)
+- Pipelines:
+-- Bin peaks and cosine scoring (i.e., search)
+-- Replicates to collapsed spectra (in progress)
+-- Preprocessing (in progress)
+-- Upload spectra files  (in progress)
