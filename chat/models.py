@@ -101,7 +101,7 @@ class AbstractSpectra(models.Model):
   # ~ xml_hash = models.TextField(blank=True)
   xml_hash = models.ForeignKey(
     'XML',
-    # ~ related_name='uploaded_by',
+    #### related_name='uploaded_by',
     db_column='xml_hash',
     on_delete=models.CASCADE, 
     blank=True,
@@ -110,7 +110,7 @@ class AbstractSpectra(models.Model):
   # ~ strain_id = models.TextField(blank=True)
   strain_id = models.ForeignKey(
     'Metadata',
-    # ~ related_name='has_metadata',
+    #### related_name='has_metadata',
     db_column='strain_id',
     on_delete=models.CASCADE,
     blank=True,
@@ -287,6 +287,7 @@ class Spectra(AbstractSpectra):
       ignore                               INTEGER,
       number                               INTEGER,
   -- Original name of cId is "id"
+  -- acquisition_date: Using CharField rather than date field for now
   """
   
   
@@ -325,7 +326,8 @@ class Spectra(AbstractSpectra):
   inlet = models.CharField(max_length=255, blank=True)
   ionization_mode = models.CharField(max_length=255, blank=True)
   acquisition_method = models.CharField(max_length=255, blank=True)
-  acquisition_date = models.DateTimeField(auto_now_add=False)
+  # ~ acquisition_date = models.DateTimeField(auto_now_add=False)
+  acquisition_date = models.CharField(max_length=255, blank=True)
   acquisition_mode = models.CharField(max_length=255, blank=True)
   tof_mode = models.CharField(max_length=255, blank=True)
   acquisition_operator_mode = models.CharField(max_length=255, blank=True)
@@ -377,7 +379,7 @@ class Metadata(models.Model):
   -- Removing unique from strain_id ???
   '''
   # ~ strain_id = models.TextField(blank=True)
-  strain_id = models.CharField(max_length=200, blank=True, unique=True)
+  strain_id = models.CharField(max_length=200, blank=True) #, unique=True)
   genbank_accession = models.CharField(max_length=200, blank=True)
   ncbi_taxid = models.CharField(max_length=200, blank=True)
   cKingdom = models.CharField(max_length=200, blank=True)
@@ -399,6 +401,18 @@ class Metadata(models.Model):
   
   dna_16s = models.TextField(blank=True)
   
+  created_by = models.ForeignKey(
+    settings.AUTH_USER_MODEL,
+    on_delete=models.CASCADE,
+    blank=True,
+    null=True)
+  
+  lab_name = models.ForeignKey(
+    'LabGroup',
+    on_delete=models.CASCADE,
+    blank=True,
+    null=True)
+    
   def get_fields(self):
     return [(field.verbose_name, field.value_to_string(self)) for field in Metadata._meta.fields]
   
@@ -425,9 +439,15 @@ class XML(models.Model):
   
   created_by = models.ForeignKey(
     settings.AUTH_USER_MODEL,
-    on_delete=models.CASCADE)
+    on_delete=models.CASCADE,
+    blank=True,
+    null=True)
   
-  lab_name = models.ForeignKey('LabGroup', on_delete=models.CASCADE)
+  lab_name = models.ForeignKey(
+    'LabGroup',
+    on_delete=models.CASCADE,
+    blank=True,
+    null=True)
   
   def get_fields(self):
     return [(field.verbose_name, field.value_to_string(self)) for field in XML._meta.fields]

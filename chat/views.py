@@ -12,6 +12,7 @@ from .forms import LocaleForm
 from .forms import VersionForm
 from .forms import AddLibraryForm
 from .forms import AddLabGroupForm
+from .forms import AddXmlForm
 from .forms import LabProfileForm
 from .forms import SearchForm
 from .forms import ViewCosineForm
@@ -31,7 +32,7 @@ from .models import LabGroup
 from django.db.models import Q
 from django.views.generic import TemplateView, ListView
 
-from .tables import LibraryTable, SpectraTable, MetadataTable, LabgroupTable, CosineSearchTable
+from .tables import LibraryTable, SpectraTable, MetadataTable, LabgroupTable, CosineSearchTable, XmlTable
 
 import django_filters
 from django_filters.views import FilterView
@@ -194,6 +195,11 @@ class SearchResultsView(ListView):
   # ~ Q(spectraID=query)
   # ~ )
   # ~ return object_list
+
+class XmlListView(SingleTableView):
+  model = XML
+  table_class = XmlTable
+  template_name = 'chat/xml.html'
 
 class LibrariesListView(SingleTableView):
   model = Library
@@ -701,12 +707,18 @@ def handle_uploaded_file(f, tmpForm):
       'pi_firstname_lastname': row[16],
       'pi_orcid': row[17],
       'dna_16s': row[18],
+      
+      'created_by': request.user.id,
+      # ~ 'created_by': tmpForm.cleaned_data['user'][0].id,
+      'library': tmpForm.cleaned_data['library'][0].id,
+      'lab_name': tmpForm.cleaned_data['lab_name'][0].id,
     }
     form = MetadataForm(data)
     if form.is_valid():
       entry = form.save(commit=False)
       entry.save()
     else:
+      print(form.errors)
       raise ValueError('xxxxx')
   
   # XML
@@ -721,6 +733,11 @@ def handle_uploaded_file(f, tmpForm):
       'analyzer': row[5],
       'detector': row[6],
       'instrument_metafile': row[7],
+      
+      'created_by': request.user.id,
+      # ~ 'created_by': tmpForm.cleaned_data['user'][0].id,
+      'library': tmpForm.cleaned_data['library'][0].id,
+      'lab_name': tmpForm.cleaned_data['lab_name'][0].id,
     }
     form = XmlForm(data)
     if form.is_valid():
@@ -770,25 +787,28 @@ def handle_uploaded_file(f, tmpForm):
     print(tmpForm.cleaned_data['privacy_level'])
     print(tmpForm.cleaned_data['privacy_level'][0])
     
-    smd = Metadata.objects.get(strain_id=row[3])
     sxml = XML.objects.get(xml_hash=row[2])
+    smd = Metadata.objects.get(strain_id=row[3])
     
     pm = json.loads(row[4])
 
     data = {
       #'user': 2,
       #'user':     tmpForm.cleaned_data['user'][0].id,#.User, #tmpForm['user'],
-      'created_by':     tmpForm.cleaned_data['user'][0].id,
-      'library':  tmpForm.cleaned_data['library'][0].id,
-      'lab_name':  tmpForm.cleaned_data['lab_name'][0].id,
+      #'created_by':     tmpForm.cleaned_data['user'][0].id,
+      'created_by': request.user.id,
+      'library': tmpForm.cleaned_data['library'][0].id,
+      'lab_name': tmpForm.cleaned_data['lab_name'][0].id,
       
       'privacy_level': tmpForm.cleaned_data['privacy_level'][0],
       
       'spectrum_mass_hash': row[0],
       'spectrum_intensity_hash': row[1],
       
-      'xml_hash': smd.id,
-      'strain_id': sxml.id,
+      # ~ 'xml_hash': sxml.xml_hash, #smd.id,
+      # ~ 'strain_id': smd.strain_id, #sxml.id,
+      'xml_hash': sxml.id,
+      'strain_id': smd.id,
       
       'peak_mass': ",".join(map(str, pm['mass'])),
       'peak_intensity': ",".join(map(str, pm['intensity'])),
@@ -911,6 +931,18 @@ def home(request):
     }
   )
 
+
+@login_required
+def add_xml(request):
+  if request.method == 'POST':
+    form = AddXmlForm(request.POST, request.FILES)
+    if form.is_valid():
+      entry = form.save(commit=False)
+      entry.save()
+      return redirect('chat:home')
+  else:
+    form = AddXmlForm()
+  return render(request, 'chat/add_xml.html', {'form': form})
 
 @login_required
 def add_lib(request):
