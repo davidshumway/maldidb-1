@@ -30,7 +30,8 @@ SECRET_KEY = '(gmgz&heyoh0o7ullp)&v_lyv!x9^z-0g=6%e*gcy0j@q&+q#w'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['*']
+#ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 #ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'maldidb-sm.herokuapp.com']
 #['*',]
 

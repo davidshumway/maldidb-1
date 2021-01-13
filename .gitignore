@@ -6,3 +6,5 @@ db.*
 db.sqlite3
 .Rhistory
 .RData
+*.sock
+maldidb.sock
