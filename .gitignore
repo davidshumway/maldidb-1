@@ -6,3 +6,6 @@ db.*
 db.sqlite3
 .Rhistory
 .RData
+*.pyc
+*.sock
+maldidb.sock

@@ -1,7 +1,7 @@
 from django import forms
 
 from .models import Comment, Spectra, Metadata, XML, Locale, Version
-from .models import Library, PrivacyLevel, LabGroup, SpectraCosineScore
+from .models import Library, PrivacyLevel, LabGroup, SpectraCosineScore, XML
 
 from django.contrib.auth import get_user_model
 user = get_user_model()
@@ -96,7 +96,7 @@ class ViewCosineForm(forms.ModelForm):
 class SpectraEditForm(forms.ModelForm):
   class Meta:
     model = Spectra
-    exclude = ('id',) 
+    exclude = ('id','created_by',) 
 
 class LibProfileForm(forms.ModelForm):
   class Meta:
@@ -122,20 +122,25 @@ class SearchForm(forms.ModelForm):
     self.fields['metadata_strain_ids'] = forms.ModelChoiceField(queryset=Metadata.objects.all())
 
   
+class AddXmlForm(forms.ModelForm):
+  class Meta:
+    model = XML
+    exclude = ('created_by',)
+  
 class AddLabGroupForm(forms.ModelForm):
   class Meta:
     model = LabGroup
-    exclude = ()
+    exclude = ('created_by',)
 
 class AddLibraryForm(forms.ModelForm):
   class Meta:
     model = Library
-    exclude = ()
+    exclude = ('created_by',)
   
 class LoadSqliteForm(forms.Form):
-  user = forms.ModelMultipleChoiceField(
-    queryset = user.objects.all(), to_field_name="username"
-  )
+  # ~ user = forms.ModelMultipleChoiceField(
+    # ~ queryset = user.objects.all(), to_field_name="username"
+  # ~ )
   lab_name = forms.ModelMultipleChoiceField(
     queryset = LabGroup.objects.all(), to_field_name="lab_name"
   )
@@ -165,7 +170,9 @@ class MetadataModelChoiceField(forms.ModelChoiceField):
     return obj.strain_id
     
 class SpectraForm(forms.ModelForm):
-  """ Form for handling addition of posts """
+  """
+  Form for handling addition of spectra
+  """
   
   #md = forms.ModelMultipleChoiceField(
   #  queryset = Metadata.objects.all() # todo: add more description per entry
@@ -227,33 +234,35 @@ class SpectraForm(forms.ModelForm):
 class XmlForm(forms.ModelForm):
   class Meta:
     model = XML
-    exclude = ('id',)
+    exclude = ('id','created_by',)
     # ~ fields = ('xml_hash','xml','manufacturer','model','ionization','analyzer','detector','instrument_metafile')
     
 class MetadataForm(forms.ModelForm):
-  """ Form for handling addition of metadata """
+  """
+  Form for handling addition of metadata
+  """
                             
   class Meta:
     model = Metadata
-    exclude = ()
+    exclude = ('created_by',)
     widgets = {
       'cKingdom': forms.Textarea(
-        attrs={'rows': 2, 'cols': 40, 'placeholder': ''}
+        attrs={'rows': 1, 'cols': 40, 'placeholder': ''}
       ),
       'cPhylum': forms.Textarea(
-        attrs={'rows': 2, 'cols': 40, 'placeholder': ''}
+        attrs={'rows': 1, 'cols': 40, 'placeholder': ''}
       ),
       'cClass': forms.Textarea(
-        attrs={'rows': 2, 'cols': 40, 'placeholder': ''}
+        attrs={'rows': 1, 'cols': 40, 'placeholder': ''}
       ),
       'cOrder': forms.Textarea(
-        attrs={'rows': 2, 'cols': 40, 'placeholder': ''}
+        attrs={'rows': 1, 'cols': 40, 'placeholder': ''}
       ),
       'cGenus': forms.Textarea(
-        attrs={'rows': 2, 'cols': 40, 'placeholder': ''}
+        attrs={'rows': 1, 'cols': 40, 'placeholder': ''}
       ),
       'cSpecies': forms.Textarea(
-        attrs={'rows': 2, 'cols': 40, 'placeholder': ''}
+        attrs={'rows': 1, 'cols': 40, 'placeholder': ''}
       ),
     }
 
@@ -268,7 +277,9 @@ class VersionForm(forms.ModelForm):
     exclude = ()
     
 class CommentForm(forms.Form):
-  """ Form for adding comments"""
+  """
+  Form for adding comments
+  """
 
   text = forms.CharField(
     label="Comment",
@@ -276,6 +287,7 @@ class CommentForm(forms.Form):
   )
 
   def save(self, spectra, user):
-    """ custom save method to create comment """
-
+    """
+    custom save method to create comment
+    """
     comment = Comment.objects.create(text=self.cleaned_data.get('text', None), post=spectra, user=user)

@@ -50,7 +50,9 @@
 	    <a class="dropdown-item" href="{% url 'chat:home' %}">Contact</a>
 	    <a class="dropdown-item" href="{% url 'chat:basic_search' %}">Basic Search</a>
 	    <a class="dropdown-item" href="{% url 'chat:basic_search' %}">Advanced Search</a>
+<!--
 	    <a class="dropdown-item" href="{% url 'chat:view_cosine' %}">Cosine similarity &amp; heatmap</a>
+-->
 <!--
 	  <div class="dropdown-divider"></div>
 	    <a class="dropdown-item" href="#">Something else here</a>
@@ -68,7 +70,8 @@
 	    <a class="dropdown-item" href="{% url 'chat:libraries_results' %}">Libraries</a>
 	    <a class="dropdown-item" href="{% url 'chat:metadata_results' %}">Metadata</a>
 	    <a class="dropdown-item" href="{% url 'chat:labgroups_results' %}">Lab Groups</a>
-	    <a class="dropdown-item" href="{% url 'chat:home' %}">Spectra SQLite</a>
+	    <a class="dropdown-item" href="{% url 'chat:xml_results' %}">XML Data</a>
+	    <a class="dropdown-item" href="{% url 'chat:home' %}">IDBac SQLite</a>
 	  </div>
 	</li>
 	<li class="nav-item dropdown"><!--class=active-->
@@ -82,7 +85,8 @@
 	    <a class="dropdown-item" href="{% url 'chat:add_lib' %}">Library</a>
 	    <a class="dropdown-item" href="{% url 'chat:add_metadata' %}">Metadata</a>
 	    <a class="dropdown-item" href="{% url 'chat:add_labgroup' %}">Lab Group</a>
-	    <a class="dropdown-item" href="{% url 'chat:add_sqlite' %}">Spectra SQLite</a>
+	    <a class="dropdown-item" href="{% url 'chat:add_xml' %}">XML Data</a>
+	    <a class="dropdown-item" href="{% url 'chat:add_sqlite' %}">IDBac SQLite</a>
 	  </div>
 	</li>
       </ul>
@@ -114,11 +118,13 @@
               <a class="nav-link" href="{% url 'chat:home' %}">
                 <i class="fas fa-fw fa-user"></i> Hello, {{ request.user }}</a>
             </li>
+<!--
             <li class="nav-item">
               <a class="nav-link" href="{% url 'accounts:followers' %}">
                 <i class="fas fa-fw fa-users"></i> Followers
               </a>
             </li>
+-->
             <li class="nav-item">
               <a class="nav-link" href="{% url 'accounts:logout' %}">
                 <i class="fas fa-fw fa-sign-out-alt"></i> Logout

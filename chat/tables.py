@@ -1,6 +1,17 @@
 import django_tables2 as tables
-from .models import Library, Spectra, Metadata, LabGroup, SearchSpectraCosineScore
+from .models import Library, Spectra, Metadata, LabGroup, SearchSpectraCosineScore, XML
 
+class XmlTable(tables.Table):
+  created_by = tables.Column(linkify=True)
+  lab_name = tables.Column(linkify=True)
+  # ~ title = tables.Column(linkify=True)
+  #test = tables.CheckBoxColumn(accessor='test')
+  class Meta:
+    model = XML
+    attrs = {"class": "table maintable"}
+    template_name = "django_tables2/bootstrap4.html"
+    exclude = ('id','xml') # xml too large to show
+    
 class LibraryTable(tables.Table):
   created_by = tables.Column(linkify=True)
   lab_name = tables.Column(linkify=True)
@@ -13,14 +24,16 @@ class LibraryTable(tables.Table):
     exclude = ("id",)
 
 class CosineSearchTable(tables.Table):
+  '''
+  Provide verbose name for score, otherwise defaults to "ID" on render.
+  '''
   
-  # Provide verbose name for score, otherwise it defaults to ID
   score = tables.Column(accessor='id', verbose_name='Score')
   id = tables.Column(linkify=True)
   xml_hash = tables.Column(linkify=True)
   
   # Abbreviate col. names
-  strain_id = tables.Column(verbose_name='Strain ID')
+  strain_id = tables.Column(linkify=True, verbose_name='Strain ID')
   v1_tof_calibration = tables.Column(verbose_name='V1 TOF cal.')
   spectrometer_type = tables.Column(verbose_name='Spec. type')
   ionization_mode = tables.Column(verbose_name='Ion. mode')
