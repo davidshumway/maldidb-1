@@ -17,8 +17,8 @@
 <!-- Add search functionality here -->
 
 {% if filter %}
-  {% bootstrap_button 'show filters' %}
-  <form action="" method="get" class="form form-inline" style="display:none;">
+  <button class="btn btn-primary" onclick="toggleFilters();">Show filters</button>
+  <form action="" method="get" class="form form-inline toggle-display" style="" id="filter-form">
     {% bootstrap_form filter.form layout='inline' %}
     {% bootstrap_button 'filter' %}
   </form>
@@ -28,7 +28,11 @@
 {% render_table table %}
 </div>
 
-
+<script type="text/javascript">
+function toggleFilters() {
+  $('#filter-form').toggleClass('toggle-display');
+}
+</script>
 
 {% endblock %}
 
