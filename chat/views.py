@@ -827,6 +827,11 @@ def handle_uploaded_file(request, tmpForm): #f
   '''
   Spectra is inserted last as it depends on XML and Metadata tables.
   Requires json and sqlite3 libraries.
+  
+  Metadata strain_id and XML xml_hash should both be unique but they are 
+  not in R01 data.
+    get() returned more than one Metadata -- it returned 2!
+    e.g, smd = ...get(strain_id=row[3])
   '''
   import json
   import sqlite3
@@ -979,11 +984,9 @@ def handle_uploaded_file(request, tmpForm): #f
     print(tmpForm.cleaned_data['privacy_level'])
     print(tmpForm.cleaned_data['privacy_level'][0])
     
-    sxml = XML.objects.get(xml_hash=row[2])
-    
-    # Metadata strain_id should be unique but it's not in R01 data.
-    # get() returned more than one Metadata -- it returned 2!
-    # smd = ...get(strain_id=row[3])
+    sxml = XML.objects.filter(xml_hash=row[2])
+    if sxml:
+      sxml = sxml[0]
     smd = Metadata.objects.filter(strain_id=row[3])
     if smd:
       smd = smd[0]
