@@ -979,7 +979,13 @@ def handle_uploaded_file(request, tmpForm): #f
     print(tmpForm.cleaned_data['privacy_level'][0])
     
     sxml = XML.objects.get(xml_hash=row[2])
-    smd = Metadata.objects.get(strain_id=row[3])
+    
+    # Metadata strain_id should be unique but it's not in R01 data.
+    # get() returned more than one Metadata -- it returned 2!
+    # smd = ...get(strain_id=row[3])
+    smd = Metadata.objects.filter(strain_id=row[3])
+    if smd:
+      smd = smd[0]
     
     pm = json.loads(row[4])
 
