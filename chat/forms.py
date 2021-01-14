@@ -154,7 +154,7 @@ class LoadSqliteForm(forms.Form):
     queryset = Library.objects.all(), to_field_name="title"
   )
   
-  file = forms.FileField()
+  file = forms.FileField(required = False)
   
   # multi select from all sqlite files (temporary), presently hosted
   hc = [
@@ -171,7 +171,7 @@ class LoadSqliteForm(forms.Form):
     ('2019_09_25_10745_db-2_0_0.sqlite','2019_09_25_10745_db-2_0_0.sqlite'),
     ('2019_11_20_1003534_db-2_0_0.sqlite','2019_11_20_1003534_db-2_0_0.sqlite')
   ]
-  hosted_files__tmp = forms.MultipleChoiceField(choices = hc)
+  hosted_files__tmp = forms.MultipleChoiceField(choices = hc, required = False)
   
   PUBLIC = 'PB'
   PRIVATE = 'PR'

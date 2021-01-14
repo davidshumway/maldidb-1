@@ -199,7 +199,7 @@ def add_sqlite(request):
   if request.method == 'POST':
     form = LoadSqliteForm(request.POST, request.FILES)
     if form.is_valid():
-      handle_uploaded_file(request.FILES['file'], form)
+      handle_uploaded_file(request, form)
       return redirect('chat:home')
   else:
     form = LoadSqliteForm()
@@ -822,7 +822,7 @@ class LabgroupsListView(SingleTableView):
   table_class = LabgroupTable
   template_name = 'chat/labgroups.html'
 
-def handle_uploaded_file(f, tmpForm):
+def handle_uploaded_file(request, tmpForm): #f
   '''
   Spectra is inserted last as it depends on XML and Metadata tables.
   Requires json and sqlite3 libraries.
@@ -830,13 +830,16 @@ def handle_uploaded_file(f, tmpForm):
   import json
   import sqlite3
   
-  if f:
+  if request.FILES and request.FILES['file']:
+    f = request.FILES['file']
     with open('/tmp/test.db', 'wb+') as destination:
       for chunk in f.chunks():
         destination.write(chunk)
     connection = sqlite3.connect('/tmp/test.db')
   elif tmpForm.cleaned_data['hosted_files__tmp'] != '': #tmpForm
-    x = tmpForm.cleaned_data['hosted_files__tmp']
+    # temp
+    # only load the first value
+    x = tmpForm.cleaned_data['hosted_files__tmp'] #list ['2019..', '..']
     hc = [
       '2019_04_15_10745_db-2_0_0.sqlite',
       '2019_07_02_22910_db-2_0_0.sqlite',
@@ -851,13 +854,15 @@ def handle_uploaded_file(f, tmpForm):
       '2019_09_25_10745_db-2_0_0.sqlite',
       '2019_11_20_1003534_db-2_0_0.sqlite',
     ]
-    print(x)
+    # ~ print(x) #list ['2019..', '..']
+    if len(x) == 0 or x[0] not in hc:
+      return
     # ~ with open('/home/ubuntu/', 'wb+') as destination:
       # ~ for chunk in f.chunks():
         # ~ destination.write(chunk)
-    connection = sqlite3.connect('/home/ubuntu/' + x)
-    print(connection)
-    return
+    connection = sqlite3.connect('/home/ubuntu/' + x[0])
+    # ~ print(connection)
+    # ~ return
   
   cursor = connection.cursor()
   
