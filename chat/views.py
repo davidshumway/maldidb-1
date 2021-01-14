@@ -700,16 +700,17 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       sprv = form.cleaned_data['privacy_level'];
       slab = form.cleaned_data['lab_name'];
       ssid = form.cleaned_data['strain_id'];
-      if slib != '':
+      if slib != None:
         n = n.filter(library__exact = slib)
-      if sprv != '':
+      if sprv != None:
         n = n.filter(privacy_level__exact = sprv)
-      if slab != '':
+      if slab != None:
         n = n.filter(lab_name__exact = slab)
-      if ssid != '':
+      if ssid != None:
         n = n.filter(strain_id__exact = ssid)
       
       n = n.order_by('xml_hash')
+      print(form.cleaned_data)
       
       idx = {}
       count = 0
