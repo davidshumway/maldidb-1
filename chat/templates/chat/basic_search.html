@@ -194,6 +194,30 @@ function show_filter(e) {
       </tr>
       {% endwith %}
       
+      <!-- additional fields -->
+      <tr>
+      <td colspan=6 align="left">
+        <a href="#" onclick="toggleAddlFields();">Additional options</a>
+      </td></tr>
+      
+      <tr class="search-addl-fields toggle-display">
+      {% for f in secondary_form_fields %}
+        {% if forloop.counter0|divisibleby:3  %}
+        </tr>
+        <tr class="search-addl-fields toggle-display">
+        {% endif %}
+        <td class="" aria-required={% if field.required %}"true"{% else %}"false"{% endif %}>
+          {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
+        </td>
+        <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
+          {{ f }}
+          {% if f.help_text %}
+            <p class="help">{{ f.help_text|safe }}</p>
+          {% endif %}
+        </td>
+      {% endfor %}
+      </tr>
+      
       <tr>
       <td colspan=6 align="center">
         <button class="btn btn-outline-success my-2 my-sm-0" type="submit">
@@ -202,45 +226,6 @@ function show_filter(e) {
     </table>
     
     
-<!--
-    {% with f=form.peak_mass %}
-    <div class="form-group" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-        {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
-        {{ f }}
-        {% if f.help_text %}
-          <p class="help">{{ f.help_text|safe }}</p>
-        {% endif %}
-    </div>
-    {% endwith %}
-    <br>
-    {% with f=form.peak_intensity %}
-    <div class="form-group" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-        {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
-        {{ f }}
-        {% if f.help_text %}
-          <p class="help">{{ f.help_text|safe }}</p>
-        {% endif %}
-    </div>
-    {% endwith %}
-    <br>
-    {% with f=form.peak_snr %}
-    <div class="form-group" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-        {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
-        {{ f }}
-        {% if f.help_text %}
-          <p class="help">{{ f.help_text|safe }}</p>
-        {% endif %}
-    </div>
-    {% endwith %}
-    
-    
-    
-    Upload mzXML or mzML: -file upload-
-        OR
-        Enter peaks and intensities:
-        <input name="peaks" placeholder="peaks" />
-        <input name="intensities" placeholder="intensities" />
--->
       
       
       
@@ -342,7 +327,7 @@ function toggleCutoff(e) {
     x2.disabled = true;
   }  
 }
-function toggleSearchForm(e) {
+function toggleSearchForm() {
   console.log(e);
   var st = $('#search_toggle');
   var si = $('#search_initial');
@@ -353,6 +338,21 @@ function toggleSearchForm(e) {
     st.css('display', 'none');
     si.css('display', 'block');
   }
+}
+
+var showAddl = false
+function toggleAddlFields(e) {
+  $('.search-addl-fields').toggleClass('toggle-display');
+  console.log('x');
+  //~ var x1 = $('.search-addl-fields');
+  //~ if (x1.css('display') == 'none') {
+    //~ x1.css('display', 'block');
+  //~ } else {
+    //~ x1.css('display', 'none');
+  //~ }
+  e.stopPropagation();
+  e.preventDefault();
+  return false;
 }
 
 /* spectra tooltip */

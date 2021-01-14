@@ -4,6 +4,7 @@ from .models import Library, Spectra, Metadata, LabGroup, SearchSpectraCosineSco
 class XmlTable(tables.Table):
   created_by = tables.Column(linkify=True)
   lab_name = tables.Column(linkify=True)
+  xml_hash = tables.Column(linkify=True)
   # ~ title = tables.Column(linkify=True)
   #test = tables.CheckBoxColumn(accessor='test')
   class Meta:

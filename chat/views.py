@@ -3,6 +3,8 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
+from django import forms
+
 from .forms import CommentForm
 from .forms import SpectraForm
 from .forms import MetadataForm
@@ -50,6 +52,15 @@ print('loaded R')
 import json
 
 
+def metadata_profile(request, strain_id):
+  """View library"""
+  md = Metadata.objects.get(strain_id=strain_id)
+  return render(
+      request,
+      'chat/metadata_profile.html',
+      {'metadata': md}
+  )
+
 def xml_profile(request, xml_hash):
   """View library"""
   xml = XML.objects.get(xml_hash=xml_hash)
@@ -82,6 +93,19 @@ def spectra_profile(request, spectra_id):
   return render(request, 'chat/spectra_profile.html', {'spectra': spectra})
 
 @login_required
+def edit_metadata(request, strain_id):
+  """ edit details of xml"""    
+  if request.method == "POST":
+    # instance kwargs passed in sets the user on the modelForm
+    form = MetadataForm(request.POST, request.FILES, instance=Metadata.objects.get(strain_id=strain_id))
+    if form.is_valid():
+      form.save()
+      return redirect(reverse('chat:view_metadata', args=(strain_id, )))
+  else:
+    form = MetadataForm(instance=XML.objects.get(strain_id=strain_id))
+  return render(request, 'chat/edit_metadata.html', {'form': form})
+
+@login_required
 def edit_xml(request, xml_hash):
   """ edit details of xml"""    
   if request.method == "POST":
@@ -91,7 +115,7 @@ def edit_xml(request, xml_hash):
       form.save()
       return redirect(reverse('chat:view_xml', args=(xml_hash, )))
   else:
-    form = XmlForm(instance=Spectra.objects.get(id=spectra_id))
+    form = XmlForm(instance=XML.objects.get(xml_hash=xml_hash))
   return render(request, 'chat/edit_xml.html', {'form': form})
 
 @login_required
@@ -141,6 +165,109 @@ def edit_labprofile(request, lab_id):
     form = LabProfileForm(instance=LabGroup.objects.get(id=lab_id))
     # ~ form = LabProfileForm(instance=request.user.profile)
   return render(request, 'chat/edit_labprofile.html', {'form': form})
+
+
+@login_required
+def add_xml(request):
+  if request.method == 'POST':
+    form = AddXmlForm(request.POST, request.FILES)
+    if form.is_valid():
+      entry = form.save(commit=False)
+      entry.created_by_id = request.user.id
+      entry.save()
+      return redirect('chat:home')
+  else:
+    form = AddXmlForm()
+  return render(request, 'chat/add_xml.html', {'form': form})
+
+@login_required
+def add_lib(request):
+  if request.method == 'POST':
+    form = AddLibraryForm(request.POST, request.FILES)
+    if form.is_valid():
+      entry = form.save(commit=False)
+      entry.created_by_id = request.user.id
+      entry.save()
+      return redirect('chat:home')
+  else:
+    form = AddLibraryForm()
+  return render(request, 'chat/add_lib.html', {'form': form})
+
+@login_required
+def add_sqlite(request):
+  '''goes into views.py'''
+  if request.method == 'POST':
+    form = LoadSqliteForm(request.POST, request.FILES)
+    if form.is_valid():
+      handle_uploaded_file(request, form)
+      return redirect('chat:home')
+  else:
+    form = LoadSqliteForm()
+  return render(request, 'chat/add_sqlite.html', {'form': form})
+  
+@login_required
+def add_labgroup(request):
+  """"""
+  if request.method == 'POST':
+    form = AddLabGroupForm(request.POST, request.FILES)
+    if form.is_valid():
+      g = form.save(commit=False)
+      g.user = request.user
+      g.created_by_id = request.user.id
+      g.save() # first save before using the m2m owners rel.
+      g.owners.add(request.user)
+      g.save()
+      #print(request)
+      #print(request.user)
+      #print(request.POST) # 'owners': ['1']}
+      #print(request.POST['owners'])
+      
+      return redirect('chat:home')
+  else:
+    form = AddLabGroupForm()
+  return render(request, 'chat/add_labgroup.html', {'form': form})
+  
+@login_required
+def add_post(request):
+  """"""
+  if request.method == 'POST':
+    form = SpectraForm(request.POST, request.FILES)
+    if form.is_valid():
+      post = form.save(commit=False)
+      post.user = request.user
+      post.created_by_id = request.user.id
+      post.save()
+      return redirect('chat:home')
+  else:
+    form = SpectraForm()
+  return render(request, 'chat/add_post.html', {'form': form})
+
+@login_required
+def add_metadata(request):
+  """ create a new posts to user """
+  if request.method == 'POST':
+    form = MetadataForm(request.POST, request.FILES)
+    if form.is_valid():
+      md = form.save(commit=False)
+      md.user = request.user
+      md.created_by_id = request.user.id
+      md.save()
+      return redirect('chat:home')
+  else:
+    form = MetadataForm()
+  return render(request, 'chat/add_metadata.html', {'form': form})
+
+@login_required
+@require_POST
+def add_comment(request, post_id):
+  """ Add a comment to a post """
+  form = CommentForm(request.POST)
+  if form.is_valid():
+    # pass the post id to the comment save() method which was overriden
+    # in the CommentForm implementation
+    comment = form.save(Spectra.objects.get(id=post_id), request.user)
+  return redirect(reverse('chat:home'))
+
 
 def simple_list(request):
   queryset = Library.objects.all()
@@ -412,7 +539,7 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
 
     f = SpectraFilter(self.request.GET, queryset=self.queryset)
     context['filter'] = f
-    print(f)
+    # ~ print(f)
     
     for attr, field in f.form.fields.items():
       context['table'].columns[attr].w = field.widget.render(attr, '')
@@ -423,16 +550,38 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
         # ~ print(attr2, value2)
         # ~ pass
     
+    # addl options
+    main_fields = [
+      'spectra_file','replicates','spectrum_cutoff','spectrum_cutoff_low',
+      'spectrum_cutoff_high','preprocessing','peak_mass','peak_intensity',
+      'peak_snr',
+    ]
+    
     context['table'].sfilter = f #context.get('filter')
+    
+    form = SpectraSearchForm(self.request.GET, self.request.FILES)
+    
     if self.show_tbl is True:
-      form = SpectraSearchForm(self.request.GET, self.request.FILES)
       form.show_tbl = True
-      context['form'] = form
     else:
-      form = SpectraSearchForm(self.request.GET, self.request.FILES)
       form.show_tbl = False
-      context['form'] = form
-      
+    
+    #     boundField = forms.forms.BoundField(form, form.fields[key], key)
+    
+    # ~ print(form.fields)
+    # addl
+    secondary_form = []
+    for tag, field in form.fields.items():
+      print(field)
+      if tag not in main_fields:
+        boundField = forms.forms.BoundField(form, form.fields[tag], tag)
+        secondary_form.append(boundField)
+        # ~ secondary_form.append(field)
+    # ~ print(form)
+    
+    context['form'] = form
+    context['secondary_form_fields'] = secondary_form
+    
     return context
   
   def get(self, *args, **kwargs):
@@ -545,7 +694,21 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
         n = n.filter(tof_mode__exact='LINEAR')
       else: # protein
         pass
-        
+      
+      # optionals
+      slib = form.cleaned_data['library'];
+      sprv = form.cleaned_data['privacy_level'];
+      slab = form.cleaned_data['lab_name'];
+      ssid = form.cleaned_data['strain_id'];
+      if slib != '':
+        n = n.filter(library__exact = slib)
+      if sprv != '':
+        n = n.filter(privacy_level__exact = sprv)
+      if slab != '':
+        n = n.filter(lab_name__exact = slab)
+      if ssid != '':
+        n = n.filter(strain_id__exact = ssid)
+      
       n = n.order_by('xml_hash')
       
       idx = {}
@@ -659,20 +822,48 @@ class LabgroupsListView(SingleTableView):
   table_class = LabgroupTable
   template_name = 'chat/labgroups.html'
 
-def handle_uploaded_file(f, tmpForm):
+def handle_uploaded_file(request, tmpForm): #f
   '''
-    Works alongside upload_sqlite_file.
-    Spectra is inserted last as it depends on XML and Metadata tables.
-    Requires json and sqlite3 libraries.
-    '''
+  Spectra is inserted last as it depends on XML and Metadata tables.
+  Requires json and sqlite3 libraries.
+  '''
   import json
   import sqlite3
   
-  with open('/tmp/test.db', 'wb+') as destination:
-    for chunk in f.chunks():
-      destination.write(chunk)
-      
-  connection = sqlite3.connect('/tmp/test.db')
+  if request.FILES and request.FILES['file']:
+    f = request.FILES['file']
+    with open('/tmp/test.db', 'wb+') as destination:
+      for chunk in f.chunks():
+        destination.write(chunk)
+    connection = sqlite3.connect('/tmp/test.db')
+  elif tmpForm.cleaned_data['hosted_files__tmp'] != '': #tmpForm
+    # temp
+    # only load the first value
+    x = tmpForm.cleaned_data['hosted_files__tmp'] #list ['2019..', '..']
+    hc = [
+      '2019_04_15_10745_db-2_0_0.sqlite',
+      '2019_07_02_22910_db-2_0_0.sqlite',
+      '2019_09_11_1003534_db-2_0_0.sqlite',
+      '2019_10_10_1003534_db-2_0_0.sqlite',
+      '2019_06_06_22910_db-2_0_0.sqlite',
+      '2019_06_06_22910_db-2_0_0.sqlite',
+      '2019_09_18_22910_db-2_0_0.sqlite',
+      '2019_11_13_1003534_db-2_0_0.sqlite',
+      '2019_06_12_10745_db-2_0_0.sqlite',
+      '2019_09_04_10745_db-2_0_0.sqlite',
+      '2019_09_25_10745_db-2_0_0.sqlite',
+      '2019_11_20_1003534_db-2_0_0.sqlite',
+    ]
+    # ~ print(x) #list ['2019..', '..']
+    if len(x) == 0 or x[0] not in hc:
+      return
+    # ~ with open('/home/ubuntu/', 'wb+') as destination:
+      # ~ for chunk in f.chunks():
+        # ~ destination.write(chunk)
+    connection = sqlite3.connect('/home/ubuntu/' + x[0])
+    # ~ print(connection)
+    # ~ return
+  
   cursor = connection.cursor()
   
   # ~ p = tmpForm.cleaned_data['library'].title
@@ -931,102 +1122,6 @@ def home(request):
     }
   )
 
-
-@login_required
-def add_xml(request):
-  if request.method == 'POST':
-    form = AddXmlForm(request.POST, request.FILES)
-    if form.is_valid():
-      entry = form.save(commit=False)
-      entry.save()
-      return redirect('chat:home')
-  else:
-    form = AddXmlForm()
-  return render(request, 'chat/add_xml.html', {'form': form})
-
-@login_required
-def add_lib(request):
-  if request.method == 'POST':
-    form = AddLibraryForm(request.POST, request.FILES)
-    if form.is_valid():
-      entry = form.save(commit=False)
-      entry.save()
-      return redirect('chat:home')
-  else:
-    form = AddLibraryForm()
-  return render(request, 'chat/add_lib.html', {'form': form})
-
-@login_required
-def add_sqlite(request):
-  '''goes into views.py'''
-  if request.method == 'POST':
-    form = LoadSqliteForm(request.POST, request.FILES)
-    if form.is_valid():
-      handle_uploaded_file(request.FILES['file'], form)
-      return redirect('chat:home')
-  else:
-    form = LoadSqliteForm()
-  return render(request, 'chat/add_sqlite.html', {'form': form})
-  
-@login_required
-def add_labgroup(request):
-  """"""
-  if request.method == 'POST':
-    form = AddLabGroupForm(request.POST, request.FILES)
-    if form.is_valid():
-      g = form.save(commit=False)
-      g.user = request.user
-      g.save() # first save before using the m2m owners rel.
-      g.owners.add(request.user)
-      g.save()
-      #print(request)
-      #print(request.user)
-      #print(request.POST) # 'owners': ['1']}
-      #print(request.POST['owners'])
-      
-      return redirect('chat:home')
-  else:
-    form = AddLabGroupForm()
-  return render(request, 'chat/add_labgroup.html', {'form': form})
-  
-@login_required
-def add_post(request):
-  """"""
-  if request.method == 'POST':
-    form = SpectraForm(request.POST, request.FILES)
-    if form.is_valid():
-      post = form.save(commit=False)
-      post.user = request.user
-      post.save()
-      return redirect('chat:home')
-  else:
-    form = SpectraForm()
-  return render(request, 'chat/add_post.html', {'form': form})
-
-@login_required
-def add_metadata(request):
-  """ create a new posts to user """
-  if request.method == 'POST':
-    form = MetadataForm(request.POST, request.FILES)
-    if form.is_valid():
-      md = form.save(commit=False)
-      md.user = request.user
-      md.save()
-      return redirect('chat:home')
-  else:
-    form = MetadataForm()
-  return render(request, 'chat/add_metadata.html', {'form': form})
-
-@login_required
-@require_POST
-def add_comment(request, post_id):
-  """ Add a comment to a post """
-  form = CommentForm(request.POST)
-  if form.is_valid():
-    # pass the post id to the comment save() method which was overriden
-    # in the CommentForm implementation
-    comment = form.save(Spectra.objects.get(id=post_id), request.user)
-  return redirect(reverse('chat:home'))
 
 
 

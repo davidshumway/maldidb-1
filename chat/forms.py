@@ -63,7 +63,7 @@ class SpectraSearchForm(forms.ModelForm):
     jquery tooltip utilizes data-toggle and title attrs
     '''
     model = Spectra
-    exclude = ('id',)
+    exclude = ('id','picture','description')
     widgets = {
       'peak_mass': forms.TextInput(
         attrs={'placeholder': '1,2,3', 'class': 'form-control',
@@ -85,6 +85,12 @@ class SpectraSearchForm(forms.ModelForm):
       ),
       'spectrum_cutoff_high': forms.TextInput(
         attrs={'size': 6, 'placeholder': 'Max. M/Z', 'class': 'form-control'}
+      ),
+      'calibration_constants': forms.Textarea(
+        attrs={'rows': 1, 'cols': 10, 'placeholder': ''}
+      ),
+      'v1_tof_calibration': forms.Textarea(
+        attrs={'rows': 1, 'cols': 10, 'placeholder': ''}
       ),
     }
     
@@ -148,7 +154,24 @@ class LoadSqliteForm(forms.Form):
     queryset = Library.objects.all(), to_field_name="title"
   )
   
-  file = forms.FileField()
+  file = forms.FileField(required = False)
+  
+  # multi select from all sqlite files (temporary), presently hosted
+  hc = [
+    ('2019_04_15_10745_db-2_0_0.sqlite','2019_04_15_10745_db-2_0_0.sqlite'),
+    ('2019_07_02_22910_db-2_0_0.sqlite','2019_07_02_22910_db-2_0_0.sqlite'),
+    ('2019_09_11_1003534_db-2_0_0.sqlite','2019_09_11_1003534_db-2_0_0.sqlite'),
+    ('2019_10_10_1003534_db-2_0_0.sqlite','2019_10_10_1003534_db-2_0_0.sqlite'),
+    ('2019_06_06_22910_db-2_0_0.sqlite','2019_06_06_22910_db-2_0_0.sqlite'),
+    ('2019_06_06_22910_db-2_0_0.sqlite','2019_06_06_22910_db-2_0_0.sqlite'),
+    ('2019_09_18_22910_db-2_0_0.sqlite','2019_09_18_22910_db-2_0_0.sqlite'),
+    ('2019_11_13_1003534_db-2_0_0.sqlite','2019_11_13_1003534_db-2_0_0.sqlite'),
+    ('2019_06_12_10745_db-2_0_0.sqlite','2019_06_12_10745_db-2_0_0.sqlite'),
+    ('2019_09_04_10745_db-2_0_0.sqlite','2019_09_04_10745_db-2_0_0.sqlite'),
+    ('2019_09_25_10745_db-2_0_0.sqlite','2019_09_25_10745_db-2_0_0.sqlite'),
+    ('2019_11_20_1003534_db-2_0_0.sqlite','2019_11_20_1003534_db-2_0_0.sqlite')
+  ]
+  hosted_files__tmp = forms.MultipleChoiceField(choices = hc, required = False)
   
   PUBLIC = 'PB'
   PRIVATE = 'PR'
@@ -234,7 +257,7 @@ class SpectraForm(forms.ModelForm):
 class XmlForm(forms.ModelForm):
   class Meta:
     model = XML
-    exclude = ('id','created_by',)
+    exclude = ('id','created_by','xml')
     # ~ fields = ('xml_hash','xml','manufacturer','model','ionization','analyzer','detector','instrument_metafile')
     
 class MetadataForm(forms.ModelForm):

@@ -180,7 +180,9 @@ class Library(models.Model):
   created_by = models.ForeignKey(
     settings.AUTH_USER_MODEL,
     # ~ related_name='created_by',
-    on_delete=models.CASCADE)
+    on_delete=models.CASCADE,
+    blank=True,
+    null=True)
   
   lab_name = models.ForeignKey('LabGroup', on_delete=models.CASCADE)
   
@@ -379,27 +381,27 @@ class Metadata(models.Model):
   -- Removing unique from strain_id ???
   '''
   # ~ strain_id = models.TextField(blank=True)
-  strain_id = models.CharField(max_length=200, blank=True) #, unique=True)
-  genbank_accession = models.CharField(max_length=200, blank=True)
-  ncbi_taxid = models.CharField(max_length=200, blank=True)
-  cKingdom = models.CharField(max_length=200, blank=True)
-  cPhylum = models.CharField(max_length=200, blank=True)
-  cClass = models.CharField(max_length=200, blank=True)
-  cOrder = models.CharField(max_length=200, blank=True)
-  cGenus = models.CharField(max_length=200, blank=True)
-  cSpecies = models.CharField(max_length=200, blank=True)
-  maldi_matrix = models.TextField(blank=True)
-  dsm_cultivation_media = models.TextField(blank=True)
-  cultivation_temp_celsius = models.TextField(blank=True)
-  cultivation_time_days = models.TextField(blank=True)
-  cultivation_other = models.TextField(blank=True)
+  strain_id = models.CharField(max_length=255, blank=True) #, unique=True)
+  genbank_accession = models.CharField(max_length=255, blank=True)
+  ncbi_taxid = models.CharField(max_length=255, blank=True)
+  cKingdom = models.CharField(max_length=255, blank=True)
+  cPhylum = models.CharField(max_length=255, blank=True)
+  cClass = models.CharField(max_length=255, blank=True)
+  cOrder = models.CharField(max_length=255, blank=True)
+  cGenus = models.CharField(max_length=255, blank=True)
+  cSpecies = models.CharField(max_length=255, blank=True)
+  maldi_matrix = models.CharField(max_length=255, blank=True)
+  dsm_cultivation_media = models.CharField(max_length=255, blank=True)
+  cultivation_temp_celsius = models.CharField(max_length=255, blank=True)
+  cultivation_time_days = models.CharField(max_length=255, blank=True)
+  cultivation_other = models.CharField(max_length=255, blank=True)
   
-  user_firstname_lastname = models.CharField(max_length=200, blank=True)
-  user_orcid = models.CharField(max_length=200, blank=True)
-  pi_firstname_lastname = models.CharField(max_length=200, blank=True)
-  pi_orcid = models.CharField(max_length=200, blank=True)
+  user_firstname_lastname = models.CharField(max_length=255, blank=True)
+  user_orcid = models.CharField(max_length=255, blank=True)
+  pi_firstname_lastname = models.CharField(max_length=255, blank=True)
+  pi_orcid = models.CharField(max_length=255, blank=True)
   
-  dna_16s = models.TextField(blank=True)
+  dna_16s = models.CharField(max_length=255, blank=True)
   
   created_by = models.ForeignKey(
     settings.AUTH_USER_MODEL,
@@ -419,20 +421,23 @@ class Metadata(models.Model):
   def __str__(self):
     #return f"{self.user.username}'s library"
     return self.strain_id
-    
+  
+  def get_absolute_url(self):
+    return reverse('chat:view_metadata', args=(self.strain_id,))
+      
 class XML(models.Model):
   '''UNIQUE(xml_hash) ---- removed '''
-  xml_hash = models.TextField(blank=True) #, unique=True
+  xml_hash = models.CharField(max_length=255, blank=True) #, unique=True
   # ~ xml             BLOB,
   #########################
   xml = models.TextField(blank=True)
   
-  manufacturer = models.CharField(max_length=200, blank=True)
-  model = models.CharField(max_length=200, blank=True)
+  manufacturer = models.CharField(max_length=255, blank=True)
+  model = models.CharField(max_length=255, blank=True)
   
-  ionization = models.TextField(blank=True)
-  analyzer = models.TextField(blank=True)
-  detector = models.TextField(blank=True)
+  ionization = models.CharField(max_length=255, blank=True)
+  analyzer = models.CharField(max_length=255, blank=True)
+  detector = models.CharField(max_length=255, blank=True)
   # ~ instrument_metafile BLOB,
   #############################
   instrument_metafile = models.TextField(blank=True)
