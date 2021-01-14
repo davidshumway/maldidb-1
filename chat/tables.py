@@ -10,7 +10,7 @@ class XmlTable(tables.Table):
   class Meta:
     model = XML
     attrs = {"class": "table maintable"}
-    template_name = "django_tables2/bootstrap4.html"
+    template_name = "chat/bootstrap4_mod.html"
     exclude = ('id','xml') # xml too large to show
     
 class LibraryTable(tables.Table):
@@ -21,7 +21,7 @@ class LibraryTable(tables.Table):
   class Meta:
     model = Library
     attrs = {"class": "table maintable"}
-    template_name = "django_tables2/bootstrap4.html"
+    template_name = "chat/bootstrap4_mod.html"
     exclude = ("id",)
 
 class CosineSearchTable(tables.Table):
@@ -97,7 +97,7 @@ class MetadataTable(tables.Table):
   class Meta:
     model = Metadata
     attrs = {"class": "table maintable"}
-    template_name = "django_tables2/bootstrap4.html"
+    template_name = "chat/bootstrap4_mod.html"
     exclude = ("id",)
 
 class LabgroupTable(tables.Table):
@@ -105,5 +105,5 @@ class LabgroupTable(tables.Table):
   class Meta:
     model = LabGroup
     attrs = {"class": "table maintable"}
-    template_name = "django_tables2/bootstrap4.html"
+    template_name = "chat/bootstrap4_mod.html"
     exclude = ("id",)

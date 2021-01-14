@@ -370,6 +370,11 @@ class Spectra(AbstractSpectra):
   # foreign key to XML?
   #xml_hash = models.TextField(blank=True) 
   
+  class Meta:
+    indexes = [
+      models.Index(fields=['tof_mode',]),
+    ]
+
   def __str__(self):
     return f"{self.created_by.username}'s spectra"
   

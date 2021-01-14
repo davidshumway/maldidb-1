@@ -300,13 +300,13 @@ function show_filter(e) {
 
 
   <!-- if search results, minimize search form -->
-  <div class="row">
-    <input type="button" class="btn btn-primary" id="search_toggle" style="display: none; width: 180px;" value="Edit Search" />
-    &nbsp;
-  {% if form.show_tbl %}  
-    {% render_table table %}
-  {% endif %}
-  </div>
+<div class="row">
+  <input type="button" class="btn btn-primary" id="search_toggle" style="display: none; width: 180px;" value="Edit Search" />
+</div>
+{% if form.show_tbl %}  
+  {% render_table table %}
+{% endif %}
+  
 
 </form>
 
