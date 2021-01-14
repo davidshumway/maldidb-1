@@ -139,7 +139,7 @@ class CollapsedSpectra(AbstractSpectra):
   min_SNR = models.DecimalField(
     max_digits=4, decimal_places=2, blank=False) #e.g. 0-1???
   tolerance = models.DecimalField(
-    max_digits=10, decimal_places=6, blank=False, default=0.002) #default = 0.002,
+    max_digits=10, decimal_places=6, blank=False, default=0.002)
   
   # spectra is protein(>6k) OR small molecule(<6k),
   # aka tofMode or acquisitionOperatorMode (REFLECTOR/LINEAR)

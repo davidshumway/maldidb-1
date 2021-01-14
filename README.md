@@ -51,6 +51,8 @@ Requires R and IDBacApp (R) to be preinstalled.
 The application should be available through your browser at
 http://localhost:8000/.
 
+A graph diagram of the models may then be generated with ```./manage.py graph_models -a -g -o models.png```.
+
 ### Overview
 - Import from SQLite
 - Search and browse data
