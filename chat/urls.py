@@ -39,6 +39,9 @@ urlpatterns = [
     # ~ path('spectra/<library_id/', FilteredSpectraLibListView.as_view(), name='spectra_library_results'),
     
     path('metadata/', MetadataListView.as_view(), name='metadata_results'),
+    path('metadata/<strain_id>/', views.metadata_profile, name='view_metadata'),
+    path('metadata/edit/<strain_id>/', views.edit_metadata, name='edit_metadata'),
+    
     path('labgroups/', LabgroupsListView.as_view(), name='labgroups_results'),
     #test
     

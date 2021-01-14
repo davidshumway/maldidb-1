@@ -71,6 +71,10 @@ body {
 #spectra-search-tbl-cutoff input[type="number"] {
 	max-width: 90px;
 }
+/**/
+.toggle-display {
+	display: none !important;
+}
 
 
 
