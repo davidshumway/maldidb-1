@@ -43,7 +43,3 @@ A graph diagram of the models may then be generated with ```./manage.py graph_mo
 - - Upload spectra files  (in progress)
 - ACS Django publications (review) https://pubs-acs-org.proxy.cc.uic.edu/action/doSearch?AllField=%22django%22
 
-- 3 drawings, one for each pipeline - slides?
- each box represents a process and/or? data, and the edges?
- and a screenshot of the pipeline in action, e.g., search results page / search page
-  add the screenshot to the drawing at that box.
