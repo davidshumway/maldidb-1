@@ -1,5 +1,8 @@
 import django_tables2 as tables
 from .models import Library, Spectra, Metadata, LabGroup, SearchSpectraCosineScore, XML
+from django.urls import reverse
+from django.utils.html import format_html
+
 
 class XmlTable(tables.Table):
   created_by = tables.Column(linkify=True)
@@ -14,10 +17,19 @@ class XmlTable(tables.Table):
     exclude = ('id','xml') # xml too large to show
     
 class LibraryTable(tables.Table):
-  created_by = tables.Column(linkify=True)
-  lab_name = tables.Column(linkify=True)
-  title = tables.Column(linkify=True)
+  created_by = tables.Column(linkify = True)
+  lab_name = tables.Column(linkify = True)
+  title = tables.Column(linkify = True)
   #test = tables.CheckBoxColumn(accessor='test')
+  collapse_replicates = tables.Column(accessor = 'id',
+    verbose_name = 'Collapse Replicates')#, linkify=True)
+  
+  def render_collapse_replicates(self, value):
+    # pass lib_id
+    r = reverse('chat:preview_collapse_lib', args=(value, )) #value.id
+    return format_html('<a href="{}">preview</a>', r)
+    # ~ return '<a href="'+r+'">preview</a>'
+    
   class Meta:
     model = Library
     attrs = {"class": "table maintable"}
@@ -55,13 +67,10 @@ class CosineSearchTable(tables.Table):
     '''
     record: entire record for the row from the table data
     '''
-    # ~ print('render_score:', record)
     return self.testing_data.get(record.id, None)
   
   def __init__(self, *args, **kwargs):
-    '''generate the scores here
-    then each row can access them.
-    '''
+    '''some reworking here to get the queryset and data back to table'''
     
     if kwargs.get('data'):
       d = kwargs.pop('data', None)
@@ -90,7 +99,6 @@ class SpectraTable(tables.Table):
     model = Spectra
     attrs = {"class": "table maintable"}
     template_name = "chat/bootstrap4_mod.html"
-    # ~ exclude = ("id",)
     exclude = ()
 
 class MetadataTable(tables.Table):

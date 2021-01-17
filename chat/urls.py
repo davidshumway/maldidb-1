@@ -57,4 +57,9 @@ urlpatterns = [
     
     path('labs/<lab_id>/', views.lab_profile, name='view_lab'),
     path('labs/edit/<lab_id>/', views.edit_labprofile, name='edit_labprofile'),
+    
+    path('preview_collapse/lib/<lib_id>/', views.preview_collapse_lib, name='preview_collapse_lib'),
+    
+    
+    
 ]

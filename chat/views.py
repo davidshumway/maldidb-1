@@ -52,8 +52,19 @@ print('loaded R')
 import json
 
 
+def preview_collapse_lib(request, lib_id):
+  """Preview a collapse of library replicates"""
+  lib = Library.objects.get(id=lib_id)
+  spectra = Spectra.objects.get(library=lib)
+  md = Metadata.objects.get(library=lib)
+  return render(
+      request,
+      'chat/preview_collapse_lib.html',
+      {'library': lib, 'spectra': spectra, 'metadata': md}
+  )
+
 def metadata_profile(request, strain_id):
-  """View library"""
+  """"""
   md = Metadata.objects.get(strain_id=strain_id)
   return render(
       request,
@@ -62,7 +73,7 @@ def metadata_profile(request, strain_id):
   )
 
 def xml_profile(request, xml_hash):
-  """View library"""
+  """"""
   xml = XML.objects.get(xml_hash=xml_hash)
   lab = LabGroup.objects.get(lab_name=xml.lab_name)
   return render(
@@ -72,7 +83,7 @@ def xml_profile(request, xml_hash):
   )
 
 def library_profile(request, library_id):
-  """View library"""
+  """"""
   lib = Library.objects.get(id=library_id)
   lab = LabGroup.objects.get(lab_name=lib.lab_name)
   s = Spectra.objects.filter(library__exact=lib)
@@ -88,13 +99,13 @@ def lab_profile(request, lab_id):
   return render(request, 'chat/lab_profile.html', {'lab': lab})
   
 def spectra_profile(request, spectra_id):
-  """View profile of lab with lab_name"""
+  """"""
   spectra = Spectra.objects.get(id=spectra_id)
   return render(request, 'chat/spectra_profile.html', {'spectra': spectra})
 
 @login_required
 def edit_metadata(request, strain_id):
-  """ edit details of xml"""    
+  """"""    
   if request.method == "POST":
     # instance kwargs passed in sets the user on the modelForm
     form = MetadataForm(request.POST, request.FILES, instance=Metadata.objects.get(strain_id=strain_id))
@@ -333,16 +344,6 @@ class LibrariesListView(SingleTableView):
   table_class = LibraryTable
   template_name = 'chat/libraries.html'
 
-class SpectraFilter(django_filters.FilterSet):
-  class Meta:
-    model = Spectra
-    exclude = ('id','picture') #fields = ['name', 'price', 'manufacturer']
-    
-# ~ def spectra_list(request):
-  # ~ filter = SpectraFilter(request.GET, queryset=Spectra.objects.all())
-  # ~ return render(request, 'chat/search_results.html', {'filter': filter})
-
-
 R('''
   suppressPackageStartupMessages(library(IDBacApp))
   # Some globals
@@ -500,31 +501,26 @@ def view_cosine(request):
   else:
     form = ViewCosineForm(instance=None)
   return render(request, 'chat/view_cosine.html', {'form': form})
-  
-  
 
+class SpectraFilter(django_filters.FilterSet):
+  library = django_filters.ModelMultipleChoiceFilter(
+    queryset = Library.objects.all()
+    #, to_field_name="title",
+    #required = False
+  )
 
-# ~ from django_tables2 import SingleTableView
-# ~ #class Person(models.Model):
-# ~ #    first_name = models.CharField(max_length=200)
-# ~ #    last_name = models.CharField(max_length=200)
-# ~ class PersonTable(tables.Table):
-  # ~ score = tables.Column()
-  # ~ def render_score(self, value):
-    # ~ print('run render_score')
-    # ~ return value + '---'
-  # ~ class Meta:
-    # ~ model = Spectra
-# ~ class PersonList(SingleTableView):
-  # ~ model = Spectra
-  # ~ table_class = PersonTable
-  # ~ template_name = 'chat/basic_search.html'
+  description = django_filters.CharFilter(lookup_expr='icontains')
 
-
+  class Meta:
+    model = Spectra
+    exclude = ('id','picture') #fields = ['name', 'price', 'manufacturer']
 
 class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
   '''
   todo: combine filter.form and table
+  table: CosineSearchTable
+  filter: SpectraFilter
+  form: SpectraSearchForm
   '''
   table_class = CosineSearchTable
   model = Spectra
@@ -532,6 +528,10 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
   filterset_class = SpectraFilter
   show_tbl = False
   
+  # ~ def form_valid(self, form):
+    # ~ form.instance.library_id = self.kwargs.get('pk')
+    # ~ return super(FilteredSpectraSearchListView, self).form_valid(form)
+
   def get_context_data(self, **kwargs):
     '''Render filter widget to pass to the table template.
     '''
@@ -539,7 +539,7 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
 
     f = SpectraFilter(self.request.GET, queryset=self.queryset)
     context['filter'] = f
-    # ~ print(f)
+    print('filter form', f)
     
     for attr, field in f.form.fields.items():
       context['table'].columns[attr].w = field.widget.render(attr, '')
@@ -559,6 +559,14 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     
     context['table'].sfilter = f #context.get('filter')
     
+    # ~ context['form'] = form
+    # ~ context['secondary_form_fields'] = secondary_form
+    # ~ return context
+    
+    # ~ self.g = self.request.GET.copy()
+    # ~ self.g['library'] = [
+      # ~ Library.objects.get(pk = int(n)) for n in self.request.GET.get('library') 
+    # ~ ]
     form = SpectraSearchForm(self.request.GET, self.request.FILES)
     
     if self.show_tbl is True:
@@ -572,7 +580,7 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     # addl
     secondary_form = []
     for tag, field in form.fields.items():
-      print(field)
+      # ~ print(field)
       if tag not in main_fields:
         boundField = forms.forms.BoundField(form, form.fields[tag], tag)
         secondary_form.append(boundField)
@@ -614,7 +622,7 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     
     if len(self.request.GET) == 0:
       return Spectra.objects.none()
-      
+    
     print(f'gq-args: {args}' ) # 
     print(f'gq-kw: {kwargs}' ) # 
     print(f'gq-sr: {self.request}' ) # 
@@ -638,13 +646,18 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     # ~ if self.request.POST is False:
       # ~ return self.queryset
     
+    # convert get to library instances?
+    # ~ self.g = self.request.GET.copy()
+    # ~ self.g['library'] = [
+      # ~ Library.objects.get(pk = int(n)) for n in self.request.GET.get('library') 
+    # ~ ]
+    
     form = SpectraSearchForm(self.request.GET, self.request.FILES)
     if form.is_valid():
-      # ~ self.show_tbl = True
       print('valid form')
       pass
     else:
-      print(form.errors)
+      print('invalid form')
       return self.queryset
     
     # http://127.0.0.1:8000/search/?peak_mass=1919%2C1939
@@ -696,18 +709,26 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
         pass
       
       # optionals
-      slib = form.cleaned_data['library'];
+      slib = form.cleaned_data['libraryXX']; #in
       sprv = form.cleaned_data['privacy_level'];
-      slab = form.cleaned_data['lab_name'];
-      ssid = form.cleaned_data['strain_id'];
+      slab = form.cleaned_data['lab_name']; #in
+      ssid = form.cleaned_data['strain_id']; #in
+      print(f'fcd: {form.cleaned_data}' ) # 
+      print('slib', slib)
+      print('slib', [lib.id for lib in slib])
       if slib != None:
-        n = n.filter(library__exact = slib)
+        print('slib', [lib.id for lib in slib])
+        n = n.filter(library__in = slib)
+        # ~ n = n.filter(library__exact = slib)
       if sprv != None:
         n = n.filter(privacy_level__exact = sprv)
+        # ~ n = n.filter(privacy_level__exact = sprv)
       if slab != None:
-        n = n.filter(lab_name__exact = slab)
+        n = n.filter(lab_name__in = slab)
+        # ~ n = n.filter(lab_name__exact = slab)
       if ssid != None:
-        n = n.filter(strain_id__exact = ssid)
+        n = n.filter(strain_id__in = ssid)
+        # ~ n = n.filter(strain_id__exact = ssid)
       
       n = n.order_by('xml_hash')
       print(form.cleaned_data)

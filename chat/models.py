@@ -129,7 +129,10 @@ class AbstractSpectra(models.Model):
     return reverse('chat:view_spectra', args=(self.id,))
   
 class CollapsedSpectra(AbstractSpectra):
-  # e.g., cs.spectra.add(s1, s2, ..., sN)
+  '''
+  Inherits strain_id
+  '''
+  # e.g., collapsed_spectra.add(s1, s2, ..., sN)
   collapsed_spectra = models.ManyToManyField('Spectra')
   
   peak_percent_presence = models.DecimalField( # e.g. 70.00%
@@ -314,43 +317,54 @@ class Spectra(AbstractSpectra):
   description = models.TextField(max_length=2048, blank=True)
   posted_date = models.DateTimeField(auto_now_add=True, blank=True)
   
-  max_mass = models.IntegerField(blank=True)
-  min_mass = models.IntegerField(blank=True)
-  ignore = models.IntegerField(blank=True)
-  number = models.IntegerField(blank=True)  
-  time_delay = models.IntegerField(blank=True)
-  time_delta = models.DecimalField(max_digits=30, decimal_places=20, blank=True)
-  calibration_constants = models.TextField(blank=True)
-  v1_tof_calibration = models.TextField(blank=True)
-  data_type = models.CharField(max_length=255, blank=True)
-  data_system = models.CharField(max_length=255, blank=True)
-  spectrometer_type = models.CharField(max_length=255, blank=True)
-  inlet = models.CharField(max_length=255, blank=True)
-  ionization_mode = models.CharField(max_length=255, blank=True)
-  acquisition_method = models.CharField(max_length=255, blank=True)
+  max_mass = models.IntegerField(blank=True, null=True)
+  min_mass = models.IntegerField(blank=True, null=True)
+  ignore = models.IntegerField(blank=True, null=True)
+  number = models.IntegerField(blank=True, null=True)  
+  time_delay = models.IntegerField(blank=True, null=True)
+  time_delta = models.DecimalField(max_digits=30, decimal_places=20, blank=True, null=True)
+  calibration_constants = models.TextField(blank=True, null=True)
+  v1_tof_calibration = models.TextField(blank=True, null=True)
+  data_type = models.CharField(max_length=255, blank=True, null=True)
+  data_system = models.CharField(max_length=255, blank=True, null=True)
+  spectrometer_type = models.CharField(max_length=255, blank=True, null=True)
+  inlet = models.CharField(max_length=255, blank=True, null=True)
+  ionization_mode = models.CharField(max_length=255, blank=True, null=True)
+  acquisition_method = models.CharField(max_length=255, blank=True, null=True)
   # ~ acquisition_date = models.DateTimeField(auto_now_add=False)
-  acquisition_date = models.CharField(max_length=255, blank=True)
-  acquisition_mode = models.CharField(max_length=255, blank=True)
-  tof_mode = models.CharField(max_length=255, blank=True)
-  acquisition_operator_mode = models.CharField(max_length=255, blank=True)
-  laser_attenuation = models.IntegerField(blank=True)
-  digitizer_type = models.CharField(max_length=255, blank=True)
-  flex_control_version = models.CharField(max_length=255, blank=True)
-  cId = models.CharField(max_length=255, blank=True) # appears to be a key to another table ???
-  instrument = models.CharField(max_length=255, blank=True)
-  instrument_id = models.CharField(max_length=255, blank=True)
-  instrument_type = models.CharField(max_length=255, blank=True)
-  mass_error = models.DecimalField(max_digits=30, decimal_places=20, blank=True)
-  laser_shots = models.IntegerField(blank=True)
-  patch = models.CharField(max_length=255, blank=True)
-  path = models.CharField(max_length=255, blank=True)
-  laser_repetition = models.DecimalField(max_digits=20, decimal_places=6, blank=True)
-  spot = models.CharField(max_length=255, blank=True)
-  spectrum_type = models.CharField(max_length=255, blank=True)
-  target_count = models.DecimalField(max_digits=10, decimal_places=4, blank=True)
-  target_id_string = models.CharField(max_length=255, blank=True)
-  target_serial_number = models.CharField(max_length=255, blank=True)
-  target_type_number = models.CharField(max_length=255, blank=True)
+  acquisition_date = models.CharField(max_length=255, blank=True, null=True)
+  acquisition_mode = models.CharField(max_length=255, blank=True, null=True)
+  
+  tof_mode = models.CharField(
+    max_length = 255,
+    choices = [
+      ('REFLECTRON', 'Reflection'),
+      ('LINEAR', 'Linear'),
+    ],
+    blank=True, null=True 
+    # ~ default = 'LINEAR',
+  )
+  # ~ tof_mode = models.CharField(max_length=255, blank=True, null=True)
+  
+  acquisition_operator_mode = models.CharField(max_length=255, blank=True, null=True)
+  laser_attenuation = models.IntegerField(blank=True, null=True)
+  digitizer_type = models.CharField(max_length=255, blank=True, null=True)
+  flex_control_version = models.CharField(max_length=255, blank=True, null=True)
+  cId = models.CharField(max_length=255, blank=True, null=True) # appears to be a key to another table ???
+  instrument = models.CharField(max_length=255, blank=True, null=True)
+  instrument_id = models.CharField(max_length=255, blank=True, null=True)
+  instrument_type = models.CharField(max_length=255, blank=True, null=True)
+  mass_error = models.DecimalField(max_digits=30, decimal_places=20, blank=True, null=True)
+  laser_shots = models.IntegerField(blank=True, null=True)
+  patch = models.CharField(max_length=255, blank=True, null=True)
+  path = models.CharField(max_length=255, blank=True, null=True)
+  laser_repetition = models.DecimalField(max_digits=20, decimal_places=6, blank=True, null=True)
+  spot = models.CharField(max_length=255, blank=True, null=True)
+  spectrum_type = models.CharField(max_length=255, blank=True, null=True)
+  target_count = models.DecimalField(max_digits=10, decimal_places=4, blank=True, null=True)
+  target_id_string = models.CharField(max_length=255, blank=True, null=True)
+  target_serial_number = models.CharField(max_length=255, blank=True, null=True)
+  target_type_number = models.CharField(max_length=255, blank=True, null=True)
   
   
     
@@ -384,6 +398,7 @@ class Spectra(AbstractSpectra):
 class Metadata(models.Model):
   ''' UNIQUE(strain_id).
   -- Removing unique from strain_id ???
+  -- Todo: Add unique(strain_id, library)
   '''
   # ~ strain_id = models.TextField(blank=True)
   strain_id = models.CharField(max_length=255, blank=True) #, unique=True)
@@ -416,6 +431,12 @@ class Metadata(models.Model):
   
   lab_name = models.ForeignKey(
     'LabGroup',
+    on_delete=models.CASCADE,
+    blank=True,
+    null=True)
+    
+  library = models.ForeignKey(
+    'Library',
     on_delete=models.CASCADE,
     blank=True,
     null=True)

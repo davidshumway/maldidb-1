@@ -57,13 +57,44 @@ class SpectraSearchForm(forms.ModelForm):
     widget = forms.RadioSelect(choices = choices))
   # on raw, include preprocessing options
   
+  # ~ lab_name = forms.ModelMultipleChoiceField(
+    # ~ queryset = LabGroup.objects.all(), to_field_name="lab_name",
+    # ~ required = False
+  # ~ )
+  libraryXX = forms.ModelMultipleChoiceField(
+    queryset = Library.objects.all(),
+    to_field_name = "title",
+    required = False
+  )
+  # ~ strain_id = forms.ModelMultipleChoiceField(
+    # ~ queryset = Metadata.objects.order_by('strain_id').distinct('strain_id'),
+    # ~ to_field_name = "strain_id",
+    # ~ required = False
+  # ~ )
   
+  def __init__(self, *args, **kwargs):
+    print(f'_init_-args: {args}' ) # 
+    print(f'_init_-kw:   {kwargs}' ) # 
+    
+    # ~ self.fields['library'] = forms.ModelMultipleChoiceField(queryset=Library.objects.all())
+    super(SpectraSearchForm, self).__init__(*args, **kwargs)
+    # ~ print('x')
+    # ~ self.fields['library'] = forms.ModelMultipleChoiceField(
+      # ~ queryset = Library.objects.all().filter(pk__in = self.fields['library'])
+    # ~ )
+    # ~ print('y')
+    #self.fields['metadata_strain_ids'] = forms.ModelChoiceField(queryset=Metadata.objects.all())
+    # ~ self.fields['library'] = forms.ModelMultipleChoiceField(queryset=Library.objects.all())
+    
+    # ~ self.fields["genre"].widget = forms.SelectMultiple(choices=foo)
+    # ~ self.fields['library'].initial = self.instance.library
+    
   class Meta:
     '''
     jquery tooltip utilizes data-toggle and title attrs
     '''
     model = Spectra
-    exclude = ('id','picture','description')
+    exclude = ('id','picture','description','library')
     widgets = {
       'peak_mass': forms.TextInput(
         attrs={'placeholder': '1,2,3', 'class': 'form-control',
@@ -92,6 +123,7 @@ class SpectraSearchForm(forms.ModelForm):
       'v1_tof_calibration': forms.Textarea(
         attrs={'rows': 1, 'cols': 10, 'placeholder': ''}
       ),
+      # ~ 'library': forms.SelectMultiple(),
     }
     
 class ViewCosineForm(forms.ModelForm):
