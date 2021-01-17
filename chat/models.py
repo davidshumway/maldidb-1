@@ -390,7 +390,9 @@ class Spectra(AbstractSpectra):
     ]
 
   def __str__(self):
-    return f"{self.created_by.username}'s spectra"
+    if self.created_by != None:
+      return f"{self.created_by.username}'s spectra"
+    else: return 'Created by an anonymous user'
   
   def get_fields(self):
     return [(field.verbose_name, field.value_to_string(self)) for field in Spectra._meta.fields]

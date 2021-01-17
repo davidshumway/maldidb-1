@@ -556,6 +556,13 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       'spectrum_cutoff_high','preprocessing','peak_mass','peak_intensity',
       'peak_snr',
     ]
+    # secondary but display on top
+    secondary_top = [
+      'lab_nameXX', 'libraryXX', 'strain_idXX', 'created_byXX',
+      'xml_hashXX',
+    ]
+    # secondary other
+    secondary_form = []
     
     context['table'].sfilter = f #context.get('filter')
     
@@ -578,14 +585,16 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     
     # ~ print(form.fields)
     # addl
-    secondary_form = []
+    
     for tag, field in form.fields.items():
-      # ~ print(field)
       if tag not in main_fields:
-        boundField = forms.forms.BoundField(form, form.fields[tag], tag)
-        secondary_form.append(boundField)
-        # ~ secondary_form.append(field)
-    # ~ print(form)
+        if tag not in secondary_top:
+          boundField = forms.forms.BoundField(form, form.fields[tag], tag)
+          secondary_form.append(boundField)
+        else: # prepend, add to index=0
+          boundField = forms.forms.BoundField(form, form.fields[tag], tag)
+          boundField.label = boundField.label.replace('xx', '')
+          secondary_form.insert(0, boundField)
     
     context['form'] = form
     context['secondary_form_fields'] = secondary_form
@@ -711,8 +720,8 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       # optionals
       slib = form.cleaned_data['libraryXX']; #in
       sprv = form.cleaned_data['privacy_level'];
-      slab = form.cleaned_data['lab_name']; #in
-      ssid = form.cleaned_data['strain_id']; #in
+      slab = form.cleaned_data['lab_nameXX']; #in
+      ssid = form.cleaned_data['strain_idXX']; #in
       print(f'fcd: {form.cleaned_data}' ) # 
       print('slib', slib)
       print('slib', [lib.id for lib in slib])

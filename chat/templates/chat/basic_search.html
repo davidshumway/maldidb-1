@@ -190,27 +190,28 @@ function show_filter(e) {
       </tr>
       {% endwith %}
       
-      <!-- additional fields -->
+      <!-- Additional fields -->
       <tr>
       <td colspan=6 align="left">
         <a href="#" onclick="toggleAddlFields();">Additional options</a>
       </td></tr>
-      
       <tr class="search-addl-fields toggle-display">
       {% for f in secondary_form_fields %}
         {% if forloop.counter0|divisibleby:3  %}
         </tr>
         <tr class="search-addl-fields toggle-display">
         {% endif %}
-        <td class="" aria-required={% if field.required %}"true"{% else %}"false"{% endif %}>
-          {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
-        </td>
-        <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-          {{ f }}
-          {% if f.help_text %}
-            <p class="help">{{ f.help_text|safe }}</p>
-          {% endif %}
-        </td>
+
+          <td class="" aria-required={% if field.required %}"true"{% else %}"false"{% endif %}>
+            {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
+          </td>
+          <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
+            {{ f }}
+            {% if f.help_text %}
+              <p class="help">{{ f.help_text|safe }}</p>
+            {% endif %}
+          </td>
+
       {% endfor %}
       </tr>
       
