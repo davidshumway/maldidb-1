@@ -4,7 +4,7 @@ from .models import Comment, Spectra, Metadata, XML, Locale, Version
 from .models import Library, PrivacyLevel, LabGroup, SpectraCosineScore, XML
 
 from django.contrib.auth import get_user_model
-user = get_user_model()
+User = get_user_model()
 
 class SpectraSearchForm(forms.ModelForm):
   '''Replicated, Collapsed, all
@@ -57,13 +57,53 @@ class SpectraSearchForm(forms.ModelForm):
     widget = forms.RadioSelect(choices = choices))
   # on raw, include preprocessing options
   
+  lab_nameXX = forms.ModelMultipleChoiceField(
+    queryset = LabGroup.objects.all(),
+    to_field_name = "lab_name",
+    required = False
+  )
+  libraryXX = forms.ModelMultipleChoiceField(
+    queryset = Library.objects.all(),
+    to_field_name = "title",
+    required = False
+  )
+  strain_idXX = forms.ModelMultipleChoiceField(
+    # ~ queryset = Spectra.objects.order_by('strain_id').distinct('strain_id'),
+    queryset = Metadata.objects.order_by('strain_id').distinct('strain_id'),
+    to_field_name = "strain_id",
+    required = False
+  )
+  distinct_users = Spectra.objects.order_by('created_by').values_list('created_by',flat=True).distinct()
+  created_byXX = forms.ModelMultipleChoiceField(
+    queryset = User.objects.all().filter(id__in = distinct_users),
+    # ~ queryset = Spectra.objects.order_by('created_by').distinct('created_by'),
+    # ~ queryset = User.objects.all().filter(id__in = ),
+    to_field_name = "username", 
+    required = False
+  )
+  xml_hashXX = forms.ModelMultipleChoiceField(
+    # ~ queryset = Spectra.objects.order_by('xml_hash').distinct('xml_hash'),
+    queryset = XML.objects.order_by('xml_hash').distinct('xml_hash'),
+    # ~ to_field_name = "xml_hash",
+    required = False
+  )
   
+  # ~ def __init__(self, *args, **kwargs):
+    # ~ print(f'_init_-args: {args}' ) # 
+    # ~ print(f'_init_-kw:   {kwargs}' ) # 
+    # ~ super(SpectraSearchForm, self).__init__(*args, **kwargs)
+    
   class Meta:
     '''
-    jquery tooltip utilizes data-toggle and title attrs
+    -- jQuery tooltip utilizes data-toggle and title attrs
+    -- Multiple select fields need to not be the model, because the model
+       expects these to be a single ID, e.g., library, strain_id, lab_name.
     '''
     model = Spectra
-    exclude = ('id','picture','description')
+    exclude = (
+      'id','picture','description','library','strain_id','lab_name',
+      'created_by','xml_hash'
+    )
     widgets = {
       'peak_mass': forms.TextInput(
         attrs={'placeholder': '1,2,3', 'class': 'form-control',
@@ -92,6 +132,7 @@ class SpectraSearchForm(forms.ModelForm):
       'v1_tof_calibration': forms.Textarea(
         attrs={'rows': 1, 'cols': 10, 'placeholder': ''}
       ),
+      # ~ 'library': forms.SelectMultiple(),
     }
     
 class ViewCosineForm(forms.ModelForm):

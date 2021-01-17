@@ -43,24 +43,12 @@ function show_filter(e) {
     
 
   <div class="card">
-<!--
-    <div class="card-body" id="">
-    
-    </div>
--->
-    <div class="card-body" id="search_initial" style="display: none;">
-    
-      
-  
-  
-<!--
-    {{ form.as_table }}
--->
+  <div class="card-body" id="search_initial" style="display: none;">
     
     <table class="table spectra-search-tbl">
       <thead>
         <tr>
-        <th colspan=6>Enter spectrum peak values or upload a spectra</th>
+        <th colspan=6>Enter spectrum peak values, select a spectrum from database, or upload a new spectra</th>
         </tr>
       </thead>
       {% with f=form.peak_mass g=form.peak_intensity h=form.peak_snr %}
@@ -84,7 +72,9 @@ function show_filter(e) {
       {% endwith %}
       
       <td colspan=2 align="center" valign="middle">
-        - OR -
+        <button type="button" class="btn btn-primary" onclick="return false;">
+            DB select form
+            (popup)</button>
       </td>
       
       {% with f=form.spectra_file %}
@@ -92,7 +82,13 @@ function show_filter(e) {
         {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
       </td>
       <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
+        <button type="button" class="btn btn-primary" onclick="return false;">
+            New spectrum
+            upload form
+            (popup)</button>
+<!--
         {{ f }}
+-->
         {% if f.help_text %}
           <p class="help">{{ f.help_text|safe }}</p>
         {% endif %}
@@ -194,29 +190,34 @@ function show_filter(e) {
       </tr>
       {% endwith %}
       
-      <!-- additional fields -->
+      <!-- Additional fields -->
       <tr>
       <td colspan=6 align="left">
         <a href="#" onclick="toggleAddlFields();">Additional options</a>
       </td></tr>
-      
       <tr class="search-addl-fields toggle-display">
       {% for f in secondary_form_fields %}
         {% if forloop.counter0|divisibleby:3  %}
         </tr>
         <tr class="search-addl-fields toggle-display">
         {% endif %}
-        <td class="" aria-required={% if field.required %}"true"{% else %}"false"{% endif %}>
-          {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
-        </td>
-        <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-          {{ f }}
-          {% if f.help_text %}
-            <p class="help">{{ f.help_text|safe }}</p>
-          {% endif %}
-        </td>
+
+          <td class="" aria-required={% if field.required %}"true"{% else %}"false"{% endif %}>
+            {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
+          </td>
+          <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
+            {{ f }}
+            {% if f.help_text %}
+              <p class="help">{{ f.help_text|safe }}</p>
+            {% endif %}
+          </td>
+
       {% endfor %}
       </tr>
+      
+      
+      
+      
       
       <tr>
       <td colspan=6 align="center">
@@ -328,7 +329,6 @@ function toggleCutoff(e) {
   }  
 }
 function toggleSearchForm() {
-  console.log(e);
   var st = $('#search_toggle');
   var si = $('#search_initial');
   if (st.css('display') == 'none') {
