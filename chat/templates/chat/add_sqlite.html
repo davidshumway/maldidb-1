@@ -20,7 +20,7 @@
 		          </div>
 		        {% endif %}
 		        
-		        <form method="POST" enctype="multipart/form-data">
+		        <form method="POST" enctype="multipart/form-data" class="form-add-sqlite">
 		          {% csrf_token %}
 		          {% for field in form %}
 		          <div class="form-group">
@@ -48,4 +48,21 @@
 		</div>
 -->
 	</div>
+	
+<script type="text/javascript">
+function toggleFile(e) {
+	$('#id_file').parent().toggleClass(
+		'toggle-display',
+		this.id != 'id_upload_type_0'
+	);
+}
+// id_upload_type_1
+window.addEventListener('DOMContentLoaded', (event) => {
+  var x1 = $('#id_upload_type_0');
+  var x2 = $('#id_upload_type_1');
+  console.log(x1);
+  x1.click(toggleFile);
+  x2.click(toggleFile);
+});
+</script>
 {% endblock %}

@@ -195,24 +195,17 @@ class LoadSqliteForm(forms.Form):
     queryset = Library.objects.all(), to_field_name="title"
   )
   
-  file = forms.FileField(required = False)
-  
-  # multi select from all sqlite files (temporary), presently hosted
-  hc = [
-    ('2019_04_15_10745_db-2_0_0.sqlite','2019_04_15_10745_db-2_0_0.sqlite'),
-    ('2019_07_02_22910_db-2_0_0.sqlite','2019_07_02_22910_db-2_0_0.sqlite'),
-    ('2019_09_11_1003534_db-2_0_0.sqlite','2019_09_11_1003534_db-2_0_0.sqlite'),
-    ('2019_10_10_1003534_db-2_0_0.sqlite','2019_10_10_1003534_db-2_0_0.sqlite'),
-    ('2019_06_06_22910_db-2_0_0.sqlite','2019_06_06_22910_db-2_0_0.sqlite'),
-    ('2019_06_06_22910_db-2_0_0.sqlite','2019_06_06_22910_db-2_0_0.sqlite'),
-    ('2019_09_18_22910_db-2_0_0.sqlite','2019_09_18_22910_db-2_0_0.sqlite'),
-    ('2019_11_13_1003534_db-2_0_0.sqlite','2019_11_13_1003534_db-2_0_0.sqlite'),
-    ('2019_06_12_10745_db-2_0_0.sqlite','2019_06_12_10745_db-2_0_0.sqlite'),
-    ('2019_09_04_10745_db-2_0_0.sqlite','2019_09_04_10745_db-2_0_0.sqlite'),
-    ('2019_09_25_10745_db-2_0_0.sqlite','2019_09_25_10745_db-2_0_0.sqlite'),
-    ('2019_11_20_1003534_db-2_0_0.sqlite','2019_11_20_1003534_db-2_0_0.sqlite')
+  choices = [
+    ('single', 'Load a single IDBac SQLite file'),
+    ('all', 'Load all IDBac R01 data files'),
   ]
-  hosted_files__tmp = forms.MultipleChoiceField(choices = hc, required = False)
+  upload_type = forms.CharField(
+    label = 'Upload type',
+    widget = forms.RadioSelect(choices = choices),
+    required = True,
+    initial = 'single')
+    
+  file = forms.FileField(required = False, label = 'Select an IDBac SQLite file to upload')
   
   PUBLIC = 'PB'
   PRIVATE = 'PR'
@@ -226,6 +219,19 @@ class LoadSqliteForm(forms.Form):
      # ~ #User.objects.all() # todo: add more description per entry
   # ~ )
   
+  def clean(self):
+    data = self.cleaned_data
+    print('add form',data)
+    # ~ raise forms.ValidationError(
+      # ~ 'Select a file to upload!'
+    # ~ )
+    if data.get('file') == None and data.get('upload_type') == 'single':
+      raise forms.ValidationError(
+        'Select a file to upload!'
+      )
+    else:
+      return data
+      
 
 
 class MetadataModelChoiceField(forms.ModelChoiceField):

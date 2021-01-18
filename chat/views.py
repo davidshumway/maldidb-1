@@ -812,7 +812,7 @@ class LabgroupsListView(SingleTableView):
   table_class = LabgroupTable
   template_name = 'chat/labgroups.html'
 
-def handle_uploaded_file(request, tmpForm): #f
+def handle_uploaded_file(request, tmpForm):
   '''
   Spectra is inserted last as it depends on XML and Metadata tables.
   Requires json and sqlite3 libraries.
@@ -824,11 +824,6 @@ def handle_uploaded_file(request, tmpForm): #f
   '''
   import json
   import sqlite3
-  # ~ print('--')
-  # ~ print(request)
-  # ~ print(request.user) #lksdjf
-  # ~ print(request.user.id) #1
-  # ~ return
   
   if request.FILES and request.FILES['file']:
     f = request.FILES['file']
@@ -836,10 +831,8 @@ def handle_uploaded_file(request, tmpForm): #f
       for chunk in f.chunks():
         destination.write(chunk)
     connection = sqlite3.connect('/tmp/test.db')
-  elif tmpForm.cleaned_data['hosted_files__tmp'] != '': #tmpForm
-    # temp
-    # only load the first value
-    x = tmpForm.cleaned_data['hosted_files__tmp'] #list ['2019..', '..']
+    idbac_sqlite_insert(request, tmpForm, connection)
+  elif tmpForm.cleaned_data['upload_type'] == 'all': # hosted on server
     hc = [
       '2019_04_15_10745_db-2_0_0.sqlite',
       '2019_07_02_22910_db-2_0_0.sqlite',
@@ -854,13 +847,12 @@ def handle_uploaded_file(request, tmpForm): #f
       '2019_09_25_10745_db-2_0_0.sqlite',
       '2019_11_20_1003534_db-2_0_0.sqlite',
     ]
-    # ~ print(x) #list ['2019..', '..']
-    if len(x) == 0 or x[0] not in hc:
-      return
-    # ~ with open('/home/ubuntu/', 'wb+') as destination:
-      # ~ for chunk in f.chunks():
-        # ~ destination.write(chunk)
-    connection = sqlite3.connect('/home/ubuntu/' + x[0])
+    for f in hc:
+      connection = sqlite3.connect('/home/ubuntu/' + f)
+      idbac_sqlite_insert(request, tmpForm, connection)
+    
+  
+def idbac_sqlite_insert(request, tmpForm, connection):
     
   cursor = connection.cursor()
   
