@@ -58,31 +58,31 @@ class AbstractSpectra(models.Model):
     (PRIVATE, 'Private'),
   ]
   privacy_level = models.CharField(
-    max_length=2,
-    choices=privacyChoices,
-    default=PUBLIC,
-    blank=True,
-    null=True
+    max_length = 2,
+    choices = privacyChoices,
+    default = PUBLIC,
+    blank = True,
+    null = True
   )
   
   library = models.ForeignKey(
     'Library',
-    on_delete=models.CASCADE,
-    blank=True,
-    null=True)
+    on_delete = models.CASCADE,
+    blank = True,
+    null = True)
   
   created_by = models.ForeignKey(
     settings.AUTH_USER_MODEL,
     # ~ related_name='created_by',
-    on_delete=models.CASCADE,
-    blank=True,
-    null=True)
+    on_delete = models.CASCADE,
+    blank = True,
+    null = True)
   
   lab_name = models.ForeignKey(
     'LabGroup',
-    on_delete=models.CASCADE,
-    blank=True,
-    null=True)
+    on_delete = models.CASCADE,
+    blank = True,
+    null = True)
   
   # Averaged m/z and intensity values in case of collapse spectra
   # ~ peak_matrix = models.TextField(blank=True)
@@ -213,9 +213,9 @@ class Library(models.Model):
     (BRONZE, 'Bronze'),
   ]
   quality_rating = models.CharField(
-    max_length=2,
-    choices=qualChoices,
-    default=BRONZE,
+    max_length = 2,
+    choices = qualChoices,
+    default = BRONZE,
   )
   
   def __str__(self):
@@ -270,9 +270,9 @@ class SearchSpectra(AbstractSpectra):
   created_by = models.ForeignKey(
     settings.AUTH_USER_MODEL,
     # ~ related_name='created_by',
-    on_delete=models.CASCADE,
-    blank=True,
-    null=True)
+    on_delete = models.CASCADE,
+    blank = True,
+    null = True)
   
 class Spectra(AbstractSpectra):
   """ Spectra Model
@@ -338,7 +338,7 @@ class Spectra(AbstractSpectra):
   tof_mode = models.CharField(
     max_length = 255,
     choices = [
-      ('REFLECTRON', 'Reflection'),
+      ('REFLECTOR', 'Reflector'),
       ('LINEAR', 'Linear'),
     ],
     blank=True, null=True 

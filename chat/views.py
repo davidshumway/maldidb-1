@@ -42,7 +42,11 @@ from django_tables2.views import SingleTableMixin
 from django_tables2 import SingleTableView
 import django_tables2 as tables
 
-# For distance measurement
+# unused
+# ~ from django.contrib.auth import get_user_model
+# ~ User = get_user_model()
+
+# Distance measurement
 from sklearn.metrics.pairwise import cosine_similarity
 
 # R/json for binning
@@ -55,8 +59,8 @@ import json
 def preview_collapse_lib(request, lib_id):
   """Preview a collapse of library replicates"""
   lib = Library.objects.get(id=lib_id)
-  spectra = Spectra.objects.get(library=lib)
-  md = Metadata.objects.get(library=lib)
+  spectra = Spectra.objects.filter(library=lib)
+  md = Metadata.objects.filter(library=lib)
   return render(
       request,
       'chat/preview_collapse_lib.html',
@@ -386,8 +390,10 @@ R('''
     # Discard symmetric part of matrix
     d[lower.tri(d, diag = FALSE)] <- NA
     
-    d <- d[1,] # first column
-    #print(d)
+    # ~ print(d[1,][0])
+    print(d[2,])
+    
+    d <- d[1,] # first row
   }
   
   # heatmap code
@@ -564,16 +570,8 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     # secondary other
     secondary_form = []
     
-    context['table'].sfilter = f #context.get('filter')
+    context['table'].sfilter = f
     
-    # ~ context['form'] = form
-    # ~ context['secondary_form_fields'] = secondary_form
-    # ~ return context
-    
-    # ~ self.g = self.request.GET.copy()
-    # ~ self.g['library'] = [
-      # ~ Library.objects.get(pk = int(n)) for n in self.request.GET.get('library') 
-    # ~ ]
     form = SpectraSearchForm(self.request.GET, self.request.FILES)
     
     if self.show_tbl is True:
@@ -581,9 +579,6 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     else:
       form.show_tbl = False
     
-    #     boundField = forms.forms.BoundField(form, form.fields[key], key)
-    
-    # ~ print(form.fields)
     # addl
     
     for tag, field in form.fields.items():
@@ -608,22 +603,6 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     return resp
   
   # ~ def post(self, request, *args, **kwargs):
-    # ~ form = SpectraSearchForm(self.request.POST, self.request.FILES)
-    # ~ if form.is_valid():
-      # ~ form.show_tbl = True
-      # ~ print('form is valid')
-      # ~ pass
-    # ~ else:
-      # ~ print('form is invalid')
-      # ~ print(form)
-      # ~ print(form.errors)
-      # ~ pass
-    # ~ return render(request, self.template_name, {'form': form})
-    
-    # ~ if form.is_valid():
-      # ~ return HttpResponseRedirect('/success/')
-    # ~ return render(request, self.template_name, {'form': form})
-
 
   def get_queryset(self, *args, **kwargs):
     '''calling queryset.update does not update the model.'''
@@ -635,31 +614,7 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     print(f'gq-args: {args}' ) # 
     print(f'gq-kw: {kwargs}' ) # 
     print(f'gq-sr: {self.request}' ) # 
-    
-    # ~ form = AddLibraryForm(request.POST, request.FILES)
-    # ~ if form.is_valid():
-      # ~ entry = form.save(commit=False)
-      # ~ entry.save()
-      # ~ return redirect('chat:home')
-    # ~ else:
-      # ~ form = AddLibraryForm()
-    # ~ return render(request, 'chat/add_lib.html', {'form': form})
-    
-    
     print(f'gq-get: {self.request.GET}' ) # 
-    # ~ print(f'gq-post: {self.request.POST}' ) # 
-
-    # ~ sp = self.request.POST.get('peak_mass')
-    # ~ si = self.request.POST.get('peak_intensity')
-    # ~ sn = self.request.POST.get('peak_snr')
-    # ~ if self.request.POST is False:
-      # ~ return self.queryset
-    
-    # convert get to library instances?
-    # ~ self.g = self.request.GET.copy()
-    # ~ self.g['library'] = [
-      # ~ Library.objects.get(pk = int(n)) for n in self.request.GET.get('library') 
-    # ~ ]
     
     form = SpectraSearchForm(self.request.GET, self.request.FILES)
     if form.is_valid():
@@ -719,28 +674,32 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       
       # optionals
       slib = form.cleaned_data['libraryXX']; #in
-      sprv = form.cleaned_data['privacy_level'];
-      slab = form.cleaned_data['lab_nameXX']; #in
-      ssid = form.cleaned_data['strain_idXX']; #in
+      # ~ sprv = form.cleaned_data['privacy_level'];
+      slab = form.cleaned_data['lab_nameXX'];
+      ssid = form.cleaned_data['strain_idXX'];
+      sxml = form.cleaned_data['xml_hashXX'];
+      scrb = form.cleaned_data['created_byXX'];
       print(f'fcd: {form.cleaned_data}' ) # 
-      print('slib', slib)
-      print('slib', [lib.id for lib in slib])
-      if slib != None:
-        print('slib', [lib.id for lib in slib])
+      if slib.exists():
+        print('e---1')
         n = n.filter(library__in = slib)
-        # ~ n = n.filter(library__exact = slib)
-      if sprv != None:
-        n = n.filter(privacy_level__exact = sprv)
+      # ~ if sprv.exists():
         # ~ n = n.filter(privacy_level__exact = sprv)
-      if slab != None:
+      if slab.exists():
+        print('e---2')
         n = n.filter(lab_name__in = slab)
-        # ~ n = n.filter(lab_name__exact = slab)
-      if ssid != None:
+      if ssid.exists():
+        print('e---3')
         n = n.filter(strain_id__in = ssid)
-        # ~ n = n.filter(strain_id__exact = ssid)
-      
+      if sxml.exists():
+        print('e---4')
+        n = n.filter(xml_hash__in = sxml)
+      if scrb.exists():
+        print('e---5')
+        n = n.filter(created_by__in = scrb)
       n = n.order_by('xml_hash')
-      print(form.cleaned_data)
+      print(n)
+      # ~ print(form.cleaned_data)
       
       idx = {}
       count = 0
@@ -865,6 +824,11 @@ def handle_uploaded_file(request, tmpForm): #f
   '''
   import json
   import sqlite3
+  # ~ print('--')
+  # ~ print(request)
+  # ~ print(request.user) #lksdjf
+  # ~ print(request.user.id) #1
+  # ~ return
   
   if request.FILES and request.FILES['file']:
     f = request.FILES['file']
@@ -897,19 +861,8 @@ def handle_uploaded_file(request, tmpForm): #f
       # ~ for chunk in f.chunks():
         # ~ destination.write(chunk)
     connection = sqlite3.connect('/home/ubuntu/' + x[0])
-    # ~ print(connection)
-    # ~ return
-  
+    
   cursor = connection.cursor()
-  
-  # ~ p = tmpForm.cleaned_data['library'].title
-  # ~ p1 = tmpForm.cleaned_data['user']
-  # ~ p2 = tmpForm.cleaned_data['library'][0].title
-  # ~ p3 = tmpForm.cleaned_data['user'][0]
-  # ~ p1 = tmpForm.cleaned_data['user']
-  #p = tmpForm.cleaned_data['user'].filter(username=user) #objects.first()
-  # ~ p1 = tmpForm.cleaned_data.get('library').value()
-  
   
   # Metadata
   rows = cursor.execute("SELECT * FROM metaData").fetchall()
@@ -1027,7 +980,7 @@ def handle_uploaded_file(request, tmpForm): #f
       #'user': 2,
       #'user':     tmpForm.cleaned_data['user'][0].id,#.User, #tmpForm['user'],
       #'created_by':     tmpForm.cleaned_data['user'][0].id,
-      'created_by': request.user.id,
+      'created_by': request.user.id,#User.objects.get(id__exact = request.user.id),
       'library': tmpForm.cleaned_data['library'][0].id,
       'lab_name': tmpForm.cleaned_data['lab_name'][0].id,
       
@@ -1124,7 +1077,6 @@ def home(request):
   #posts = Post.objects.filter(user__in=users).order_by('-posted_date')
   comment_form = CommentForm()
   
-  # get xml
   x = XML.objects.all()
   y = Metadata.objects.all()
   y1 = Locale.objects.all()
