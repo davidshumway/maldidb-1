@@ -272,8 +272,8 @@ class SpectraForm(forms.ModelForm):
 
   class Meta:
     model = Spectra
-    #fields = ('peaks', 'intensities')
-    exclude = ('created_by',)
+    exclude = ('id',)
+    # ~ exclude = ('created_by',)
     widgets = {
       'description': forms.Textarea(
         attrs={'rows': 1, 'cols': 40, 'placeholder': 'General description of the spectra.'}
@@ -298,7 +298,8 @@ class SpectraForm(forms.ModelForm):
 class XmlForm(forms.ModelForm):
   class Meta:
     model = XML
-    exclude = ('id','created_by','xml')
+    # ~ exclude = ('id','created_by','xml')
+    exclude = ('id','xml',)
     # ~ fields = ('xml_hash','xml','manufacturer','model','ionization','analyzer','detector','instrument_metafile')
     
 class MetadataForm(forms.ModelForm):
@@ -308,7 +309,8 @@ class MetadataForm(forms.ModelForm):
                             
   class Meta:
     model = Metadata
-    exclude = ('created_by',)
+    # ~ exclude = ('created_by',)
+    exclude = ('id',)
     widgets = {
       'cKingdom': forms.Textarea(
         attrs={'rows': 1, 'cols': 40, 'placeholder': ''}
