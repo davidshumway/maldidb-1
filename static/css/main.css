@@ -1,8 +1,14 @@
+/*
 .bg-grey {
-	background: #eeeeee;
+	background: #efffef;
 }
+*/
 body {
-	background: #efefef;
+	background: #fafafa;
+}
+/*nav*/
+#mainNav {
+	background: #efefef !important;
 }
 .dropdown, .dropup {
 	margin-left: 10px !important;
@@ -28,9 +34,7 @@ body {
 	text-overflow: ellipsis;
 	overflow: hidden;
 	padding: 0 !important;
-/*
 	border: 1px solid #bbb;
-*/
 }
 /* Override default table container to avoid expanding off the page */
 .table-container {
@@ -56,16 +60,27 @@ body {
 .modal-table-cols label {
 	display: block;
 }
-/* Align left */
-.search-peakrow div {
-	height: 60px;
+/* Spectra search */
+	/* Align left */
+	.search-peakrow div {
+		height: 60px;
+	}
+	/**/
+	.spectra-search-tbl ul {
+		list-style-type: none;
+	}
+	#spectra-search-tbl-cutoff input[type="number"] {
+		max-width: 90px;
+	}
+/* Add sqlite */
+.form-add-sqlite ul {
+	list-style-type: none !important;
+	margin: 0px 0px 20px 0px ;
+	padding: 7px 5px 7px 5px ;
 }
 /**/
-.spectra-search-tbl ul {
-	list-style-type: none;
-}
-#spectra-search-tbl-cutoff input[type="number"] {
-	max-width: 90px;
+.toggle-display {
+	display: none !important;
 }
 
 
