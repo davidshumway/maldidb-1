@@ -19,25 +19,29 @@ class SpectraSearchForm(forms.ModelForm):
   )
   
   choices = [
-    ('replicate', 'Replicates'),
     ('collapsed', 'Collapsed Spectra'),
+    ('replicate', 'Replicates'),
     ('all', 'All'),
   ]
-  replicates = forms.CharField(
+  replicates = forms.ChoiceField(
     label = 'Spectrum type',
     widget = forms.RadioSelect(choices = choices),
-    required = True)
+    choices = choices,
+    required = True,
+    initial = 'collapsed')
   
   choices = [
-    ('small', 'Small Molecule'),
     ('protein', 'Protein'),
+    ('small', 'Small Molecule'),
     ('all', 'All'),
     ('custom', 'Custom'),
   ]
-  spectrum_cutoff = forms.CharField(
-    label = 'Spectrum cutoff',
-    widget = forms.RadioSelect(choices = choices),
-    required = True)
+  spectrum_cutoff = forms.ChoiceField(
+    label = 'Spectrum cutoff', 
+    widget = forms.RadioSelect,
+    choices = choices,
+    required = True,
+    initial = 'protein')
   # on custom, then allow for a range
   spectrum_cutoff_low = forms.IntegerField(
     label = 'Minimum M/Z',
@@ -52,10 +56,13 @@ class SpectraSearchForm(forms.ModelForm):
     ('processed', 'Processed Spectrum'),
     ('raw', 'Raw Spectrum'),
   ]
-  preprocessing = forms.CharField(
+  preprocessing = forms.ChoiceField(
     label = 'Spectrum state:',
-    widget = forms.RadioSelect(choices = choices))
+    widget = forms.RadioSelect(choices = choices),
+    choices = choices,
+    initial = 'processed')
   # on raw, include preprocessing options
+  # (todo?)
   
   lab_nameXX = forms.ModelMultipleChoiceField(
     queryset = LabGroup.objects.all(),
@@ -92,6 +99,24 @@ class SpectraSearchForm(forms.ModelForm):
     # ~ print(f'_init_-args: {args}' ) # 
     # ~ print(f'_init_-kw:   {kwargs}' ) # 
     # ~ super(SpectraSearchForm, self).__init__(*args, **kwargs)
+  
+  def clean(self):
+    data = self.cleaned_data
+    # ~ print('add form',data)
+    # ~ raise forms.ValidationError(
+      # ~ 'Select a file to upload!'
+    # ~ )
+    # ~ if data.get('file') == None and data.get('upload_type') == 'single':
+      # ~ raise forms.ValidationError(
+        # ~ 'Select a file to upload!'
+      # ~ )
+    print('dpm',data.get('peak_mass'))
+    if (data.get('peak_mass') != '' or data.get('peak_intensity') != '' or data.get('peak_snr') != '') and (data.get('peak_mass') == '' or data.get('peak_intensity') == '' or data.get('peak_snr') == ''):
+      raise forms.ValidationError(
+        'Peak mass, intensity, and SNR must be entered!'
+      )
+    else:
+      return data
     
   class Meta:
     '''

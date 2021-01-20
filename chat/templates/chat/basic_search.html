@@ -97,36 +97,7 @@ function show_filter(e) {
 <!--
       <td>{{ form.spectra_file }}</td>
 -->
-      
       </tr>
-      
-      
-<!--
-      {% with f=form.peak_intensity %}
-      <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-        {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
-      </td>
-      <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-        {{ f }}
-        {% if f.help_text %}
-          <p class="help">{{ f.help_text|safe }}</p>
-        {% endif %}
-      </td>
-      {% endwith %}
-      
-      {% with f=form.peak_snr %}
-      <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-        {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
-      </td>
-      <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-        {{ f }}
-        {% if f.help_text %}
-          <p class="help">{{ f.help_text|safe }}</p>
-        {% endif %}
-      </td>
-      </tr>
-      {% endwith %}
--->
       
       {% with f=form.replicates %}
       <tr>
@@ -164,13 +135,6 @@ function show_filter(e) {
         {% endif %}
         {% endfor %}
         </ul>
-<!--
-        {{ f }}
-        <div style="display: none; width: 80px;">
-        {{ g }}
-        {{ h }}
-        </div>
--->
         {% if f.help_text %}
           <p class="help">{{ f.help_text|safe }}</p>
         {% endif %}
@@ -216,7 +180,19 @@ function show_filter(e) {
       </tr>
       
       
-      
+      {% if form.errors %}
+       {% for field in form %}
+           {% if field.errors %}
+             {% for error in field.errors %} 
+                <tr><td colspan="6" align="center">
+                <div class="alert alert-danger">
+                     <strong>Error with search field "{{field.label_tag}}": {{ error|escape }}</strong>
+                </div>
+                </td></tr>
+            {% endfor %}
+          {% endif %}
+       {% endfor %}
+    {% endif %}
       
       
       <tr>
@@ -343,13 +319,6 @@ function toggleSearchForm() {
 var showAddl = false
 function toggleAddlFields(e) {
   $('.search-addl-fields').toggleClass('toggle-display');
-  console.log('x');
-  //~ var x1 = $('.search-addl-fields');
-  //~ if (x1.css('display') == 'none') {
-    //~ x1.css('display', 'block');
-  //~ } else {
-    //~ x1.css('display', 'none');
-  //~ }
   e.stopPropagation();
   e.preventDefault();
   return false;

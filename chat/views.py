@@ -545,7 +545,7 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
 
     f = SpectraFilter(self.request.GET, queryset=self.queryset)
     context['filter'] = f
-    print('filter form', f)
+    # ~ print('filter form', f)
     
     for attr, field in f.form.fields.items():
       context['table'].columns[attr].w = field.widget.render(attr, '')
@@ -572,21 +572,27 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     
     context['table'].sfilter = f
     
-    form = SpectraSearchForm(self.request.GET, self.request.FILES)
+    print(f'gg: {self.request.GET}' ) # 
+    print(f'gg: {self.request.GET.get("peak_mass")}' ) # 
+    if self.request.GET.get('peak_mass'):
+      form = SpectraSearchForm(self.request.GET, self.request.FILES,
+        initial = {'spectrum_cutoff': 'protein', 'replicates': 'collapsed'}
+      )
+    else:
+      form = SpectraSearchForm()
     
     if self.show_tbl is True:
       form.show_tbl = True
     else:
       form.show_tbl = False
     
-    # addl
-    
+    # Addl fields
     for tag, field in form.fields.items():
       if tag not in main_fields:
         if tag not in secondary_top:
           boundField = forms.forms.BoundField(form, form.fields[tag], tag)
           secondary_form.append(boundField)
-        else: # prepend, add to index=0
+        else: # Prepend, add to index=0
           boundField = forms.forms.BoundField(form, form.fields[tag], tag)
           boundField.label = boundField.label.replace('xx', '')
           secondary_form.insert(0, boundField)
@@ -598,8 +604,8 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
   
   def get(self, *args, **kwargs):
     resp = super().get(*args, **kwargs)
-    print(f'get-args: {args}' ) # 
-    print(f'get-kw: {kwargs}' ) # 
+    # ~ print(f'get-args: {args}' ) # 
+    # ~ print(f'get-kw: {kwargs}' ) # 
     return resp
   
   # ~ def post(self, request, *args, **kwargs):
@@ -611,10 +617,10 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     if len(self.request.GET) == 0:
       return Spectra.objects.none()
     
-    print(f'gq-args: {args}' ) # 
-    print(f'gq-kw: {kwargs}' ) # 
-    print(f'gq-sr: {self.request}' ) # 
-    print(f'gq-get: {self.request.GET}' ) # 
+    # ~ print(f'gq-args: {args}' ) # 
+    # ~ print(f'gq-kw: {kwargs}' ) # 
+    # ~ print(f'gq-sr: {self.request}' ) # 
+    # ~ print(f'gq-get: {self.request.GET}' ) # 
     
     form = SpectraSearchForm(self.request.GET, self.request.FILES)
     if form.is_valid():
@@ -681,25 +687,17 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       scrb = form.cleaned_data['created_byXX'];
       print(f'fcd: {form.cleaned_data}' ) # 
       if slib.exists():
-        print('e---1')
         n = n.filter(library__in = slib)
-      # ~ if sprv.exists():
-        # ~ n = n.filter(privacy_level__exact = sprv)
       if slab.exists():
-        print('e---2')
         n = n.filter(lab_name__in = slab)
       if ssid.exists():
-        print('e---3')
         n = n.filter(strain_id__in = ssid)
       if sxml.exists():
-        print('e---4')
         n = n.filter(xml_hash__in = sxml)
       if scrb.exists():
-        print('e---5')
         n = n.filter(created_by__in = scrb)
       n = n.order_by('xml_hash')
-      print(n)
-      # ~ print(form.cleaned_data)
+      # ~ print(n)
       
       idx = {}
       count = 0
@@ -743,7 +741,9 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       # overwrite the table data to add some custom data, i.e., the score
       self.table_data = {'scores': scores, 'queryset': q}
       
+      # Returns a queryset
       return q
+
     # Empty queryset
     return Spectra.objects.none()
 
@@ -757,25 +757,7 @@ class FilteredSpectraListView(SingleTableMixin, FilterView):
   filterset_class = SpectraFilter
   
   def get_queryset(self):
-    print('Got a GET', self.request.GET)
-    
-    # ~ filter = SpectraFilter(self.request.GET, queryset=Spectra.objects.all())
-    #return render(self.request, 'chat/spectra.html', {'filter': filter})
-    # ~ return render(self.request, 'chat/search_results.html', {'filter': filter})
-    
-  # ~ def get_queryset(self):
-    # ~ filter = SpectraFilter(request.GET, queryset=Spectra.objects.all())
-    # ~ return render(request, 'chat/spectra.html', {'filter': filter})
-    # all spectra from a given strain_id
-    # ~ 
-    # ~ object_list = Spectra.objects.filter(
-      # ~ strain_id__strain_id__exact = strain_id
-    # ~ )
-    
-    ### All species
-    #species_list = Metadata.objects.order_by().values('strain_id').distinct()
-    
-    # ~ return object_list
+    pass
 
 
     
@@ -787,20 +769,6 @@ class SpectraListView(SingleTableView):
   def get_queryset(self):
     filter = SpectraFilter(request.GET, queryset=Spectra.objects.all())
     return render(request, 'chat/spectra.html', {'filter': filter})
-    
-  # ~ def get_queryset(self):
-    
-    # ~ # all spectra from a given strain_id
-    # ~ strain_id = self.request.GET.get('strain_id')
-    # ~ object_list = Spectra.objects.filter(
-      # ~ strain_id__strain_id__exact = strain_id
-      # ~ ###Q(metadata__strain_id__exact = strain_id)
-    # ~ )
-    
-    # ~ ### All species
-    # ~ #species_list = Metadata.objects.order_by().values('strain_id').distinct()
-    
-    # ~ return object_list
 
 class MetadataListView(SingleTableView):
   model = Metadata
@@ -881,7 +849,6 @@ def idbac_sqlite_insert(request, tmpForm, connection):
       'dna_16s': row[18],
       
       'created_by': request.user.id,
-      # ~ 'created_by': tmpForm.cleaned_data['user'][0].id,
       'library': tmpForm.cleaned_data['library'][0].id,
       'lab_name': tmpForm.cleaned_data['lab_name'][0].id,
     }
@@ -953,12 +920,6 @@ def idbac_sqlite_insert(request, tmpForm, connection):
   rows = cursor.execute("SELECT * FROM spectra").fetchall()
   for row in rows:
     
-    #print(row[2] + '--2')
-    #print(row[3] + '--3')
-    print(tmpForm.cleaned_data)
-    print(tmpForm.cleaned_data['privacy_level'])
-    print(tmpForm.cleaned_data['privacy_level'][0])
-    
     sxml = XML.objects.filter(xml_hash=row[2])
     if sxml:
       sxml = sxml[0]
@@ -969,10 +930,7 @@ def idbac_sqlite_insert(request, tmpForm, connection):
     pm = json.loads(row[4])
 
     data = {
-      #'user': 2,
-      #'user':     tmpForm.cleaned_data['user'][0].id,#.User, #tmpForm['user'],
-      #'created_by':     tmpForm.cleaned_data['user'][0].id,
-      'created_by': request.user.id,#User.objects.get(id__exact = request.user.id),
+      'created_by': request.user.id,
       'library': tmpForm.cleaned_data['library'][0].id,
       'lab_name': tmpForm.cleaned_data['lab_name'][0].id,
       
@@ -981,8 +939,6 @@ def idbac_sqlite_insert(request, tmpForm, connection):
       'spectrum_mass_hash': row[0],
       'spectrum_intensity_hash': row[1],
       
-      # ~ 'xml_hash': sxml.xml_hash, #smd.id,
-      # ~ 'strain_id': smd.strain_id, #sxml.id,
       'xml_hash': sxml.id,
       'strain_id': smd.id,
       
@@ -990,14 +946,6 @@ def idbac_sqlite_insert(request, tmpForm, connection):
       'peak_intensity': ",".join(map(str, pm['intensity'])),
       'peak_snr': ",".join(map(str, pm['snr'])),
       
-      #'TESTxml_hash': row[2],
-      #'TESTstrain_id': row[3],
-      # ~ 'xml_hash': row[2],
-      # ~ 'strain_id': row[3],
-      
-      
-      # ~ 'peak_matrix': '', #TEMP row[4],
-      # ~ 'spectrum_intensity': '',#TEMP row[5],
       'max_mass': row[6],
       'min_mass': row[7],
       'ignore': row[8],
@@ -1253,68 +1201,7 @@ try:
     }
   ''')
   
-  # ~ pi = R('distMatrix')
-  #print('x')
-  # ~ print("R['distMatrix']:", R['g'](1))
-  
-  #n = [[0,1,2,3,4,5],[0,0,0,0,0,0]]
-  
-  
-  
-  # sample data is a matrix: x: col1, col2, colN, y: mazda, honda, carN.
-  # ~ d = {'x': robjects.IntVector((1,2,3)), 'y': robjects.IntVector((4,5,6))}
-  # ~ dataf1 = robjects.DataFrame(d)
-  # ~ dataf2 = robjects.DataFrame(d)
-  # ~ dataf3 = robjects.DataFrame(d)
-  # ~ print(dataf1)
-  # ~ d2 = {'spectra': [dataf1, dataf2, dataf3]}
-  # ~ n = robjects.DataFrame(d2)
-  # ~ print(n)
-  #n = [dataf1, dataf2, dataf3]
-  
-  # ~ d = {'x': robjects.IntVector((1,2,3)), 'y': robjects.IntVector((4,5,6))}
-  # ~ n = robjects.DataFrame(d)
-  
-  # ~ d2 = {'spectra': robjects.DataFrame([d, d, d])}
-  # ~ d2 = {'spectra': (d, d, d)}
-  # ~ d2 = {'spectra': [d, d, d]}
-  # ~ n = robjects.DataFrame(d2)
-  # ~ print(n)
-  
-  # ~ v1 = robjects.FloatVector([1.1, 2.2, 1.2, 2.3])
-  # ~ v2 = robjects.FloatVector([1.1, 2.2, 1.2, 2.3])
-  
-  
-  # ~ v1 = robjects.FloatVector([1.1, 2.2, 1.2, 2.3])
-  # ~ v2 = robjects.FloatVector([1.1, 2.2, 1.2, 2.3])
-  # ~ v3 = robjects.FloatVector([1.1, 2.2, 1.2, 2.3])
-  # ~ m1 = R['matrix'](v1, nrow = 2)
-  # ~ m2 = R['matrix'](v2, nrow = 2)
-  # ~ m3 = R['matrix'](v3, nrow = 2)
-  # ~ print(m1)
-  # ~ n = R['matrix']([m1,m2,m3], nrow=1)
-  # ~ # n = R['matrix']([v1,v2,v3])
-  # ~ # n = robjects.DataFrame()
-  # ~ print(n)
-
-  # ~ print(R['distMatrix'](
-      # ~ v1, v2,
-      # ~ 'cosine',
-      # ~ True
-    # ~ ))
-  
 except:
   print('did not load R')
   pass
 
-
-
-'''
-  
-    
-    
-    
-
-
-
-       '''
