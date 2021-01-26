@@ -15,7 +15,7 @@
 ```
 
 ### Install Requirements
-Requires R and IDBacApp (R) to be preinstalled.
+Requires R, IDBacApp R library, and RabbitMQ to be preinstalled.
 ```bash
   pip install -r requirements.txt
 ```

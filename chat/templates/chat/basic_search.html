@@ -179,7 +179,7 @@ function show_filter(e) {
       {% endfor %}
       </tr>
       
-      
+      <!-- Form errors -->
       {% if form.errors %}
        {% for field in form %}
            {% if field.errors %}
@@ -193,7 +193,6 @@ function show_filter(e) {
           {% endif %}
        {% endfor %}
     {% endif %}
-      
       
       <tr>
       <td colspan=6 align="center">

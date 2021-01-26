@@ -3,8 +3,43 @@ from django.conf import settings
 import uuid
 from django.urls import reverse
 
-    
-
+class UserTasks(models.Model):
+  thread_ident = models.CharField(max_length=255, blank=True, null=False)
+  owner = models.ForeignKey(
+    settings.AUTH_USER_MODEL,
+    on_delete=models.CASCADE,
+    blank=False,
+    null=False)
+  start_date = models.DateTimeField(auto_now_add=True, blank=False)
+  finish_date = models.DateTimeField(blank=True, null=True)
+  task_complete = models.BooleanField(blank=False, null=False,
+    default=False)
+  task_choices = [
+    ('idbac_sql','Insert IDBac SQLite data to database'),
+    ('spectra','Add spectra files to database'),
+    ('preprocess','Preprocess spectra'),
+    ('collapse','Collapse replicates'),
+    ('cos_search','Cosine score search'),
+  ]
+  task_description = models.CharField(
+    max_length=255,
+    choices=task_choices,
+    blank=True,
+    null=True
+  )
+  completion_choices = [
+    ('start', 'Started'),
+    ('run', 'Running'),
+    ('complete', 'Completed'),
+    ('error', 'Completed - Error'),
+  ]
+  status = models.CharField(
+    max_length=255,
+    choices=completion_choices,
+    blank=True,
+    null=True
+  )
+  
 class AbstractCosineScore(models.Model):
   score = models.DecimalField(
     max_digits=10, decimal_places=6, blank=False)
@@ -98,19 +133,15 @@ class AbstractSpectra(models.Model):
   spectrum_mass_hash = models.CharField(max_length=255, blank=True)
   spectrum_intensity_hash = models.CharField(max_length=255, blank=True)
   
-  # ~ xml_hash = models.TextField(blank=True)
   xml_hash = models.ForeignKey(
     'XML',
-    #### related_name='uploaded_by',
     db_column='xml_hash',
     on_delete=models.CASCADE, 
     blank=True,
     null=True)
     
-  # ~ strain_id = models.TextField(blank=True)
   strain_id = models.ForeignKey(
     'Metadata',
-    #### related_name='has_metadata',
     db_column='strain_id',
     on_delete=models.CASCADE,
     blank=True,
@@ -131,18 +162,25 @@ class AbstractSpectra(models.Model):
 class CollapsedSpectra(AbstractSpectra):
   '''
   Inherits strain_id
+  Pipeline cols: peak_percent_presence, lower_mass_cutoff,
+    upper_mass_cutoff, min_snr, tolerance
+  Remove lower and upper mass cutoff.
+  MALDIQuant docs: 4.10 Feature Matrix We choose a very low
+    signal-to-noise ratio to keep as much features as possible.
+    To remove some false positive peaks we remove less frequent peaks.
   '''
   # e.g., collapsed_spectra.add(s1, s2, ..., sN)
   collapsed_spectra = models.ManyToManyField('Spectra')
   
   peak_percent_presence = models.DecimalField( # e.g. 70.00%
-    max_digits=4, decimal_places=2, blank=False)
-  lower_mass_cutoff = models.IntegerField(blank=True) #e.g. 0
-  upper_mass_cutoff = models.IntegerField(blank=True) #e.g. 6000
-  min_SNR = models.DecimalField(
-    max_digits=4, decimal_places=2, blank=False) #e.g. 0-1???
+    max_digits=4, decimal_places=1, blank=False, default=70.0)
+  # ~ lower_mass_cutoff = models.IntegerField(blank=True) #e.g. 0
+  # ~ upper_mass_cutoff = models.IntegerField(blank=True) #e.g. 6000
+  
+  min_snr = models.DecimalField(
+    max_digits=4, decimal_places=2, blank=False, default=0.25) #e.g. 0-1???
   tolerance = models.DecimalField(
-    max_digits=10, decimal_places=6, blank=False, default=0.002)
+    max_digits=10, decimal_places=3, blank=False, default=0.002)
   
   # spectra is protein(>6k) OR small molecule(<6k),
   # aka tofMode or acquisitionOperatorMode (REFLECTOR/LINEAR)

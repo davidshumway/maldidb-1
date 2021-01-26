@@ -1,9 +1,31 @@
 import django_tables2 as tables
-from .models import Library, Spectra, Metadata, LabGroup, SearchSpectraCosineScore, XML
+from .models import Library, Spectra, Metadata, LabGroup, \
+  SearchSpectraCosineScore, XML, UserTasks
 from django.urls import reverse
 from django.utils.html import format_html
 
-
+class UserTasksTable(tables.Table):
+  class Meta:
+    model = UserTasks
+    attrs = {"class": "table maintable"}
+    template_name = "chat/bootstrap4_mod.html"
+    exclude = ('id',)
+  
+class LibCollapseTable(tables.Table):
+  num_replicates = tables.Column()
+  strain_id = tables.Column()
+  spectrum_type = tables.Column()
+  
+  def render_strain_id(self, value):
+    print('rsid value', value)
+    return '-----'+value.strain_id
+    
+  class Meta:
+    model = Spectra
+    attrs = {"class": "table maintable"}
+    template_name = "chat/bootstrap4_mod.html"
+    fields = ['id']
+    
 class XmlTable(tables.Table):
   created_by = tables.Column(linkify=True)
   lab_name = tables.Column(linkify=True)
@@ -26,8 +48,10 @@ class LibraryTable(tables.Table):
   
   def render_collapse_replicates(self, value):
     # pass lib_id
-    r = reverse('chat:preview_collapse_lib', args=(value, )) #value.id
-    return format_html('<a href="{}">preview</a>', r)
+    r = reverse('chat:preview_collapse_lib') #, args=(value, )
+    return format_html(
+      '<a href="{}?library='+str(value)+'">preview</a>', r
+    )
     # ~ return '<a href="'+r+'">preview</a>'
     
   class Meta:

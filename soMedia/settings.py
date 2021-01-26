@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     'bootstrap4',
     'jquery',
     'django_extensions',
+    # ~ 'celery',
+    # ~ 'celery_progress',
     #'whitenoise.runserver_nostatic',
 ]
 
@@ -166,3 +168,10 @@ AUTH_USER_MODEL = 'accounts.User'
 #STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 #STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 #django_heroku.settings(locals())
+
+
+# Celery Settings
+# ~ BROKER_URL = 'pyamqp://localhost:5672'
+# ~ CELERY_RESULT_BACKEND = 'pyamqp://localhost:5672'
+# ~ BROKER_URL = 'redis://localhost:6379'
+# ~ CELERY_RESULT_BACKEND = 'redis://localhost:6379'

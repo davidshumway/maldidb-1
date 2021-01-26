@@ -6,6 +6,66 @@ from .models import Library, PrivacyLevel, LabGroup, SpectraCosineScore, XML
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
+
+class LibraryCollapseForm(forms.Form):
+  '''
+  Select: Collapse all replicates marked as "Linear" vs. "Reflector"
+  User selects a library.
+  Spectra are grouped by machine setting linear vs. reflector.
+  Spectra then grouped by strain id.
+  '''
+  # ~ library = forms.CharField(disabled = True, required = True)
+  library = forms.ModelChoiceField(
+    queryset = Library.objects.all(),
+    # ~ to_field_name = "title",
+    required = False 
+  )
+  
+  #CollapsedSpectra
+  peak_percent_presence = forms.DecimalField( # e.g. 70.00%
+    max_value=100, decimal_places=1, initial=70.0)
+  #lower_mass_cutoff = models.IntegerField(blank=True) #e.g. 0
+  #upper_mass_cutoff = models.IntegerField(blank=True) #e.g. 6000
+  min_snr = forms.DecimalField(
+    decimal_places=2, initial=0.25) #e.g.?
+  tolerance = forms.DecimalField(
+    decimal_places=3, initial=0.002)
+  
+  spectraChoices = [
+    ('protein', 'Protein'),
+    ('sm', 'Small Molecule'),
+    ('all', 'All'),
+  ]
+  collapse_types = forms.ChoiceField(
+    label = 'Select replicates to collapse',
+    choices = spectraChoices,
+    widget = forms.RadioSelect,
+    initial = 'all',
+    required = True
+  )
+  
+  #generated_date = forms.DateTimeField(auto_now_add=True, blank=True)
+  
+  class Meta:
+    model = Library
+    fields = ['id']
+    
+  # ~ def __init__(self, *args, **kwargs):
+    # ~ g = kwargs.pop('get','')
+    
+    # Get initial data passed from the view
+    #self.library = None
+    #if 'library' in kwargs['initial']:
+    #  self.library = kwargs['initial'].pop('library')
+    
+    # ~ super(LibraryCollapseForm, self).__init__(*args, **kwargs)
+      
+    #self.fields['library'].queryset = Library.objects.filter(id=self.library)
+    # ~ print(f'_init_-args: {args}')
+    # ~ print(f'_init_-args: {kwargs}')
+    #if 
+    # ~ self.fields['metadata_strain_ids'] = forms.ModelChoiceField(queryset=Metadata.objects.all())
+    
 class SpectraSearchForm(forms.ModelForm):
   '''Replicated, Collapsed, all
   Small molecule, Protein, all [or range, e.g., 3k-8k]
@@ -75,7 +135,6 @@ class SpectraSearchForm(forms.ModelForm):
     required = False
   )
   strain_idXX = forms.ModelMultipleChoiceField(
-    # ~ queryset = Spectra.objects.order_by('strain_id').distinct('strain_id'),
     queryset = Metadata.objects.order_by('strain_id').distinct('strain_id'),
     to_field_name = "strain_id",
     required = False
@@ -83,35 +142,29 @@ class SpectraSearchForm(forms.ModelForm):
   distinct_users = Spectra.objects.order_by('created_by').values_list('created_by',flat=True).distinct()
   created_byXX = forms.ModelMultipleChoiceField(
     queryset = User.objects.all().filter(id__in = distinct_users),
-    # ~ queryset = Spectra.objects.order_by('created_by').distinct('created_by'),
-    # ~ queryset = User.objects.all().filter(id__in = ),
     to_field_name = "username", 
     required = False
   )
   xml_hashXX = forms.ModelMultipleChoiceField(
-    # ~ queryset = Spectra.objects.order_by('xml_hash').distinct('xml_hash'),
     queryset = XML.objects.order_by('xml_hash').distinct('xml_hash'),
-    # ~ to_field_name = "xml_hash",
     required = False
   )
   
   # ~ def __init__(self, *args, **kwargs):
-    # ~ print(f'_init_-args: {args}' ) # 
-    # ~ print(f'_init_-kw:   {kwargs}' ) # 
+    # ~ print(f'_init_-args: {args}') # 
+    # ~ print(f'_init_-kw:   {kwargs}') # 
     # ~ super(SpectraSearchForm, self).__init__(*args, **kwargs)
   
   def clean(self):
     data = self.cleaned_data
-    # ~ print('add form',data)
-    # ~ raise forms.ValidationError(
-      # ~ 'Select a file to upload!'
-    # ~ )
-    # ~ if data.get('file') == None and data.get('upload_type') == 'single':
-      # ~ raise forms.ValidationError(
-        # ~ 'Select a file to upload!'
-      # ~ )
     print('dpm',data.get('peak_mass'))
-    if (data.get('peak_mass') != '' or data.get('peak_intensity') != '' or data.get('peak_snr') != '') and (data.get('peak_mass') == '' or data.get('peak_intensity') == '' or data.get('peak_snr') == ''):
+    s1 = (
+      data.get('peak_mass') != '' or data.get('peak_intensity') != '' or data.get('peak_snr') != ''
+    )
+    s2 = (
+      data.get('peak_mass') == '' or data.get('peak_intensity') == '' or data.get('peak_snr') == ''
+    )
+    if s1 and s2:
       raise forms.ValidationError(
         'Peak mass, intensity, and SNR must be entered!'
       )
