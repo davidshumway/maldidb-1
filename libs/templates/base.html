@@ -114,10 +114,26 @@
     <div class="collapse navbar-collapse" id="navbarResponsive">
         <ul class="navbar-nav ml-auto">
           {% if request.user.is_authenticated %}
+	    <li class="nav-item dropdown">
+	      <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+		Hello, {{ request.user }}
+	      </a>
+	      <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+		<a class="dropdown-item" href="{% url 'accounts:view-profile' request.user %}">Profile</a>
+		<a class="dropdown-item" href="{% url 'chat:user_tasks' %}">Tasks</a>
+<!--
+		<a class="dropdown-item" href="{% url 'chat:home' %}">Logs</a>
+-->
+		<a class="dropdown-item" href="{% url 'accounts:logout' %}">Logout</a>
+	      </div>
+	    </li>
+	  
+<!--
             <li class="nav-item">
               <a class="nav-link" href="{% url 'chat:home' %}">
                 <i class="fas fa-fw fa-user"></i> Hello, {{ request.user }}</a>
             </li>
+-->
 <!--
             <li class="nav-item">
               <a class="nav-link" href="{% url 'accounts:followers' %}">
@@ -125,11 +141,13 @@
               </a>
             </li>
 -->
+<!--
             <li class="nav-item">
               <a class="nav-link" href="{% url 'accounts:logout' %}">
                 <i class="fas fa-fw fa-sign-out-alt"></i> Logout
               </a>
             </li>
+-->
         {% else %}
           <li class="nav-item">
               <a class="nav-link" href="{% url 'accounts:login' %}">

@@ -5,7 +5,8 @@ from .views import SearchResultsView, LibrariesListView, SpectraListView, \
   MetadataListView, LabgroupsListView, XmlListView, \
   FilteredSpectraListView, FilteredSpectraSearchListView, \
   FilteredSpectraListView, FilteredSpectraSearchListView, \
-  LibCollapseListView, UserTasksListView
+  LibCollapseListView, UserTaskListView
+  #UserLogsListView
 
 app_name = 'chat'
 
@@ -66,5 +67,6 @@ urlpatterns = [
   # ~ path('preview_collapse/lib/<lib_id>/', views.preview_collapse_lib, name='preview_collapse_lib'), #<lib_id>/
   
   
-  path('tasks/', UserTasksListView.as_view(), name='user_tasks'),
+  path('tasks/', UserTaskListView.as_view(), name='user_tasks'),
+  # ~ path('logs/', UserLogsListView.as_view(), name='user_logs'),
 ]

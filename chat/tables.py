@@ -1,30 +1,72 @@
 import django_tables2 as tables
 from .models import Library, Spectra, Metadata, LabGroup, \
-  SearchSpectraCosineScore, XML, UserTasks
+  SearchSpectraCosineScore, XML, UserTask, UserTaskStatus
+  #UserLogs
 from django.urls import reverse
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 
-class UserTasksTable(tables.Table):
+# ~ class UserLogsTable(tables.Table):
+  # ~ class Meta:
+    # ~ model = UserLogs
+    # ~ attrs = {"class": "table maintable"}
+    # ~ template_name = "chat/bootstrap4_mod.html"
+    # ~ exclude = ('id',)
+      
+class UserTaskTable(tables.Table):
+  '''
+  -- friends = tables.ManyToManyColumn(transform=lambda user: u.name)
+  If only the active friends should be displayed, you can use the `filter` argument::
+  friends = tables.ManyToManyColumn(filter=lambda qs: qs.filter(is_active=True))
+  '''
+  statuses = tables.ManyToManyColumn(
+    # ~ transform = lambda s: s.status,
+    # ~ separator = '---***---***---***---'
+  )
+  
+  def render_statuses(self, value):
+    out = []
+    for s in value.all():
+      r = s.status + ' (' + str(s.status_date) + ')'
+      if s.extra != '':
+        s.extra = s.extra[0:60] + '...' if len(s.extra) > 60 else s.extra
+        if s.status == 'info':
+          r += '<div class="alert alert-info">' + s.extra + '<div>'
+        else:
+          r += '<div class="alert alert-warning">' + s.extra + '<div>'
+      out.append(r)
+    # ~ return "<br>".join(out)
+    # ~ return format_html("<br>".join(out))
+    return format_html_join(
+      '<br>', "{}",
+       ( u for u in out )
+    )
+    ("<br>".join(out))
+    # ~ return format_html("<br>").join(out)
+    #'<img src="/media/img/{}.jpg" />', value)
+    #"<br>".join(out)
+    # ~ pass
+    
   class Meta:
-    model = UserTasks
+    model = UserTask
     attrs = {"class": "table maintable"}
     template_name = "chat/bootstrap4_mod.html"
-    exclude = ('id',)
+    exclude = ('id', 'owner')
   
 class LibCollapseTable(tables.Table):
   num_replicates = tables.Column()
   strain_id = tables.Column()
-  spectrum_type = tables.Column()
+  # ~ spectrum_type = tables.Column()
   
   def render_strain_id(self, value):
-    print('rsid value', value)
-    return '-----'+value.strain_id
+    # ~ print('rsid value', value)
+    # ~ return '-----'+value.strain_id
+    return value
     
   class Meta:
     model = Spectra
     attrs = {"class": "table maintable"}
     template_name = "chat/bootstrap4_mod.html"
-    fields = ['id']
+    fields = ['strain_id']
     
 class XmlTable(tables.Table):
   created_by = tables.Column(linkify=True)

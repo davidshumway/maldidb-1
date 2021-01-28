@@ -12,14 +12,16 @@ from .forms import CommentForm, SpectraForm, MetadataForm, \
 
 from .models import Spectra, SearchSpectra, SpectraCosineScore, \
   SearchSpectraCosineScore, Metadata, XML, Locale, Version, Library, \
-  LabGroup, UserTasks
+  LabGroup, UserTask, UserTaskStatus
+  #UserLogs
 
 from django.db.models import Q
 from django.views.generic import TemplateView, ListView
 
 from .tables import LibraryTable, SpectraTable, MetadataTable, \
   LabgroupTable, CosineSearchTable, XmlTable, LibCollapseTable, \
-  UserTasksTable
+  UserTaskTable
+  #UserLogsTable
 
 import django_filters
 from django_filters.views import FilterView
@@ -50,15 +52,19 @@ from threading import Thread
 def start_new_thread(function):
   '''Starts a new thread for long-running tasks'''
   def decorator(*args, **kwargs):
-    t = Thread(target = function, args=args, kwargs=kwargs)
+    t = Thread(target = function, args = args, kwargs = kwargs)
     t.daemon = True
     t.start()
     return t
   return decorator
+
+#@start_new_thread[]
+#def x():
+  
   
 def metadata_profile(request, strain_id):
   ''''''
-  md = Metadata.objects.get(strain_id=strain_id)
+  md = Metadata.objects.get(strain_id = strain_id)
   return render(
       request,
       'chat/metadata_profile.html',
@@ -67,8 +73,8 @@ def metadata_profile(request, strain_id):
 
 def xml_profile(request, xml_hash):
   ''''''
-  xml = XML.objects.get(xml_hash=xml_hash)
-  lab = LabGroup.objects.get(lab_name=xml.lab_name)
+  xml = XML.objects.get(xml_hash = xml_hash)
+  lab = LabGroup.objects.get(lab_name = xml.lab_name)
   return render(
       request,
       'chat/xml_profile.html',
@@ -77,9 +83,9 @@ def xml_profile(request, xml_hash):
 
 def library_profile(request, library_id):
   ''''''
-  lib = Library.objects.get(id=library_id)
-  lab = LabGroup.objects.get(lab_name=lib.lab_name)
-  s = Spectra.objects.filter(library__exact=lib)
+  lib = Library.objects.get(id = library_id)
+  lab = LabGroup.objects.get(lab_name = lib.lab_name)
+  s = Spectra.objects.filter(library__exact = lib)
   return render(
       request,
       'chat/library_profile.html',
@@ -88,12 +94,12 @@ def library_profile(request, library_id):
 
 def lab_profile(request, lab_id):
   '''View profile of lab with lab_name'''
-  lab = LabGroup.objects.get(id=lab_id)
+  lab = LabGroup.objects.get(id = lab_id)
   return render(request, 'chat/lab_profile.html', {'lab': lab})
   
 def spectra_profile(request, spectra_id):
   ''''''
-  spectra = Spectra.objects.get(id=spectra_id)
+  spectra = Spectra.objects.get(id = spectra_id)
   return render(request, 'chat/spectra_profile.html', {'spectra': spectra})
 
 @login_required
@@ -101,12 +107,12 @@ def edit_metadata(request, strain_id):
   ''''''    
   if request.method == "POST":
     # instance kwargs passed in sets the user on the modelForm
-    form = MetadataForm(request.POST, request.FILES, instance=Metadata.objects.get(strain_id=strain_id))
+    form = MetadataForm(request.POST, request.FILES, instance = Metadata.objects.get(strain_id = strain_id))
     if form.is_valid():
       form.save()
-      return redirect(reverse('chat:view_metadata', args=(strain_id, )))
+      return redirect(reverse('chat:view_metadata', args = (strain_id, )))
   else:
-    form = MetadataForm(instance=XML.objects.get(strain_id=strain_id))
+    form = MetadataForm(instance = XML.objects.get(strain_id = strain_id))
   return render(request, 'chat/edit_metadata.html', {'form': form})
 
 @login_required
@@ -114,12 +120,12 @@ def edit_xml(request, xml_hash):
   ''' edit details of xml'''    
   if request.method == "POST":
     # instance kwargs passed in sets the user on the modelForm
-    form = XmlForm(request.POST, request.FILES, instance=XML.objects.get(xml_hash=xml_hash))
+    form = XmlForm(request.POST, request.FILES, instance = XML.objects.get(xml_hash = xml_hash))
     if form.is_valid():
       form.save()
-      return redirect(reverse('chat:view_xml', args=(xml_hash, )))
+      return redirect(reverse('chat:view_xml', args = (xml_hash, )))
   else:
-    form = XmlForm(instance=XML.objects.get(xml_hash=xml_hash))
+    form = XmlForm(instance = XML.objects.get(xml_hash = xml_hash))
   return render(request, 'chat/edit_xml.html', {'form': form})
 
 @login_required
@@ -127,12 +133,12 @@ def edit_spectra(request, spectra_id):
   ''' edit details of library '''    
   if request.method == "POST":
     # instance kwargs passed in sets the user on the modelForm
-    form = SpectraEditForm(request.POST, request.FILES, instance=Spectra.objects.get(id=spectra_id))
+    form = SpectraEditForm(request.POST, request.FILES, instance = Spectra.objects.get(id = spectra_id))
     if form.is_valid():
       form.save()
-      return redirect(reverse('chat:view_spectra', args=(lib_id, )))
+      return redirect(reverse('chat:view_spectra', args = (lib_id, )))
   else:
-    form = SpectraEditForm(instance=Spectra.objects.get(id=spectra_id))
+    form = SpectraEditForm(instance = Spectra.objects.get(id = spectra_id))
   return render(request, 'chat/edit_spectra.html', {'form': form})
 
 @login_required
@@ -140,12 +146,12 @@ def edit_libprofile(request, lib_id):
   ''' edit details of library '''    
   if request.method == "POST":
     # instance kwargs passed in sets the user on the modelForm
-    form = LibProfileForm(request.POST, request.FILES, instance=Library.objects.get(id=lib_id))
+    form = LibProfileForm(request.POST, request.FILES, instance = Library.objects.get(id = lib_id))
     if form.is_valid():
       form.save()
-      return redirect(reverse('chat:view_lab', args=(lib_id, )))
+      return redirect(reverse('chat:view_lab', args = (lib_id, )))
   else:
-    form = LibProfileForm(instance=Library.objects.get(id=lib_id))
+    form = LibProfileForm(instance = Library.objects.get(id = lib_id))
   return render(request, 'chat/edit_libprofile.html', {'form': form})
     
 @login_required
@@ -154,12 +160,12 @@ def edit_labprofile(request, lab_id):
   if request.method == "POST":
     # instance kwargs passed in sets the user on the modelForm
     form = LabProfileForm(request.POST, request.FILES,
-      instance=LabGroup.objects.get(id=lab_id))
+      instance = LabGroup.objects.get(id = lab_id))
     if form.is_valid():
       form.save()
-      return redirect(reverse('chat:view_lab', args=(lab_id, )))
+      return redirect(reverse('chat:view_lab', args = (lab_id, )))
   else:
-    form = LabProfileForm(instance=LabGroup.objects.get(id=lab_id))
+    form = LabProfileForm(instance = LabGroup.objects.get(id = lab_id))
   return render(request, 'chat/edit_labprofile.html', {'form': form})
 
 
@@ -168,7 +174,7 @@ def add_xml(request):
   if request.method == 'POST':
     form = AddXmlForm(request.POST, request.FILES)
     if form.is_valid():
-      entry = form.save(commit=False)
+      entry = form.save(commit = False)
       entry.created_by_id = request.user.id
       entry.save()
       return redirect('chat:home')
@@ -181,7 +187,7 @@ def add_lib(request):
   if request.method == 'POST':
     form = AddLibraryForm(request.POST, request.FILES)
     if form.is_valid():
-      entry = form.save(commit=False)
+      entry = form.save(commit = False)
       entry.created_by_id = request.user.id
       entry.save()
       return redirect('chat:home')
@@ -215,7 +221,7 @@ def add_labgroup(request):
   if request.method == 'POST':
     form = AddLabGroupForm(request.POST, request.FILES)
     if form.is_valid():
-      g = form.save(commit=False)
+      g = form.save(commit = False)
       g.user = request.user
       g.created_by_id = request.user.id
       g.save() # first save before using the m2m owners rel.
@@ -237,7 +243,7 @@ def add_post(request):
   if request.method == 'POST':
     form = SpectraForm(request.POST, request.FILES)
     if form.is_valid():
-      post = form.save(commit=False)
+      post = form.save(commit = False)
       post.user = request.user
       post.created_by_id = request.user.id
       post.save()
@@ -252,7 +258,7 @@ def add_metadata(request):
   if request.method == 'POST':
     form = MetadataForm(request.POST, request.FILES)
     if form.is_valid():
-      md = form.save(commit=False)
+      md = form.save(commit = False)
       md.user = request.user
       md.created_by_id = request.user.id
       md.save()
@@ -269,7 +275,7 @@ def add_comment(request, post_id):
   if form.is_valid():
     # pass the post id to the comment save() method which was overriden
     # in the CommentForm implementation
-    comment = form.save(Spectra.objects.get(id=post_id), request.user)
+    comment = form.save(Spectra.objects.get(id = post_id), request.user)
   return redirect(reverse('chat:home'))
 
 
@@ -285,7 +291,7 @@ from django.views.generic.base import TemplateView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 
-@method_decorator(login_required, name='dispatch')
+@method_decorator(login_required, name = 'dispatch')
 class LibCollapseListView(MultiTableMixin, TemplateView):
   model = Library
   table_class = LibCollapseTable
@@ -321,33 +327,56 @@ class LibCollapseListView(MultiTableMixin, TemplateView):
       print('lcf valid')
       qs_pr = Spectra.objects.raw(
         'SELECT 1 as id, s.strain_id as "strain_id", '
-          'COUNT(s.strain_id) AS "num_replicates", COUNT(c.strain_id) as "abc" '
+          'COUNT(s.strain_id) AS "num_replicates" '
         'FROM chat_spectra s '
-        'LEFT OUTER JOIN chat_metadata m '
-          'ON (s.strain_id = m.id) '
-        'LEFT OUTER JOIN chat_collapsedspectra c '
-          'ON (c.strain_id = s.strain_id)'
+        'LEFT OUTER JOIN '
+          'chat_metadata m ON (s.strain_id = m.id) '
         'WHERE s.library_id = {} AND s.max_mass < 6000'
         'GROUP BY s.strain_id' \
         .format(form.cleaned_data['library'].id)
       )
-
+      # ~ qs_pr = Spectra.objects.raw(
+        # ~ 'SELECT 1 as id, s.strain_id as "strain_id", '
+          # ~ 'COUNT(s.strain_id) AS "num_replicates" '
+        # ~ 'FROM chat_spectra s '
+        # ~ 'LEFT OUTER JOIN chat_metadata m '
+          # ~ 'ON (s.strain_id = m.id) '
+        # ~ 'WHERE s.library_id = {} AND s.max_mass < 6000'
+        # ~ 'GROUP BY s.strain_id' \
+        # ~ .format(form.cleaned_data['library'].id)
+      # ~ )
+      # 'COUNT(c.strain_id) as "num_collapsed" '
+      # 'LEFT OUTER JOIN chat_collapsedspectra c '
+      # 'ON (s.strain_id in c.strain_id)'
+      
+      # ~ qs = Metadata.objects.filter(
+        # ~ library__exact = form.cleaned_data['library']
+      # ~ )
+      # ~ qs_sm = qs.annotate('num_replicates' = Count(''))
+      
+      
+      # Works (pr) but doesn't retrieve value of strain_id (only col id)
       # ~ qs = Spectra.objects.filter(
         # ~ library__exact = form.cleaned_data['library']
       # ~ )
-      #.group_by('strain_id') \
       # ~ qs_sm = qs.filter(max_mass__lt = 6000) \
         # ~ .annotate(num_replicates = Count('strain_id')) \
         # ~ .order_by('strain_id')
       # ~ qs_pr = qs.filter(max_mass__gt = 6000) \
+        # ~ .values('strain_id') \
+        # ~ .annotate(num_replicates = Count('strain_id')) #\
+        #.values('strain_id__strain_id') \
+      # ~ qs_pr = qs.filter(max_mass__gt = 6000) \
         # ~ .values('strain_id__strain_id') \
-        # ~ .annotate(num_replicates=Count('strain_id')) #\
-        #, num_replicates=Count('strain_id')) #\
-        #.values('strain_id')# \
-        #.annotate(strain_id='strain_id')
+        # ~ .annotate(num_replicates = Count('strain_id')) #\
+        # ~ #, num_replicates = Count('strain_id')) #\
+        # ~ #.values('strain_id')# \
+        # ~ #.annotate(strain_id = 'strain_id')
+        
+        
       self.tables = [
         LibCollapseTable(qs_sm),
-        LibCollapseTable(qs_pr),# exclude=("country", ))
+        LibCollapseTable(qs_pr),# exclude = ("country", ))
       ]
       
     context.update({
@@ -358,8 +387,9 @@ class LibCollapseListView(MultiTableMixin, TemplateView):
     return context
     
   def get_queryset(self):
+    print('LibCollapseListView:get_queryset')
     pass
-    print('xx')
+    
     try:
       li = Library.objects.get(
         id = self.request.GET.get('library', None)
@@ -393,7 +423,7 @@ class LibCollapseListView(MultiTableMixin, TemplateView):
         .order_by('strain_id')
       self.tables = [
         LibCollapseTable(qs_sm),
-        LibCollapseTable(qs_pr),# exclude=("country", ))
+        LibCollapseTable(qs_pr),# exclude = ("country", ))
       ]
       return self.queryset
 
@@ -409,16 +439,16 @@ def preview_collapse_lib(request):
   # ~ except Library.DoesNotExist:
     # ~ pass    
   
-  # ~ lib = Library.objects.get(id=lib_id)
-  # ~ spectra = Spectra.objects.filter(library=lib)
-  # ~ md = Metadata.objects.filter(library=lib)
+  # ~ lib = Library.objects.get(id = lib_id)
+  # ~ spectra = Spectra.objects.filter(library = lib)
+  # ~ md = Metadata.objects.filter(library = lib)
   #if request.method == "POST":
   #  form = LibraryCollapseForm(request.POST, request.FILES)
-  #    # ~ instance=Library.objects.get(id=lib_id))
+  #    # ~ instance = Library.objects.get(id = lib_id))
   #  if form.is_valid():
   #    form.save()
   #    return redirect(reverse('chat:home'))
-  #    # ~ return redirect(reverse('chat:view_metadata', args=(lib_id, )))
+  #    # ~ return redirect(reverse('chat:view_metadata', args = (lib_id, )))
   # ~ else:
     
   return render(request, 'chat/collapse_library.html', {'form': form})
@@ -456,10 +486,15 @@ class SearchResultsView(ListView):
     
     return object_list
 
-class UserTasksListView(SingleTableView):
-  model = UserTasks
-  table_class = UserTasksTable
-  template_name = 'chat/my_tasks.html'
+# ~ class UserLogsListView(SingleTableView):
+  # ~ model = UserLogs
+  # ~ table_class = UserLogsTable
+  # ~ template_name = 'chat/user_tasks.html'
+
+class UserTaskListView(SingleTableView):
+  model = UserTask
+  table_class = UserTaskTable
+  template_name = 'chat/user_tasks.html'
 
 class XmlListView(SingleTableView):
   model = XML
@@ -489,19 +524,19 @@ R('''
     # todo: createMassPeaks -- snr = as.numeric(x$snr))
     allSpectra <<- append(
       allSpectra,
-      MALDIquant::createMassSpectrum(mass=m, intensity=i)
+      MALDIquant::createMassSpectrum(mass = m, intensity = i)
     )
     allPeaks <<- append(
       allPeaks,
       MALDIquant::createMassPeaks(
-        mass=m, intensity=i, snr=as.numeric(s)
+        mass = m, intensity = i, snr = as.numeric(s)
       )
     )
   }
   binSpectra <- function() {
     # Only scores in first row are relevant, i.e., input spectra
     # Finally, order the row by score decreasing
-    binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance=0.002)
+    binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
     featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
     print("dim(featureMatrix)")
     print(dim(featureMatrix))
@@ -511,7 +546,7 @@ R('''
     d <- round(d, 3)
     
     # Don't reorder now, leave it to Python
-    #d <- d[,order(d[,1],decreasing=T)]
+    #d <- d[,order(d[,1],decreasing = T)]
     
     # Discard symmetric part of matrix
     d[lower.tri(d, diag = FALSE)] <- NA
@@ -524,7 +559,7 @@ R('''
   
   # heatmap code
   binSpectraOLD <- function() {
-    binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance=0.002)
+    binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
     featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
     
     
@@ -543,8 +578,8 @@ R('''
     #print('d')
     #print(d)
     
-    #jpeg(file="test.jpg", quality=100, width=2000, height=2000)
-    png(file="test.png", width=3000, height=3000, res=300, pointsize=6)
+    #jpeg(file = "test.jpg", quality = 100, width = 2000, height = 2000)
+    png(file = "test.png", width = 3000, height = 3000, res = 300, pointsize = 6)
     # ~ heatmap(d) #, col = palette, symm = TRUE)
     # ~ heatmap(as.matrix(d[, -1])) #, col = palette, symm = TRUE)
     heatmap(x, symm = FALSE, Colv = NA, Rowv = NA) #, col = palette, symm = TRUE)
@@ -552,65 +587,64 @@ R('''
     dev.off()
     
     # small section
-    png(file="test-sm.png", width=1000, height=1000, res=300, pointsize=6)
+    png(file = "test-sm.png", width = 1000, height = 1000, res = 300, pointsize = 6)
     heatmap(x[1:16,1:16], symm = FALSE, Colv = NA, Rowv = NA) #, col = palette, symm = TRUE)
     dev.off()
     
     library(gplots)
-    png(file="test2-sm.png", width=1200, height=1200, res=300, pointsize=6)
-    gplots::heatmap.2(x[1:16,1:16], symm = FALSE, Colv = NA, Rowv = NA, cellnote=x[1:16,1:16], notecex=0.5, trace="none")
+    png(file = "test2-sm.png", width = 1200, height = 1200, res = 300, pointsize = 6)
+    gplots::heatmap.2(x[1:16,1:16], symm = FALSE, Colv = NA, Rowv = NA, cellnote = x[1:16,1:16], notecex = 0.5, trace = "none")
     dev.off()
     
-    png(file="test2-med.png", width=1200, height=1200, res=300, pointsize=6)
-    gplots::heatmap.2(x[1:32,1:32], symm = FALSE, Colv = NA, Rowv = NA, cellnote=x[1:32,1:32], notecex=0.5, trace="none")
+    png(file = "test2-med.png", width = 1200, height = 1200, res = 300, pointsize = 6)
+    gplots::heatmap.2(x[1:32,1:32], symm = FALSE, Colv = NA, Rowv = NA, cellnote = x[1:32,1:32], notecex = 0.5, trace = "none")
     dev.off()
     
-    png(file="test3-sm.png", width=1200, height=1200, res=300, pointsize=6)
+    png(file = "test3-sm.png", width = 1200, height = 1200, res = 300, pointsize = 6)
     y <- x
     y[lower.tri(x, diag = FALSE)] <- NA
-    gplots::heatmap.2(y[1:16,1:16], symm = FALSE, Colv = NA, Rowv = NA, cellnote=y[1:16,1:16], notecex=0.5, trace="none")
+    gplots::heatmap.2(y[1:16,1:16], symm = FALSE, Colv = NA, Rowv = NA, cellnote = y[1:16,1:16], notecex = 0.5, trace = "none")
     dev.off()
     
-    png(file="test3-med.png", width=1200, height=1200, res=300, pointsize=6)
+    png(file = "test3-med.png", width = 1200, height = 1200, res = 300, pointsize = 6)
     y <- x
     y[lower.tri(x, diag = FALSE)] <- NA
-    gplots::heatmap.2(y[1:32,1:32], symm = FALSE, Colv = NA, Rowv = NA, cellnote=y[1:32,1:32], notecex=0.5, trace="none")
+    gplots::heatmap.2(y[1:32,1:32], symm = FALSE, Colv = NA, Rowv = NA, cellnote = y[1:32,1:32], notecex = 0.5, trace = "none")
     dev.off()
     
-    png(file="test3-full.png", width=3000, height=3000, res=300, pointsize=6)
+    png(file = "test3-full.png", width = 3000, height = 3000, res = 300, pointsize = 6)
     y <- x
     y[lower.tri(x, diag = FALSE)] <- NA
-    gplots::heatmap.2(y, symm = FALSE, Colv = NA, Rowv = NA, trace="none")
+    gplots::heatmap.2(y, symm = FALSE, Colv = NA, Rowv = NA, trace = "none")
     dev.off()
     
     
-    png(file="test4-sm.png", width=1200, height=1200, res=300, pointsize=6)
+    png(file = "test4-sm.png", width = 1200, height = 1200, res = 300, pointsize = 6)
     y <- x
     y[y == 0] <- 1
-    gplots::heatmap.2(y[1:16,1:16], symm = FALSE, cellnote=y[1:16,1:16], notecex=0.5, trace="none")
+    gplots::heatmap.2(y[1:16,1:16], symm = FALSE, cellnote = y[1:16,1:16], notecex = 0.5, trace = "none")
     dev.off()
     
-    png(file="test4-med.png", width=1200, height=1200, res=300, pointsize=6)
+    png(file = "test4-med.png", width = 1200, height = 1200, res = 300, pointsize = 6)
     y <- x
     y[y == 0] <- 1
-    gplots::heatmap.2(y[1:32,1:32], symm = FALSE, cellnote=y[1:32,1:32], notecex=0.5, trace="none")
+    gplots::heatmap.2(y[1:32,1:32], symm = FALSE, cellnote = y[1:32,1:32], notecex = 0.5, trace = "none")
     dev.off()
     
-    png(file="test4-full.png", width=3000, height=3000, res=300, pointsize=6)
+    png(file = "test4-full.png", width = 3000, height = 3000, res = 300, pointsize = 6)
     y <- x
     y[y == 0] <- 1
-    gplots::heatmap.2(y, symm = FALSE, trace="none")
+    gplots::heatmap.2(y, symm = FALSE, trace = "none")
     dev.off()
     
   }
 ''')
 
 def view_cosine(request):
-  ''' edit profile of lab '''
+  '''Generate R heatmaps'''
+  pass
   # small and large molecules combined, or large only
-  print('start adding')
-  # ~ n = Spectra.objects.all()
-  n = Spectra.objects.all().filter(tof_mode__exact='LINEAR').order_by('xml_hash')
+  n = Spectra.objects.all().filter(tof_mode__exact = 'LINEAR').order_by('xml_hash')
   for spectra in n:
     pm = json.loads('['+spectra.peak_mass+']')
     pi = json.loads('['+spectra.peak_intensity+']')
@@ -620,28 +654,26 @@ def view_cosine(request):
     )
   print('end adding')
   print('start binning')
-  R['binSpectra']()
+  R['binSpectraOLD']()
   print('end binning')
   
-  
   if request.method == "POST":
-    form = ViewCosineForm(request.POST, request.FILES, instance=None)
+    form = ViewCosineForm(request.POST, request.FILES, instance = None)
     if form.is_valid():
       #form.save()
-      
       return redirect(reverse('chat:view_cosine'))
   else:
-    form = ViewCosineForm(instance=None)
+    form = ViewCosineForm(instance = None)
   return render(request, 'chat/view_cosine.html', {'form': form})
 
 class SpectraFilter(django_filters.FilterSet):
   library = django_filters.ModelMultipleChoiceFilter(
     queryset = Library.objects.all()
-    #, to_field_name="title",
+    #, to_field_name = "title",
     #required = False
   )
 
-  description = django_filters.CharFilter(lookup_expr='icontains')
+  description = django_filters.CharFilter(lookup_expr = 'icontains')
 
   class Meta:
     model = Spectra
@@ -669,9 +701,8 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     '''
     context = super().get_context_data(**kwargs)
 
-    f = SpectraFilter(self.request.GET, queryset=self.queryset)
+    f = SpectraFilter(self.request.GET, queryset = self.queryset)
     context['filter'] = f
-    # ~ print('filter form', f)
     
     for attr, field in f.form.fields.items():
       context['table'].columns[attr].w = field.widget.render(attr, '')
@@ -718,7 +749,7 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
         if tag not in secondary_top: #forms.forms. in django 2.2
           boundField = forms.BoundField(form, form.fields[tag], tag)
           secondary_form.append(boundField)
-        else: # Prepend, add to index=0
+        else: # Prepend, add to index = 0
           boundField = forms.BoundField(form, form.fields[tag], tag)
           boundField.label = boundField.label.replace('xx', '')
           secondary_form.insert(0, boundField)
@@ -737,7 +768,11 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
   # ~ def post(self, request, *args, **kwargs):
 
   def get_queryset(self, *args, **kwargs):
-    '''calling queryset.update does not update the model.'''
+    '''
+    -- Calling queryset.update does not update the model.
+    -- Use min_mass and max_mass, not tof_mode, to differentiate sm and
+       proteins
+    '''
     # Basic: Make a new SearchSpectra and then compare to all Spectra
     
     if len(self.request.GET) == 0:
@@ -756,9 +791,9 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       print('invalid form')
       return self.queryset
     
-    # http://127.0.0.1:8000/search/?peak_mass=1919%2C1939
-    # &peak_intensity=1%2C2&peak_snr=1%2C2&spectra_file=
-    # &replicates=replicate&spectrum_cutoff=small&preprocessing=processed
+    # http://127.0.0.1:8000/search/?peak_mass = 1919%2C1939
+    # &peak_intensity = 1%2C2&peak_snr = 1%2C2&spectra_file = 
+    # &replicates = replicate&spectrum_cutoff = small&preprocessing = processed
     sm = form.cleaned_data['peak_mass'];
     si = form.cleaned_data['peak_intensity'];
     sn = form.cleaned_data['peak_snr'];
@@ -797,16 +832,22 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       
       n = Spectra.objects.all()
       
+      # tof_mode (use min/max instead)
+      # ~ if scut == 'small':
+        # ~ n = n.filter(tof_mode__exact = 'REFLECTOR')
+      # ~ elif scut == 'protein': # protein
+        # ~ n = n.filter(tof_mode__exact = 'LINEAR')
+      # ~ else: # protein
+        # ~ pass
       if scut == 'small':
-        n = n.filter(tof_mode__exact='REFLECTOR')
+        n = n.filter(max_mass__lt = 6000)
       elif scut == 'protein': # protein
-        n = n.filter(tof_mode__exact='LINEAR')
+        n = n.filter(max_mass__gt = 6000)
       else: # protein
         pass
       
       # optionals
-      slib = form.cleaned_data['libraryXX']; #in
-      # ~ sprv = form.cleaned_data['privacy_level'];
+      slib = form.cleaned_data['libraryXX'];
       slab = form.cleaned_data['lab_nameXX'];
       ssid = form.cleaned_data['strain_idXX'];
       sxml = form.cleaned_data['xml_hashXX'];
@@ -818,15 +859,24 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
         n = n.filter(lab_name__in = slab)
       if ssid.exists():
         n = n.filter(strain_id__in = ssid)
+        print('query3',n)
       if sxml.exists():
         n = n.filter(xml_hash__in = sxml)
       if scrb.exists():
         n = n.filter(created_by__in = scrb)
       n = n.order_by('xml_hash')
-      # ~ print(n)
+      print('query', n.query)
       
       idx = {}
       count = 0
+      
+      # ~ try:
+          # ~ ...
+      # ~ except json.JSONDecodeError: # na values in intensity or snr
+        # ~ print(spectra.strain_id)
+        # ~ print(spectra.peak_snr)        
+        # ~ return
+          
       for spectra in n:
         pm = json.loads('['+spectra.peak_mass+']')
         pi = json.loads('['+spectra.peak_intensity+']')
@@ -840,6 +890,7 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
         count += 1
       result = R['binSpectra']()
       
+      # sort by key
       sorted_list = []
       pk_list = []
       scores = {}
@@ -851,14 +902,11 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
         k = int(key) - 2 # starts with 1, and 1st is search spectra
         sorted_list.append({'id': idx[k].id, 'score': float(value)})
         scores[idx[k].id] = float(value)
-      
-      sorted_list.sort(key=sort_func, reverse=True)
-      
+      sorted_list.sort(key = sort_func, reverse = True)
       pk_list = [key.get('id') for key in sorted_list]
-      
       from django.db.models import Case, When
-      preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(pk_list)])
-      q = Spectra.objects.filter(id__in=pk_list).order_by(preserved)
+      preserved = Case(*[When(pk = pk, then = pos) for pos, pk in enumerate(pk_list)])
+      q = Spectra.objects.filter(id__in = pk_list).order_by(preserved)
       
       # normal:   -kw: {'data': <QuerySet [
       # Then:
@@ -893,7 +941,7 @@ class SpectraListView(SingleTableView):
   template_name = 'chat/spectra.html'
   
   def get_queryset(self):
-    filter = SpectraFilter(request.GET, queryset=Spectra.objects.all())
+    filter = SpectraFilter(request.GET, queryset = Spectra.objects.all())
     return render(request, 'chat/spectra.html', {'filter': filter})
 
 class MetadataListView(SingleTableView):
@@ -913,9 +961,7 @@ def handle_uploaded_file(request, tmpForm):
   Requires json and sqlite3 libraries.
   
   Metadata strain_id and XML xml_hash should both be unique but they are 
-  not in R01 data.
-    get() returned more than one Metadata -- it returned 2!
-    e.g, smd = ...get(strain_id=row[3])
+  not in R01 data?
   '''
   if request.FILES and request.FILES['file']:
     f = request.FILES['file']
@@ -923,24 +969,20 @@ def handle_uploaded_file(request, tmpForm):
       for chunk in f.chunks():
         destination.write(chunk)
     
-    # ~ idbac_sqlite_insert(request, tmpForm, connection)
-    thread = idbac_sqlite_insert(request, tmpForm, '/tmp/test.db')
-    print(thread)
-    
     # New entry in user's tasks
-    # ~ UserTasks
-    UserTasks.objects.create(
-      owner=request.user,
-      thread_ident=thread.ident,
-      task_description='idbac_sql',
-      status='start'
+    t = UserTask.objects.create(
+      owner = request.user,
+      task_description = 'idbac_sql'
     )
+    t.statuses.add(UserTaskStatus.objects.create(status = 'start'))
+    thread = idbac_sqlite_insert(request, tmpForm, '/tmp/test.db', t)
+    #print(thread)
     
     # ~ result = idbac_sqlite_insert(request, tmpForm, '/tmp/test.db')
     # ~ asyncio.run(result)
     # ~ await idbac_sqlite_insert(request, tmpForm, '/tmp/test.db')
     # ~ data = async_to_sync(idbac_sqlite_insert)(
-      # ~ request=request, tmpForm=tmpForm, uploadFile='/tmp/test.db'
+      # ~ request = request, tmpForm = tmpForm, uploadFile = '/tmp/test.db'
     # ~ )
   elif tmpForm.cleaned_data['upload_type'] == 'all': # hosted on server
     hc = [
@@ -961,13 +1003,41 @@ def handle_uploaded_file(request, tmpForm):
       connection = sqlite3.connect('/home/ubuntu/' + f)
       idbac_sqlite_insert(request, tmpForm, connection)
     
-@start_new_thread #(args=('test',)) # args, kwargs
-def idbac_sqlite_insert(request, tmpForm, uploadFile):
-# ~ async def idbac_sqlite_insert(request, tmpForm, uploadFile):
+@start_new_thread #(args = ('test',)) # args, kwargs
+def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
+  '''
+  -- In the case of erroneous data, save the offending row data to user's
+  error log. E.g., if mass, intensity, or snr contain "na" or "nan".
+  -- Wrap the entire insertion in a try-catch and note any errors for 
+  later inspection.
+  '''  
+  try:
+    _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task)
+  except Exception as e:
+    user_task.statuses.add(
+      UserTaskStatus.objects.create(
+        status = 'error',
+        extra = 'Unexpected except caught\n{}: {}'.format(type(e).__name__, e)
+    ))
+  finally:
+    user_task.statuses.add(
+      UserTaskStatus.objects.create(
+        status = 'complete'
+    ))
+  
+    # ~ UserLogs.objects.create(
+      # ~ owner = request.user,
+      # ~ title = 'Peak mass, intensity, or SNR contains an "NA" value',
+      # ~ description = 'Row data:' + json.dumps(data),
+    # ~ )
+    # ~ data_error = True
+
+def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
   
   idbac_version = '1.0.0'
   connection = sqlite3.connect(uploadFile)
   cursor = connection.cursor()
+  # ~ data_error = False # Save this value to UserTasks
   
   # Version
   rows = cursor.execute("SELECT * FROM version").fetchall()
@@ -980,12 +1050,16 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile):
     }
     form = VersionForm(data)
     if form.is_valid():
-      entry = form.save(commit=False)
+      entry = form.save(commit = False)
       entry.save()
     else:
         raise ValueError('xxxxx')
         
   # Metadata
+  user_task.statuses.add(
+    UserTaskStatus.objects.create(
+      status = 'info', extra = 'Inserting metadata'
+  ))
   rows = cursor.execute("SELECT * FROM metaData").fetchall()
   for row in rows:
     data = {
@@ -1015,7 +1089,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile):
     form = MetadataForm(data)
     
     if form.is_valid():
-      entry = form.save(commit=False)
+      entry = form.save(commit = False)
       entry.save()
     # ~ form_is_valid = await sync_to_async(form.is_valid)()
     # ~ await sync_to_async(entry.save)()
@@ -1024,6 +1098,10 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile):
       raise ValueError('xxxxx')
   
   # XML
+  user_task.statuses.add(
+    UserTaskStatus.objects.create(
+      status = 'info', extra = 'Inserting XML'
+  ))
   rows = cursor.execute("SELECT * FROM XML").fetchall()
   for row in rows:
     data = {
@@ -1041,7 +1119,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile):
     }
     form = XmlForm(data)
     if form.is_valid():
-      entry = form.save(commit=False)
+      entry = form.save(commit = False)
       entry.save()
     else:
       form.non_field_errors()
@@ -1056,7 +1134,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile):
     }
     form = LocaleForm(data)
     if form.is_valid():
-      entry = form.save(commit=False)
+      entry = form.save(commit = False)
       entry.save()
     else:
         raise ValueError('xxxxx')
@@ -1064,14 +1142,18 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile):
   
   # Spectra
   # row[5] spectrumIntensity ??
+  user_task.statuses.add(
+    UserTaskStatus.objects.create(
+      status = 'info', extra = 'Inserting spectra'
+  ))
   t = 'IndividualSpectra' if idbac_version == '1.0.0' else 'spectra'
   rows = cursor.execute('SELECT * FROM '+t).fetchall()
   for row in rows:
     
-    sxml = XML.objects.filter(xml_hash=row[2])
+    sxml = XML.objects.filter(xml_hash = row[2])
     if sxml:
       sxml = sxml[0]
-    smd = Metadata.objects.filter(strain_id=row[3])
+    smd = Metadata.objects.filter(strain_id = row[3])
     if smd:
       smd = smd[0]
     
@@ -1131,15 +1213,35 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile):
       'target_serial_number': row[40],
       'target_type_number': row[41],
     }
+    
+    # Sanity check ("na" or "nan"): Skip this row.
+    if 'na' in row[4].lower():
+      user_task.statuses.add(
+        UserTaskStatus.objects.create(
+          status = 'error',
+          extra = 'Peak mass, intensity, or SNR contains an "NA" value:\n\n'
+            'Row data:\n\n' + json.dumps(data)
+      ))
+      # ~ UserLogs.objects.create(
+        # ~ owner = request.user,
+        # ~ title = 'Peak mass, intensity, or SNR contains an "NA" value',
+        # ~ description = 'Row data:' + json.dumps(data),
+      # ~ )
+      # ~ data_error = True
+      continue
+    
     form = SpectraForm(data)
     if form.is_valid():
-      entry = form.save(commit=False)
+      entry = form.save(commit = False)
       entry.save()
     else:
       form.non_field_errors()
       field_errors = [ (field.label, field.errors) for field in form] 
       raise ValueError('xxxxx')
-    
+  
+  # Close the db connection  
+  from django.db import connection
+  connection.close()
 
 
 def search(request):
@@ -1154,7 +1256,7 @@ def home(request):
   # ~ users.append(request.user)
 
   # Get posts from users accounts whose posts to display and order by latest
-  #posts = Post.objects.filter(user__in=users).order_by('-posted_date')
+  #posts = Post.objects.filter(user__in = users).order_by('-posted_date')
   comment_form = CommentForm()
   
   x = XML.objects.all()
@@ -1172,7 +1274,7 @@ def home(request):
   # Num species per library
   for libInstance in lib.iterator():
     bb = libInstance
-    aa = Spectra.objects.filter(library=libInstance.id).count()
+    aa = Spectra.objects.filter(library = libInstance.id).count()
     countLib[libInstance.title] = aa
     #libInstance.pie = 1
     #lib[i]['asdf'] = 1
@@ -1205,7 +1307,7 @@ try:
   # define an R function
   # ~ R('''
     # ~ # create a function `f`
-    # ~ f <- function(r, verbose=FALSE) {
+    # ~ f <- function(r, verbose = FALSE) {
         # ~ if (verbose) {
             # ~ cat("I am calling f().\n")
         # ~ }
@@ -1281,28 +1383,22 @@ try:
 except:
   print('did not load R')
 
-R('''
-  sprintf('R process id----: %i', Sys.getpid())
-  ''')
-
-
-# thread test
-@start_new_thread
-def tt():
-  R('''
-  test <- function() {
-    paste0('R process id:', Sys.getpid())
-    ##sprintf('R process id: %i', Sys.getpid())
-    ##Sys.sleep(20) #seconds
-    print('slept')
-    print(Sys.getpid())
-    paste0('R process id:', Sys.getpid())
-    print('x')
-  }
-  ''')
-  #print()
-  "R['test']():", R['test']()
-
-tt()
-tt()
-tt()
+# ~ # thread test
+# ~ @start_new_thread
+# ~ def tt():
+  # ~ R('''
+  # ~ test <- function() {
+    # ~ paste0('R process id:', Sys.getpid())
+    # ~ ##sprintf('R process id: %i', Sys.getpid())
+    # ~ ##Sys.sleep(20) #seconds
+    # ~ print('slept')
+    # ~ print(Sys.getpid())
+    # ~ paste0('R process id:', Sys.getpid())
+    # ~ print('x')
+  # ~ }
+  # ~ ''')
+  # ~ #print()
+  # ~ "R['test']():", R['test']()
+# ~ tt()
+# ~ tt()
+# ~ tt()
