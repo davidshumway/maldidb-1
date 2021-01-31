@@ -119,20 +119,12 @@ function show_filter(e) {
       <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
         <ul>
         {% for c in f %}
-        {% if c.choice_label != "Custom" %}
-          <li>{{ c.tag }}
-            <label for="id_spectrum_cutoff_{{ forloop.counter0 }}">
-              {{ c.choice_label }}</label>
-          </li>
-        {% else %}
-          <li id="spectra-search-tbl-cutoff">
-            <input type="radio" name="spectrum_cutoff" value="{{ c.choice_value }}" required="" id="id_spectrum_cutoff_{{ forloop.counter0 }}" />
-            <label for="id_spectrum_cutoff_{{ forloop.counter0 }}" onclick="toggleCutoff();">
-              {{ c.choice_label }}</label>
-              {{ g }}
-              {{ h }}
-          </li>
-        {% endif %}
+          {% if c.choice_label != "Custom" %}
+            <li>{{ c.tag }}
+              <label for="id_spectrum_cutoff_{{ forloop.counter0 }}">
+                {{ c.choice_label }}</label>
+            </li>
+          {% endif %}
         {% endfor %}
         </ul>
         {% if f.help_text %}
@@ -287,22 +279,22 @@ function show_filter(e) {
 </form>
 
 <script type="text/javascript">
-function toggleCutoff(e) {
-  var x1 = document.getElementById('id_spectrum_cutoff_low');
-  var x2 = document.getElementById('id_spectrum_cutoff_high');
-  if (this.id == 'id_spectrum_cutoff_3') {
-    if (x1.disabled) {
-      x1.disabled = false;
-      x2.disabled = false;
-    } else {
-      x1.disabled = true;
-      x2.disabled = true;
-    }
-  } else {
-    x1.disabled = true;
-    x2.disabled = true;
-  }  
-}
+//~ function toggleCutoff(e) {
+  //~ var x1 = document.getElementById('id_spectrum_cutoff_low');
+  //~ var x2 = document.getElementById('id_spectrum_cutoff_high');
+  //~ if (this.id == 'id_spectrum_cutoff_3') {
+    //~ if (x1.disabled) {
+      //~ x1.disabled = false;
+      //~ x2.disabled = false;
+    //~ } else {
+      //~ x1.disabled = true;
+      //~ x2.disabled = true;
+    //~ }
+  //~ } else {
+    //~ x1.disabled = true;
+    //~ x2.disabled = true;
+  //~ }  
+//~ }
 function toggleSearchForm() {
   var st = $('#search_toggle');
   var si = $('#search_initial');
@@ -324,14 +316,14 @@ function toggleAddlFields(e) {
 }
 //~ $(document).ready(function(){
 window.addEventListener('DOMContentLoaded', (event) => {
-  var y = document.getElementsByName('spectrum_cutoff');
-  for (var i=0; i<y.length; i++) {
-    y[i].onclick = toggleCutoff;
-  }
-  var x1 = $('#id_spectrum_cutoff_low');
-  var x2 = $('#id_spectrum_cutoff_high');
-  x1.attr({'placeholder': 'Min. M/Z', 'max': '999999'});
-  x2.attr({'placeholder': 'Max. M/Z', 'max': '999999'});
+  //~ var y = document.getElementsByName('spectrum_cutoff');
+  //~ for (var i=0; i<y.length; i++) {
+    //~ y[i].onclick = toggleCutoff;
+  //~ }
+  //~ var x1 = $('#id_spectrum_cutoff_low');
+  //~ var x2 = $('#id_spectrum_cutoff_high');
+  //~ x1.attr({'placeholder': 'Min. M/Z', 'max': '999999'});
+  //~ x2.attr({'placeholder': 'Max. M/Z', 'max': '999999'});
   
   var show_tbl = {{ form.show_tbl|lower }};
   var st = $('#search_toggle');

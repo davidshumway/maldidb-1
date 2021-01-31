@@ -69,4 +69,6 @@ urlpatterns = [
   
   path('tasks/', UserTaskListView.as_view(), name='user_tasks'),
   # ~ path('logs/', UserLogsListView.as_view(), name='user_logs'),
+  
+  path('statuses/<status_id>/', views.user_task_status_profile, name='user_task_statuses'),
 ]

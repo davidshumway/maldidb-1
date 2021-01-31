@@ -3,7 +3,7 @@ from .models import Library, Spectra, Metadata, LabGroup, \
   SearchSpectraCosineScore, XML, UserTask, UserTaskStatus
   #UserLogs
 from django.urls import reverse
-from django.utils.html import format_html, format_html_join
+from django.utils.html import format_html, format_html_join, html_safe
 
 # ~ class UserLogsTable(tables.Table):
   # ~ class Meta:
@@ -28,23 +28,29 @@ class UserTaskTable(tables.Table):
     for s in value.all():
       r = s.status + ' (' + str(s.status_date) + ')'
       if s.extra != '':
-        s.extra = s.extra[0:60] + '...' if len(s.extra) > 60 else s.extra
-        if s.status == 'info':
-          r += '<div class="alert alert-info">' + s.extra + '<div>'
-        else:
-          r += '<div class="alert alert-warning">' + s.extra + '<div>'
+        s.extra = s.extra[0:40] + '...' if len(s.extra) > 40 else s.extra
+        n = reverse('chat:user_task_statuses', args=(s.id, ))
+        c = 'info' if s.status == 'info' else 'danger'
+        r += format_html(
+          '<div class="alert alert-{}"><a href="{}">{}</a></div>',
+          c, n, s.extra)
+        # ~ if s.status == 'info': # info
+          # ~ r += format_html('<div class="alert alert-info"><a href="{}">{}</a></div>', n, s.extra)
+        # ~ else: # danger
+          # ~ r += format_html('<div class="alert alert-danger"><a href="{}">{}</a></div>', n, s.extra)
       out.append(r)
-    # ~ return "<br>".join(out)
-    # ~ return format_html("<br>".join(out))
-    return format_html_join(
-      '<br>', "{}",
-       ( u for u in out )
-    )
-    ("<br>".join(out))
-    # ~ return format_html("<br>").join(out)
-    #'<img src="/media/img/{}.jpg" />', value)
-    #"<br>".join(out)
-    # ~ pass
+    return format_html("<br>".join(out))
+  
+  def __init__(self, *args, **kwargs):
+    '''Default order is newest task descending'''
+    print(f'utt args {args}')
+    print(f'utt kwargs {kwargs}')
+    # ~ if kwargs.get('data'):
+      # ~ d = kwargs.pop('data', None)
+      # ~ self.testing_data = d.get('scores', None)
+      # ~ kwargs.setdefault('data', d.get('queryset', None))
+    
+    super().__init__(*args, **kwargs)
     
   class Meta:
     model = UserTask

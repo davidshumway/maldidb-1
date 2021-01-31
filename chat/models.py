@@ -3,6 +3,11 @@ from django.conf import settings
 import uuid
 from django.urls import reverse
 
+# For model triggers
+from django.db.models.signals import post_save, m2m_changed
+from django.dispatch import receiver
+from django.utils import timezone
+
 # ~ class UserLogs(models.Model):
   # ~ '''
   # ~ -- Capture errors in SQLite and file imports
@@ -41,13 +46,25 @@ class UserTask(models.Model):
     null = True
   )
   statuses = models.ManyToManyField('UserTaskStatus')
-  # ~ task_progress =  models.CharField(max_length = 255, blank = True, null = True)
+  last_modified = models.DateTimeField(auto_now_add = True, blank = False)
   
-# Another model to describe events user tasks go through, e.g., started, paused, finished
-# ...
+#@receiver(m2m_changed, sender = UserTask, dispatch_uid = None)
+@receiver(m2m_changed, sender = UserTask.statuses.through)
+def update_user_task(sender, instance, action, **kwargs):
+  '''Update last_modified on UserTask when m2m (statuses) field is updated.'''
+  if action in ['post_add', 'post_remove', 'post_clear']:
+    instance.last_modified = timezone.now()
+    m2m_changed.disconnect(update_user_task, sender = UserTask)
+    instance.save()
+    m2m_changed.connect(update_user_task, sender = UserTask)
+  
+# Another model to 
 class UserTaskStatus(models.Model):
-  '''
+  '''Describe lifecycle events of user tasks.
+  
   -- An extra field to optionally further explain the status.
+  -- Each time a new status is created, trigger last_modified on UserTask
+     to update.
   '''
   # ~ task = models.ForeignKey(
     # ~ 'UserTasks',
@@ -68,7 +85,7 @@ class UserTaskStatus(models.Model):
   )
   status_date = models.DateTimeField(auto_now_add = True, blank = False)
   extra = models.TextField(blank = False)
-
+  
 class AbstractCosineScore(models.Model):
   score = models.DecimalField(
     max_digits = 10, decimal_places = 6, blank = False)
@@ -315,17 +332,14 @@ class LabGroup(models.Model):
   def get_absolute_url(self):
     return reverse('chat:view_lab', args = (self.id,))
 
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-#import accounts.models as m
 @receiver(post_save, sender = LabGroup, dispatch_uid = None)
 def update_stock(sender, instance, **kwargs):
   '''Add each owner to the group as a member when creating the group.
+  
   TODO: This only adds the owners when the LabGroup is first created.
         When updating the lab group, the form's values override this.'''
   for owner in instance.owners.all():
     instance.members.add(owner)
-    #instance.members.add(m.User.objects.get(username = str(owner)))
   post_save.disconnect(update_stock, sender = LabGroup)
   instance.save()
   post_save.connect(update_stock, sender = LabGroup)

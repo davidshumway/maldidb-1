@@ -8,7 +8,8 @@ from django import forms
 from .forms import CommentForm, SpectraForm, MetadataForm, \
   LoadSqliteForm, XmlForm, LocaleForm, VersionForm, AddLibraryForm, \
   AddLabGroupForm, AddXmlForm, LabProfileForm, SearchForm, \
-  ViewCosineForm, SpectraSearchForm, LibraryCollapseForm
+  ViewCosineForm, SpectraSearchForm, LibraryCollapseForm, \
+  LibProfileForm
 
 from .models import Spectra, SearchSpectra, SpectraCosineScore, \
   SearchSpectraCosineScore, Metadata, XML, Locale, Version, Library, \
@@ -29,6 +30,7 @@ from django_tables2.views import SingleTableMixin
 from django_tables2 import SingleTableView
 import django_tables2 as tables
 
+
 # unused
 # ~ from django.contrib.auth import get_user_model
 # ~ User = get_user_model()
@@ -37,9 +39,9 @@ import django_tables2 as tables
 from sklearn.metrics.pairwise import cosine_similarity
 
 # R/json for binning
-from rpy2.robjects import r as R
-import rpy2.robjects as robjects
-print('loaded R')
+# ~ from rpy2.robjects import r as R
+# ~ import rpy2.robjects as robjects
+# ~ print('loaded R')
 import json
 
 import asyncio
@@ -47,7 +49,10 @@ import asyncio
 # json and sqlite3 required for sqlite import
 import json
 import sqlite3
-  
+
+# R
+from .rfn import R, robjects, SpectraScores
+
 from threading import Thread
 def start_new_thread(function):
   '''Starts a new thread for long-running tasks'''
@@ -57,10 +62,15 @@ def start_new_thread(function):
     t.start()
     return t
   return decorator
-
-#@start_new_thread[]
-#def x():
   
+def user_task_status_profile(request, status_id):
+  ''''''
+  uts = UserTaskStatus.objects.get(id = status_id)
+  return render(
+      request,
+      'chat/user_task_status_profile.html',
+      {'user_task_status': uts}
+  )
   
 def metadata_profile(request, strain_id):
   ''''''
@@ -142,16 +152,16 @@ def edit_spectra(request, spectra_id):
   return render(request, 'chat/edit_spectra.html', {'form': form})
 
 @login_required
-def edit_libprofile(request, lib_id):
+def edit_libprofile(request, library_id):
   ''' edit details of library '''    
   if request.method == "POST":
     # instance kwargs passed in sets the user on the modelForm
-    form = LibProfileForm(request.POST, request.FILES, instance = Library.objects.get(id = lib_id))
+    form = LibProfileForm(request.POST, request.FILES, instance = Library.objects.get(id = library_id))
     if form.is_valid():
       form.save()
-      return redirect(reverse('chat:view_lab', args = (lib_id, )))
+      return redirect(reverse('chat:view_lab', args = (library_id, )))
   else:
-    form = LibProfileForm(instance = Library.objects.get(id = lib_id))
+    form = LibProfileForm(instance = Library.objects.get(id = library_id))
   return render(request, 'chat/edit_libprofile.html', {'form': form})
     
 @login_required
@@ -495,7 +505,14 @@ class UserTaskListView(SingleTableView):
   model = UserTask
   table_class = UserTaskTable
   template_name = 'chat/user_tasks.html'
-
+  
+  def get_queryset(self, *args, **kwargs):
+    # ~ print(f'utlv args {args}')
+    # ~ print(f'utlv kwargs {kwargs}')
+    # ~ return self.queryset
+    return UserTask.objects.filter(owner = self.request.user) \
+      .order_by('-last_modified') #statuses__status_date
+    
 class XmlListView(SingleTableView):
   model = XML
   table_class = XmlTable
@@ -505,140 +522,6 @@ class LibrariesListView(SingleTableView):
   model = Library
   table_class = LibraryTable
   template_name = 'chat/libraries.html'
-
-R('''
-  suppressPackageStartupMessages(library(IDBacApp))
-  # Some globals
-  allSpectra <- list()
-  allPeaks <- list()
-  binnedPeaks <- F
-  resetGlobal <- function() {
-    allSpectra <<- list()
-    allPeaks <<- list()
-    binnedPeaks <<- F
-  }
-  appendSpectra <- function(m, i, s) {
-    # <<-: assign upward
-    # allPeaks: Used for binPeaks, intensityMatrix
-    # allSpectra: Used for intensityMatrix
-    # todo: createMassPeaks -- snr = as.numeric(x$snr))
-    allSpectra <<- append(
-      allSpectra,
-      MALDIquant::createMassSpectrum(mass = m, intensity = i)
-    )
-    allPeaks <<- append(
-      allPeaks,
-      MALDIquant::createMassPeaks(
-        mass = m, intensity = i, snr = as.numeric(s)
-      )
-    )
-  }
-  binSpectra <- function() {
-    # Only scores in first row are relevant, i.e., input spectra
-    # Finally, order the row by score decreasing
-    binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
-    featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
-    print("dim(featureMatrix)")
-    print(dim(featureMatrix))
-    
-    d <- stats::as.dist(coop::tcosine(featureMatrix))
-    d <- as.matrix(d)
-    d <- round(d, 3)
-    
-    # Don't reorder now, leave it to Python
-    #d <- d[,order(d[,1],decreasing = T)]
-    
-    # Discard symmetric part of matrix
-    d[lower.tri(d, diag = FALSE)] <- NA
-    
-    # ~ print(d[1,][0])
-    print(d[2,])
-    
-    d <- d[1,] # first row
-  }
-  
-  # heatmap code
-  binSpectraOLD <- function() {
-    binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
-    featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
-    
-    
-    # Utilizing: github.com/strejcem/MALDIvs16S/blob/master/R/MALDIbacteria.R
-    # ~ similarity <- coop::cosine(t(featureMatrix))
-    # ~ d <- as.dist(1-similarity) ### ???
-    # ~ d <- as.dist(similarity)
-    
-    # IDBac: stats::as.dist(1 - coop::tcosine(data))
-    # ~ d <- stats::as.dist(1 - coop::tcosine(featureMatrix))
-    d <- stats::as.dist(coop::tcosine(featureMatrix))
-    
-    
-    x <- as.matrix(d)
-    x <- round(x, 2)
-    #print('d')
-    #print(d)
-    
-    #jpeg(file = "test.jpg", quality = 100, width = 2000, height = 2000)
-    png(file = "test.png", width = 3000, height = 3000, res = 300, pointsize = 6)
-    # ~ heatmap(d) #, col = palette, symm = TRUE)
-    # ~ heatmap(as.matrix(d[, -1])) #, col = palette, symm = TRUE)
-    heatmap(x, symm = FALSE, Colv = NA, Rowv = NA) #, col = palette, symm = TRUE)
-    # ~ heatmap.2(as.matrix(d), symm = FALSE) #, col = palette, symm = TRUE)
-    dev.off()
-    
-    # small section
-    png(file = "test-sm.png", width = 1000, height = 1000, res = 300, pointsize = 6)
-    heatmap(x[1:16,1:16], symm = FALSE, Colv = NA, Rowv = NA) #, col = palette, symm = TRUE)
-    dev.off()
-    
-    library(gplots)
-    png(file = "test2-sm.png", width = 1200, height = 1200, res = 300, pointsize = 6)
-    gplots::heatmap.2(x[1:16,1:16], symm = FALSE, Colv = NA, Rowv = NA, cellnote = x[1:16,1:16], notecex = 0.5, trace = "none")
-    dev.off()
-    
-    png(file = "test2-med.png", width = 1200, height = 1200, res = 300, pointsize = 6)
-    gplots::heatmap.2(x[1:32,1:32], symm = FALSE, Colv = NA, Rowv = NA, cellnote = x[1:32,1:32], notecex = 0.5, trace = "none")
-    dev.off()
-    
-    png(file = "test3-sm.png", width = 1200, height = 1200, res = 300, pointsize = 6)
-    y <- x
-    y[lower.tri(x, diag = FALSE)] <- NA
-    gplots::heatmap.2(y[1:16,1:16], symm = FALSE, Colv = NA, Rowv = NA, cellnote = y[1:16,1:16], notecex = 0.5, trace = "none")
-    dev.off()
-    
-    png(file = "test3-med.png", width = 1200, height = 1200, res = 300, pointsize = 6)
-    y <- x
-    y[lower.tri(x, diag = FALSE)] <- NA
-    gplots::heatmap.2(y[1:32,1:32], symm = FALSE, Colv = NA, Rowv = NA, cellnote = y[1:32,1:32], notecex = 0.5, trace = "none")
-    dev.off()
-    
-    png(file = "test3-full.png", width = 3000, height = 3000, res = 300, pointsize = 6)
-    y <- x
-    y[lower.tri(x, diag = FALSE)] <- NA
-    gplots::heatmap.2(y, symm = FALSE, Colv = NA, Rowv = NA, trace = "none")
-    dev.off()
-    
-    
-    png(file = "test4-sm.png", width = 1200, height = 1200, res = 300, pointsize = 6)
-    y <- x
-    y[y == 0] <- 1
-    gplots::heatmap.2(y[1:16,1:16], symm = FALSE, cellnote = y[1:16,1:16], notecex = 0.5, trace = "none")
-    dev.off()
-    
-    png(file = "test4-med.png", width = 1200, height = 1200, res = 300, pointsize = 6)
-    y <- x
-    y[y == 0] <- 1
-    gplots::heatmap.2(y[1:32,1:32], symm = FALSE, cellnote = y[1:32,1:32], notecex = 0.5, trace = "none")
-    dev.off()
-    
-    png(file = "test4-full.png", width = 3000, height = 3000, res = 300, pointsize = 6)
-    y <- x
-    y[y == 0] <- 1
-    gplots::heatmap.2(y, symm = FALSE, trace = "none")
-    dev.off()
-    
-  }
-''')
 
 def view_cosine(request):
   '''Generate R heatmaps'''
@@ -669,8 +552,6 @@ def view_cosine(request):
 class SpectraFilter(django_filters.FilterSet):
   library = django_filters.ModelMultipleChoiceFilter(
     queryset = Library.objects.all()
-    #, to_field_name = "title",
-    #required = False
   )
 
   description = django_filters.CharFilter(lookup_expr = 'icontains')
@@ -772,6 +653,9 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     -- Calling queryset.update does not update the model.
     -- Use min_mass and max_mass, not tof_mode, to differentiate sm and
        proteins
+    -- With user's spectra and db spectra in place, the search should
+       be cached after first processing takes place, 
+       as long as db rows did not change in the meantime.
     '''
     # Basic: Make a new SearchSpectra and then compare to all Spectra
     
@@ -804,7 +688,7 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       self.show_tbl = True
       
       # reset R globals
-      R['resetGlobal']()
+      # ~ R['resetGlobal']()
       
       # Create a search object for user, or anonymous user
       try:
@@ -821,11 +705,15 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
           peak_snr = sn,
           created_by = None
         )
-      R['appendSpectra'](
-        robjects.FloatVector(json.loads('[' + sm + ']')),
-        robjects.FloatVector(json.loads('[' + si + ']')),
-        robjects.FloatVector(json.loads('[' + sn + ']'))
-      )
+      
+      sc = SpectraScores()
+      sc.append_spectra(sm, si, sn)
+      
+      # ~ R['appendSpectra'](
+        # ~ robjects.FloatVector(json.loads('[' + sm + ']')),
+        # ~ robjects.FloatVector(json.loads('[' + si + ']')),
+        # ~ robjects.FloatVector(json.loads('[' + sn + ']'))
+      # ~ )
       
       # small and large molecules combined, or large only
       # use GET query variables to adjust .filter()
@@ -852,20 +740,18 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       ssid = form.cleaned_data['strain_idXX'];
       sxml = form.cleaned_data['xml_hashXX'];
       scrb = form.cleaned_data['created_byXX'];
-      print(f'fcd: {form.cleaned_data}' ) # 
+      #print(f'fcd: {form.cleaned_data}' ) # 
       if slib.exists():
         n = n.filter(library__in = slib)
       if slab.exists():
         n = n.filter(lab_name__in = slab)
       if ssid.exists():
         n = n.filter(strain_id__in = ssid)
-        print('query3',n)
       if sxml.exists():
         n = n.filter(xml_hash__in = sxml)
       if scrb.exists():
         n = n.filter(created_by__in = scrb)
       n = n.order_by('xml_hash')
-      print('query', n.query)
       
       idx = {}
       count = 0
@@ -878,17 +764,23 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
         # ~ return
           
       for spectra in n:
-        pm = json.loads('['+spectra.peak_mass+']')
-        pi = json.loads('['+spectra.peak_intensity+']')
-        ps = json.loads('['+spectra.peak_snr+']')
-        R['appendSpectra'](
-          robjects.FloatVector(pm),
-          robjects.FloatVector(pi),
-          robjects.FloatVector(ps)
+        sc.append_spectra(
+          spectra.peak_mass, spectra.peak_intensity, spectra.peak_snr
         )
+        # ~ pm = json.loads('['+spectra.peak_mass+']')
+        # ~ pi = json.loads('['+spectra.peak_intensity+']')
+        # ~ ps = json.loads('['+spectra.peak_snr+']')
+        # ~ R['appendSpectra'](
+          # ~ robjects.FloatVector(pm),
+          # ~ robjects.FloatVector(pi),
+          # ~ robjects.FloatVector(ps)
+        # ~ )
         idx[count] = spectra
         count += 1
-      result = R['binSpectra']()
+      
+      # bin  
+      result = sc.bin_peaks()
+      # ~ result = R['binSpectra']()
       
       # sort by key
       sorted_list = []
@@ -1060,6 +952,12 @@ def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
     UserTaskStatus.objects.create(
       status = 'info', extra = 'Inserting metadata'
   ))
+  
+  # ~ print ('library')
+  # ~ print (tmpForm.cleaned_data['library'])
+  # ~ print (tmpForm.cleaned_data['library'].id)
+  # ~ print (tmpForm.cleaned_data['library'][0])
+  # ~ print (tmpForm.cleaned_data['library'][0].id)
   rows = cursor.execute("SELECT * FROM metaData").fetchall()
   for row in rows:
     data = {
@@ -1083,8 +981,8 @@ def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
       'pi_orcid': row[17],
       'dna_16s': row[18],
       'created_by': request.user.id,
-      'library': tmpForm.cleaned_data['library'][0].id,
-      'lab_name': tmpForm.cleaned_data['lab_name'][0].id,
+      'library': tmpForm.cleaned_data['library'].id,
+      'lab_name': tmpForm.cleaned_data['lab_name'].id,
     }
     form = MetadataForm(data)
     
@@ -1114,8 +1012,8 @@ def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
       'detector': row[6],
       'instrument_metafile': row[7],
       'created_by': request.user.id,
-      'library': tmpForm.cleaned_data['library'][0].id,
-      'lab_name': tmpForm.cleaned_data['lab_name'][0].id,
+      'library': tmpForm.cleaned_data['library'].id,
+      'lab_name': tmpForm.cleaned_data['lab_name'].id,
     }
     form = XmlForm(data)
     if form.is_valid():
@@ -1161,9 +1059,8 @@ def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
     
     data = {
       'created_by': request.user.id,
-      'library': tmpForm.cleaned_data['library'][0].id,
-      'lab_name': tmpForm.cleaned_data['lab_name'][0].id,
-      
+      'library': tmpForm.cleaned_data['library'].id,
+      'lab_name': tmpForm.cleaned_data['lab_name'].id,
       'privacy_level': tmpForm.cleaned_data['privacy_level'][0],
       
       'spectrum_mass_hash': row[0],
@@ -1171,7 +1068,6 @@ def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
       
       'xml_hash': sxml.id,
       'strain_id': smd.id,
-      
       'peak_mass': ",".join(map(str, pm['mass'])),
       'peak_intensity': ",".join(map(str, pm['intensity'])),
       'peak_snr': ",".join(map(str, pm['snr'])),
@@ -1222,12 +1118,6 @@ def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
           extra = 'Peak mass, intensity, or SNR contains an "NA" value:\n\n'
             'Row data:\n\n' + json.dumps(data)
       ))
-      # ~ UserLogs.objects.create(
-        # ~ owner = request.user,
-        # ~ title = 'Peak mass, intensity, or SNR contains an "NA" value',
-        # ~ description = 'Row data:' + json.dumps(data),
-      # ~ )
-      # ~ data_error = True
       continue
     
     form = SpectraForm(data)
@@ -1298,90 +1188,6 @@ def home(request):
 
 
 
-
-# R
-try:
-  def getRConnection():
-    return R
-  
-  # define an R function
-  # ~ R('''
-    # ~ # create a function `f`
-    # ~ f <- function(r, verbose = FALSE) {
-        # ~ if (verbose) {
-            # ~ cat("I am calling f().\n")
-        # ~ }
-        # ~ 2 * pi * r
-    # ~ }
-    # ~ # call the function `f` with argument value 3
-    # ~ f(3)
-    # ~ ''')
-  # ~ print("R['f'](4):", R['f'](4))
-  # ~ print("R['f'](4) vvv:", R['f'](4, True))
-  
-  # another one...
-  R('''
-    collapseReplicates <- function(checkedPool,
-                                   sampleIDs,
-                                   peakPercentPresence,
-                                   lowerMassCutoff,
-                                   upperMassCutoff, 
-                                   minSNR, 
-                                   tolerance = 0.002,
-                                   protein){
-      
-      validate(need(is.numeric(peakPercentPresence), "peakPercentPresence not numeric"))
-      validate(need(is.numeric(lowerMassCutoff), "lowerMassCutoff not numeric"))
-      validate(need(is.numeric(upperMassCutoff), "upperMassCutoff not numeric"))
-      validate(need(is.numeric(minSNR), "minSNR not numeric"))
-      validate(need(is.numeric(tolerance), "tolerance not numeric"))
-      validate(need(is.logical(protein), "protein not logical"))
-      
-      temp <- IDBacApp::getPeakData(checkedPool = checkedPool,
-                                    sampleIDs = sampleIDs,
-                                    protein = protein) 
-      req(length(temp) > 0)
-      # Binning peaks lists belonging to a single sample so we can filter 
-      # peaks outside the given threshold of presence 
-      
-      for (i in 1:length(temp)) {
-        snr1 <-  which(MALDIquant::snr(temp[[i]]) >= minSNR)
-        temp[[i]]@mass <- temp[[i]]@mass[snr1]
-        temp[[i]]@snr <- temp[[i]]@snr[snr1]
-        temp[[i]]@intensity <- temp[[i]]@intensity[snr1]
-      }
-      
-      specNotZero <- sapply(temp, function(x) length(x@mass) > 0)
-      
-      # Only binPeaks if spectra(um) has peaks.
-      # see: https://github.com/sgibb/MALDIquant/issues/61 for more info 
-      # note: MALDIquant::binPeaks does work if there is only one spectrum
-      if (any(specNotZero)) {
-        
-        temp <- temp[specNotZero]
-        temp <- MALDIquant::binPeaks(temp,
-                                     tolerance = tolerance, 
-                                     method = c("strict")) 
-        
-        temp <- MALDIquant::filterPeaks(temp,
-                                        minFrequency = peakPercentPresence / 100) 
-        
-        temp <- MALDIquant::mergeMassPeaks(temp, 
-                                           method = "mean") 
-        temp <- MALDIquant::trim(temp,
-                                 c(lowerMassCutoff,
-                                   upperMassCutoff))
-      } else {
-        temp <- MALDIquant::mergeMassPeaks(temp, 
-                                           method = "mean") 
-      }
-      
-      return(temp)
-    }
-    ''')
-  
-except:
-  print('did not load R')
 
 # ~ # thread test
 # ~ @start_new_thread

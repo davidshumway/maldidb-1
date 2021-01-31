@@ -94,7 +94,7 @@ class SpectraSearchForm(forms.ModelForm):
     ('protein', 'Protein'),
     ('small', 'Small Molecule'),
     ('all', 'All'),
-    ('custom', 'Custom'),
+    # ~ ('custom', 'Custom'),
   ]
   spectrum_cutoff = forms.ChoiceField(
     label = 'Spectrum cutoff', 
@@ -103,14 +103,14 @@ class SpectraSearchForm(forms.ModelForm):
     required = True,
     initial = 'protein')
   # on custom, then allow for a range
-  spectrum_cutoff_low = forms.IntegerField(
-    label = 'Minimum M/Z',
-    min_value = 0, disabled = True,
-    required = False)
-  spectrum_cutoff_high = forms.IntegerField(
-    label = 'Maximum M/Z',
-    min_value = 0, disabled = True,
-    required = False)
+  # ~ spectrum_cutoff_low = forms.IntegerField(
+    # ~ label = 'Minimum M/Z',
+    # ~ min_value = 0, disabled = True,
+    # ~ required = False)
+  # ~ spectrum_cutoff_high = forms.IntegerField(
+    # ~ label = 'Maximum M/Z',
+    # ~ min_value = 0, disabled = True,
+    # ~ required = False)
   
   choices = [
     ('processed', 'Processed Spectrum'),
@@ -266,10 +266,10 @@ class LoadSqliteForm(forms.Form):
   # ~ user = forms.ModelMultipleChoiceField(
     # ~ queryset = user.objects.all(), to_field_name="username"
   # ~ )
-  lab_name = forms.ModelMultipleChoiceField(
+  lab_name = forms.ModelChoiceField(
     queryset = LabGroup.objects.all(), to_field_name="lab_name"
   )
-  library = forms.ModelMultipleChoiceField(
+  library = forms.ModelChoiceField(
     queryset = Library.objects.all(), to_field_name="title"
   )
   
