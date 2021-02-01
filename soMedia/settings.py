@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'bootstrap4',
     'jquery',
     'django_extensions',
+    'ajaxuploader',
     # ~ 'celery',
     # ~ 'celery_progress',
     #'whitenoise.runserver_nostatic',

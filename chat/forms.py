@@ -66,17 +66,71 @@ class LibraryCollapseForm(forms.Form):
     #if 
     # ~ self.fields['metadata_strain_ids'] = forms.ModelChoiceField(queryset=Metadata.objects.all())
     
+class SpectraUploadForm(forms.Form):
+  file = forms.FileField(
+    label = 'Upload a file',
+    required = True
+  )
+  
+  # Options
+  
+  # Save spectra to lab->library?
+  # otherwise, save to user's (temporary spectra) library
+  save_to_library = forms.BooleanField(required = False,
+    label = 'Save uploaded file to a preexisting Library? (optional)')
+  # If yes... todo: filter by user's membership and/or public libs
+  lab_name = forms.ModelChoiceField(
+    queryset = LabGroup.objects.all(),
+    to_field_name = "lab_name",
+    required = False
+  )
+  library = forms.ModelChoiceField(
+    queryset = Library.objects.all(),
+    to_field_name = "title",
+    required = False
+  )
+  
+  # perform (default) preprocessing?
+  preprocess = forms.BooleanField(required = False,
+    label = 'Perform preprocessing on the file? (optional)')
+  
+  def clean(self):
+    '''
+    -- If saving, then lab/library must be present and valid selection
+    '''
+    data = self.cleaned_data
+    s1 = (
+      data.get('save_to_library') == True and (data.get('lab_name') == '' or data.get('library') == '')
+    )
+    ll_err = False
+    if data.get('save_to_library') == True:
+      try:
+        LabGroup.objects.get(data.get('lab_name'))
+      except:
+        ll_err = forms.ValidationError(
+          'Lab group not found!'
+        )
+      try:
+        Library.objects.get(data.get('library'))
+      except:# Library.DoesNotExist:
+        ll_err = forms.ValidationError(
+          'Library not found!'
+        )
+    if s1:
+      raise forms.ValidationError(
+        'Lab group and library must be specified if "Save to Library" is selected!'
+      )
+    elif ll_err:
+      raise ll_err
+    else:
+      return data
+      
 class SpectraSearchForm(forms.ModelForm):
   '''Replicated, Collapsed, all
   Small molecule, Protein, all [or range, e.g., 3k-8k]
   Processed spectra, raw spectra (run pipeline?)'''
   
   # ~ prefix = 'fm'
-  
-  spectra_file = forms.FileField(
-    label = 'Upload a spectrum file',
-    required = False
-  )
   
   choices = [
     ('collapsed', 'Collapsed Spectra'),

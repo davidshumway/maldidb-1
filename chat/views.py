@@ -9,7 +9,7 @@ from .forms import CommentForm, SpectraForm, MetadataForm, \
   LoadSqliteForm, XmlForm, LocaleForm, VersionForm, AddLibraryForm, \
   AddLabGroupForm, AddXmlForm, LabProfileForm, SearchForm, \
   ViewCosineForm, SpectraSearchForm, LibraryCollapseForm, \
-  LibProfileForm
+  LibProfileForm, SpectraUploadForm
 
 from .models import Spectra, SearchSpectra, SpectraCosineScore, \
   SearchSpectraCosineScore, Metadata, XML, Locale, Version, Library, \
@@ -62,6 +62,36 @@ def start_new_thread(function):
     t.start()
     return t
   return decorator
+
+# AjaxFileUploader
+from django.middleware.csrf import get_token
+# ~ from django.shortcuts import render_to_response
+from django.template import RequestContext
+from ajaxuploader.views import AjaxFileUploader
+def start(request):
+  csrf_token = get_token(request)
+  return render(
+    request,
+    'import.html',
+    {'csrf_token': csrf_token},
+    context_instance = RequestContext(request))
+  # ~ return render_to_response(
+    # ~ 'import.html',
+    # ~ {'csrf_token': csrf_token},
+    # ~ context_instance = RequestContext(request))
+import_uploader = AjaxFileUploader()
+
+def ajax_spectra_upload(request):
+  if request.method == 'POST':
+    form = SpectraUploadForm(data=request.POST, files=request.FILES)
+    if form.is_valid():
+      print('valid form')
+      return 'valid'
+    else:
+      print('invalid form')
+      print(form.errors)
+      return 'invalid'
+  return HttpResponseRedirect('/ingest/')
   
 def user_task_status_profile(request, status_id):
   ''''''
@@ -581,7 +611,10 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     '''Render filter widget to pass to the table template.
     '''
     context = super().get_context_data(**kwargs)
-
+    
+    # upload form
+    context['upload_form'] = SpectraUploadForm()
+    
     f = SpectraFilter(self.request.GET, queryset = self.queryset)
     context['filter'] = f
     

@@ -1,12 +1,6 @@
 from django.urls import path, re_path, include
 
 from . import views
-from .views import SearchResultsView, LibrariesListView, SpectraListView, \
-  MetadataListView, LabgroupsListView, XmlListView, \
-  FilteredSpectraListView, FilteredSpectraSearchListView, \
-  FilteredSpectraListView, FilteredSpectraSearchListView, \
-  LibCollapseListView, UserTaskListView
-  #UserLogsListView
 
 app_name = 'chat'
 
@@ -30,25 +24,25 @@ urlpatterns = [
   
   # basic / advanced search
   # ~ path('test/', PersonList.as_view(), name='testxyz'),
-  path('search/', FilteredSpectraSearchListView.as_view(), name='basic_search'),
+  path('search/', views.FilteredSpectraSearchListView.as_view(), name='basic_search'),
   # ~ path('search/', FilteredSpectraListView.as_view(), name='search_results'),
   
-  path('libraries/', LibrariesListView.as_view(), name='libraries_results'),
+  path('libraries/', views.LibrariesListView.as_view(), name='libraries_results'),
   
   # ~ path('spectra/', SpectraListView.as_view(), name='spectra_results'),
-  path('spectra/', FilteredSpectraListView.as_view(), name='spectra_results'),
+  path('spectra/', views.FilteredSpectraListView.as_view(), name='spectra_results'),
   
   # All spectra from a library / filter
   # ~ path('spectra/<library_id/', FilteredSpectraLibListView.as_view(), name='spectra_library_results'),
   
-  path('metadata/', MetadataListView.as_view(), name='metadata_results'),
+  path('metadata/', views.MetadataListView.as_view(), name='metadata_results'),
   path('metadata/<strain_id>/', views.metadata_profile, name='view_metadata'),
   path('metadata/edit/<strain_id>/', views.edit_metadata, name='edit_metadata'),
   
-  path('labgroups/', LabgroupsListView.as_view(), name='labgroups_results'),
+  path('labgroups/', views.LabgroupsListView.as_view(), name='labgroups_results'),
   #test
   
-  path('xml/', XmlListView.as_view(), name='xml_results'),
+  path('xml/', views.XmlListView.as_view(), name='xml_results'),
   path('xml/<xml_hash>/', views.xml_profile, name='view_xml'),
   path('xml/edit/<xml_hash>/', views.edit_xml, name='edit_xml'),
   
@@ -61,14 +55,19 @@ urlpatterns = [
   path('labs/<lab_id>/', views.lab_profile, name='view_lab'),
   path('labs/edit/<lab_id>/', views.edit_labprofile, name='edit_labprofile'),
   
-  path('preview_collapse/', LibCollapseListView.as_view(), name='preview_collapse_lib'),
+  path('preview_collapse/', views.LibCollapseListView.as_view(), name='preview_collapse_lib'),
   # ~ path('preview_collapse/', views.preview_collapse_lib, name='preview_collapse_lib'),
   # ~ path('preview_collapse/lib/', views.preview_collapse_lib, name='preview_collapse_lib'),
   # ~ path('preview_collapse/lib/<lib_id>/', views.preview_collapse_lib, name='preview_collapse_lib'), #<lib_id>/
   
   
-  path('tasks/', UserTaskListView.as_view(), name='user_tasks'),
+  path('tasks/', views.UserTaskListView.as_view(), name='user_tasks'),
   # ~ path('logs/', UserLogsListView.as_view(), name='user_logs'),
   
   path('statuses/<status_id>/', views.user_task_status_profile, name='user_task_statuses'),
+  
+  #path('ajax_spectra_upload/', views.ajax_spectra_upload, name='ajax_spectra_upload'),
+  path('start', views.start, name="start"),
+  path('ajax-upload', views.import_uploader, name="my_ajax_upload"),
+  
 ]

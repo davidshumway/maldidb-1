@@ -10,3 +10,6 @@ db.sqlite3
 *.sock
 maldidb.sock
 migrations
+./media/
+./media/uploads
+./media/posts
