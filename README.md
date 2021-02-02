@@ -17,6 +17,7 @@
 ### Install Requirements
 Requires R, IDBacApp R library, and RabbitMQ to be preinstalled.
 ```bash
+  git clone https://github.com/davidshumway/maldidb
   pip install -r requirements.txt
 ```
 
