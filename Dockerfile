@@ -1,9 +1,14 @@
-FROM virtualstaticvoid/heroku-docker-r:build
+FROM rstudio/plumber
+MAINTAINER David Shumway <dshumw2@uic.edu>
 
-# ONBUILD will copy application files into the container
-#  and execute onbuild, Aptfile, init.R and restore packrat packages (if they are provided)
+# idbac prereqs
+RUN apt-get update && apt-get install -y \
+	zlib1g-dev \
+	r-cran-ncdf4 \
+	netcdf-bin
 
-# override the base image CMD
-#CMD ["/usr/bin/python", "/app/app.py"]
-CMD ["/usr/bin/python", "/app/manage.py", "migrate"]
-CMD ["/usr/bin/python", "/app/manage.py", "runserver"]
+# install idbac
+RUN R -e "install.packages('remotes')"
+RUN R -e "remotes::install_github('chasemc/IDBacApp@*release')"
+
+CMD ["/app/plumber.R"]
