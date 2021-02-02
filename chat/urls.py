@@ -66,8 +66,8 @@ urlpatterns = [
   
   path('statuses/<status_id>/', views.user_task_status_profile, name='user_task_statuses'),
   
-  #path('ajax_spectra_upload/', views.ajax_spectra_upload, name='ajax_spectra_upload'),
-  path('start', views.start, name="start"),
-  path('ajax-upload', views.import_uploader, name="my_ajax_upload"),
+  path('ajax_upload/', views.ajax_upload, name='ajax_upload'),
+  # ~ path('start', views.start, name="start"),
+  # ~ path('ajax-upload', views.import_uploader, name="my_ajax_upload"),
   
 ]

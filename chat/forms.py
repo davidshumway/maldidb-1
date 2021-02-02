@@ -1,7 +1,7 @@
 from django import forms
 
-from .models import Comment, Spectra, Metadata, XML, Locale, Version
-from .models import Library, PrivacyLevel, LabGroup, SpectraCosineScore, XML
+from .models import Comment, Spectra, Metadata, XML, Locale, Version, \
+  Library, PrivacyLevel, LabGroup, SpectraCosineScore, XML, UserFile
 
 from django.contrib.auth import get_user_model
 User = get_user_model()
@@ -66,7 +66,7 @@ class LibraryCollapseForm(forms.Form):
     #if 
     # ~ self.fields['metadata_strain_ids'] = forms.ModelChoiceField(queryset=Metadata.objects.all())
     
-class SpectraUploadForm(forms.Form):
+class SpectraUploadForm(forms.ModelForm):
   file = forms.FileField(
     label = 'Upload a file',
     required = True
@@ -76,24 +76,64 @@ class SpectraUploadForm(forms.Form):
   
   # Save spectra to lab->library?
   # otherwise, save to user's (temporary spectra) library
-  save_to_library = forms.BooleanField(required = False,
-    label = 'Save uploaded file to a preexisting Library? (optional)')
+  save_to_library = forms.BooleanField(
+    required = False,
+    label = 'Save uploaded file to a preexisting Library? (optional)',
+    widget = forms.CheckboxInput(
+      attrs = {
+        'class': 'form-check-input'}
+    )
+  )
   # If yes... todo: filter by user's membership and/or public libs
   lab_name = forms.ModelChoiceField(
     queryset = LabGroup.objects.all(),
     to_field_name = "lab_name",
-    required = False
+    required = False,
+    widget = forms.Select(
+      attrs = {
+        'class': 'custom-select'}
+    ),
+    disabled = True,
+    empty_label='Select a lab'
   )
   library = forms.ModelChoiceField(
     queryset = Library.objects.all(),
     to_field_name = "title",
-    required = False
+    required = False,
+    widget = forms.Select(
+      attrs = {
+        'class': 'custom-select'}
+    ),
+    disabled = True,
+    empty_label='Select a library'
   )
   
   # perform (default) preprocessing?
-  preprocess = forms.BooleanField(required = False,
+  preprocess = forms.BooleanField(
+    required = False,
     label = 'Perform preprocessing on the file? (optional)')
   
+  class Meta:
+    model = UserFile
+    exclude = ('id', 'owner', 'upload_date', 'extension')
+    #custom-select
+    widgets = {
+      'lab_name': forms.Select(
+        attrs = {
+          'placeholder': '1,2,3',
+          'class': 'custom-select',
+          'title': 'meh'}
+      ),
+    }
+  
+  def save(self, commit = True):
+    '''
+    '''
+    instance = super().save(commit=False)
+    instance.owner = self.request.user
+    instance.save(commit)
+    return instance
+    
   def clean(self):
     '''
     -- If saving, then lab/library must be present and valid selection
@@ -494,4 +534,7 @@ class CommentForm(forms.Form):
     """
     custom save method to create comment
     """
-    comment = Comment.objects.create(text=self.cleaned_data.get('text', None), post=spectra, user=user)
+    comment = Comment.objects.create(
+      text=self.cleaned_data.get('text', None),
+      post = spectra,
+      user = user)

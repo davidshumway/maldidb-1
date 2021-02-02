@@ -2,6 +2,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+from threading import Thread
 
 from django import forms
 
@@ -13,7 +15,7 @@ from .forms import CommentForm, SpectraForm, MetadataForm, \
 
 from .models import Spectra, SearchSpectra, SpectraCosineScore, \
   SearchSpectraCosineScore, Metadata, XML, Locale, Version, Library, \
-  LabGroup, UserTask, UserTaskStatus
+  LabGroup, UserTask, UserTaskStatus, UserFile
   #UserLogs
 
 from django.db.models import Q
@@ -42,9 +44,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 # ~ from rpy2.robjects import r as R
 # ~ import rpy2.robjects as robjects
 # ~ print('loaded R')
-import json
-
-import asyncio
+#import json
+#import asyncio
 
 # json and sqlite3 required for sqlite import
 import json
@@ -53,7 +54,6 @@ import sqlite3
 # R
 from .rfn import R, robjects, SpectraScores
 
-from threading import Thread
 def start_new_thread(function):
   '''Starts a new thread for long-running tasks'''
   def decorator(*args, **kwargs):
@@ -63,35 +63,31 @@ def start_new_thread(function):
     return t
   return decorator
 
-# AjaxFileUploader
-from django.middleware.csrf import get_token
-# ~ from django.shortcuts import render_to_response
-from django.template import RequestContext
-from ajaxuploader.views import AjaxFileUploader
-def start(request):
-  csrf_token = get_token(request)
-  return render(
-    request,
-    'import.html',
-    {'csrf_token': csrf_token},
-    context_instance = RequestContext(request))
-  # ~ return render_to_response(
-    # ~ 'import.html',
-    # ~ {'csrf_token': csrf_token},
-    # ~ context_instance = RequestContext(request))
-import_uploader = AjaxFileUploader()
-
-def ajax_spectra_upload(request):
+def ajax_upload(request):
+  '''
+  -- Once the file is uploaded, we can optionally spawn a new thread to
+    preprocess it.
+  -- Once the file is (optionally) preprocessed, we can optionally add
+    it to the user's requested library, or user's "uploaded" spectra
+    if not selected, or "anonymous" spectra collection if uploaded by
+    a guest user.
+  -- What happens if the file / mzml contains more than one spectra?
+    Answer: Probably throw an error.
+  '''
   if request.method == 'POST':
     form = SpectraUploadForm(data=request.POST, files=request.FILES)
     if form.is_valid():
       print('valid form')
-      return 'valid'
+      form.request = request # pass request to save() method
+      form.save()
+      # optional new thread to preprocess
+      # add to library
+      return JsonResponse({'file': 'x'}, status=200)
     else:
       print('invalid form')
-      print(form.errors)
-      return 'invalid'
-  return HttpResponseRedirect('/ingest/')
+      e = form.errors.as_json()
+      return JsonResponse({'errors': e}, status=400)
+  return JsonResponse({'errors': 'Empty request.'}, status=400)
   
 def user_task_status_profile(request, status_id):
   ''''''

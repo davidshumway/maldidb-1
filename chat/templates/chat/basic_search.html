@@ -3,7 +3,7 @@
 {% load widget_tweaks %}
 
 {% block title %}
-	Search
+	Basic Search
 {% endblock %}
 
 {% block content %}
@@ -11,16 +11,6 @@
 {% load render_table from django_tables2 %}
 {% load bootstrap4 %}
 {% load static %}
-
-<!--
-{% if filter %}
-  {% bootstrap_button 'show filters' %}
-  <form action="" method="get" class="form form-inline" style="display:none;">
-    {% bootstrap_form filter.form layout='inline' %}
-    {% bootstrap_button 'filter' %}
-  </form>
-{% endif %}
--->
 
 <script type="text/javascript">
 function show_filter(e) {
@@ -30,16 +20,7 @@ function show_filter(e) {
 }
 </script>
 
-{% if filter %}
-<!--
-<div class="btn btn-primary" onclick="show_filter()">show filters</div>
-<div style="display:none;" id="filters">
-  {% bootstrap_form filter.form layout='inline' %}
-</div>
--->
-{% endif %}
-
-<!--upload form modal-->
+<!--Using modal for now to avoid nested forms.-->
 <div>
   <!-- Modal - Overwrite margin/width to adjust modal size -->
   <div id="upload_modal" class="modal fade" role="dialog">
@@ -48,21 +29,64 @@ function show_filter(e) {
         
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title">Upload Spectra</h4>
+          <h4 class="modal-title">Upload Unknown Isolate</h4>
         </div>
-        
-        <div id="file-uploader">       
-          <noscript>          
-            <p>Please enable JavaScript to use file uploader.</p>
-          </noscript>         
-        </div>
-
-<!--chat:ajax_spectra_upload --
-        <form action=" url 'chat:home' " class="" method="POST" style="" id="upload_form">
+<!--
+        <noscript>
+          <p>Please enable JavaScript to use file uploader.</p>
+        </noscript>
+-->     
+        <form action="{% url 'chat:ajax_upload' %}" class="" method="POST" style="" id="upload_form">
           {% csrf_token %}
           
         <div class="modal-body">
-          {% bootstrap_form upload_form layout='inline' %}
+          
+          <div class="custom-file">
+            <input type="file" class="custom-file-input" id="customFile" name="file">
+            <label class="custom-file-label" for="customFile">Choose file</label>
+          </div>
+          <div class="alert alert-danger toggle-display" id="file-error">
+<!--
+              <strong></strong>
+-->
+            </div>
+          
+          <br>
+          
+          <a href="#" id="upload-more-opts" onclick="return false;">Show more options</a>
+          
+          <div id="div-upload-opts" style="display:none;">
+            <div class="form-check">
+              {% with f=upload_form.save_to_library %}
+                {{ f }}
+                <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
+              {% endwith %}
+  <!--
+              <input class="form-check-input" type="checkbox" value="" id="defaultCheck1" name="save_to_library">
+              <label class="form-check-label" for="defaultCheck1">
+                Save file to a preexisting library? 
+              </label>
+  -->
+            </div>
+            
+            <div class="form-group">
+              {% with f=upload_form.lab_name %}
+              {{ f }}
+              {% endwith %}
+            </div>
+            <div class="form-group">
+              {% with f=upload_form.library %}
+              {{ f }}
+              {% endwith %}
+            </div>
+            <div class="form-group">
+              {% with f=upload_form.preprocess %}
+                {{ f }}
+                <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
+              {% endwith %}
+            </div>
+          </div>
+
         </div>
         
         <div class="modal-footer">
@@ -71,11 +95,13 @@ function show_filter(e) {
         </div>
         
         </form>
--->
+        
       </div>
     </div>
   </div>
 </div>
+
+
 
 
 <form action="{% url 'chat:basic_search' %}" class="" method="GET" style="">
@@ -96,35 +122,76 @@ function show_filter(e) {
         <td colspan=6>
           <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#upload_modal">
             Upload file of unknown isolate</button>
-          <a href="#">More options</a>
-          <div style="">
-            <button type="button" class="btn btn-primary" onclick="return false;">
-            Select a previously uploaded unknown isolate</button>
-          </div>
-          <div style="display: block;">
-            {% with f=form.peak_mass g=form.peak_intensity h=form.peak_snr %}
-            <table>
-              <thead><th>
-                Manually enter values for peak mass, intensity, and
-                signal-to-noise ratio of the unknown isolate
-              </th></thead>
-              <tr class="search-peakrow">
-              <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-                <div>{{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
-                </div>
-                <div>{{ g.label_tag }}{% if g.field.required %}<span class="required">*</span>{% endif %}
-                </div>
-                <div>{{ h.label_tag }}{% if h.field.required %}<span class="required">*</span>{% endif %}
-                </div>
-              </td>
-              <td class="search-peakrow" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-                <div>{{ f }}</div>
-                <div>{{ g }}</div>
-                <div>{{ h }}</div>
-              </td>
-              </tr>
-            </table>
-            {% endwith %}
+          
+          <br>
+          <br>
+          <a href="#" id="searchtype-more-opts">Additional file options</a>
+          
+          
+          <div style="display: none;" id="div-searchtype-opts" class="form-group">
+            <div class="card">
+              <div class="card-header">
+                <ul class="nav nav-pills card-header-pills">
+                  <li class="nav-item">
+                    <a class="nav-link active" href="#">Use previously uploaded file</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#">Use library spectra</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#">Manually enter spectra</a><!--"nav-link disabled"-->
+                  </li>
+                </ul>
+              </div>
+              <div class="card-body" id="">
+                <h5 class="card-title">...</h5>
+                <p class="card-text">...</p>
+                <a href="#" class="btn btn-primary">...</a>
+              </div>
+              <div class="card-body" id="" style="display: none;>
+                <h5 class="card-title">Special title treatment</h5>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+                <a href="#" class="btn btn-primary">Go somewhere</a>
+              </div>
+              <div class="card-body" id="" style="display: none;">
+                {% with f=form.peak_mass g=form.peak_intensity h=form.peak_snr %}
+                <table>
+                  <thead><th>
+                    Manually enter values for peak mass, intensity, and
+                    signal-to-noise ratio of the unknown isolate
+                  </th></thead>
+                  <tr class="search-peakrow">
+                  <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
+                    <div>{{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
+                    </div>
+                    <div>{{ g.label_tag }}{% if g.field.required %}<span class="required">*</span>{% endif %}
+                    </div>
+                    <div>{{ h.label_tag }}{% if h.field.required %}<span class="required">*</span>{% endif %}
+                    </div>
+                  </td>
+                  <td class="search-peakrow" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
+                    <div>{{ f }}</div>
+                    <div>{{ g }}</div>
+                    <div>{{ h }}</div>
+                  </td>
+                  </tr>
+                </table>
+                {% endwith %}
+              </div>
+            </div>
+            
+<!--
+            <div style="display: block;">
+              <button type="button" class="btn btn-primary" onclick="return false;">
+              Select a previously uploaded unknown isolate</button>
+            </div>
+            
+            <div style="display: block;">
+              <button type="button" class="btn btn-primary" onclick="return false;">
+              Select a library isolate</button>
+            </div>
+-->
+            
           </div>
         </td>        
       </tr>
@@ -132,7 +199,7 @@ function show_filter(e) {
       <!-- Additional fields -->
       <tr>
       <td colspan=6 align="left">
-        <a href="#" onclick="toggleAddlFields();">Additional options</a>
+        <a href="#" id="toggle-search-opts">Additional search options</a>
       </td></tr>
       
       
@@ -309,12 +376,6 @@ function show_filter(e) {
 </form>
 
 
-<!--ajax file uploader-->
-<script src="{% static 'ajaxuploader/js/fileuploader.js' %}" ></script>
-<link href="{% static 'ajaxuploader/css/fileuploader.css' %}" media="screen" rel="stylesheet" type="text/css" />
-
-
-
 <script type="text/javascript">
 //~ function toggleCutoff(e) {
   //~ var x1 = document.getElementById('id_spectrum_cutoff_low');
@@ -332,6 +393,39 @@ function show_filter(e) {
     //~ x2.disabled = true;
   //~ }  
 //~ }
+function toggleSearchTypeOpts(e) {
+  var s = $('#div-searchtype-opts');
+  if (s.css('display') == 'none') {
+    s.css('display', 'block');
+    $(this).text('Hide file options')
+  } else {
+    s.css('display', 'none');
+    $(this).text('Additional file options')
+  }
+  return false;
+}
+function toggleUploadOpts(e) {
+  var s = $('#div-upload-opts');
+  if (s.css('display') == 'none') {
+    s.css('display', 'block');
+    $(this).text('Hide more options')
+  } else {
+    s.css('display', 'none');
+    $(this).text('Show more options')
+  }
+  return false;
+}
+function toggleSaveToLibrary(e) {
+  var lb = $('#id_lab_name');
+  var li = $('#id_library');
+  if (this.checked) {
+    li[0].disabled = false;
+    lb[0].disabled = false;
+  } else {
+    li[0].disabled = true;
+    lb[0].disabled = true;
+  }
+}
 function toggleSearchForm() {
   var st = $('#search_toggle');
   var si = $('#search_initial');
@@ -344,11 +438,14 @@ function toggleSearchForm() {
   }
 }
 
-var showAddl = false
-function toggleAddlFields(e) {
+//~ var showAddl = false
+function toggleAddlFields() {
   $('.search-addl-fields').toggleClass('toggle-display');
-  e.stopPropagation();
-  e.preventDefault();
+  if ($(this).text() == 'Additional search options') {
+    $(this).text('Hide search options');
+  } else {
+    $(this).text('Additional search options');
+  }
   return false;
 }
 //~ $(document).ready(function(){
@@ -374,81 +471,96 @@ window.addEventListener('DOMContentLoaded', (event) => {
   }
   st.click(toggleSearchForm);
   
-  // upload
-  //~ $('#upload_form').submit(upload);
-  //~ console.log($('#upload_form'))
-  //~ console.log($('#upload_form').submit)
+  // toggle search options
+  $('#toggle-search-opts').click(toggleAddlFields);
   
-  var uploader = new qq.FileUploader({
-    action: "{% url 'chat:my_ajax_upload' %}",
-    element: $('#file-uploader')[0],
-    multiple: true,
-    onComplete: function(id, fileName, responseJSON) {
-      if(responseJSON.success) {
-          alert("success!");
-      } else {
-          alert("upload failed!");
-      }
-    },
-    onAllComplete: function(uploads) {
-      // uploads is an array of maps
-      // the maps look like this: {file: FileObject, response: JSONServerResponse}
-      alert("All complete!");
-    },
-    params: {
-      'csrf_token': '{{ csrf_token }}',
-      'csrf_name': 'csrfmiddlewaretoken',
-      'csrf_xname': 'X-CSRFToken',
-    },
+  // search type opts
+  $('#searchtype-more-opts').click(toggleSearchTypeOpts);
+  
+  // save to library
+  $('#id_save_to_library').click(toggleSaveToLibrary);
+  
+  // upload more opts
+  $('#upload-more-opts').click(toggleUploadOpts);
+  
+  // upload
+  $('#upload_form').submit(upload);
+  
+  // file selector (via w3 schools) and initial value on page reload
+  $(".custom-file-input").on("change", function() {
+    var f = $(this).val().split("\\").pop();
+    $(this).siblings(".custom-file-label").addClass("selected").html(f);
   });
+  if ($(".custom-file-input").val() != '') {
+    var n = $(".custom-file-input");
+    var f = n.val().split("\\").pop();
+    n.siblings(".custom-file-label").addClass("selected").html(f);
+  }
+  
 });
 
 // upload form
 function upload(event) {
-  //~ var formData = new FormData();
-  //~ formData.append('file1', myFile); 
-  //~ const data_ = JSON.stringify(data)
-  //~ formData.append('data', data_);
-  //~ doPost(url, formData)
-  //~ .then(result => {
-   //~ })
-  
-  //~ console.log(event);
-  //~ event.preventDefault();
-  //~ var data = new FormData($('#upload_form').get(0));
+  //~ console.log($(this).serialize());
+  //~ console.log($('#upload_form').serialize());
+  //~ console.log(this);
+  //~ formdata = new FormData();
+  //~ if($(this).prop('files').length > 0)
+  //~ {
+      //~ file =$(this).prop('files')[0];
+      //~ formdata.append("music", file);
+  //~ }
+  //~ console.log($(this).serialize());
+  //~ var data = new FormData($(this).get(0));
+  //~ var data = new FormData($(this));
   //~ console.log(data);
-  //~ console.log($('#upload_form'));
-  //~ console.log($('#upload_form').get(0));
-  //~ $.ajax({
-    //~ url: $(this).attr('action'),
-    //~ type: $(this).attr('method'),
-    //~ data: data,
-    //~ cache: false,
-    //~ processData: false,
-    //~ contentType: false,
-    //~ success: function(data) {
-      //~ alert('success');
-    //~ },
-    //~ error: function(e) {
-      //~ alert('fail');
-    //~ }
-  //~ });
-  //~ return false;
+  $.ajax({
+    dataType: "JSON",
+    data: new FormData(this),
+    url: "{% url 'chat:ajax_upload' %}",
+    type: 'POST',
+    processData: false,
+    contentType: false,
+    // on success
+    success: function(response) {
+      console.log(response)
+      //~ if (response.is_taken == true) {
+          //~ $('#id_username').removeClass('is-valid').addClass('is-invalid');
+          //~ $('#id_username').after('<div class="invalid-feedback d-block" id="usernameError">This username is not available!</div>')
+      //~ } else {
+          //~ $('#id_username').removeClass('is-invalid').addClass('is-valid');
+          //~ $('#usernameError').remove();
+
+      //~ }
+    },
+    // on error
+    error: function(response) {
+      console.log(response);
+      try {
+        var r = JSON.parse(response.responseJSON.errors);
+        console.log(r);
+        if (r && r.file) { // array of messages
+          $('#customFile').removeClass('is-valid').addClass('is-invalid');
+          $('#file-error').removeClass('toggle-display').text(
+            r.file.join('<br>')
+          );
+          var msgs = [];
+          r.file.forEach(e => msgs.push(e.message));
+          $('#file-error').text(msgs.join('<br>'));
+        }
+      } catch(e) {
+        console.log(e);
+      }
+      
+    }
+  });
+  return false;
 }
-
-//~ $(function() {
-    
-//~ });
 </script>
 
 
 
 
 
-<script>
-    $(function(){
-    
-    });
-</script>
 {% endblock %}
 

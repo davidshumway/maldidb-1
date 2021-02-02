@@ -13,4 +13,3 @@ django-jquery
 psycopg2
 psycopg2-binary
 django-extensions
-ajaxuploader
