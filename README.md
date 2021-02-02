@@ -18,6 +18,7 @@
 Requires R and IDBacApp R library to be preinstalled.
 ```bash
   git clone https://github.com/davidshumway/maldidb
+  cd ./maldidb/
   pip install -r requirements.txt
 ```
 
