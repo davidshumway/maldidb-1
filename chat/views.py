@@ -376,10 +376,15 @@ R('''
     )
   }
   binSpectra <- function() {
+    print("dims")
+    print(dim(allSpectra))
+    print(dim(allPeaks))
     # Only scores in first row are relevant, i.e., input spectra
     # Finally, order the row by score decreasing
     binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance=0.002)
+    print(dim(binnedPeaks))
     featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
+    print(dim(featureMatrix))
     d <- stats::as.dist(coop::tcosine(featureMatrix))
     d <- as.matrix(d)
     d <- round(d, 3)
