@@ -1,4 +1,4 @@
-Django==2.2.13
+Django==3.1
 Pillow==6.0.0
 pytz==2019.1
 sqlparse==0.3.0
@@ -13,5 +13,4 @@ django-jquery
 psycopg2
 psycopg2-binary
 django-extensions
-celery
-celery-progress
+django-autocomplete-light

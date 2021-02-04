@@ -8,13 +8,8 @@
 
 {% block content %}
 
-<!--extended/advanced search-->
-<!-- Quick search -->
-
 {% load render_table from django_tables2 %}
 {% load bootstrap4 %}
-
-<!-- Add search functionality here -->
 
 {% if filter %}
   <button class="btn btn-primary" onclick="toggleFilters();">Show filters</button>

@@ -1,22 +1,244 @@
 from django import forms
 
-from .models import Comment, Spectra, Metadata, XML, Locale, Version
-from .models import Library, PrivacyLevel, LabGroup, SpectraCosineScore, XML
+from .models import Comment, Spectra, Metadata, XML, Locale, Version, \
+  Library, PrivacyLevel, LabGroup, SpectraCosineScore, XML, UserFile
+
+from dal import autocomplete
 
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
+
+class LibraryCollapseForm(forms.Form):
+  '''
+  Select: Collapse all replicates marked as "Linear" vs. "Reflector"
+  User selects a library.
+  Spectra are grouped by machine setting linear vs. reflector.
+  Spectra then grouped by strain id.
+  '''
+  # ~ library = forms.CharField(disabled = True, required = True)
+  library = forms.ModelChoiceField(
+    queryset = Library.objects.all(),
+    # ~ to_field_name = "title",
+    required = False 
+  )
+  
+  #CollapsedSpectra
+  peak_percent_presence = forms.DecimalField( # e.g. 70.00%
+    max_value=100, decimal_places=1, initial=70.0)
+  #lower_mass_cutoff = models.IntegerField(blank=True) #e.g. 0
+  #upper_mass_cutoff = models.IntegerField(blank=True) #e.g. 6000
+  min_snr = forms.DecimalField(
+    decimal_places=2, initial=0.25) #e.g.?
+  tolerance = forms.DecimalField(
+    decimal_places=3, initial=0.002)
+  
+  spectraChoices = [
+    ('protein', 'Protein'),
+    ('sm', 'Small Molecule'),
+    ('all', 'All'),
+  ]
+  collapse_types = forms.ChoiceField(
+    label = 'Select replicates to collapse',
+    choices = spectraChoices,
+    widget = forms.RadioSelect,
+    initial = 'all',
+    required = True
+  )
+  
+  #generated_date = forms.DateTimeField(auto_now_add=True, blank=True)
+  
+  class Meta:
+    model = Library
+    fields = ['id']
+    
+  # ~ def __init__(self, *args, **kwargs):
+    # ~ g = kwargs.pop('get','')
+    
+    # Get initial data passed from the view
+    #self.library = None
+    #if 'library' in kwargs['initial']:
+    #  self.library = kwargs['initial'].pop('library')
+    
+    # ~ super(LibraryCollapseForm, self).__init__(*args, **kwargs)
+      
+    #self.fields['library'].queryset = Library.objects.filter(id=self.library)
+    # ~ print(f'_init_-args: {args}')
+    # ~ print(f'_init_-args: {kwargs}')
+    #if 
+    # ~ self.fields['metadata_strain_ids'] = forms.ModelChoiceField(queryset=Metadata.objects.all())
+    
+class SpectraCollectionsForm(forms.ModelForm):
+  '''
+    metadata [kingdom, ..., species], strain_id
+    [lab, library]
+  '''
+  cKingdom = forms.ModelMultipleChoiceField(
+    queryset = Metadata.objects.all(),
+    label = 'Kingdom',
+    widget = autocomplete.ModelSelect2Multiple(url = 'chat:metadata_autocomplete_kingdom')) # attrs = {'class': 'form-check-input'}
+  cPhylum = forms.ModelMultipleChoiceField(
+    queryset = Metadata.objects.all(),
+    label = 'Phylum',
+    widget = autocomplete.ModelSelect2Multiple(url = 'chat:metadata_autocomplete_phylum', forward=('cKingdom',))
+  )
+  cClass = forms.ModelMultipleChoiceField(
+    queryset = Metadata.objects.all(),
+    label = 'Class',
+    widget = autocomplete.ModelSelect2Multiple(url = 'chat:metadata_autocomplete_class', forward=['cKingdom','cPhylum'])
+  )
+  cOrder = forms.ModelMultipleChoiceField(
+    queryset = Metadata.objects.all(),
+    label = 'Order',
+    widget = autocomplete.ModelSelect2Multiple(url = 'chat:metadata_autocomplete_order', forward=['cKingdom','cPhylum','cClass'])
+  )
+  cGenus = forms.ModelMultipleChoiceField(
+    queryset = Metadata.objects.all(),
+    label = 'Genus',
+    widget = autocomplete.ModelSelect2Multiple(url = 'chat:metadata_autocomplete_genus', forward=['cKingdom','cPhylum','cClass','cOrder'])
+  )
+  cSpecies = forms.ModelMultipleChoiceField(
+    queryset = Metadata.objects.all(),
+    label = 'Species',
+    widget = autocomplete.ModelSelect2Multiple(url = 'chat:metadata_autocomplete_species', forward=['cKingdom','cPhylum','cClass','cOrder','cGenus'])
+  )
+  
+  class Meta:
+    model = Metadata
+    fields = ['cKingdom', 'cPhylum', 'cClass', 'cOrder', 'cGenus', 'cSpecies']
+    # ~ widgets = {
+      # ~ 'cGenus': autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete'),
+      # ~ 'cClass': autocomplete.Select2(url = 'chat:metadata_autocomplete'),
+      # ~ 'cGenus': autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete'),
+      # ~ 'cClass': autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete'),
+    # ~ }
+  # ~ lab_name = forms.ModelChoiceField(
+    # ~ queryset = LabGroup.objects.all(),
+    # ~ to_field_name = "lab_name",
+    # ~ required = False,
+    # ~ widget = forms.Select(
+      # ~ attrs = {
+        # ~ 'class': 'custom-select'}
+    # ~ ),
+    # ~ disabled = True,
+    # ~ empty_label='Select a lab'
+  # ~ )
+  # ~ library = forms.ModelChoiceField(
+    # ~ queryset = Library.objects.all(),
+    # ~ to_field_name = "title",
+    # ~ required = False,
+    # ~ widget = forms.Select(
+      # ~ attrs = {
+        # ~ 'class': 'custom-select'}
+    # ~ ),
+    # ~ disabled = True,
+    # ~ empty_label='Select a library'
+  # ~ )
+  
+class SpectraUploadForm(forms.ModelForm):
+  file = forms.FileField(
+    label = 'Upload a file',
+    required = True
+  )
+  
+  # Options
+  
+  # Save spectra to lab->library?
+  # otherwise, save to user's (temporary spectra) library
+  save_to_library = forms.BooleanField(
+    required = False,
+    label = 'Save upload to preexisting library? (optional)',
+    widget = forms.CheckboxInput(
+      attrs = {
+        'class': 'form-check-input'}
+    )
+  )
+  # If yes... todo: filter by user's membership and/or public libs
+  lab_name = forms.ModelChoiceField(
+    queryset = LabGroup.objects.all(),
+    to_field_name = "lab_name",
+    required = False,
+    widget = forms.Select(
+      attrs = {
+        'class': 'custom-select'}
+    ),
+    disabled = True,
+    empty_label='Select a lab'
+  )
+  library = forms.ModelChoiceField(
+    queryset = Library.objects.all(),
+    to_field_name = "title",
+    required = False,
+    widget = forms.Select(
+      attrs = {
+        'class': 'custom-select'}
+    ),
+    disabled = True,
+    empty_label='Select a library'
+  )
+  
+  # perform (default) preprocessing?
+  preprocess = forms.BooleanField(
+    required = False,
+    initial = True,
+    label = 'Perform spectra preprocessing? (optional)')
+  
+  class Meta:
+    model = UserFile
+    exclude = ('id', 'owner', 'upload_date', 'extension')
+    #custom-select
+    widgets = {
+      'lab_name': forms.Select(
+        attrs = {
+          'class': 'custom-select'}
+      ),
+    }
+  
+  def save(self, commit = True):
+    '''
+    '''
+    instance = super().save(commit=False)
+    instance.owner = self.request.user
+    instance.save(commit)
+    return instance
+    
+  def clean(self):
+    '''
+    -- If saving, then lab/library must be present and valid selection
+    '''
+    data = self.cleaned_data
+    s1 = (
+      data.get('save_to_library') == True and (data.get('lab_name') == '' or data.get('library') == '')
+    )
+    # ~ ll_err = False
+    # ~ if data.get('save_to_library') == True:
+      # ~ try:
+        # ~ LabGroup.objects.get(data.get('lab_name'))
+      # ~ except:
+        # ~ ll_err = forms.ValidationError(
+          # ~ 'Lab group not found!'
+        # ~ )
+      # ~ try:
+        # ~ Library.objects.get(data.get('library'))
+      # ~ except:# Library.DoesNotExist:
+        # ~ ll_err = forms.ValidationError(
+          # ~ 'Library not found!'
+        # ~ )
+    if s1:
+      raise forms.ValidationError(
+        'Lab group and library must be specified if "Save to Library" is selected!'
+      )
+    # ~ elif ll_err:
+      # ~ raise ll_err
+    else:
+      return data
+      
 class SpectraSearchForm(forms.ModelForm):
   '''Replicated, Collapsed, all
   Small molecule, Protein, all [or range, e.g., 3k-8k]
   Processed spectra, raw spectra (run pipeline?)'''
   
   # ~ prefix = 'fm'
-  
-  spectra_file = forms.FileField(
-    label = 'Upload a spectrum file',
-    required = False
-  )
   
   choices = [
     ('collapsed', 'Collapsed Spectra'),
@@ -34,7 +256,7 @@ class SpectraSearchForm(forms.ModelForm):
     ('protein', 'Protein'),
     ('small', 'Small Molecule'),
     ('all', 'All'),
-    ('custom', 'Custom'),
+    # ~ ('custom', 'Custom'),
   ]
   spectrum_cutoff = forms.ChoiceField(
     label = 'Spectrum cutoff', 
@@ -43,14 +265,14 @@ class SpectraSearchForm(forms.ModelForm):
     required = True,
     initial = 'protein')
   # on custom, then allow for a range
-  spectrum_cutoff_low = forms.IntegerField(
-    label = 'Minimum M/Z',
-    min_value = 0, disabled = True,
-    required = False)
-  spectrum_cutoff_high = forms.IntegerField(
-    label = 'Maximum M/Z',
-    min_value = 0, disabled = True,
-    required = False)
+  # ~ spectrum_cutoff_low = forms.IntegerField(
+    # ~ label = 'Minimum M/Z',
+    # ~ min_value = 0, disabled = True,
+    # ~ required = False)
+  # ~ spectrum_cutoff_high = forms.IntegerField(
+    # ~ label = 'Maximum M/Z',
+    # ~ min_value = 0, disabled = True,
+    # ~ required = False)
   
   choices = [
     ('processed', 'Processed Spectrum'),
@@ -75,7 +297,6 @@ class SpectraSearchForm(forms.ModelForm):
     required = False
   )
   strain_idXX = forms.ModelMultipleChoiceField(
-    # ~ queryset = Spectra.objects.order_by('strain_id').distinct('strain_id'),
     queryset = Metadata.objects.order_by('strain_id').distinct('strain_id'),
     to_field_name = "strain_id",
     required = False
@@ -83,35 +304,29 @@ class SpectraSearchForm(forms.ModelForm):
   distinct_users = Spectra.objects.order_by('created_by').values_list('created_by',flat=True).distinct()
   created_byXX = forms.ModelMultipleChoiceField(
     queryset = User.objects.all().filter(id__in = distinct_users),
-    # ~ queryset = Spectra.objects.order_by('created_by').distinct('created_by'),
-    # ~ queryset = User.objects.all().filter(id__in = ),
     to_field_name = "username", 
     required = False
   )
   xml_hashXX = forms.ModelMultipleChoiceField(
-    # ~ queryset = Spectra.objects.order_by('xml_hash').distinct('xml_hash'),
     queryset = XML.objects.order_by('xml_hash').distinct('xml_hash'),
-    # ~ to_field_name = "xml_hash",
     required = False
   )
   
   # ~ def __init__(self, *args, **kwargs):
-    # ~ print(f'_init_-args: {args}' ) # 
-    # ~ print(f'_init_-kw:   {kwargs}' ) # 
+    # ~ print(f'_init_-args: {args}') # 
+    # ~ print(f'_init_-kw:   {kwargs}') # 
     # ~ super(SpectraSearchForm, self).__init__(*args, **kwargs)
   
   def clean(self):
     data = self.cleaned_data
-    # ~ print('add form',data)
-    # ~ raise forms.ValidationError(
-      # ~ 'Select a file to upload!'
-    # ~ )
-    # ~ if data.get('file') == None and data.get('upload_type') == 'single':
-      # ~ raise forms.ValidationError(
-        # ~ 'Select a file to upload!'
-      # ~ )
     print('dpm',data.get('peak_mass'))
-    if (data.get('peak_mass') != '' or data.get('peak_intensity') != '' or data.get('peak_snr') != '') and (data.get('peak_mass') == '' or data.get('peak_intensity') == '' or data.get('peak_snr') == ''):
+    s1 = (
+      data.get('peak_mass') != '' or data.get('peak_intensity') != '' or data.get('peak_snr') != ''
+    )
+    s2 = (
+      data.get('peak_mass') == '' or data.get('peak_intensity') == '' or data.get('peak_snr') == ''
+    )
+    if s1 and s2:
       raise forms.ValidationError(
         'Peak mass, intensity, and SNR must be entered!'
       )
@@ -213,10 +428,10 @@ class LoadSqliteForm(forms.Form):
   # ~ user = forms.ModelMultipleChoiceField(
     # ~ queryset = user.objects.all(), to_field_name="username"
   # ~ )
-  lab_name = forms.ModelMultipleChoiceField(
+  lab_name = forms.ModelChoiceField(
     queryset = LabGroup.objects.all(), to_field_name="lab_name"
   )
-  library = forms.ModelMultipleChoiceField(
+  library = forms.ModelChoiceField(
     queryset = Library.objects.all(), to_field_name="title"
   )
   
@@ -387,4 +602,7 @@ class CommentForm(forms.Form):
     """
     custom save method to create comment
     """
-    comment = Comment.objects.create(text=self.cleaned_data.get('text', None), post=spectra, user=user)
+    comment = Comment.objects.create(
+      text=self.cleaned_data.get('text', None),
+      post = spectra,
+      user = user)

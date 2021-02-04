@@ -1,0 +1,80 @@
+
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}
+	Collapse library replicates
+{% endblock %}
+
+{% block content %}
+
+{% load render_table from django_tables2 %}
+{% load bootstrap4 %}
+
+
+
+	<div class="container-fluid row">
+		<div class="col-md-12">
+			<h5 class="py-3 px-2 bg-dark text-light d-flex justify-content-between">Collapse library replicates</h5>
+			<div class=" bg-grey container mx-auto py-3">
+
+				{% if form.non_field_errors %}
+		          <div class="alert alert-warning alert-dismissible fade show" style="font-size: 11px" role="alert">
+		            {{ form.non_field_errors }}
+		            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+		              <span aria-hidden="true">&times;</span>
+		            </button>
+		          </div>
+		        {% endif %}
+		        
+		        <form method="get" class="ul-radios">
+		          {% for field in form %}
+		          <div class="form-group">
+		            {% if field.errors %}
+		              <div class="alert alert-warningalert-dismissible fade show" role='alert'>
+		                {{ field.errors }}
+		                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+		                  <span aria-hidden="true">&times;</span>
+		                </button>
+		              </div>
+		            {% endif %}
+		        
+		            {{ field.label_tag }}
+		            {{ field|add_class:'form-control' }}
+		          </div>
+		          {% endfor %}
+		          <input type='submit' class="btn btn-primary btn-block" value='submit'>
+		        </form>
+			</div>
+		</div>
+<!--
+		<div class="col-md-4">
+			<h5 class="py-3 px-2 bg-dark text-light text-center">My profile</h5>
+			{% include 'accounts/profile.html' %}
+		</div>
+-->
+	</div>
+	
+<div class="row">
+  <input type="button" class="btn btn-primary" id="search_toggle" style="display: none; width: 180px;" value="Edit Search" />
+</div>
+
+{% if tables %}  
+	{% for table in tables %}
+		{% render_table table %}
+	{% endfor %}
+{% endif %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+{% endblock %}

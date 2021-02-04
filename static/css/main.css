@@ -78,15 +78,26 @@ body {
 	margin: 0px 0px 20px 0px ;
 	padding: 7px 5px 7px 5px ;
 }
-/**/
+.form-add-sqlite ul li {
+	display: inline ;
+	padding: 0px 3px 0px 3px ;
+}
+/* everywhere */
 .toggle-display {
 	display: none !important;
 }
-/**/
-.toggle-display {
-	display: none !important;
+label, select, input {
+	cursor: pointer;
 }
-
+.ul-radios li {
+	display: inline;
+	padding: 8px;
+}
+.ul-radios ul {
+	list-style-type: none !important;
+	margin: 0px 0px 20px 0px ;
+	padding: 7px 5px 7px 5px ;
+}
 
 
 
