@@ -73,34 +73,34 @@ class SpectraCollectionsForm(forms.ModelForm):
     metadata [kingdom, ..., species], strain_id
     [lab, library]
   '''
-  cKingdom = forms.ModelChoiceField(
+  cKingdom = forms.ModelMultipleChoiceField(
     queryset = Metadata.objects.all(),
     label = 'Kingdom',
-    widget = autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete_kingdom')) # attrs = {'class': 'form-check-input'}
-  cPhylum = forms.ModelChoiceField(
+    widget = autocomplete.ModelSelect2Multiple(url = 'chat:metadata_autocomplete_kingdom')) # attrs = {'class': 'form-check-input'}
+  cPhylum = forms.ModelMultipleChoiceField(
     queryset = Metadata.objects.all(),
     label = 'Phylum',
-    widget = autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete_phylum', forward=['cKingdom'])
+    widget = autocomplete.ModelSelect2Multiple(url = 'chat:metadata_autocomplete_phylum', forward=('cKingdom',))
   )
-  cClass = forms.ModelChoiceField(
+  cClass = forms.ModelMultipleChoiceField(
     queryset = Metadata.objects.all(),
     label = 'Class',
-    widget = autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete_class', forward=['cKingdom','cPhylum'])
+    widget = autocomplete.ModelSelect2Multiple(url = 'chat:metadata_autocomplete_class', forward=['cKingdom','cPhylum'])
   )
-  cOrder = forms.ModelChoiceField(
+  cOrder = forms.ModelMultipleChoiceField(
     queryset = Metadata.objects.all(),
     label = 'Order',
-    widget = autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete_order', forward=['cKingdom','cPhylum','cClass'])
+    widget = autocomplete.ModelSelect2Multiple(url = 'chat:metadata_autocomplete_order', forward=['cKingdom','cPhylum','cClass'])
   )
-  cGenus = forms.ModelChoiceField(
+  cGenus = forms.ModelMultipleChoiceField(
     queryset = Metadata.objects.all(),
     label = 'Genus',
-    widget = autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete_genus', forward=['cKingdom','cPhylum','cClass','cOrder'])
+    widget = autocomplete.ModelSelect2Multiple(url = 'chat:metadata_autocomplete_genus', forward=['cKingdom','cPhylum','cClass','cOrder'])
   )
-  cSpecies = forms.ModelChoiceField(
+  cSpecies = forms.ModelMultipleChoiceField(
     queryset = Metadata.objects.all(),
     label = 'Species',
-    widget = autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete_species', forward=['cKingdom','cPhylum','cClass','cOrder','cGenus'])
+    widget = autocomplete.ModelSelect2Multiple(url = 'chat:metadata_autocomplete_species', forward=['cKingdom','cPhylum','cClass','cOrder','cGenus'])
   )
   
   class Meta:
@@ -147,7 +147,7 @@ class SpectraUploadForm(forms.ModelForm):
   # otherwise, save to user's (temporary spectra) library
   save_to_library = forms.BooleanField(
     required = False,
-    label = 'Save uploaded file to a preexisting Library? (optional)',
+    label = 'Save upload to preexisting library? (optional)',
     widget = forms.CheckboxInput(
       attrs = {
         'class': 'form-check-input'}
@@ -180,7 +180,8 @@ class SpectraUploadForm(forms.ModelForm):
   # perform (default) preprocessing?
   preprocess = forms.BooleanField(
     required = False,
-    label = 'Perform preprocessing on the file? (optional)')
+    initial = True,
+    label = 'Perform spectra preprocessing? (optional)')
   
   class Meta:
     model = UserFile

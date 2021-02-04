@@ -47,377 +47,320 @@ function show_filter(e) {
 <form action="{% url 'chat:basic_search' %}" class="" method="GET" style="" id="search-form">
 </form>
 
-
-<div style="" id="div-searchtype-opts" class="container">
-<!--
-  <div class="col-sm-10">
--->
-  <div class="">
-  <div class="card">
-    <div class="card-header">Select search type
-    </div>
-
-    <div class="card-header">
-      <ul class="nav nav-tabs card-header-tabs" id="nav-search-source">
-        <li class="nav-item">
-          <a class="nav-link active" href="#" id="nss-1">Upload file of unknown isolate</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" id="nss-2">Use previously uploaded file</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" id="nss-3">Use library spectra</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" id="nss-4">Manually enter spectra</a><!--"nav-link disabled"-->
-        </li>
-      </ul>
-    </div>
-    <div class="card-body" id="nss-card-1" style="">
-      
-      <!-- File upload form -->
-      <form action="{% url 'chat:ajax_upload' %}" class="" method="POST" style="" id="upload_form">
-      {% csrf_token %}
-      
-      <div class="custom-file">
-        <input type="file" class="custom-file-input" id="customFile" name="file">
-        <label class="custom-file-label" for="customFile">Choose file</label>
-      </div>
-      <div class="alert alert-danger toggle-display" id="file-error">
-        </div>
-      
-      <br>
-      <br>
-      <p class="card-text">
-        <a href="#" id="upload-more-opts" onclick="return false;">Show more options</a>
-      </p>
-      
-      <div id="div-upload-opts" style="display:none;">
-        <div class="form-check">
-          {% with f=upload_form.save_to_library %}
-            {{ f }}
-            <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
-          {% endwith %}
-        </div>
-        
-        <div class="w-75">
-          <div class="form-group">
-            {% with f=upload_form.lab_name %}
-            {{ f }}
-            {% endwith %}
-          </div>
-          <div class="form-group">
-            {% with f=upload_form.library %}
-            {{ f }}
-            {% endwith %}
-          </div>
-        </div>
-        <div class="form-group">
-          {% with f=upload_form.preprocess %}
-            {{ f }}
-            <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
-          {% endwith %}
-        </div>
-      </div>
-      
-      <div class="text-center">
-        <button type="submit" class="btn btn-default">Upload</button>
-      </div>
-      </form>
-      <!-- End file upload form -->
-      
-    </div>
-    <div class="card-body toggle-display" id="nss-card-2">
-      <h5 class="card-title">title</h5>
-      <p class="card-text">text</p>
-    </div>
-    <div class="card-body toggle-display" id="nss-card-3">
-      <h5 class="card-title">title</h5>
-      <p class="card-text">text</p>
-    </div>
-    <div class="card-body toggle-display" id="nss-card-4">
-      <p class="card-text">Manually enter values for peak mass, intensity, and
-          signal-to-noise ratio of the unknown isolate</p>
-      
-      {% with f=form.peak_mass g=form.peak_intensity h=form.peak_snr %}
-        <div class="form-group row">
-          <label class="col-sm-2 col-form-label" for="{{ f.auto_id }}">{{ f.label }}</label>
-          <div class="col-sm-10">
-            {{ f }}
-          </div>
-        </div>
-        <div class="form-group row">
-          <label class="col-sm-2 col-form-label" for="{{ g.auto_id }}">{{ g.label }}</label>
-          <div class="col-sm-10">
-            {{ g }}
-          </div>
-        </div>
-        <div class="form-group row">
-          <label class="col-sm-2 col-form-label" for="{{ h.auto_id }}">{{ h.label }}</label>
-          <div class="col-sm-10">
-            {{ h }}
-          </div>
-        </div>
-      {% endwith %}
-    </div>
-  
-    <div class="card-header">Perform search against
-    </div>
+<div style="" id="" class="container">
+  <div id="accordion">
     
-    <div class="card-header">
-      <ul class="nav nav-tabs card-header-tabs" id="nav-search-2">
-        <li class="nav-item">
-          <a class="nav-link active" href="#" id="ns2-1">Select collection</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" id="ns2-2">Select dendrogram</a>
-        </li>
-      </ul>
+  <!-- search type -->
+  <div class="card">
+    <div class="card-header" id="headingOne">
+      <h5 class="mb-0">
+        <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+          Search type
+        </button>
+      </h5>
     </div>
-  
-    <div>
-      <form action="" method="post" class="dal-form container">
-          {% csrf_token %}
-          
-          {{ metadata_form }}
-
-<!--
-          <table style="display: none">
-              {{ view.formset.empty_form }}
-          </table>
-
-          <table>
-              {{ view.formset }}
-          </table>
--->
-
-<!--
-          <span id="add-form" class="button">Add form</span>
--->
-
-<!--
-          <input type="submit" />
--->
-        </form>
+    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+      <div class="card-body">
         
-        
+            <div class="card" style="height:450px !important;"><!--Makes all tabs same height to keep card body height from always changing upon tab selection.-->
+              <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="nav-search-source">
+                  <li class="nav-item">
+                    <a class="nav-link active" href="#" id="nss-1">Upload new file of unknown isolate</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#" id="nss-2">Previously uploaded files</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#" id="nss-3">Library spectra</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#" id="nss-4">Manual spectra entry</a><!--"nav-link disabled"-->
+                  </li>
+                </ul>
+              </div>
+              <div class="card-body" id="nss-card-1" style="">
+                
+                <!-- File upload form -->
+                <form action="{% url 'chat:ajax_upload' %}" class="" method="POST" style="" id="upload_form">
+                {% csrf_token %}
+                
+                <div class="custom-file">
+                  <input type="file" class="custom-file-input" id="customFile" name="file">
+                  <label class="custom-file-label" for="customFile">Choose file</label>
+                </div>
+                <div class="alert alert-danger toggle-display" id="file-error">
+                  </div>
+                
+                <br>
+                <br>
+                <p class="card-text">
+                  <a href="#" id="upload-more-opts" onclick="return false;">Show more options</a>
+                </p>
+                
+                <div id="div-upload-opts" style="display:none;">
+                  <div class="form-check">
+                    {% with f=upload_form.save_to_library %}
+                      {{ f }}
+                      <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
+                    {% endwith %}
+                  </div>
+                  
+                  <div class="w-75">
+                    <div class="form-group">
+                      {% with f=upload_form.lab_name %}
+                      {{ f }}
+                      {% endwith %}
+                    </div>
+                    <div class="form-group">
+                      {% with f=upload_form.library %}
+                      {{ f }}
+                      {% endwith %}
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    {% with f=upload_form.preprocess %}
+                      {{ f }}
+                      <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
+                    {% endwith %}
+                  </div>
+                </div>
+                
+                <div class="text-center">
+                  <button type="submit" class="btn btn-default">Upload</button>
+                </div>
+                </form>
+                <!-- End file upload form -->
+                
+              </div>
+              <div class="card-body toggle-display" id="nss-card-2">
+                <h5 class="card-title">title</h5>
+                <p class="card-text">text</p>
+              </div>
+              <div class="card-body toggle-display" id="nss-card-3">
+                <h5 class="card-title">title</h5>
+                <p class="card-text">text</p>
+              </div>
+              <div class="card-body toggle-display" id="nss-card-4">
+                <p class="card-text">Manually enter values for peak mass, intensity, and
+                    signal-to-noise ratio of the unknown isolate</p>
+                
+                {% with f=form.peak_mass g=form.peak_intensity h=form.peak_snr %}
+                  <div class="form-group row">
+                    <label class="col-sm-2 col-form-label" for="{{ f.auto_id }}">{{ f.label }}</label>
+                    <div class="col-sm-10">
+                      {{ f }}
+                    </div>
+                  </div>
+                  <div class="form-group row">
+                    <label class="col-sm-2 col-form-label" for="{{ g.auto_id }}">{{ g.label }}</label>
+                    <div class="col-sm-10">
+                      {{ g }}
+                    </div>
+                  </div>
+                  <div class="form-group row">
+                    <label class="col-sm-2 col-form-label" for="{{ h.auto_id }}">{{ h.label }}</label>
+                    <div class="col-sm-10">
+                      {{ h }}
+                    </div>
+                  </div>
+                {% endwith %}
+              </div>
+            </div>
+            <!-- search button -->
+            <button class="btn btn-primary">Start search</button>
+      </div>
     </div>
-{{ metadata_form.media }}
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
   </div>
+
+  <!-- -->
+  <div class="card">
+    <div class="card-header" id="headingTwo">
+      <h5 class="mb-0">
+        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+          Search filters
+        </button>
+      </h5>
+    </div>
+    <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+      <div class="card-body">
+            <div class="card" style="height:550px !important;"><!--Makes all tabs same height to keep card body height from always changing upon tab selection.-->
+              <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="nav-search-2">
+                  <li class="nav-item">
+                    <a class="nav-link active" href="#" id="ns2-1">Select collection</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#" id="ns2-2">Select dendrogram</a>
+                  </li>
+                </ul>
+              </div>
+            
+              <div>
+                <form action="" method="post" class="dal-form container">
+                    {% csrf_token %}
+                    
+                    {{ metadata_form }}
+
+          <!--
+                    <table style="display: none">
+                        {{ view.formset.empty_form }}
+                    </table>
+
+                    <table>
+                        {{ view.formset }}
+                    </table>
+          -->
+
+          <!--
+                    <span id="add-form" class="button">Add form</span>
+          -->
+
+          <!--
+                    <input type="submit" />
+          -->
+                  </form>
+                  
+                  
+              </div>
+            {{ metadata_form.media }}
+            </div>
+            <!-- search button -->
+            <button class="btn btn-primary">Start search</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- -->
+  <div class="card">
+    <div class="card-header" id="headingThree">
+      <h5 class="mb-0">
+        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+          Additional filters
+        </button>
+      </h5>
+    </div>
+    <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+      <div class="card-body">
+                  <table class="table spectra-search-tbl">
+                    
+                    <!-- Additional fields -->
+<!--
+                    <tr>
+                    <td colspan=6 align="left">
+                      <a href="#" id="toggle-search-opts">Additional search options</a>
+                    </td></tr>
+-->
+                    
+                    
+                    {% with f=form.replicates %}
+                    <tr class="search-addl-fields">
+                    <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
+                      {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
+                    </td>
+                    <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
+                      {{ f }}
+                      {% if f.help_text %}
+                        <p class="help">{{ f.help_text|safe }}</p>
+                      {% endif %}
+                    </td>
+                    {% endwith %}
+                    
+                    {% with f=form.spectrum_cutoff g=form.spectrum_cutoff_low h=form.spectrum_cutoff_high %}
+                    <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
+                      {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
+                    </td>
+                    <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
+                      <ul>
+                      {% for c in f %}
+                        {% if c.choice_label != "Custom" %}
+                          <li>{{ c.tag }}
+                            <label for="id_spectrum_cutoff_{{ forloop.counter0 }}">
+                              {{ c.choice_label }}</label>
+                          </li>
+                        {% endif %}
+                      {% endfor %}
+                      </ul>
+                      {% if f.help_text %}
+                        <p class="help">{{ f.help_text|safe }}</p>
+                      {% endif %}
+                    </td>
+                    {% endwith %}
+                    
+                    {% with f=form.preprocessing %}
+                    <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
+                      {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
+                    </td>
+                    <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
+                      {{ f }}
+                      {% if f.help_text %}
+                        <p class="help">{{ f.help_text|safe }}</p>
+                      {% endif %}
+                    </td>
+                    </tr>
+                    {% endwith %}
+                    
+                    <tr class="search-addl-fields">
+                    {% for f in secondary_form_fields %}
+                      {% if forloop.counter0|divisibleby:3  %}
+                      </tr>
+                      <tr class="search-addl-fields">
+                      {% endif %}
+
+                        <td class="" aria-required={% if field.required %}"true"{% else %}"false"{% endif %}>
+                          {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
+                        </td>
+                        <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
+                          {{ f }}
+                          {% if f.help_text %}
+                            <p class="help">{{ f.help_text|safe }}</p>
+                          {% endif %}
+                        </td>
+
+                    {% endfor %}
+                    </tr>
+                    
+                    <!-- Form errors -->
+                    {% if form.errors %}
+                     {% for field in form %}
+                         {% if field.errors %}
+                           {% for error in field.errors %} 
+                              <tr><td colspan="6" align="center">
+                              <div class="alert alert-danger">
+                                   <strong>Error with search field "{{field.label_tag}}": {{ error|escape }}</strong>
+                              </div>
+                              </td></tr>
+                          {% endfor %}
+                        {% endif %}
+                      {% endfor %}
+                    {% endif %}
+                    
+<!--
+                    <tr>
+                    <td colspan=6 align="center">
+                      <button class="btn btn-outline-success my-2 my-sm-0" type="submit">
+                        Search</button>
+                    </td></tr>
+-->
+                  </table>
+                  <!-- search button -->
+                  <button class="btn btn-primary">Start search</button>
+      </div>
+    </div>
   </div>
 </div>
+</div>
 
-<div id="get-form-div">
 
-  <div class="card">
-  <div class="card-body" id="search_initial" style="display: none;">
-    
-    <table class="table spectra-search-tbl">
-      <!--<thead>
-        <tr>
-        <th colspan=6>Enter spectrum peak values, select a spectrum from
-          database, or upload a new spectra</th>
-        </tr>
-      </thead>-->
-      
-      <tr>
-        <td colspan=6>
-          
 <!--
-          <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#upload_modal">
-            Upload file of unknown isolate</button>
-          
+<div style="" id="div-searchtype-opts" class="container"></div>
 -->
 <!--
-          <br>
-          <br>
-          <a href="#" id="searchtype-more-opts">Additional file options</a>
+<div id="get-form-div"></div>
 -->
-          
-        </td>        
-      </tr>
-      
-      <!-- Additional fields -->
-      <tr>
-      <td colspan=6 align="left">
-        <a href="#" id="toggle-search-opts">Additional search options</a>
-      </td></tr>
-      
-      
-      {% with f=form.replicates %}
-      <tr class="search-addl-fields toggle-display">
-      <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-        {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
-      </td>
-      <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-        {{ f }}
-        {% if f.help_text %}
-          <p class="help">{{ f.help_text|safe }}</p>
-        {% endif %}
-      </td>
-      {% endwith %}
-      
-      {% with f=form.spectrum_cutoff g=form.spectrum_cutoff_low h=form.spectrum_cutoff_high %}
-      <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-        {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
-      </td>
-      <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-        <ul>
-        {% for c in f %}
-          {% if c.choice_label != "Custom" %}
-            <li>{{ c.tag }}
-              <label for="id_spectrum_cutoff_{{ forloop.counter0 }}">
-                {{ c.choice_label }}</label>
-            </li>
-          {% endif %}
-        {% endfor %}
-        </ul>
-        {% if f.help_text %}
-          <p class="help">{{ f.help_text|safe }}</p>
-        {% endif %}
-      </td>
-      {% endwith %}
-      
-      {% with f=form.preprocessing %}
-      <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-        {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
-      </td>
-      <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-        {{ f }}
-        {% if f.help_text %}
-          <p class="help">{{ f.help_text|safe }}</p>
-        {% endif %}
-      </td>
-      </tr>
-      {% endwith %}
-      
-      <tr class="search-addl-fields toggle-display">
-      {% for f in secondary_form_fields %}
-        {% if forloop.counter0|divisibleby:3  %}
-        </tr>
-        <tr class="search-addl-fields toggle-display">
-        {% endif %}
-
-          <td class="" aria-required={% if field.required %}"true"{% else %}"false"{% endif %}>
-            {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
-          </td>
-          <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-            {{ f }}
-            {% if f.help_text %}
-              <p class="help">{{ f.help_text|safe }}</p>
-            {% endif %}
-          </td>
-
-      {% endfor %}
-      </tr>
-      
-      <!-- Form errors -->
-      {% if form.errors %}
-       {% for field in form %}
-           {% if field.errors %}
-             {% for error in field.errors %} 
-                <tr><td colspan="6" align="center">
-                <div class="alert alert-danger">
-                     <strong>Error with search field "{{field.label_tag}}": {{ error|escape }}</strong>
-                </div>
-                </td></tr>
-            {% endfor %}
-          {% endif %}
-        {% endfor %}
-      {% endif %}
-      
-      <tr>
-      <td colspan=6 align="center">
-        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">
-          Search</button>
-      </td></tr>
-    </table>
-    
-    
-      
-      
-      
-      
-  </div></div>
   
   
-  
-<!--
-  <table>
-    
-    <tr>
-      <td>
-        {% if metadata_strain_ids %} 
-        Strain select: 
-        <select placeholder="Species" name="strain_ids" multiple="true">
-          {% for s in metadata_strain_ids %}
-            <option>
-              {{ s.strain_id }}
-            </option>
-          {% endfor %}
-        </select>
-        {% else %}
-          No strains in database!
-        {% endif %}
-      </td>
-    </tr>
--->
-    
-<!--
-    <tr>
-      <td>
-        {% if species_list %} 
-        Strain select: 
-        <select placeholder="Species" name="strain_id" multiple="true">
-          {% for species in species_list %}
-            <option>
-              {{ species.strain_id }}
-            </option>
-          {% endfor %}
-        </select>
-        {% else %}
-          No strains in database!
-        {% endif %}
-      </td>
-    </tr>
--->
-    
-    
-<!--
-  </table>
--->
-
-
-<!--
-{% if object_list %}               
-<h5>Search Results</h5>
-  <ul>
-    {% for post in object_list %}
-      <li>
-        {{ post.user }}, {{ post.text }}, {{ post.posted_date }},
-        {{ post.peaks }}, {{ post.intensities }}, {{ post.picture }},
-        {{ post.user }}
-      </li>
-    {% endfor %}
-  </ul>
-{% else %}
-  No search results!
-{% endif %}
--->
-
-
-
-  <!-- if search results, minimize search form -->
+<!-- if search results, minimize search form -->
 <div class="row">
   <input type="button" class="btn btn-primary" id="search_toggle" style="display: none; width: 180px;" value="Edit Search" />
 </div>

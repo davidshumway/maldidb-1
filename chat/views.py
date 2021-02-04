@@ -99,27 +99,32 @@ class MetadataAutocomplete(autocomplete.Select2QuerySetView):
   def get_queryset(self):
     '''
     -- self.view is in [cKingdom, cPhylum, ...]
+    -- Ignore empty forwards. But if a previous forward is filled, then
+       clear the following forwards. That is, a change in upper level
+       resets lower levels.
     '''
     try:
-      #fwd:{'cKingdom': '1002', 'cPhylum': 'B41416', 'cClass': 'B16437', 'cOrder': 'B16437', 'cGenus': 'B4319'}
       print(f'fwd:{self.forwarded}')
     except:
       pass
+    qs = Metadata.objects.all().order_by(self.view).distinct(self.view)
+    if self.forwarded:
+      for attr, val in self.forwarded.items():
+        # ~ print(attr, val) # cKingdom ['Bacteria']
+        if val == []: continue
+        kwargs = {
+          '{0}__{1}'.format(attr, 'in'): val # or qs.filter(abc=abc) ?
+        }
+        qs = qs.filter(**kwargs)
+    # ~ print('qs.query',qs.query)
+    
     if self.q:
       kwargs = {
         '{0}__{1}'.format(self.view, 'icontains'): self.q
         # ~ '{0}__{1}'.format('name', 'endswith'): 'Z'
       }
-      # ~ ... objects.filter(**kwargs)
-      qs = Metadata.objects.filter(**kwargs
-        # ~ Q(cKingdom.get_lookup('istartswith') == self.q)
-        # ~ Q(n = self.q)
-        # ~ Q(cKingdom__istartswith = self.q)
+      qs = qs.filter(**kwargs
       ).order_by(self.view).distinct(self.view)
-      if self.forwarded:
-        print('self forwarded..')
-    else:
-      qs = Metadata.objects.all().order_by(self.view).distinct(self.view)
     return qs
 
   #self.get_result_label(result),
@@ -150,12 +155,12 @@ class MetadataAutocomplete(autocomplete.Select2QuerySetView):
     # ~ print(f'gco {co}')
     # ~ return co
   
-  def get_context_data(self, *args, **kwargs):
-    context = super().get_context_data(*args, **kwargs)
-    print(f'c:{context}')
-    print(f'c:{args}')
-    print(f'c:{kwargs}')
-    return context  
+  # ~ def get_context_data(self, *args, **kwargs):
+    # ~ context = super().get_context_data(*args, **kwargs)
+    # ~ print(f'c:{context}')
+    # ~ print(f'c:{args}')
+    # ~ print(f'c:{kwargs}')
+    # ~ return context  
     
 #-----------------------------------------------------------------------
 # end autocomplete views
