@@ -11,7 +11,7 @@ from .forms import CommentForm, SpectraForm, MetadataForm, \
   LoadSqliteForm, XmlForm, LocaleForm, VersionForm, AddLibraryForm, \
   AddLabGroupForm, AddXmlForm, LabProfileForm, SearchForm, \
   ViewCosineForm, SpectraSearchForm, LibraryCollapseForm, \
-  LibProfileForm, SpectraUploadForm
+  LibProfileForm, SpectraUploadForm, SpectraCollectionsForm
 
 from .models import Spectra, SearchSpectra, SpectraCosineScore, \
   SearchSpectraCosineScore, Metadata, XML, Locale, Version, Library, \
@@ -62,6 +62,104 @@ def start_new_thread(function):
     t.start()
     return t
   return decorator
+
+#-----------------------------------------------------------------------
+# begin autocomplete views
+#-----------------------------------------------------------------------
+from dal import autocomplete
+class MetadataAutocomplete(autocomplete.Select2QuerySetView):
+  '''cKingdom = models.CharField(max_length = 255, blank = True)
+  cPhylum = models.CharField(max_length = 255, blank = True)
+  cClass = models.CharField(max_length = 255, blank = True)
+  cOrder = models.CharField(max_length = 255, blank = True)
+  cGenus = models.CharField(max_length = 255, blank = True)
+  cSpecies
+  
+  https://github.com/yourlabs/django-autocomplete-light/issues/1072
+  
+  -- get_result_label, get_result_value, get_selected_result_label
+     all take in an item (<Metadata object>) and return a string
+     or by default <Metadata object>'s __str__ representation.
+  '''
+  view = None
+  
+  def __init__(self, *args, **kwargs):
+    self.view = kwargs.get('view', None)
+    
+  def get_result_label(self, item):
+    return getattr(item, self.view)
+
+  def get_result_value(self, item):
+    return getattr(item, self.view)
+    # ~ return item.strain_id
+
+  def get_selected_result_label(self, item):
+    return getattr(item, self.view)
+  
+  def get_queryset(self):
+    '''
+    -- self.view is in [cKingdom, cPhylum, ...]
+    '''
+    try:
+      #fwd:{'cKingdom': '1002', 'cPhylum': 'B41416', 'cClass': 'B16437', 'cOrder': 'B16437', 'cGenus': 'B4319'}
+      print(f'fwd:{self.forwarded}')
+    except:
+      pass
+    if self.q:
+      kwargs = {
+        '{0}__{1}'.format(self.view, 'icontains'): self.q
+        # ~ '{0}__{1}'.format('name', 'endswith'): 'Z'
+      }
+      # ~ ... objects.filter(**kwargs)
+      qs = Metadata.objects.filter(**kwargs
+        # ~ Q(cKingdom.get_lookup('istartswith') == self.q)
+        # ~ Q(n = self.q)
+        # ~ Q(cKingdom__istartswith = self.q)
+      ).order_by(self.view).distinct(self.view)
+      if self.forwarded:
+        print('self forwarded..')
+    else:
+      qs = Metadata.objects.all().order_by(self.view).distinct(self.view)
+    return qs
+
+  #self.get_result_label(result),
+  # ~ def render_to_response(self, context):
+    # ~ """Return a JSON response in Select2 format."""
+    # ~ q = self.request.GET.get('q', None)
+    # ~ create_option = self.get_create_option(context, q)
+    # ~ return http.JsonResponse({
+      # ~ 'results': self.get_results(context) + create_option,
+      # ~ 'pagination': {
+        # ~ 'more': self.has_more(context)
+      # ~ }
+    # ~ })
+  
+  # ~ def label_from_instance(obj):
+    # ~ print(obj)
+    # ~ return obj.cKingdom
+  
+  # ~ def get_create_option(self, context, q):
+    # ~ '''e.g.,
+    # ~ gco {'paginator': <django.core.paginator.Paginator object at 0x7fc91f02dd90>, 'page_obj': <Page 1 of 297>, 'is_paginated': True, 'object_list': <QuerySet [<Metadata: 1002>, <Metadata: 1004>, <Metadata: 1007>, <Metadata: 1008>, <Metadata: 1009>, <Metadata: 1010>, <Metadata: 1011>, <Metadata: 1012>, <Metadata: 1013>, <Metadata: 1014>]>, 'results': <QuerySet [<Metadata: 1002>, <Metadata: 1004>, <Metadata: 1007>, <Metadata: 1008>, <Metadata: 1009>, <Metadata: 1010>, <Metadata: 1011>, <Metadata: 1012>, <Metadata: 1013>, <Metadata: 1014>]>, 'view': <chat.views.MetadataAutocomplete object at 0x7fc91f02de80>}
+    # ~ gco b
+    # ~ gco []
+    # ~ '''
+    # ~ co = super(MetadataAutocomplete, self).get_create_option(context, q)
+    # ~ print(f'gco {context}')
+    # ~ print(f'gco {q}')
+    # ~ print(f'gco {co}')
+    # ~ return co
+  
+  def get_context_data(self, *args, **kwargs):
+    context = super().get_context_data(*args, **kwargs)
+    print(f'c:{context}')
+    print(f'c:{args}')
+    print(f'c:{kwargs}')
+    return context  
+    
+#-----------------------------------------------------------------------
+# end autocomplete views
+#-----------------------------------------------------------------------
 
 def ajax_upload(request):
   '''
@@ -509,17 +607,11 @@ class SearchResultsView(ListView):
     return context
 
   def get_queryset(self):
-    
     # all spectra from a given strain_id
     strain_id = self.request.GET.get('strain_id')
     object_list = Spectra.objects.filter(
       strain_id__strain_id__exact = strain_id
-      # ~ Q(metadata__strain_id__exact = strain_id)
     )
-    
-    ### All species
-    #species_list = Metadata.objects.order_by().values('strain_id').distinct()
-    
     return object_list
 
 # ~ class UserLogsListView(SingleTableView):
@@ -607,6 +699,9 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     '''Render filter widget to pass to the table template.
     '''
     context = super().get_context_data(**kwargs)
+    
+    # metadata form
+    context['metadata_form'] = SpectraCollectionsForm()
     
     # upload form
     context['upload_form'] = SpectraUploadForm()

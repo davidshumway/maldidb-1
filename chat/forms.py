@@ -3,6 +3,8 @@ from django import forms
 from .models import Comment, Spectra, Metadata, XML, Locale, Version, \
   Library, PrivacyLevel, LabGroup, SpectraCosineScore, XML, UserFile
 
+from dal import autocomplete
+
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
@@ -66,6 +68,73 @@ class LibraryCollapseForm(forms.Form):
     #if 
     # ~ self.fields['metadata_strain_ids'] = forms.ModelChoiceField(queryset=Metadata.objects.all())
     
+class SpectraCollectionsForm(forms.ModelForm):
+  '''
+    metadata [kingdom, ..., species], strain_id
+    [lab, library]
+  '''
+  cKingdom = forms.ModelChoiceField(
+    queryset = Metadata.objects.all(),
+    label = 'Kingdom',
+    widget = autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete_kingdom')) # attrs = {'class': 'form-check-input'}
+  cPhylum = forms.ModelChoiceField(
+    queryset = Metadata.objects.all(),
+    label = 'Phylum',
+    widget = autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete_phylum', forward=['cKingdom'])
+  )
+  cClass = forms.ModelChoiceField(
+    queryset = Metadata.objects.all(),
+    label = 'Class',
+    widget = autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete_class', forward=['cKingdom','cPhylum'])
+  )
+  cOrder = forms.ModelChoiceField(
+    queryset = Metadata.objects.all(),
+    label = 'Order',
+    widget = autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete_order', forward=['cKingdom','cPhylum','cClass'])
+  )
+  cGenus = forms.ModelChoiceField(
+    queryset = Metadata.objects.all(),
+    label = 'Genus',
+    widget = autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete_genus', forward=['cKingdom','cPhylum','cClass','cOrder'])
+  )
+  cSpecies = forms.ModelChoiceField(
+    queryset = Metadata.objects.all(),
+    label = 'Species',
+    widget = autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete_species', forward=['cKingdom','cPhylum','cClass','cOrder','cGenus'])
+  )
+  
+  class Meta:
+    model = Metadata
+    fields = ['cKingdom', 'cPhylum', 'cClass', 'cOrder', 'cGenus', 'cSpecies']
+    # ~ widgets = {
+      # ~ 'cGenus': autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete'),
+      # ~ 'cClass': autocomplete.Select2(url = 'chat:metadata_autocomplete'),
+      # ~ 'cGenus': autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete'),
+      # ~ 'cClass': autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete'),
+    # ~ }
+  # ~ lab_name = forms.ModelChoiceField(
+    # ~ queryset = LabGroup.objects.all(),
+    # ~ to_field_name = "lab_name",
+    # ~ required = False,
+    # ~ widget = forms.Select(
+      # ~ attrs = {
+        # ~ 'class': 'custom-select'}
+    # ~ ),
+    # ~ disabled = True,
+    # ~ empty_label='Select a lab'
+  # ~ )
+  # ~ library = forms.ModelChoiceField(
+    # ~ queryset = Library.objects.all(),
+    # ~ to_field_name = "title",
+    # ~ required = False,
+    # ~ widget = forms.Select(
+      # ~ attrs = {
+        # ~ 'class': 'custom-select'}
+    # ~ ),
+    # ~ disabled = True,
+    # ~ empty_label='Select a library'
+  # ~ )
+  
 class SpectraUploadForm(forms.ModelForm):
   file = forms.FileField(
     label = 'Upload a file',
@@ -120,9 +189,7 @@ class SpectraUploadForm(forms.ModelForm):
     widgets = {
       'lab_name': forms.Select(
         attrs = {
-          'placeholder': '1,2,3',
-          'class': 'custom-select',
-          'title': 'meh'}
+          'class': 'custom-select'}
       ),
     }
   
@@ -142,26 +209,26 @@ class SpectraUploadForm(forms.ModelForm):
     s1 = (
       data.get('save_to_library') == True and (data.get('lab_name') == '' or data.get('library') == '')
     )
-    ll_err = False
-    if data.get('save_to_library') == True:
-      try:
-        LabGroup.objects.get(data.get('lab_name'))
-      except:
-        ll_err = forms.ValidationError(
-          'Lab group not found!'
-        )
-      try:
-        Library.objects.get(data.get('library'))
-      except:# Library.DoesNotExist:
-        ll_err = forms.ValidationError(
-          'Library not found!'
-        )
+    # ~ ll_err = False
+    # ~ if data.get('save_to_library') == True:
+      # ~ try:
+        # ~ LabGroup.objects.get(data.get('lab_name'))
+      # ~ except:
+        # ~ ll_err = forms.ValidationError(
+          # ~ 'Lab group not found!'
+        # ~ )
+      # ~ try:
+        # ~ Library.objects.get(data.get('library'))
+      # ~ except:# Library.DoesNotExist:
+        # ~ ll_err = forms.ValidationError(
+          # ~ 'Library not found!'
+        # ~ )
     if s1:
       raise forms.ValidationError(
         'Lab group and library must be specified if "Save to Library" is selected!'
       )
-    elif ll_err:
-      raise ll_err
+    # ~ elif ll_err:
+      # ~ raise ll_err
     else:
       return data
       

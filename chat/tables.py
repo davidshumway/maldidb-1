@@ -34,10 +34,6 @@ class UserTaskTable(tables.Table):
         r += format_html(
           '<div class="alert alert-{}"><a href="{}">{}</a></div>',
           c, n, s.extra)
-        # ~ if s.status == 'info': # info
-          # ~ r += format_html('<div class="alert alert-info"><a href="{}">{}</a></div>', n, s.extra)
-        # ~ else: # danger
-          # ~ r += format_html('<div class="alert alert-danger"><a href="{}">{}</a></div>', n, s.extra)
       out.append(r)
     return format_html("<br>".join(out))
   

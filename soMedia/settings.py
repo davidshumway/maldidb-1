@@ -38,6 +38,8 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 # Application definition
 
 INSTALLED_APPS = [
+    'dal', # autocomplete, before admin in case used in admin
+    'dal_select2',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -52,9 +54,6 @@ INSTALLED_APPS = [
     'jquery',
     'django_extensions',
     #'ajaxuploader',
-    # ~ 'celery',
-    # ~ 'celery_progress',
-    #'whitenoise.runserver_nostatic',
 ]
 
 MIDDLEWARE = [

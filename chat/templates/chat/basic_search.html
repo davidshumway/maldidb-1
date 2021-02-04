@@ -20,92 +20,204 @@ function show_filter(e) {
 }
 </script>
 
-<!--Using modal for now to avoid nested forms.-->
+<!--Upload modal
 <div>
-  <!-- Modal - Overwrite margin/width to adjust modal size -->
   <div id="upload_modal" class="modal fade" role="dialog">
     <div class="modal-dialog" style="margin: 2.5rem !important; max-width: none !important;">
       <div class="modal-content">
-        
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal">&times;</button>
           <h4 class="modal-title">Upload Unknown Isolate</h4>
         </div>
-<!--
         <noscript>
           <p>Please enable JavaScript to use file uploader.</p>
         </noscript>
--->     
-        <form action="{% url 'chat:ajax_upload' %}" class="" method="POST" style="" id="upload_form">
-          {% csrf_token %}
-          
         <div class="modal-body">
-          
-          <div class="custom-file">
-            <input type="file" class="custom-file-input" id="customFile" name="file">
-            <label class="custom-file-label" for="customFile">Choose file</label>
-          </div>
-          <div class="alert alert-danger toggle-display" id="file-error">
-<!--
-              <strong></strong>
--->
-            </div>
-          
-          <br>
-          
-          <a href="#" id="upload-more-opts" onclick="return false;">Show more options</a>
-          
-          <div id="div-upload-opts" style="display:none;">
-            <div class="form-check">
-              {% with f=upload_form.save_to_library %}
-                {{ f }}
-                <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
-              {% endwith %}
-  <!--
-              <input class="form-check-input" type="checkbox" value="" id="defaultCheck1" name="save_to_library">
-              <label class="form-check-label" for="defaultCheck1">
-                Save file to a preexisting library? 
-              </label>
-  -->
-            </div>
-            
-            <div class="form-group">
-              {% with f=upload_form.lab_name %}
-              {{ f }}
-              {% endwith %}
-            </div>
-            <div class="form-group">
-              {% with f=upload_form.library %}
-              {{ f }}
-              {% endwith %}
-            </div>
-            <div class="form-group">
-              {% with f=upload_form.preprocess %}
-                {{ f }}
-                <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
-              {% endwith %}
-            </div>
-          </div>
-
         </div>
-        
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
           <button type="submit" class="btn btn-default">Upload</button>
         </div>
-        
-        </form>
-        
       </div>
     </div>
   </div>
+</div>-->
+
+<!-- After file upload form, get-form-div is placed inside this form. -->
+<form action="{% url 'chat:basic_search' %}" class="" method="GET" style="" id="search-form">
+</form>
+
+
+<div style="" id="div-searchtype-opts" class="container">
+<!--
+  <div class="col-sm-10">
+-->
+  <div class="">
+  <div class="card">
+    <div class="card-header">Select search type
+    </div>
+
+    <div class="card-header">
+      <ul class="nav nav-tabs card-header-tabs" id="nav-search-source">
+        <li class="nav-item">
+          <a class="nav-link active" href="#" id="nss-1">Upload file of unknown isolate</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" id="nss-2">Use previously uploaded file</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" id="nss-3">Use library spectra</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" id="nss-4">Manually enter spectra</a><!--"nav-link disabled"-->
+        </li>
+      </ul>
+    </div>
+    <div class="card-body" id="nss-card-1" style="">
+      
+      <!-- File upload form -->
+      <form action="{% url 'chat:ajax_upload' %}" class="" method="POST" style="" id="upload_form">
+      {% csrf_token %}
+      
+      <div class="custom-file">
+        <input type="file" class="custom-file-input" id="customFile" name="file">
+        <label class="custom-file-label" for="customFile">Choose file</label>
+      </div>
+      <div class="alert alert-danger toggle-display" id="file-error">
+        </div>
+      
+      <br>
+      <br>
+      <p class="card-text">
+        <a href="#" id="upload-more-opts" onclick="return false;">Show more options</a>
+      </p>
+      
+      <div id="div-upload-opts" style="display:none;">
+        <div class="form-check">
+          {% with f=upload_form.save_to_library %}
+            {{ f }}
+            <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
+          {% endwith %}
+        </div>
+        
+        <div class="w-75">
+          <div class="form-group">
+            {% with f=upload_form.lab_name %}
+            {{ f }}
+            {% endwith %}
+          </div>
+          <div class="form-group">
+            {% with f=upload_form.library %}
+            {{ f }}
+            {% endwith %}
+          </div>
+        </div>
+        <div class="form-group">
+          {% with f=upload_form.preprocess %}
+            {{ f }}
+            <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
+          {% endwith %}
+        </div>
+      </div>
+      
+      <div class="text-center">
+        <button type="submit" class="btn btn-default">Upload</button>
+      </div>
+      </form>
+      <!-- End file upload form -->
+      
+    </div>
+    <div class="card-body toggle-display" id="nss-card-2">
+      <h5 class="card-title">title</h5>
+      <p class="card-text">text</p>
+    </div>
+    <div class="card-body toggle-display" id="nss-card-3">
+      <h5 class="card-title">title</h5>
+      <p class="card-text">text</p>
+    </div>
+    <div class="card-body toggle-display" id="nss-card-4">
+      <p class="card-text">Manually enter values for peak mass, intensity, and
+          signal-to-noise ratio of the unknown isolate</p>
+      
+      {% with f=form.peak_mass g=form.peak_intensity h=form.peak_snr %}
+        <div class="form-group row">
+          <label class="col-sm-2 col-form-label" for="{{ f.auto_id }}">{{ f.label }}</label>
+          <div class="col-sm-10">
+            {{ f }}
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-sm-2 col-form-label" for="{{ g.auto_id }}">{{ g.label }}</label>
+          <div class="col-sm-10">
+            {{ g }}
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-sm-2 col-form-label" for="{{ h.auto_id }}">{{ h.label }}</label>
+          <div class="col-sm-10">
+            {{ h }}
+          </div>
+        </div>
+      {% endwith %}
+    </div>
+  
+    <div class="card-header">Perform search against
+    </div>
+    
+    <div class="card-header">
+      <ul class="nav nav-tabs card-header-tabs" id="nav-search-2">
+        <li class="nav-item">
+          <a class="nav-link active" href="#" id="ns2-1">Select collection</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" id="ns2-2">Select dendrogram</a>
+        </li>
+      </ul>
+    </div>
+  
+    <div>
+      <form action="" method="post" class="dal-form container">
+          {% csrf_token %}
+          
+          {{ metadata_form }}
+
+<!--
+          <table style="display: none">
+              {{ view.formset.empty_form }}
+          </table>
+
+          <table>
+              {{ view.formset }}
+          </table>
+-->
+
+<!--
+          <span id="add-form" class="button">Add form</span>
+-->
+
+<!--
+          <input type="submit" />
+-->
+        </form>
+        
+        
+    </div>
+{{ metadata_form.media }}
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  </div>
+  </div>
 </div>
 
-
-
-
-<form action="{% url 'chat:basic_search' %}" class="" method="GET" style="">
-    
+<div id="get-form-div">
 
   <div class="card">
   <div class="card-body" id="search_initial" style="display: none;">
@@ -120,79 +232,18 @@ function show_filter(e) {
       
       <tr>
         <td colspan=6>
+          
+<!--
           <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#upload_modal">
             Upload file of unknown isolate</button>
           
+-->
+<!--
           <br>
           <br>
           <a href="#" id="searchtype-more-opts">Additional file options</a>
-          
-          
-          <div style="display: none;" id="div-searchtype-opts" class="form-group">
-            <div class="card">
-              <div class="card-header">
-                <ul class="nav nav-pills card-header-pills">
-                  <li class="nav-item">
-                    <a class="nav-link active" href="#">Use previously uploaded file</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="#">Use library spectra</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="#">Manually enter spectra</a><!--"nav-link disabled"-->
-                  </li>
-                </ul>
-              </div>
-              <div class="card-body" id="">
-                <h5 class="card-title">...</h5>
-                <p class="card-text">...</p>
-                <a href="#" class="btn btn-primary">...</a>
-              </div>
-              <div class="card-body" id="" style="display: none;>
-                <h5 class="card-title">Special title treatment</h5>
-                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                <a href="#" class="btn btn-primary">Go somewhere</a>
-              </div>
-              <div class="card-body" id="" style="display: none;">
-                {% with f=form.peak_mass g=form.peak_intensity h=form.peak_snr %}
-                <table>
-                  <thead><th>
-                    Manually enter values for peak mass, intensity, and
-                    signal-to-noise ratio of the unknown isolate
-                  </th></thead>
-                  <tr class="search-peakrow">
-                  <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-                    <div>{{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
-                    </div>
-                    <div>{{ g.label_tag }}{% if g.field.required %}<span class="required">*</span>{% endif %}
-                    </div>
-                    <div>{{ h.label_tag }}{% if h.field.required %}<span class="required">*</span>{% endif %}
-                    </div>
-                  </td>
-                  <td class="search-peakrow" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-                    <div>{{ f }}</div>
-                    <div>{{ g }}</div>
-                    <div>{{ h }}</div>
-                  </td>
-                  </tr>
-                </table>
-                {% endwith %}
-              </div>
-            </div>
-            
-<!--
-            <div style="display: block;">
-              <button type="button" class="btn btn-primary" onclick="return false;">
-              Select a previously uploaded unknown isolate</button>
-            </div>
-            
-            <div style="display: block;">
-              <button type="button" class="btn btn-primary" onclick="return false;">
-              Select a library isolate</button>
-            </div>
 -->
-            
-          </div>
+          
         </td>        
       </tr>
       
@@ -373,7 +424,12 @@ function show_filter(e) {
 {% if form.show_tbl %}  
   {% render_table table %}
 {% endif %}
+
+</div>
+<!--
 </form>
+-->
+
 
 
 <script type="text/javascript">
@@ -402,6 +458,16 @@ function toggleSearchTypeOpts(e) {
     s.css('display', 'none');
     $(this).text('Additional file options')
   }
+  return false;
+}
+function toggleNavSearch(e) {
+  $('#nav-search-source a').removeClass('active');
+  $(this).addClass('active');
+  for (var i=1; i<=4; i++) {
+    $('#nss-card-'+i).addClass('toggle-display');
+  }
+  var n = $(this).attr('id').split('-')[1];
+  $('#nss-card-'+n).removeClass('toggle-display');
   return false;
 }
 function toggleUploadOpts(e) {
@@ -474,6 +540,9 @@ window.addEventListener('DOMContentLoaded', (event) => {
   // toggle search options
   $('#toggle-search-opts').click(toggleAddlFields);
   
+  // toggle search options
+  $('#nav-search-source a').click(toggleNavSearch);
+  
   // search type opts
   $('#searchtype-more-opts').click(toggleSearchTypeOpts);
   
@@ -486,6 +555,9 @@ window.addEventListener('DOMContentLoaded', (event) => {
   // upload
   $('#upload_form').submit(upload);
   
+  // progress
+  //~ $('#upload_form').uploadprogress({redirect_url: null}); //{redirect_url: '/'}
+  
   // file selector (via w3 schools) and initial value on page reload
   $(".custom-file-input").on("change", function() {
     var f = $(this).val().split("\\").pop();
@@ -497,24 +569,77 @@ window.addEventListener('DOMContentLoaded', (event) => {
     n.siblings(".custom-file-label").addClass("selected").html(f);
   }
   
+  //
+  $('#add-form').click(function() {
+      var index = $('#id_inline_test_models-TOTAL_FORMS').val()
+      //~ console.log('index', index);
+      var newTable = $('#id_inline_test_models-__prefix__-DELETE').parents('table').clone()
+      //~ console.log('nt', newTable);
+      newTable.find(':input').each(function() {
+          for (attr of ['name', 'id'])
+              $(this).attr(
+                  attr,
+                  $(this).attr(attr).replace('__prefix__', index)
+              )
+      })
+      newTable.insertBefore($(this))
+      $('#id_inline_test_models-TOTAL_FORMS').val(
+          parseInt($('#id_inline_test_models-TOTAL_FORMS').val()) + 1
+      )
+      newTable.slideDown()
+  })
+  
 });
 
 // upload form
 function upload(event) {
-  //~ console.log($(this).serialize());
-  //~ console.log($('#upload_form').serialize());
-  //~ console.log(this);
-  //~ formdata = new FormData();
-  //~ if($(this).prop('files').length > 0)
-  //~ {
-      //~ file =$(this).prop('files')[0];
-      //~ formdata.append("music", file);
-  //~ }
-  //~ console.log($(this).serialize());
-  //~ var data = new FormData($(this).get(0));
-  //~ var data = new FormData($(this));
-  //~ console.log(data);
+  
+  var template = '<div class="modal fade" id="file-progress-modal">\
+  <div class="modal-dialog">\
+    <div class="modal-content">\
+      <div class="modal-header">\
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>\
+        <h4 class="modal-title">Uploading</h4>\
+      </div>\
+      <div class="modal-body">\
+        <div class="modal-message"></div>\
+        <div class="progress">\
+          <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0"\
+               aria-valuemax="100" style="width: 0%;min-width: 2em;">\
+            0%\
+          </div>\
+        </div>\
+      </div>\
+      <div class="modal-footer" style="display:none">\
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>\
+      </div>\
+    </div>\
+  </div>\
+</div>';
+
   $.ajax({
+    xhr: function() {
+      var xhr = new window.XMLHttpRequest();
+
+      // Upload
+      xhr.upload.addEventListener("progress", function(evt){
+        if (evt.lengthComputable) {
+            var percentComplete = evt.loaded / evt.total;
+            console.log(percentComplete);
+        }
+     }, false);
+     
+     // Download
+     xhr.addEventListener("progress", function(evt){
+       if (evt.lengthComputable) {
+         var percentComplete = evt.loaded / evt.total;
+         console.log(percentComplete);
+       }
+     }, false);
+     
+     return xhr;
+    },
+    
     dataType: "JSON",
     data: new FormData(this),
     url: "{% url 'chat:ajax_upload' %}",
@@ -557,10 +682,6 @@ function upload(event) {
   return false;
 }
 </script>
-
-
-
-
 
 {% endblock %}
 
