@@ -98,10 +98,10 @@ label, select, input {
 	margin: 0px 0px 20px 0px ;
 	padding: 7px 5px 7px 5px ;
 }
-
-
-
-
+/* Override django-autocomplete-light */
+.dal-form label {
+	display: block !important;
+}
 
 
 

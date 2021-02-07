@@ -105,6 +105,14 @@
             var url;
             var content_type = xhr.getResponseHeader('Content-Type');
 
+            ////////////////////////////////////////////////////////////
+            // START MODIFICATION
+            ////////////////////////////////////////////////////////////
+            if (this.options.redirect_url == null) return;
+            ////////////////////////////////////////////////////////////
+            // END MODIFICATION
+            ////////////////////////////////////////////////////////////
+            
             // make it possible to return the redirect URL in
             // a JSON response
             if(content_type.indexOf('application/json') !== -1){
@@ -128,6 +136,14 @@
 
             var content_type = xhr.getResponseHeader('Content-Type');
 
+            ////////////////////////////////////////////////////////////
+            // START MODIFICATION
+            ////////////////////////////////////////////////////////////
+            return;
+            ////////////////////////////////////////////////////////////
+            // END MODIFICATION
+            ////////////////////////////////////////////////////////////
+            
             // Replace the contents of the form, with the returned html
             if(xhr.status === 422){
                 var new_html = $.parseHTML(xhr.responseText);

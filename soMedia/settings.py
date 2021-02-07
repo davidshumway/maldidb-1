@@ -176,3 +176,8 @@ AUTH_USER_MODEL = 'accounts.User'
 # ~ CELERY_RESULT_BACKEND = 'pyamqp://localhost:5672'
 # ~ BROKER_URL = 'redis://localhost:6379'
 # ~ CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+
+# 500MB - 429916160
+# 2000MB - 1719664640
+MAX_UPLOAD_SIZE = 1719664640
+
