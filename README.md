@@ -14,7 +14,7 @@
 - R
 - IDBacApp (R library)
 - PostgreSQL
- - Run `psql` and create an initial database:
+    - Run `psql` and create an initial database:
 ```bash
  CREATE DATABASE <database>;
  CREATE USER <user> WITH PASSWORD '<password>';
@@ -55,8 +55,8 @@ using ```./manage.py graph_models -a -g -o models.png```.
 - Search and browse data
 - User and group management 
 - Pipelines:
- - Bin peaks and cosine scoring for search and dendrograms
- - Replicates to collapsed spectra
- - Preprocessing
- - Upload spectra files
+    - Bin peaks and cosine scoring for search and dendrograms
+    - Replicates to collapsed spectra
+    - Preprocessing
+    - Upload spectra files
 
