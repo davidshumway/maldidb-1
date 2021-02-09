@@ -9,10 +9,10 @@ db.sqlite3
 *.pyc
 *.sock
 maldidb.sock
-migrations
 media
 media/
 /media
 ./media/
 ./media/uploads
 ./media/posts
+project.env
