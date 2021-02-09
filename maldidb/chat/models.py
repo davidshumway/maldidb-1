@@ -38,8 +38,8 @@ class UserFile(models.Model):
     ]
   )
   upload_date = models.DateTimeField(auto_now_add = True, blank = False)
-  extension = models.CharField(max_length = 255)
-  
+  extension = models.CharField(max_length = 255, blank = True, null = True)
+
 class UserTask(models.Model):
   '''
   '''
@@ -102,7 +102,7 @@ class UserTaskStatus(models.Model):
     null = False
   )
   status_date = models.DateTimeField(auto_now_add = True, blank = False)
-  extra = models.TextField(blank = False)
+  extra = models.TextField(blank = True, null = True)
   
 class AbstractCosineScore(models.Model):
   score = models.DecimalField(
