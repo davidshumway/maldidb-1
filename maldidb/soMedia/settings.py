@@ -32,16 +32,14 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 #SECRET_KEY = '(gmgz&heyoh0o7ullp)&v_lyv!x9^z-0g=6%e*gcy0j@q&+q#w'
-#print('Secrets', Secrets)
-#print('Secrets.sk', Secrets.SECRET_KEY)
 #print('Database', Database)
 #print('Database.name', Database.NAME)
-#print('Database.port', Database.PORT)
+#print('Database.user', Database.USER)
+#print('Database.password', Database.PASSWORD)
 #print('Database.host', Database.HOST)
-#print('Database.test', Database.TEST)
-#print('Database.djsecret', Database.DJSECRET)
+#print('Database.port', Database.PORT)
+#print('Database.secret', Database.SECRET_KEY)
 
-#SECRET_KEY = Secrets.SECRET_KEY
 SECRET_KEY = Database.SECRET_KEY
 
 
