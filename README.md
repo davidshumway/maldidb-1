@@ -21,6 +21,9 @@ Where project.env should include the following:
 
 PostgreSQL does not need to be installed on the system beforehand unless performing a manual installaion.
 
+Running `docker-compose up --build` the first time may take 15-30 minutes to complete. However, successive
+builds should complete within 15-30 seconds.
+
 ## Manual install
 ### Install prerequisites
 - R
