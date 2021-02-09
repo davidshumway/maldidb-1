@@ -9,6 +9,18 @@
  docker-compose up --build
 ```
 
+Where project.env should include the following:
+
+    POSTGRES_USER=<database user>
+    POSTGRES_PASSWORD=<database password>
+    POSTGRES_DB=<database name>
+    DATABASE=postgres
+    DATABASE_HOST=postgresdb
+    DATABASE_PORT=5432
+    SECRET_KEY=<any key>
+
+PostgreSQL does not need to be installed on the system beforehand unless performing a manual installaion.
+
 ## Manual install
 ### Install prerequisites
 - R
