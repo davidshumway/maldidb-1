@@ -116,12 +116,11 @@ class MetadataAutocomplete(autocomplete.Select2QuerySetView):
           '{0}__{1}'.format(attr, 'in'): val # or qs.filter(abc=abc) ?
         }
         qs = qs.filter(**kwargs)
-    # ~ print('qs.query',qs.query)
     
     if self.q:
       kwargs = {
         '{0}__{1}'.format(self.view, 'icontains'): self.q
-        # ~ '{0}__{1}'.format('name', 'endswith'): 'Z'
+        # ~ , '{0}__{1}'.format('name', 'endswith'): 'Z'
       }
       qs = qs.filter(**kwargs
       ).order_by(self.view).distinct(self.view)
@@ -333,9 +332,6 @@ def add_lib(request):
   else:
     form = AddLibraryForm()
   return render(request, 'chat/add_lib.html', {'form': form})
-
-# ~ from asgiref.sync import async_to_sync, sync_to_async
-
  
 @login_required
 def add_sqlite(request):
@@ -345,11 +341,7 @@ def add_sqlite(request):
     if form.is_valid():
       result = handle_uploaded_file(request, form)
       print('result---', result)
-      # ~ print('result---', result.get_ident())
-      # ~ return render(request, 'chat/my_tasks.html', {'form': form})
       return redirect('chat:user_tasks')
-      # ~ return redirect('chat:home')
-      # ~ return render(request, 'chat/add_sqlite.html', {'form': form})
   else:
     form = LoadSqliteForm()
   return render(request, 'chat/add_sqlite.html', {'form': form})
@@ -366,11 +358,6 @@ def add_labgroup(request):
       g.save() # first save before using the m2m owners rel.
       g.owners.add(request.user)
       g.save()
-      #print(request)
-      #print(request.user)
-      #print(request.POST) # 'owners': ['1']}
-      #print(request.POST['owners'])
-      
       return redirect('chat:home')
   else:
     form = AddLabGroupForm()
@@ -619,20 +606,12 @@ class SearchResultsView(ListView):
     )
     return object_list
 
-# ~ class UserLogsListView(SingleTableView):
-  # ~ model = UserLogs
-  # ~ table_class = UserLogsTable
-  # ~ template_name = 'chat/user_tasks.html'
-
 class UserTaskListView(SingleTableView):
   model = UserTask
   table_class = UserTaskTable
   template_name = 'chat/user_tasks.html'
   
   def get_queryset(self, *args, **kwargs):
-    # ~ print(f'utlv args {args}')
-    # ~ print(f'utlv kwargs {kwargs}')
-    # ~ return self.queryset
     return UserTask.objects.filter(owner = self.request.user) \
       .order_by('-last_modified') #statuses__status_date
     
@@ -716,12 +695,9 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     
     for attr, field in f.form.fields.items():
       context['table'].columns[attr].w = field.widget.render(attr, '')
-      # ~ print(attr, field)
       # ~ for attr2, value2 in value.__dict__.items():
         # ~ widget = value2.widget
         # ~ context['table'].columns[widget.name] = widget.render()
-        # ~ print(attr2, value2)
-        # ~ pass
     
     # addl options
     main_fields = [
@@ -769,11 +745,11 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     
     return context
   
-  def get(self, *args, **kwargs):
-    resp = super().get(*args, **kwargs)
-    # ~ print(f'get-args: {args}' ) # 
-    # ~ print(f'get-kw: {kwargs}' ) # 
-    return resp
+  # ~ def get(self, *args, **kwargs):
+    # ~ resp = super().get(*args, **kwargs)
+    # ~ # print(f'get-args: {args}' ) # 
+    # ~ # print(f'get-kw: {kwargs}' ) # 
+    # ~ return resp
   
   # ~ def post(self, request, *args, **kwargs):
 
@@ -816,9 +792,6 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       print('valid data')
       self.show_tbl = True
       
-      # reset R globals
-      # ~ R['resetGlobal']()
-      
       # Create a search object for user, or anonymous user
       try:
         obj, created = SearchSpectra.objects.get_or_create(
@@ -837,12 +810,6 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       
       sc = SpectraScores()
       sc.append_spectra(sm, si, sn)
-      
-      # ~ R['appendSpectra'](
-        # ~ robjects.FloatVector(json.loads('[' + sm + ']')),
-        # ~ robjects.FloatVector(json.loads('[' + si + ']')),
-        # ~ robjects.FloatVector(json.loads('[' + sn + ']'))
-      # ~ )
       
       # small and large molecules combined, or large only
       # use GET query variables to adjust .filter()
@@ -896,20 +863,11 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
         sc.append_spectra(
           spectra.peak_mass, spectra.peak_intensity, spectra.peak_snr
         )
-        # ~ pm = json.loads('['+spectra.peak_mass+']')
-        # ~ pi = json.loads('['+spectra.peak_intensity+']')
-        # ~ ps = json.loads('['+spectra.peak_snr+']')
-        # ~ R['appendSpectra'](
-          # ~ robjects.FloatVector(pm),
-          # ~ robjects.FloatVector(pi),
-          # ~ robjects.FloatVector(ps)
-        # ~ )
         idx[count] = spectra
         count += 1
       
       # bin  
       result = sc.bin_peaks()
-      # ~ result = R['binSpectra']()
       
       # sort by key
       sorted_list = []
@@ -1008,16 +966,17 @@ def handle_uploaded_file(request, tmpForm):
   elif tmpForm.cleaned_data['upload_type'] == 'all': # hosted on server
     hc = [
       '2019_04_15_10745_db-2_0_0.sqlite',
-      '2019_07_02_22910_db-2_0_0.sqlite',
-      '2019_09_11_1003534_db-2_0_0.sqlite',
-      '2019_10_10_1003534_db-2_0_0.sqlite',
       '2019_06_06_22910_db-2_0_0.sqlite',
-      '2019_06_06_22910_db-2_0_0.sqlite',
-      '2019_09_18_22910_db-2_0_0.sqlite',
-      '2019_11_13_1003534_db-2_0_0.sqlite',
       '2019_06_12_10745_db-2_0_0.sqlite',
+      '2019_07_02_22910_db-2_0_0.sqlite',
+        '2019_07_10_10745_db-2_0_0.sqlite',
+        '2019_07_17_1003534_db-2_0_0.sqlite',
       '2019_09_04_10745_db-2_0_0.sqlite',
+      '2019_09_11_1003534_db-2_0_0.sqlite',
+      '2019_09_18_22910_db-2_0_0.sqlite',
       '2019_09_25_10745_db-2_0_0.sqlite',
+      '2019_10_10_1003534_db-2_0_0.sqlite',
+      '2019_11_13_1003534_db-2_0_0.sqlite',
       '2019_11_20_1003534_db-2_0_0.sqlite',
     ]
     for f in hc:

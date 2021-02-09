@@ -200,6 +200,7 @@ class SpectraUploadForm(forms.ModelForm):
     instance = super().save(commit=False)
     instance.owner = self.request.user
     instance.save(commit)
+    print('userfile instance',instance)
     return instance
     
   def clean(self):
@@ -445,7 +446,8 @@ class LoadSqliteForm(forms.Form):
     required = True,
     initial = 'single')
     
-  file = forms.FileField(required = False, label = 'Select an IDBac SQLite file to upload')
+  file = forms.FileField(required = False,
+    label = 'Select an IDBac SQLite file to upload')
   
   PUBLIC = 'PB'
   PRIVATE = 'PR'

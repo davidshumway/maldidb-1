@@ -39,6 +39,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 #print('Database.host', Database.HOST)
 #print('Database.port', Database.PORT)
 #print('Database.secret', Database.SECRET_KEY)
+#d = Database()
+#print('init db..')
 
 SECRET_KEY = Database.SECRET_KEY
 
@@ -56,81 +58,81 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'dal', # autocomplete, before admin in case used in admin
-    'dal_select2',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'accounts',
-    'chat',
-    'django_tables2',
-    'django_filters',
-    'bootstrap4',
-    'jquery',
-    'django_extensions',
-    #'ajaxuploader',
+  'dal', # autocomplete, before admin in case used in admin
+  'dal_select2',
+  'django.contrib.admin',
+  'django.contrib.auth',
+  'django.contrib.contenttypes',
+  'django.contrib.sessions',
+  'django.contrib.messages',
+  'django.contrib.staticfiles',
+  'accounts',
+  'chat',
+  'django_tables2',
+  'django_filters',
+  'bootstrap4',
+  'jquery',
+  'django_extensions',
+  #'ajaxuploader',
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    #'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+  'django.middleware.security.SecurityMiddleware',
+  #'whitenoise.middleware.WhiteNoiseMiddleware',
+  'django.contrib.sessions.middleware.SessionMiddleware',
+  'django.middleware.common.CommonMiddleware',
+  'django.middleware.csrf.CsrfViewMiddleware',
+  'django.contrib.auth.middleware.AuthenticationMiddleware',
+  'django.contrib.messages.middleware.MessageMiddleware',
+  'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 ROOT_URLCONF = 'soMedia.urls'
 
 
 TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'libs', 'templates')],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
+  {
+    'BACKEND': 'django.template.backends.django.DjangoTemplates',
+    'DIRS': [os.path.join(BASE_DIR, 'libs', 'templates')],
+    'APP_DIRS': True,
+    'OPTIONS': {
+      'context_processors': [
+        'django.template.context_processors.debug',
+        'django.template.context_processors.request',
+        'django.contrib.auth.context_processors.auth',
+        'django.contrib.messages.context_processors.messages',
+      ],
     },
+  },
 ]
 
 WSGI_APPLICATION = 'soMedia.wsgi.application'
 
 DATABASES = {
-    "default": {
+  "default": {
 #       'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": Database.NAME,
-        "USER": Database.USER,
-        "PASSWORD": Database.PASSWORD,
-        "HOST": Database.HOST,
-        "PORT": Database.PORT,
-    }
+    "ENGINE": "django.db.backends.postgresql",
+    "NAME": Database.NAME,
+    "USER": Database.USER,
+    "PASSWORD": Database.PASSWORD,
+    "HOST": Database.HOST,
+    "PORT": Database.PORT,
+  }
 }
 
 #DATABASES = {
-    # ~ 'default': {
-        # ~ 'ENGINE': 'django.db.backends.sqlite3',
-        # ~ 'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    # ~ }
- #   'default': {
- #       'ENGINE': 'django.db.backends.postgresql_psycopg2',
- #       'NAME': 'maldidb',
- #       'USER': 'maldiadmin',
- #       'PASSWORD': '3SosVdNfJ9jKioOS4sWjdofji0zFpciVov',
- #       'HOST': 'localhost',
- #       'PORT': '5432',
- #   }
+  # ~ 'default': {
+      # ~ 'ENGINE': 'django.db.backends.sqlite3',
+      # ~ 'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+  # ~ }
+#   'default': {
+#       'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#       'NAME': 'maldidb',
+#       'USER': 'maldiadmin',
+#       'PASSWORD': '3SosVdNfJ9jKioOS4sWjdofji0zFpciVov',
+#       'HOST': 'localhost',
+#       'PORT': '5432',
+#   }
 #}
 db_from_env = dj_database_url.config()
 DATABASES['default'].update(db_from_env)
@@ -140,67 +142,49 @@ DATABASES['default'].update(db_from_env)
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+  {
+    'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+  },
+  {
+    'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+  },
+  {
+    'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+  },
+  {
+    'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+  },
 ]
 
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+#STATIC_ROOT = ''
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+# ~ STATICFILES_DIRS = (
+  # ~ PROJECT_ROOT + '/static/',
+# ~ )
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "libs", "static"),
+  os.path.join(BASE_DIR, "libs", "static"),
 ]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-# Authentication URLS
 
+# Authentication URLS
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login'
 
-
 # Authentication User Model
 AUTH_USER_MODEL = 'accounts.User'
-
-#HEROKU
-#STATIC_URL = '/static/'
-#STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-#STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-#django_heroku.settings(locals())
-
-
-# Celery Settings
-# ~ BROKER_URL = 'pyamqp://localhost:5672'
-# ~ CELERY_RESULT_BACKEND = 'pyamqp://localhost:5672'
-# ~ BROKER_URL = 'redis://localhost:6379'
-# ~ CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 
 # 500MB - 429916160
 # 2000MB - 1719664640
