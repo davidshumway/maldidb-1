@@ -24,6 +24,7 @@ services:
       - db
     volumes:
       - staticfiles:/home/app/web/static/
+      - /home/ubuntu/r01data:/home/app/r01data/
   nginx:
     container_name: nginx
     image: nginx:mainline-alpine

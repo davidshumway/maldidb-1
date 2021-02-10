@@ -143,11 +143,10 @@ class MetadataAutocomplete(autocomplete.Select2QuerySetView):
     # ~ return obj.cKingdom
   
   # ~ def get_create_option(self, context, q):
-    # ~ '''e.g.,
-    # ~ gco {'paginator': <django.core.paginator.Paginator object at 0x7fc91f02dd90>, 'page_obj': <Page 1 of 297>, 'is_paginated': True, 'object_list': <QuerySet [<Metadata: 1002>, <Metadata: 1004>, <Metadata: 1007>, <Metadata: 1008>, <Metadata: 1009>, <Metadata: 1010>, <Metadata: 1011>, <Metadata: 1012>, <Metadata: 1013>, <Metadata: 1014>]>, 'results': <QuerySet [<Metadata: 1002>, <Metadata: 1004>, <Metadata: 1007>, <Metadata: 1008>, <Metadata: 1009>, <Metadata: 1010>, <Metadata: 1011>, <Metadata: 1012>, <Metadata: 1013>, <Metadata: 1014>]>, 'view': <chat.views.MetadataAutocomplete object at 0x7fc91f02de80>}
-    # ~ gco b
-    # ~ gco []
-    # ~ '''
+    ## ~ e.g.,
+    ## ~ gco {'paginator': <django.core.paginator.Paginator object at 0x7fc91f02dd90>, 'page_obj': <Page 1 of 297>, 'is_paginated': True, 'object_list': <QuerySet [<Metadata: 1002>, <Metadata: 1004>, <Metadata: 1007>, <Metadata: 1008>, <Metadata: 1009>, <Metadata: 1010>, <Metadata: 1011>, <Metadata: 1012>, <Metadata: 1013>, <Metadata: 1014>]>, 'results': <QuerySet [<Metadata: 1002>, <Metadata: 1004>, <Metadata: 1007>, <Metadata: 1008>, <Metadata: 1009>, <Metadata: 1010>, <Metadata: 1011>, <Metadata: 1012>, <Metadata: 1013>, <Metadata: 1014>]>, 'view': <chat.views.MetadataAutocomplete object at 0x7fc91f02de80>}
+    ## ~ gco b
+    ## ~ gco []
     # ~ co = super(MetadataAutocomplete, self).get_create_option(context, q)
     # ~ print(f'gco {context}')
     # ~ print(f'gco {q}')
@@ -192,7 +191,7 @@ def ajax_upload(request):
   return JsonResponse({'errors': 'Empty request.'}, status=400)
   
 def user_task_status_profile(request, status_id):
-  ''''''
+  
   uts = UserTaskStatus.objects.get(id = status_id)
   return render(
       request,
@@ -201,7 +200,7 @@ def user_task_status_profile(request, status_id):
   )
   
 def metadata_profile(request, strain_id):
-  ''''''
+  
   md = Metadata.objects.get(strain_id = strain_id)
   return render(
       request,
@@ -210,7 +209,7 @@ def metadata_profile(request, strain_id):
   )
 
 def xml_profile(request, xml_hash):
-  ''''''
+  
   xml = XML.objects.get(xml_hash = xml_hash)
   lab = LabGroup.objects.get(lab_name = xml.lab_name)
   return render(
@@ -220,7 +219,7 @@ def xml_profile(request, xml_hash):
   )
 
 def library_profile(request, library_id):
-  ''''''
+  
   lib = Library.objects.get(id = library_id)
   lab = LabGroup.objects.get(lab_name = lib.lab_name)
   s = Spectra.objects.filter(library__exact = lib)
@@ -236,13 +235,13 @@ def lab_profile(request, lab_id):
   return render(request, 'chat/lab_profile.html', {'lab': lab})
   
 def spectra_profile(request, spectra_id):
-  ''''''
+  
   spectra = Spectra.objects.get(id = spectra_id)
   return render(request, 'chat/spectra_profile.html', {'spectra': spectra})
 
 @login_required
 def edit_metadata(request, strain_id):
-  ''''''    
+      
   if request.method == "POST":
     # instance kwargs passed in sets the user on the modelForm
     form = MetadataForm(request.POST, request.FILES, instance = Metadata.objects.get(strain_id = strain_id))
@@ -348,7 +347,7 @@ def add_sqlite(request):
   
 @login_required
 def add_labgroup(request):
-  ''''''
+  
   if request.method == 'POST':
     form = AddLabGroupForm(request.POST, request.FILES)
     if form.is_valid():
@@ -365,7 +364,7 @@ def add_labgroup(request):
   
 @login_required
 def add_post(request):
-  ''''''
+  
   if request.method == 'POST':
     form = SpectraForm(request.POST, request.FILES)
     if form.is_valid():
@@ -587,7 +586,7 @@ def preview_collapse_lib(request):
   # ~ )
   
 class SearchResultsView(ListView):
-  ''''''
+  
   model = Spectra
   template_name = 'chat/search_results.html'
   
@@ -955,7 +954,6 @@ def handle_uploaded_file(request, tmpForm):
     )
     t.statuses.add(UserTaskStatus.objects.create(status = 'start'))
     thread = idbac_sqlite_insert(request, tmpForm, '/tmp/test.db', t)
-    #print(thread)
     
     # ~ result = idbac_sqlite_insert(request, tmpForm, '/tmp/test.db')
     # ~ asyncio.run(result)
@@ -969,8 +967,8 @@ def handle_uploaded_file(request, tmpForm):
       '2019_06_06_22910_db-2_0_0.sqlite',
       '2019_06_12_10745_db-2_0_0.sqlite',
       '2019_07_02_22910_db-2_0_0.sqlite',
-        '2019_07_10_10745_db-2_0_0.sqlite',
-        '2019_07_17_1003534_db-2_0_0.sqlite',
+      '2019_07_10_10745_db-2_0_0.sqlite',
+      '2019_07_17_1003534_db-2_0_0.sqlite',
       '2019_09_04_10745_db-2_0_0.sqlite',
       '2019_09_11_1003534_db-2_0_0.sqlite',
       '2019_09_18_22910_db-2_0_0.sqlite',
@@ -980,15 +978,25 @@ def handle_uploaded_file(request, tmpForm):
       '2019_11_20_1003534_db-2_0_0.sqlite',
     ]
     for f in hc:
-      connection = sqlite3.connect('/home/ubuntu/' + f)
-      idbac_sqlite_insert(request, tmpForm, connection)
+      # New entry in user's tasks
+      t = UserTask.objects.create(
+        owner = request.user,
+        task_description = 'idbac_sql'
+      )
+      t.statuses.add(UserTaskStatus.objects.create(status = 'start'))
+      t.statuses.add(
+        UserTaskStatus.objects.create(
+          status = 'info', extra = 'Loading SQLite file ' + f
+      ))
+      #connection = sqlite3.connect('/home/app/r01data/' + f) # /home/ubuntu/
+      idbac_sqlite_insert(request, tmpForm, '/home/app/r01data/' + f, t)
     
 @start_new_thread #(args = ('test',)) # args, kwargs
 def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
   '''
-  -- In the case of erroneous data, save the offending row data to user's
+  -- In the case of erroneous data, save the row data to user's
   error log. E.g., if mass, intensity, or snr contain "na" or "nan".
-  -- Wrap the entire insertion in a try-catch and note any errors for 
+  -- Wrap entire insert in try-catch, noting errors for 
   later inspection.
   '''  
   try:
@@ -1041,11 +1049,6 @@ def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
       status = 'info', extra = 'Inserting metadata'
   ))
   
-  # ~ print ('library')
-  # ~ print (tmpForm.cleaned_data['library'])
-  # ~ print (tmpForm.cleaned_data['library'].id)
-  # ~ print (tmpForm.cleaned_data['library'][0])
-  # ~ print (tmpForm.cleaned_data['library'][0].id)
   rows = cursor.execute("SELECT * FROM metaData").fetchall()
   for row in rows:
     data = {
@@ -1223,7 +1226,7 @@ def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
 
 
 def search(request):
-  ''''''
+  
   return render(request, 'chat/search.html', {'spectra': {}, 'comment_form': {}})
   
 def home(request):
@@ -1274,25 +1277,3 @@ def home(request):
     }
   )
 
-
-
-
-# ~ # thread test
-# ~ @start_new_thread
-# ~ def tt():
-  # ~ R('''
-  # ~ test <- function() {
-    # ~ paste0('R process id:', Sys.getpid())
-    # ~ ##sprintf('R process id: %i', Sys.getpid())
-    # ~ ##Sys.sleep(20) #seconds
-    # ~ print('slept')
-    # ~ print(Sys.getpid())
-    # ~ paste0('R process id:', Sys.getpid())
-    # ~ print('x')
-  # ~ }
-  # ~ ''')
-  # ~ #print()
-  # ~ "R['test']():", R['test']()
-# ~ tt()
-# ~ tt()
-# ~ tt()

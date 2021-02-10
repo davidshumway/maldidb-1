@@ -28,7 +28,7 @@ class UserTaskTable(tables.Table):
     for s in value.all():
       r = s.status + ' (' + str(s.status_date) + ')'
       if s.extra != '':
-        s.extra = s.extra[0:40] + '...' if len(s.extra) > 40 else s.extra
+        s.extra = s.extra[0:40] + '...' if s.extra != None and len(s.extra) > 40 else s.extra
         n = reverse('chat:user_task_statuses', args=(s.id, ))
         c = 'info' if s.status == 'info' else 'danger'
         r += format_html(
@@ -37,16 +37,15 @@ class UserTaskTable(tables.Table):
       out.append(r)
     return format_html("<br>".join(out))
   
-  def __init__(self, *args, **kwargs):
-    '''Default order is newest task descending'''
-    print(f'utt args {args}')
-    print(f'utt kwargs {kwargs}')
+  # ~ def __init__(self, *args, **kwargs):
+    # ~ '''Default order is newest task descending'''
+    # ~ print(f'utt args {args}')
+    # ~ print(f'utt kwargs {kwargs}')
     # ~ if kwargs.get('data'):
       # ~ d = kwargs.pop('data', None)
       # ~ self.testing_data = d.get('scores', None)
       # ~ kwargs.setdefault('data', d.get('queryset', None))
-    
-    super().__init__(*args, **kwargs)
+    # ~ super().__init__(*args, **kwargs)
     
   class Meta:
     model = UserTask
