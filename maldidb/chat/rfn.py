@@ -15,6 +15,37 @@ todo:
 -- show a plot of memory size and number of spectra being compared
 '''
 
+# process mzml file
+# 
+R('''
+  preprocess <- function(file) {
+    mzML_con <- mzR::openMSfile(file, backend = "pwiz")
+    scanNumber <- nrow(mzR::header(mzML_con))
+    if (scanNumber != 1) {
+      return 'error scan number:' + scanNumber
+    }
+    spectraImport <- mzR::peaks(mzML_con)
+    spectraImport <- IDBacApp::spectrumMatrixToMALDIqaunt(spectraImport)
+    # logical vector of maximum masses of mass vectors.
+    # True = small mol, False = protein
+    smallIndex <- unlist(lapply(spectraImport, function(x) max(x@mass)))
+    smallIndex <- smallIndex < smallRangeEnd
+    env_sm <- false
+    if (any(smallIndex)) { 
+      env_sm <- IDBacApp::processXMLIndSpectra(spectraImport = spectraImport,
+                                            smallOrProtein = "small",
+                                            index = smallIndex)
+    }
+    env_pr <- false
+    if (any(!smallIndex)) {
+      env_pr <- IDBacApp::processXMLIndSpectra(spectraImport = spectraImport,
+                                            smallOrProtein = "protein",
+                                            index = !smallIndex)
+    }
+    return list(env_sm, env_pr)
+  }
+  ''')
+
 # collapse
 R('''
   collapseReplicates <- function(checkedPool,

@@ -164,15 +164,23 @@ class MetadataAutocomplete(autocomplete.Select2QuerySetView):
 # end autocomplete views
 #-----------------------------------------------------------------------
 
+@start_new_thread
+def preprocess_mzml(file):
+  '''Run R methods to preprocess mzml file
+  
+  -- insert result into 
+  '''
+  env_list = R['preprocess'](file)
+  
+  
 def ajax_upload(request):
   '''
-  -- Once the file is uploaded, we can optionally spawn a new thread to
-    preprocess it.
-  -- Once the file is (optionally) preprocessed, we can optionally add
-    it to the user's requested library, or user's "uploaded" spectra
+  -- Preprocessing (optional) - Once uploaded, spawn new thread to preprocess.
+  -- Library (optional) - After optional preprocessing, add file
+    to the user's requested library, or user's "uploaded" spectra
     if not selected, or "anonymous" spectra collection if uploaded by
     a guest user.
-  -- What happens if the file / mzml contains more than one spectra?
+  -- What happens if file / mzml contains more than one spectra?
     Answer: Probably throw an error.
   '''
   if request.method == 'POST':
@@ -181,9 +189,14 @@ def ajax_upload(request):
       print('valid form')
       form.request = request # pass request to save() method
       form.save()
+      if form.cleaned_data['preprocess'] == True:
+        preprocess_mzml(form.cleaned_data['file'])
+        return JsonResponse({'status': 'preprocessing'}, status=200)
+      else:
+        return JsonResponse({'status': 'ready'}, status=200)
       # optional new thread to preprocess
       # add to library
-      return JsonResponse({'file': 'x'}, status=200)
+      
     else:
       print('invalid form')
       e = form.errors.as_json()
@@ -932,7 +945,6 @@ class LabgroupsListView(SingleTableView):
   table_class = LabgroupTable
   template_name = 'chat/labgroups.html'
 
-# ~ async def handle_uploaded_file(request, tmpForm):
 def handle_uploaded_file(request, tmpForm):
   '''
   Spectra is inserted last as it depends on XML and Metadata tables.

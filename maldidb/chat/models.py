@@ -24,7 +24,9 @@ from django.utils import timezone
   
 class UserFile(models.Model):
   '''
-  Files uploaded by the user, being spectra for the most part.
+  Spectra files uploaded by users.
+  
+  -- May be associated with one or more Spectra.
   '''
   owner = models.ForeignKey(
     settings.AUTH_USER_MODEL,
@@ -39,7 +41,8 @@ class UserFile(models.Model):
   )
   upload_date = models.DateTimeField(auto_now_add = True, blank = False)
   extension = models.CharField(max_length = 255, blank = True, null = True)
-
+  spectra = models.ManyToManyField('Spectra', blank = True, null = True)
+  
 class UserTask(models.Model):
   '''
   '''

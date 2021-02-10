@@ -163,7 +163,7 @@ class SpectraUploadForm(forms.ModelForm):
         'class': 'custom-select'}
     ),
     disabled = True,
-    empty_label='Select a lab'
+    empty_label = 'Select a lab'
   )
   library = forms.ModelChoiceField(
     queryset = Library.objects.all(),
@@ -174,7 +174,7 @@ class SpectraUploadForm(forms.ModelForm):
         'class': 'custom-select'}
     ),
     disabled = True,
-    empty_label='Select a library'
+    empty_label = 'Select a library'
   )
   
   # perform (default) preprocessing?
@@ -195,8 +195,6 @@ class SpectraUploadForm(forms.ModelForm):
     }
   
   def save(self, commit = True):
-    '''
-    '''
     instance = super().save(commit=False)
     instance.owner = self.request.user
     instance.save(commit)
