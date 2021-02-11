@@ -198,7 +198,7 @@ class SpectraUploadForm(forms.ModelForm):
     instance = super().save(commit=False)
     instance.owner = self.request.user
     instance.save(commit)
-    print('userfile instance',instance)
+    # ~ print('userfile instance',instance)
     return instance
     
   def clean(self):
@@ -374,10 +374,24 @@ class SpectraSearchForm(forms.ModelForm):
       # ~ 'library': forms.SelectMultiple(),
     }
     
-class ViewCosineForm(forms.ModelForm):
-  class Meta:
-    model = SpectraCosineScore
-    exclude = ('id',) 
+class ViewCosineForm(forms.Form):
+  '''
+  Select any spectra from lab, library, metadata
+  '''
+  lab_name = forms.ModelMultipleChoiceField(
+    queryset = LabGroup.objects.all(),
+    to_field_name = "lab_name",
+    required = False
+  )
+  library = forms.ModelMultipleChoiceField(
+    queryset = Library.objects.all(),
+    to_field_name = "title",
+    required = False
+  )
+  
+  #class Meta:
+    #model = SpectraCosineScore
+  #  exclude = ('id',) 
 
 class SpectraEditForm(forms.ModelForm):
   class Meta:

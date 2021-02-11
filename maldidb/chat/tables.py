@@ -1,3 +1,11 @@
+'''
+tables.py
+
+-- Specify a table_type, e.g., context['table'].table_type = 'spectra',
+  used for rendering tables (spectra, libraries, labs, metadata).
+  Added via get_context_data.
+'''
+
 import django_tables2 as tables
 from .models import Library, Spectra, Metadata, LabGroup, \
   SearchSpectraCosineScore, XML, UserTask, UserTaskStatus
@@ -73,13 +81,14 @@ class XmlTable(tables.Table):
   created_by = tables.Column(linkify=True)
   lab_name = tables.Column(linkify=True)
   xml_hash = tables.Column(linkify=True)
-  # ~ title = tables.Column(linkify=True)
-  #test = tables.CheckBoxColumn(accessor='test')
+  selector = tables.CheckBoxColumn()
+  
   class Meta:
     model = XML
     attrs = {"class": "table maintable"}
     template_name = "chat/bootstrap4_mod.html"
     exclude = ('id','xml') # xml too large to show
+    sequence = ('selector', '...')
     
 class LibraryTable(tables.Table):
   created_by = tables.Column(linkify = True)
@@ -88,6 +97,7 @@ class LibraryTable(tables.Table):
   #test = tables.CheckBoxColumn(accessor='test')
   collapse_replicates = tables.Column(accessor = 'id',
     verbose_name = 'Collapse Replicates')#, linkify=True)
+  selector = tables.CheckBoxColumn(accessor = 'id')
   
   def render_collapse_replicates(self, value):
     # pass lib_id
@@ -95,13 +105,13 @@ class LibraryTable(tables.Table):
     return format_html(
       '<a href="{}?library='+str(value)+'">preview</a>', r
     )
-    # ~ return '<a href="'+r+'">preview</a>'
     
   class Meta:
     model = Library
-    attrs = {"class": "table maintable"}
-    template_name = "chat/bootstrap4_mod.html"
-    exclude = ("id",)
+    attrs = {'class': 'table maintable'}
+    template_name = 'chat/bootstrap4_mod.html'
+    exclude = ('id',)
+    sequence = ('selector', '...')
 
 class CosineSearchTable(tables.Table):
   '''
@@ -137,7 +147,7 @@ class CosineSearchTable(tables.Table):
     return self.testing_data.get(record.id, None)
   
   def __init__(self, *args, **kwargs):
-    '''some reworking here to get the queryset and data back to table'''
+    '''some reworking here to get queryset and data back to table'''
     
     if kwargs.get('data'):
       d = kwargs.pop('data', None)
@@ -162,11 +172,13 @@ class SpectraTable(tables.Table):
   lab_name = tables.Column(linkify=True)
   library = tables.Column(linkify=True)
   id = tables.Column(linkify=True)
+  selector = tables.CheckBoxColumn()
   class Meta:
     model = Spectra
     attrs = {"class": "table maintable"}
     template_name = "chat/bootstrap4_mod.html"
     exclude = ()
+    sequence = ('selector','id', 'strain_id', '...')
 
 class MetadataTable(tables.Table):
   class Meta:

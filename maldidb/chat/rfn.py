@@ -18,11 +18,13 @@ todo:
 # process mzml file
 # 
 R('''
-  preprocess <- function(file) {
-    mzML_con <- mzR::openMSfile(file, backend = "pwiz")
+  suppressPackageStartupMessages(library(IDBacApp))
+  preprocess <- function(f) {
+    f <- file.path(getwd(), paste0('media/', f))
+    mzML_con <- mzR::openMSfile(f, backend = "pwiz")
     scanNumber <- nrow(mzR::header(mzML_con))
     if (scanNumber != 1) {
-      return 'error scan number:' + scanNumber
+      return(list('error' = paste('scan number is not one:', scanNumber)))
     }
     spectraImport <- mzR::peaks(mzML_con)
     spectraImport <- IDBacApp::spectrumMatrixToMALDIqaunt(spectraImport)
@@ -30,21 +32,21 @@ R('''
     # True = small mol, False = protein
     smallIndex <- unlist(lapply(spectraImport, function(x) max(x@mass)))
     smallIndex <- smallIndex < smallRangeEnd
-    env_sm <- false
-    if (any(smallIndex)) { 
+    env1 <- FALSE
+    env2 <- FALSE
+    if (any(smallIndex)) {
       env_sm <- IDBacApp::processXMLIndSpectra(spectraImport = spectraImport,
                                             smallOrProtein = "small",
                                             index = smallIndex)
     }
-    env_pr <- false
     if (any(!smallIndex)) {
       env_pr <- IDBacApp::processXMLIndSpectra(spectraImport = spectraImport,
                                             smallOrProtein = "protein",
                                             index = !smallIndex)
     }
-    return list(env_sm, env_pr)
+    return(list('env_sm' = env1, 'env_pr' = env2))
   }
-  ''')
+''')
 
 # collapse
 R('''
@@ -144,7 +146,6 @@ class SpectraScores():
     
 # bin
 R('''
-  suppressPackageStartupMessages(library(IDBacApp))
   # Some globals
   #allSpectra <- list()
   #allPeaks <- list()

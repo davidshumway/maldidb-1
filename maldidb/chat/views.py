@@ -165,17 +165,32 @@ class MetadataAutocomplete(autocomplete.Select2QuerySetView):
 #-----------------------------------------------------------------------
 
 @start_new_thread
-def preprocess_mzml(file):
+def preprocess_mzml(file, user_task):
   '''Run R methods to preprocess mzml file
   
-  -- insert result into 
+  -- add Spectra and update UserFile
+  -- example: elt = l.rx2(1) # This is the R `[[`, so one-offset indexing
   '''
-  env_list = R['preprocess'](file)
+  result = R['preprocess'](file)
+  print(f'pp result{result}')
+  if result.rx2('error'):
+    user_task.statuses.add(
+      UserTaskStatus.objects.create(
+        status = 'error', extra = result.rx2('error')
+    ))
+    user_task.statuses.add(
+      UserTaskStatus.objects.create(
+        status = 'complete'
+    ))
   
+  #if result
+  #
   
+
 def ajax_upload(request):
   '''
   -- Preprocessing (optional) - Once uploaded, spawn new thread to preprocess.
+  -- UserFile has file location, e.g., "uploads/Bacillus_ByZQI1O.mzXML".
   -- Library (optional) - After optional preprocessing, add file
     to the user's requested library, or user's "uploaded" spectra
     if not selected, or "anonymous" spectra collection if uploaded by
@@ -190,7 +205,12 @@ def ajax_upload(request):
       form.request = request # pass request to save() method
       form.save()
       if form.cleaned_data['preprocess'] == True:
-        preprocess_mzml(form.cleaned_data['file'])
+        t = UserTask.objects.create(
+          owner = request.user,
+          task_description = 'preprocess'
+        )
+        t.statuses.add(UserTaskStatus.objects.create(status = 'start'))
+        preprocess_mzml(str(form.instance.file), t)
         return JsonResponse({'status': 'preprocessing'}, status=200)
       else:
         return JsonResponse({'status': 'ready'}, status=200)
@@ -636,9 +656,19 @@ class LibrariesListView(SingleTableView):
   model = Library
   table_class = LibraryTable
   template_name = 'chat/libraries.html'
+  
+  def get_context_data(self, **kwargs):
+    context = super().get_context_data(**kwargs)
+    context['table'].table_type = 'libraries'
+    return context
 
 def view_cosine(request):
-  '''Generate R heatmaps'''
+  '''API for exploring cosine data
+  
+  --Returns three objects: binned peaks (list), feature matrix (list),
+    cosine scores (matrix)
+  '''
+  sc = SpectraScores()
   pass
   # small and large molecules combined, or large only
   n = Spectra.objects.all().filter(tof_mode__exact = 'LINEAR').order_by('xml_hash')
@@ -649,15 +679,11 @@ def view_cosine(request):
       robjects.FloatVector(pm),
       robjects.FloatVector(pi)
     )
-  print('end adding')
-  print('start binning')
   R['binSpectraOLD']()
-  print('end binning')
   
-  if request.method == "POST":
+  if request.method == 'POST':
     form = ViewCosineForm(request.POST, request.FILES, instance = None)
     if form.is_valid():
-      #form.save()
       return redirect(reverse('chat:view_cosine'))
   else:
     form = ViewCosineForm(instance = None)
@@ -687,10 +713,6 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
   filterset_class = SpectraFilter
   show_tbl = False
   
-  # ~ def form_valid(self, form):
-    # ~ form.instance.library_id = self.kwargs.get('pk')
-    # ~ return super(FilteredSpectraSearchListView, self).form_valid(form)
-
   def get_context_data(self, **kwargs):
     '''Render filter widget to pass to the table template.
     '''
@@ -726,9 +748,10 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     secondary_form = []
     
     context['table'].sfilter = f
+    context['table'].table_type = 'spectra'
     
-    print(f'gg: {self.request.GET}' ) # 
-    print(f'gg: {self.request.GET.get("peak_mass")}' ) # 
+    # ~ print(f'gg: {self.request.GET}' ) # 
+    # ~ print(f'gg: {self.request.GET.get("peak_mass")}' ) # 
     if self.request.GET.get('peak_mass'):
       form = SpectraSearchForm(self.request.GET, self.request.FILES,
         initial = {'spectrum_cutoff': 'protein', 'replicates': 'collapsed'}
@@ -923,8 +946,6 @@ class FilteredSpectraListView(SingleTableMixin, FilterView):
   
   def get_queryset(self):
     pass
-
-
     
 class SpectraListView(SingleTableView):
   model = Spectra
@@ -967,12 +988,6 @@ def handle_uploaded_file(request, tmpForm):
     t.statuses.add(UserTaskStatus.objects.create(status = 'start'))
     thread = idbac_sqlite_insert(request, tmpForm, '/tmp/test.db', t)
     
-    # ~ result = idbac_sqlite_insert(request, tmpForm, '/tmp/test.db')
-    # ~ asyncio.run(result)
-    # ~ await idbac_sqlite_insert(request, tmpForm, '/tmp/test.db')
-    # ~ data = async_to_sync(idbac_sqlite_insert)(
-      # ~ request = request, tmpForm = tmpForm, uploadFile = '/tmp/test.db'
-    # ~ )
   elif tmpForm.cleaned_data['upload_type'] == 'all': # hosted on server
     hc = [
       '2019_04_15_10745_db-2_0_0.sqlite',
@@ -1140,7 +1155,6 @@ def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
     else:
         raise ValueError('xxxxx')
     
-  
   # Spectra
   # row[5] spectrumIntensity ??
   user_task.statuses.add(

@@ -55,7 +55,7 @@ function show_filter(e) {
     <div class="card-header" id="headingOne">
       <h5 class="mb-0">
         <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-          Search type
+          Upload new file of unknown isolate
         </button>
       </h5>
     </div>
@@ -66,8 +66,9 @@ function show_filter(e) {
               <div class="card-header">
                 <ul class="nav nav-tabs card-header-tabs" id="nav-search-source">
                   <li class="nav-item">
-                    <a class="nav-link active" href="#" id="nss-1">Upload new file of unknown isolate</a>
+                    <a class="nav-link active" href="#" id="nss-1">-</a>
                   </li>
+<!--Turn off these options for now
                   <li class="nav-item">
                     <a class="nav-link" href="#" id="nss-2">Previously uploaded files</a>
                   </li>
@@ -75,8 +76,9 @@ function show_filter(e) {
                     <a class="nav-link" href="#" id="nss-3">Library spectra</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link" href="#" id="nss-4">Manual spectra entry</a><!--"nav-link disabled"-->
+                    <a class="nav-link" href="#" id="nss-4">Manual spectra entry</a>
                   </li>
+-->
                 </ul>
               </div>
               <div class="card-body" id="nss-card-1" style="">
@@ -92,8 +94,6 @@ function show_filter(e) {
                 <div class="alert alert-danger toggle-display" id="file-error">
                   </div>
                 
-                <br>
-                <br>
                 <p class="card-text">
                   <a href="#" id="upload-more-opts" onclick="return false;">Show more options</a>
                 </p>
@@ -133,6 +133,9 @@ function show_filter(e) {
                 <!-- End file upload form -->
                 
               </div>
+
+<!-- Turn off these options for now
+
               <div class="card-body toggle-display" id="nss-card-2">
                 <h5 class="card-title">title</h5>
                 <p class="card-text">text</p>
@@ -166,6 +169,7 @@ function show_filter(e) {
                   </div>
                 {% endwith %}
               </div>
+-->
             </div>
             <!-- search button -->
             <button class="btn btn-primary">Start search</button>
@@ -231,7 +235,7 @@ function show_filter(e) {
     </div>
   </div>
   
-  <!-- -->
+  <!-- 
   <div class="card">
     <div class="card-header" id="headingThree">
       <h5 class="mb-0">
@@ -243,15 +247,6 @@ function show_filter(e) {
     <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
       <div class="card-body">
                   <table class="table spectra-search-tbl">
-                    
-                    <!-- Additional fields -->
-<!--
-                    <tr>
-                    <td colspan=6 align="left">
-                      <a href="#" id="toggle-search-opts">Additional search options</a>
-                    </td></tr>
--->
-                    
                     
                     {% with f=form.replicates %}
                     <tr class="search-addl-fields">
@@ -320,7 +315,6 @@ function show_filter(e) {
                     {% endfor %}
                     </tr>
                     
-                    <!-- Form errors -->
                     {% if form.errors %}
                      {% for field in form %}
                          {% if field.errors %}
@@ -335,30 +329,13 @@ function show_filter(e) {
                       {% endfor %}
                     {% endif %}
                     
-<!--
-                    <tr>
-                    <td colspan=6 align="center">
-                      <button class="btn btn-outline-success my-2 my-sm-0" type="submit">
-                        Search</button>
-                    </td></tr>
--->
                   </table>
-                  <!-- search button -->
                   <button class="btn btn-primary">Start search</button>
       </div>
     </div>
-  </div>
+  </div>-->
 </div>
 </div>
-
-
-<!--
-<div style="" id="div-searchtype-opts" class="container"></div>
--->
-<!--
-<div id="get-form-div"></div>
--->
-  
   
 <!-- if search results, minimize search form -->
 <div class="row">
@@ -369,11 +346,6 @@ function show_filter(e) {
 {% endif %}
 
 </div>
-<!--
-</form>
--->
-
-
 
 <script type="text/javascript">
 //~ function toggleCutoff(e) {
@@ -484,7 +456,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
   $('#toggle-search-opts').click(toggleAddlFields);
   
   // toggle search options
-  $('#nav-search-source a').click(toggleNavSearch);
+  // turn off for now
+  //~ $('#nav-search-source a').click(toggleNavSearch);
   
   // search type opts
   $('#searchtype-more-opts').click(toggleSearchTypeOpts);
@@ -537,6 +510,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
 // upload form
 function upload(event) {
   
+  // Modal tempalte adapted from
+  // https://github.com/jakobadam/bootstrap-uploadprogress
   var template = '<div class="modal fade" id="file-progress-modal">\
   <div class="modal-dialog">\
     <div class="modal-content">\
@@ -560,6 +535,16 @@ function upload(event) {
   </div>\
 </div>';
 
+  var t = $(template);
+  t.modal({
+    backdrop: 'static',
+    keyboard: false
+  });
+  t.message = t.find('.modal-message');
+  t.title = t.find('.modal-title');
+            //this.$modal_footer = this.$modal.find('.modal-footer');
+  t.progress = t.find('.progress-bar');
+
   $.ajax({
     xhr: function() {
       var xhr = new window.XMLHttpRequest();
@@ -567,8 +552,11 @@ function upload(event) {
       // Upload
       xhr.upload.addEventListener("progress", function(evt){
         if (evt.lengthComputable) {
-            var percentComplete = evt.loaded / evt.total;
-            console.log(percentComplete);
+          var percent = 100 * evt.loaded / evt.total;
+          //~ console.log(percentComplete);
+          t.progress.attr('aria-valuenow', percent);
+          t.progress.text(percent + '%');
+          t.progress.css('width', percent + '%');
         }
      }, false);
      
@@ -591,7 +579,10 @@ function upload(event) {
     contentType: false,
     // on success
     success: function(response) {
-      console.log(response)
+      console.log(response);
+      t.modal('hide');
+      // Fails when file uploaded second time
+      
       //~ if (response.is_taken == true) {
           //~ $('#id_username').removeClass('is-valid').addClass('is-invalid');
           //~ $('#id_username').after('<div class="invalid-feedback d-block" id="usernameError">This username is not available!</div>')

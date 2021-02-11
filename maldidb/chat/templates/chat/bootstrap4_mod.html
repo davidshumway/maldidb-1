@@ -4,9 +4,6 @@
 
 {% if table.sfilter %}
 <!--
-    bbb
-    <form action="" method="get" class="form form-inline">
-    {% csrf_token %}
 -->
 {% endif %}
 
@@ -52,7 +49,25 @@
 
 <!-- show columns -->
 <div class="container col-md-8">
+  
+  
+  
+
 <div class="card">
+  <!-- maldidb selector -->
+  <!--(one or more libraries, or one or more spectra)-->
+  {% if table.table_type == 'libraries' %}
+  <div class="dropdown">
+    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      Selection tool
+    </button>
+    <div class="dropdown-menu" aria-labelledby="dropdownMenu2">
+      <button class="dropdown-item disabled" type="button">Collapse replicates</button>
+      <button class="dropdown-item disabled" type="button">Delete</button>
+      <button class="dropdown-item disabled" type="button">Add to dendrogram</button>
+    </div>
+  </div>
+  {% endif %}
 <div class="card-body">
   <div class="table-container">
       {% block table %}
@@ -161,13 +176,8 @@
 </div></div></div>
 {% endblock table-wrapper %}
 
-<!--
-{% if table.sfilter %}
-</form>
-{% endif %}
--->
 
-<!-- After the table has rendered, add a mouseover for TH links 
+<!-- Mouseover for TH links 
   spectrometer_type = tables.Column(verbose_name='SP')
   ionization_mode = tables.Column(verbose_name='IM')
   acquisition_mode = tables.Column(verbose_name='AM')

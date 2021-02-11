@@ -40,8 +40,8 @@ class UserFile(models.Model):
     ]
   )
   upload_date = models.DateTimeField(auto_now_add = True, blank = False)
-  extension = models.CharField(max_length = 255, blank = True, null = True)
-  spectra = models.ManyToManyField('Spectra', blank = True, null = True)
+  #extension = models.CharField(max_length = 255, blank = True, null = True)
+  spectra = models.ManyToManyField('Spectra', blank = True)
   
 class UserTask(models.Model):
   '''
@@ -87,10 +87,6 @@ class UserTaskStatus(models.Model):
   -- Each time a new status is created, trigger last_modified on UserTask
      to update.
   '''
-  # ~ task = models.ForeignKey(
-    # ~ 'UserTasks',
-    # ~ related_name = 'spectra1',
-    # ~ on_delete = models.CASCADE)
   status_choices = [
     ('start', 'Started'),
     ('run', 'Running'),
