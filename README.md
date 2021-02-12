@@ -1,3 +1,13 @@
+## Overview
+- Mass data import from SQLite
+- Search and browse data
+- User and group management 
+- Pipelines:
+    - Bin peaks and cosine scoring for search and dendrograms
+    - Replicates to collapsed spectra
+    - Preprocessing
+    - Upload spectra files
+
 ## Docker install with docker-compose
 ```bash
  git clone https://github.com/davidshumway/maldidb
@@ -5,8 +15,6 @@
  # Use project.env.template to create project.env
  cp project.env.template project.env
  nano project.env
- # Build and run project
- docker-compose up --build
 ```
 
 Where project.env should include the following:
@@ -19,6 +27,18 @@ Where project.env should include the following:
     DATABASE_PORT=5432
     SECRET_KEY=<any key>
 
+Update docker-compose.yaml to point to R01 data files, if present, or
+remove the R01 volume, if not present:
+
+```bash
+  - /home/ubuntu/r01data:/home/app/r01data/
+```
+
+Finally, build and run the project:
+
+```bash
+docker-compose up --build
+```
 PostgreSQL does not need to be installed on the system beforehand unless performing a manual installaion.
 
 Running `docker-compose up --build` the first time may take 15-30 minutes to complete. However, successive
@@ -44,6 +64,9 @@ builds should complete within 15-30 seconds.
  git clone https://github.com/davidshumway/maldidb
  cd ./maldidb
  # Use project.env.template to create project.env
+ # and input settings used in psql. 
+ # DATABASE_HOST should be set to "localhost"
+ # rather than postgresdb.
  cp project.env.template project.env
  nano project.env
  # Initialize environment variables and virtualenv
@@ -56,22 +79,13 @@ builds should complete within 15-30 seconds.
  # Run server
  python manage.py makemigrations
  python manage.py migrate
- python manage.py runserver
 ```
 
-The application should now be available through a browser at
-http://localhost:8000/.
+In `maldidb/soMedia/settings.py`, set `Debug = False`.
 
-A graph diagram of the application's models may then be generated
+Execute `python manage.py runserver` to run the project.
+The site should now be available in a browser at `http://localhost:8000/`.
+
+A graph diagram of the application's models may be generated
 using ```./manage.py graph_models -a -g -o models.png```.
-
-### Overview
-- Mass data import from SQLite
-- Search and browse data
-- User and group management 
-- Pipelines:
-    - Bin peaks and cosine scoring for search and dendrograms
-    - Replicates to collapsed spectra
-    - Preprocessing
-    - Upload spectra files
 
