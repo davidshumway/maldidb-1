@@ -172,7 +172,7 @@ def preprocess_mzml(file, user_task):
   -- example: elt = l.rx2(1) # This is the R `[[`, so one-offset indexing
   '''
   result = R['preprocess'](file)
-  print(f'pp result{result}')
+  #print(f'pp result{result}')
   if result.rx2('error'):
     user_task.statuses.add(
       UserTaskStatus.objects.create(
@@ -668,25 +668,30 @@ def view_cosine(request):
   --Returns three objects: binned peaks (list), feature matrix (list),
     cosine scores (matrix)
   '''
-  sc = SpectraScores()
-  pass
+  # ~ pass
   # small and large molecules combined, or large only
-  n = Spectra.objects.all().filter(tof_mode__exact = 'LINEAR').order_by('xml_hash')
-  for spectra in n:
-    pm = json.loads('['+spectra.peak_mass+']')
-    pi = json.loads('['+spectra.peak_intensity+']')
-    R['appendSpectra'](
-      robjects.FloatVector(pm),
-      robjects.FloatVector(pi)
-    )
-  R['binSpectraOLD']()
+  # ~ n = Spectra.objects.all().filter(tof_mode__exact = 'LINEAR').order_by('xml_hash')
+  # ~ for spectra in n:
+    # ~ pm = json.loads('['+spectra.peak_mass+']')
+    # ~ pi = json.loads('['+spectra.peak_intensity+']')
+    # ~ R['appendSpectra'](
+      # ~ robjects.FloatVector(pm),
+      # ~ robjects.FloatVector(pi)
+    # ~ )
+  # ~ R['binSpectraOLD']()
   
   if request.method == 'POST':
-    form = ViewCosineForm(request.POST, request.FILES, instance = None)
+    form = ViewCosineForm(request.POST, request.FILES)
     if form.is_valid():
-      return redirect(reverse('chat:view_cosine'))
+      sc = SpectraScores(form).info() # {binnedPeaks: ..., , }
+      #print('sc', sc)
+      return render(
+        request,
+        'chat/view_cosine.html',
+        {'form': form, 'sc': json.dumps(sc)}
+      )
   else:
-    form = ViewCosineForm(instance = None)
+    form = ViewCosineForm() #instance = None)
   return render(request, 'chat/view_cosine.html', {'form': form})
 
 class SpectraFilter(django_filters.FilterSet):

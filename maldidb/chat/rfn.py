@@ -1,6 +1,7 @@
 from rpy2.robjects import r as R
 import rpy2.robjects as robjects
 import json
+from .models import Spectra
 
 '''
 todo:
@@ -126,9 +127,12 @@ class SpectraScores():
   import rpy2.robjects as robjects
   '''
   
-  def __init__(self):
+  def __init__(self, form = None):
     self.all_peaks = []
     self.all_spectra = []
+    self.form = form
+    if form != None:
+      self.process_form()
   
   def bin_peaks(self):
     return R['binPeaks'](self.all_peaks, self.all_spectra)
@@ -143,34 +147,64 @@ class SpectraScores():
     self.all_spectra.append(
       R['createMassSpectrum'](m, i)
     )
+  
+  def info(self):
+    '''
+    Use with process_form to output binPeaks data for inspection.
     
+    -- example: e = l.rx2(1) # This is the R `[[`, so one-offset indexing
+    -- example: e = l.rx2('binnedPeaks')
+    -- binPeaksInfo contains:
+        list(
+          'binnedPeaks' = binnedPeaks,
+          'featureMatrix' = featureMatrix,
+          'cosineScores' = d
+        )
+    '''
+    # ~ print('running debug')
+    # ~ print(self.all_peaks)
+    # ~ print(self.all_spectra)
+    n = R['binPeaksInfo'](self.all_peaks, self.all_spectra)
+    # https://stackoverflow.com/questions/24152160/converting-an-rpy2-listvector-to-a-python-dictionary
+    # ~ import pandas.rpy.common as com
+    # ~ (a)
+    # ~ from rpy2.robjects import ri2py
+    return {
+      'binnedPeaks': n.rx2['binnedPeaks'],
+      'featureMatrix': n.rx2['featureMatrix'],
+      'cosineScores': n.rx2['cosineScores']
+    }
+    
+  def process_form(self):
+    n = Spectra.objects.all()
+    n = n.filter(max_mass__gt = 6000)
+    # optionals
+    slib = self.form.cleaned_data['library'];
+    slab = self.form.cleaned_data['lab_name'];
+    # ~ ssid = form.cleaned_data['strain_idXX'];
+    # ~ sxml = form.cleaned_data['xml_hashXX'];
+    # ~ scrb = form.cleaned_data['created_byXX'];
+    #print(f'fcd: {form.cleaned_data}' ) # 
+    if slib.exists():
+      n = n.filter(library__in = slib)
+    if slab.exists():
+      n = n.filter(lab_name__in = slab)
+    # ~ if ssid.exists():
+      # ~ n = n.filter(strain_id__in = ssid)
+    # ~ if sxml.exists():
+      # ~ n = n.filter(xml_hash__in = sxml)
+    # ~ if scrb.exists():
+      # ~ n = n.filter(created_by__in = scrb)
+    # ~ n = n.order_by('xml_hash')
+    for spectra in n:
+      self.append_spectra(
+        spectra.peak_mass, spectra.peak_intensity, spectra.peak_snr
+      )
+    ## bin
+    ## return self.bin_peaks()
+      
 # bin
 R('''
-  # Some globals
-  #allSpectra <- list()
-  #allPeaks <- list()
-  #binnedPeaks <- F
-  #resetGlobal <- function() {
-  #  allSpectra <<- list()
-  #  allPeaks <<- list()
-  #  binnedPeaks <<- F
-  # ~ #}
-  # ~ appendSpectra <- function(m, i, s) {
-    # ~ # <<-: assign upward
-    # ~ # allPeaks: Used for binPeaks, intensityMatrix
-    # ~ # allSpectra: Used for intensityMatrix
-    # ~ # todo: createMassPeaks -- snr = as.numeric(x$snr))
-    # ~ allSpectra <<- append(
-      # ~ allSpectra,
-      # ~ MALDIquant::createMassSpectrum(mass = m, intensity = i)
-    # ~ )
-    # ~ allPeaks <<- append(
-      # ~ allPeaks,
-      # ~ MALDIquant::createMassPeaks(
-        # ~ mass = m, intensity = i, snr = as.numeric(s)
-      # ~ )
-    # ~ )
-  # ~ }
   showMem <- function() {
     print('x')
     for (itm in ls()) { 
@@ -182,28 +216,12 @@ R('''
     }
   }
   binPeaks <- function(allPeaks, allSpectra) {
-    #print(class(allPeaks)) # list
-    #print(class(allSpectra))
-    print("length(allPeaks)")
-    print(length(allPeaks))
-    print("length(allSpectra)")
-    print(length(allSpectra))
     showMem()
     # Only scores in first row are relevant, i.e., input spectra
     # Finally, order the row by score decreasing
     binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
-    print("length(binnedPeaks)")
-    print(length(binnedPeaks))
-    print(is(binnedPeaks))
-    print(object.size(allSpectra))
-    print(object.size(allPeaks))
-    print(object.size(binnedPeaks))
     # ram issue here:
     featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
-    print("dim(featureMatrix)")
-    print(dim(featureMatrix))
-    print(is(binnedPeaks))
-    print(object.size(featureMatrix))
     showMem()
     
     d <- stats::as.dist(coop::tcosine(featureMatrix))
@@ -220,6 +238,22 @@ R('''
     print(d[2,])
     
     d <- d[1,] # first row
+  }
+  binPeaksInfo <- function(allPeaks, allSpectra) {
+    library(jsonlite)
+    # bp: a list of MassPeaks objects
+    binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
+    featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
+    d <- stats::as.dist(coop::tcosine(featureMatrix))
+    d <- as.matrix(d)
+    d <- round(d, 3)
+    n <- list(
+      "binnedPeaks" = lapply(binnedPeaks, function(x) list(x@mass, x@intensity)), ##as.matrix(binnedPeaks),
+      "featureMatrix" = "as.matrix(featureMatrix)",
+      "cosineScores" = "d"
+    )
+    toJSON(n, pretty = FALSE)
+    # ~ return()
   }
   
   # heatmap code

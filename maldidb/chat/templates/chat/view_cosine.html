@@ -11,19 +11,27 @@
 {% load bootstrap4 %}
 
 {% if form.is_bound %}
-  <button class="btn btn-primary" onclick="toggleFilters();">Show filters</button>
-  <form action="" method="get" class="form form-inline toggle-display" style="" id="filter-form">
-    {% bootstrap_form filter.form layout='inline' %}
-    {% bootstrap_button 'filter' %}
+  <button class="btn btn-primary" onclick="toggleFilters();">Show form</button>
+  <form action="" method="post" class="form form-inline toggle-display" style="" id="filter-form">
+    {% csrf_token %}
+    {% bootstrap_form form layout='inline' %}
+    {% bootstrap_button 're-calculate scores' %}
   </form>
 {% else %}
-	<button class="btn btn-primary" onclick="toggleFilters();">Hide filters</button>
-  <form action="" method="get" class="form form-inline" style="" id="filter-form">
-    {% bootstrap_form filter.form layout='inline' %}
-    {% bootstrap_button 'filter' %}
+	<button class="btn btn-primary" onclick="toggleFilters();">Hide form</button>
+  <form action="" method="post" class="form form-inline" style="" id="filter-form">
+		{% csrf_token %}
+    {% bootstrap_form form layout='inline' %}
+    {% bootstrap_button 'calculate scores' %}
   </form>
 {% endif %}
 
+{% if sc %}
+<script type="text/javascript">
+var sc = JSON.parse('{{ sc }}');
+console.log(sc);
+</script>
+{% endif %}
 
 <div class="card">
 <!--
