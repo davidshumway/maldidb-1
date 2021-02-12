@@ -11,29 +11,83 @@
 {% load bootstrap4 %}
 
 {% if form.is_bound %}
+<div class="row">
   <button class="btn btn-primary" onclick="toggleFilters();">Show form</button>
   <form action="" method="post" class="form form-inline toggle-display" style="" id="filter-form">
     {% csrf_token %}
     {% bootstrap_form form layout='inline' %}
-    {% bootstrap_button 're-calculate scores' %}
+    {% bootstrap_button 'calculate scores' %}
   </form>
+</div>
 {% else %}
+<div class="container">
 	<button class="btn btn-primary" onclick="toggleFilters();">Hide form</button>
   <form action="" method="post" class="form form-inline" style="" id="filter-form">
 		{% csrf_token %}
     {% bootstrap_form form layout='inline' %}
     {% bootstrap_button 'calculate scores' %}
   </form>
+</div>
 {% endif %}
 
 {% if sc %}
+<div class="card">
+	<div class="card" style=""><!--height:450px !important;-->
+		<div class="card-header">
+			<ul class="nav nav-tabs card-header-tabs" id="nav-search-source">
+				<li class="nav-item">
+					<a class="nav-link active" href="#" id="nss-1">binned peaks</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="#" id="nss-2">feature matrix</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="#" id="nss-3">cosine scores</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="#" id="nss-4">cosine scores upper triangle</a>
+				</li>
+			</ul>
+		</div>
+		<div class="card-body" id="nss-card-1" style="">
+			<pre>{{ sc.binnedPeaks }}</pre>
+		</div>
+		<div class="card-body toggle-display" id="nss-card-2" style="">
+			<pre>{{ sc.featureMatrix }}</pre>
+		</div>
+		<div class="card-body toggle-display" id="nss-card-3" style="">
+			<pre>{{ sc.cosineScores }}</pre>
+		</div>
+		<div class="card-body toggle-display" id="nss-card-4" style="">
+			<pre>{{ sc.cosineScoresUt }}</pre>
+		</div>
+	</div>
+</div>
+
 <script type="text/javascript">
-var sc = JSON.parse('{{ sc }}');
-console.log(sc);
+//~ var sc = JSON.parse('[]');
+//~ console.log(sc);
+function toggleNavSearch(e) {
+  $('#nav-search-source a').removeClass('active');
+  $(this).addClass('active');
+  for (var i=1; i<=4; i++) {
+    $('#nss-card-'+i).addClass('toggle-display');
+  }
+  var n = $(this).attr('id').split('-')[1];
+  $('#nss-card-'+n).removeClass('toggle-display');
+  return false;
+}
+function toggleFilters() {
+  $('#filter-form').toggleClass('toggle-display');
+}
+window.addEventListener('DOMContentLoaded', (event) => {
+	$('#nav-search-source a').click(toggleNavSearch);
+});
 </script>
 {% endif %}
 
 <div class="card">
+
 <!--
 	{% if lab.picture %}
 		<img class="card-img-top" src='{{ lab.picture }}'>
@@ -41,6 +95,7 @@ console.log(sc);
 		<div class="container mt-1 text-center"><i class="fas fa-9x fa-user"></i></div>
 	{% endif %}
 -->
+<!--
 	<div class="card-body">
 		<div class="card-title">
 			
@@ -49,6 +104,7 @@ console.log(sc);
 			
 		</div>
 	</div>
+-->
 <!--
 	<ul class="list-group list-group-flush">
 		<li class="list-group-item"><strong><i class="fa fa-fw fa-user-alt"></i></strong> {{ user.username }}</li>

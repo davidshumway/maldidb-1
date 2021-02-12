@@ -388,6 +388,11 @@ class ViewCosineForm(forms.Form):
     to_field_name = "title",
     required = False
   )
+  strain_id = forms.ModelMultipleChoiceField(
+    queryset = Metadata.objects.all(),
+    to_field_name = "strain_id",
+    required = False
+  )
   
   #class Meta:
     #model = SpectraCosineScore

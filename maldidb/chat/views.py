@@ -684,11 +684,15 @@ def view_cosine(request):
     form = ViewCosineForm(request.POST, request.FILES)
     if form.is_valid():
       sc = SpectraScores(form).info() # {binnedPeaks: ..., , }
-      #print('sc', sc)
+      # ~ print('sc', sc)
+      # ~ print('scbp', sc.rx2('binnedPeaks'))
+      # ~ print('scfm', sc.rx2('featureMatrix'))
+      # ~ print('sccs', sc.rx2('cosineScores'))
+      
       return render(
         request,
         'chat/view_cosine.html',
-        {'form': form, 'sc': json.dumps(sc)}
+        {'form': form, 'sc': sc}
       )
   else:
     form = ViewCosineForm() #instance = None)

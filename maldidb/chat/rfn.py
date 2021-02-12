@@ -161,18 +161,12 @@ class SpectraScores():
           'cosineScores' = d
         )
     '''
-    # ~ print('running debug')
-    # ~ print(self.all_peaks)
-    # ~ print(self.all_spectra)
     n = R['binPeaksInfo'](self.all_peaks, self.all_spectra)
-    # https://stackoverflow.com/questions/24152160/converting-an-rpy2-listvector-to-a-python-dictionary
-    # ~ import pandas.rpy.common as com
-    # ~ (a)
-    # ~ from rpy2.robjects import ri2py
     return {
-      'binnedPeaks': n.rx2['binnedPeaks'],
-      'featureMatrix': n.rx2['featureMatrix'],
-      'cosineScores': n.rx2['cosineScores']
+      'binnedPeaks': n.rx2('binnedPeaks'),
+      'featureMatrix': n.rx2('featureMatrix'),
+      'cosineScores': n.rx2('cosineScores'),
+      'cosineScoresUt': n.rx2('cosineScoresUt'),
     }
     
   def process_form(self):
@@ -181,7 +175,7 @@ class SpectraScores():
     # optionals
     slib = self.form.cleaned_data['library'];
     slab = self.form.cleaned_data['lab_name'];
-    # ~ ssid = form.cleaned_data['strain_idXX'];
+    ssid = self.form.cleaned_data['strain_id'];
     # ~ sxml = form.cleaned_data['xml_hashXX'];
     # ~ scrb = form.cleaned_data['created_byXX'];
     #print(f'fcd: {form.cleaned_data}' ) # 
@@ -189,8 +183,8 @@ class SpectraScores():
       n = n.filter(library__in = slib)
     if slab.exists():
       n = n.filter(lab_name__in = slab)
-    # ~ if ssid.exists():
-      # ~ n = n.filter(strain_id__in = ssid)
+    if ssid.exists():
+      n = n.filter(strain_id__in = ssid)
     # ~ if sxml.exists():
       # ~ n = n.filter(xml_hash__in = sxml)
     # ~ if scrb.exists():
@@ -240,20 +234,23 @@ R('''
     d <- d[1,] # first row
   }
   binPeaksInfo <- function(allPeaks, allSpectra) {
-    library(jsonlite)
+    #library(jsonlite)
     # bp: a list of MassPeaks objects
     binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
     featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
     d <- stats::as.dist(coop::tcosine(featureMatrix))
     d <- as.matrix(d)
     d <- round(d, 3)
+    ut <- d
+    ut[lower.tri(ut, diag = FALSE)] <- NA
     n <- list(
-      "binnedPeaks" = lapply(binnedPeaks, function(x) list(x@mass, x@intensity)), ##as.matrix(binnedPeaks),
-      "featureMatrix" = "as.matrix(featureMatrix)",
-      "cosineScores" = "d"
+      "binnedPeaks" = binnedPeaks,
+      "featureMatrix" = featureMatrix,
+      "cosineScores" = d,
+      "cosineScoresUt" = ut
     )
-    toJSON(n, pretty = FALSE)
-    # ~ return()
+    #toJSON(n, pretty = FALSE)
+    #return()
   }
   
   # heatmap code
