@@ -14,10 +14,9 @@
  cd ./maldidb/
  # Use project.env.template to create project.env
  cp project.env.template project.env
- nano project.env
 ```
 
-Where project.env should include the following:
+Edit project.env to include the following:
 
     POSTGRES_USER=<database user>
     POSTGRES_PASSWORD=<database password>
