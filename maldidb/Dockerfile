@@ -20,6 +20,8 @@ RUN apt-get update && apt-get install -y \
         libnetcdf-dev
 
 RUN R -e "install.packages('remotes')"
+RUN R -e "install.packages('BiocManager')"
+RUN R -e "BiocManager::install('mzR')"
 RUN R -e "remotes::install_github('chasemc/IDBacApp@*release')"
 
 # copy previous build to here.
