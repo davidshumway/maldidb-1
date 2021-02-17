@@ -52,7 +52,10 @@ import json
 import sqlite3
 
 # R
-from .rfn import R, robjects, SpectraScores
+# ~ from rpy2.robjects import r as R
+# ~ import rpy2.robjects as robjects
+# ~ #from .rfn import R, robjects, SpectraScores
+# ~ from .rfn import SpectraScores
 
 def start_new_thread(function):
   '''Starts a new thread for long-running tasks'''
@@ -170,17 +173,27 @@ def preprocess_mzml(file, user_task):
   
   -- add Spectra and update UserFile
   -- example: elt = l.rx2(1) # This is the R `[[`, so one-offset indexing
+  -- python docs!
+    Python signal handlers are always executed in the main Python thread,
+    even if the signal was received in another thread. This means that
+    signals can’t be used as a means of inter-thread communication. You
+    can use the synchronization primitives from the threading module
+    instead. Besides, only the main thread is allowed to set a new
+    signal handler.
+    e.g., see the article: "Django Anti-Patterns: Signals"
+
   '''
   result = R['preprocess'](file)
   #print(f'pp result{result}')
   if result.rx2('error'):
     user_task.statuses.add(
       UserTaskStatus.objects.create(
-        status = 'error', extra = result.rx2('error')
+        status = 'error', extra = result.rx2('error'),
+        user_task = user_task
     ))
     user_task.statuses.add(
       UserTaskStatus.objects.create(
-        status = 'complete'
+        status = 'complete', user_task = user_task
     ))
   
   #if result
@@ -209,7 +222,8 @@ def ajax_upload(request):
           owner = request.user,
           task_description = 'preprocess'
         )
-        t.statuses.add(UserTaskStatus.objects.create(status = 'start'))
+        t.statuses.add(UserTaskStatus.objects.create(
+          status = 'start', user_task = t))
         preprocess_mzml(str(form.instance.file), t)
         return JsonResponse({'status': 'preprocessing'}, status=200)
       else:
@@ -668,34 +682,19 @@ def view_cosine(request):
   --Returns three objects: binned peaks (list), feature matrix (list),
     cosine scores (matrix)
   '''
-  # ~ pass
-  # small and large molecules combined, or large only
-  # ~ n = Spectra.objects.all().filter(tof_mode__exact = 'LINEAR').order_by('xml_hash')
-  # ~ for spectra in n:
-    # ~ pm = json.loads('['+spectra.peak_mass+']')
-    # ~ pi = json.loads('['+spectra.peak_intensity+']')
-    # ~ R['appendSpectra'](
-      # ~ robjects.FloatVector(pm),
-      # ~ robjects.FloatVector(pi)
-    # ~ )
-  # ~ R['binSpectraOLD']()
-  
   if request.method == 'POST':
     form = ViewCosineForm(request.POST, request.FILES)
     if form.is_valid():
-      sc = SpectraScores(form).info() # {binnedPeaks: ..., , }
-      # ~ print('sc', sc)
-      # ~ print('scbp', sc.rx2('binnedPeaks'))
-      # ~ print('scfm', sc.rx2('featureMatrix'))
-      # ~ print('sccs', sc.rx2('cosineScores'))
-      
+      sc = SpectraScores(form).info()      
       return render(
         request,
         'chat/view_cosine.html',
         {'form': form, 'sc': sc}
       )
   else:
+    print('trace')
     form = ViewCosineForm() #instance = None)
+  print('trace2')
   return render(request, 'chat/view_cosine.html', {'form': form})
 
 class SpectraFilter(django_filters.FilterSet):
@@ -1019,10 +1018,12 @@ def handle_uploaded_file(request, tmpForm):
         owner = request.user,
         task_description = 'idbac_sql'
       )
-      t.statuses.add(UserTaskStatus.objects.create(status = 'start'))
+      t.statuses.add(UserTaskStatus.objects.create(status = 'start',
+        user_task = t))
       t.statuses.add(
         UserTaskStatus.objects.create(
-          status = 'info', extra = 'Loading SQLite file ' + f
+          status = 'info', extra = 'Loading SQLite file ' + f,
+          user_task = t
       ))
       #connection = sqlite3.connect('/home/app/r01data/' + f) # /home/ubuntu/
       idbac_sqlite_insert(request, tmpForm, '/home/app/r01data/' + f, t)
@@ -1041,12 +1042,13 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
     user_task.statuses.add(
       UserTaskStatus.objects.create(
         status = 'error',
-        extra = 'Unexpected except caught\n{}: {}'.format(type(e).__name__, e)
+        extra = 'Unexpected except caught\n{}: {}'.format(type(e).__name__, e),
+        user_task = user_task
     ))
   finally:
     user_task.statuses.add(
       UserTaskStatus.objects.create(
-        status = 'complete'
+        status = 'complete', user_task = user_task
     ))
   
     # ~ UserLogs.objects.create(
@@ -1082,7 +1084,8 @@ def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
   # Metadata
   user_task.statuses.add(
     UserTaskStatus.objects.create(
-      status = 'info', extra = 'Inserting metadata'
+      status = 'info', extra = 'Inserting metadata',
+      user_task = user_task
   ))
   
   rows = cursor.execute("SELECT * FROM metaData").fetchall()
@@ -1125,7 +1128,7 @@ def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
   # XML
   user_task.statuses.add(
     UserTaskStatus.objects.create(
-      status = 'info', extra = 'Inserting XML'
+      status = 'info', extra = 'Inserting XML', user_task = user_task
   ))
   rows = cursor.execute("SELECT * FROM XML").fetchall()
   for row in rows:
@@ -1168,7 +1171,8 @@ def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
   # row[5] spectrumIntensity ??
   user_task.statuses.add(
     UserTaskStatus.objects.create(
-      status = 'info', extra = 'Inserting spectra'
+      status = 'info', extra = 'Inserting spectra',
+      user_task = user_task
   ))
   t = 'IndividualSpectra' if idbac_version == '1.0.0' else 'spectra'
   rows = cursor.execute('SELECT * FROM '+t).fetchall()
@@ -1242,7 +1246,8 @@ def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
         UserTaskStatus.objects.create(
           status = 'error',
           extra = 'Peak mass, intensity, or SNR contains an "NA" value:\n\n'
-            'Row data:\n\n' + json.dumps(data)
+            'Row data:\n\n' + json.dumps(data),
+          user_task = user_task
       ))
       continue
     

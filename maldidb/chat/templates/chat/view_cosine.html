@@ -3,7 +3,7 @@
 
 
 {% block title %}
-	Detail
+  Detail
 {% endblock %}
 
 {% block content %}
@@ -21,9 +21,9 @@
 </div>
 {% else %}
 <div class="container">
-	<button class="btn btn-primary" onclick="toggleFilters();">Hide form</button>
+  <button class="btn btn-primary" onclick="toggleFilters();">Hide form</button>
   <form action="" method="post" class="form form-inline" style="" id="filter-form">
-		{% csrf_token %}
+    {% csrf_token %}
     {% bootstrap_form form layout='inline' %}
     {% bootstrap_button 'calculate scores' %}
   </form>

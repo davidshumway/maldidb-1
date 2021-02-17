@@ -11,6 +11,13 @@ services:
       - 5432:5432
     volumes:
       - postgres-data1:/var/lib/postgresql/data1
+  plumber:
+    build: rplumber/
+    restart: always
+    volumes:
+     - ./rplumber:/app
+    ports:
+     - "7001:8000"
   web:
     container_name: django
     build: maldidb/
@@ -22,6 +29,7 @@ services:
       - 8000
     depends_on:
       - db
+      - plumber
     volumes:
       - staticfiles:/home/app/web/static/
       - /home/ubuntu/r01data:/home/app/r01data/
@@ -36,6 +44,8 @@ services:
       - staticfiles:/home/app/web/static/
     depends_on:
       - web
+      - db
+      - plumber
 
 volumes:
   postgres-data1:

@@ -5,9 +5,9 @@ from django.urls import reverse
 from django.core.validators import FileExtensionValidator
 
 # For model triggers
-from django.db.models.signals import post_save, m2m_changed
-from django.dispatch import receiver
-from django.utils import timezone
+# ~ from django.db.models.signals import post_save, m2m_changed
+# ~ from django.dispatch import receiver
+# ~ from django.utils import timezone
 
 # ~ class UserLogs(models.Model):
   # ~ '''
@@ -70,14 +70,14 @@ class UserTask(models.Model):
   last_modified = models.DateTimeField(auto_now_add = True, blank = False)
   
 #@receiver(m2m_changed, sender = UserTask, dispatch_uid = None)
-@receiver(m2m_changed, sender = UserTask.statuses.through)
-def update_user_task(sender, instance, action, **kwargs):
-  '''Update last_modified on UserTask when m2m (statuses) field is updated.'''
-  if action in ['post_add', 'post_remove', 'post_clear']:
-    instance.last_modified = timezone.now()
-    m2m_changed.disconnect(update_user_task, sender = UserTask)
-    instance.save()
-    m2m_changed.connect(update_user_task, sender = UserTask)
+# ~ @receiver(m2m_changed, sender = UserTask.statuses.through)
+# ~ def update_user_task(sender, instance, action, **kwargs):
+  # ~ '''Update last_modified on UserTask when m2m (statuses) field is updated.'''
+  # ~ if action in ['post_add', 'post_remove', 'post_clear']:
+    # ~ instance.last_modified = timezone.now()
+    # ~ m2m_changed.disconnect(update_user_task, sender = UserTask)
+    # ~ instance.save()
+    # ~ m2m_changed.connect(update_user_task, sender = UserTask)
   
 # Another model to 
 class UserTaskStatus(models.Model):
@@ -86,6 +86,7 @@ class UserTaskStatus(models.Model):
   -- An extra field to optionally further explain the status.
   -- Each time a new status is created, trigger last_modified on UserTask
      to update.
+  -- @user_task: FK, Link back to UserTask containing this status (m2m)
   '''
   status_choices = [
     ('start', 'Started'),
@@ -102,6 +103,11 @@ class UserTaskStatus(models.Model):
   )
   status_date = models.DateTimeField(auto_now_add = True, blank = False)
   extra = models.TextField(blank = True, null = True)
+  user_task = models.ForeignKey(
+    'UserTask',
+    # ~ related_name = '',
+    on_delete = models.CASCADE,
+    blank = True, null = True)
   
 class AbstractCosineScore(models.Model):
   score = models.DecimalField(
@@ -349,17 +355,17 @@ class LabGroup(models.Model):
   def get_absolute_url(self):
     return reverse('chat:view_lab', args = (self.id,))
 
-@receiver(post_save, sender = LabGroup, dispatch_uid = None)
-def update_stock(sender, instance, **kwargs):
-  '''Add each owner to the group as a member when creating the group.
+# ~ @receiver(post_save, sender = LabGroup, dispatch_uid = None)
+# ~ def update_stock(sender, instance, **kwargs):
+  # ~ '''Add each owner to the group as a member when creating the group.
   
-  TODO: This only adds the owners when the LabGroup is first created.
-        When updating the lab group, the form's values override this.'''
-  for owner in instance.owners.all():
-    instance.members.add(owner)
-  post_save.disconnect(update_stock, sender = LabGroup)
-  instance.save()
-  post_save.connect(update_stock, sender = LabGroup)
+  # ~ TODO: This only adds the owners when the LabGroup is first created.
+        # ~ When updating the lab group, the form's values override this.'''
+  # ~ for owner in instance.owners.all():
+    # ~ instance.members.add(owner)
+  # ~ post_save.disconnect(update_stock, sender = LabGroup)
+  # ~ instance.save()
+  # ~ post_save.connect(update_stock, sender = LabGroup)
  
 class SearchSpectra(AbstractSpectra):
   peak_mass = models.TextField(blank = True)

@@ -1,30 +1,15 @@
-# idbac and plumber
-#FROM rstudio/plumber AS build_part_0
-#RUN apt-get update && apt-get install -y \
-#        zlib1g-dev \
-#        r-cran-ncdf4 \
-#        netcdf-bin
-#RUN R -e "install.packages('remotes')"
-#RUN R -e "remotes::install_github('chasemc/IDBacApp@*release')"
-#CMD ["/app/plumber.R"]
-
 # nginx uwsgi
 FROM python:3
 
-RUN apt-get update && apt-get install -y \
-        zlib1g-dev \
-        r-cran-ncdf4 \
-        netcdf-bin \
-        netcat \
-        r-base-core \
-        libnetcdf-dev
-
-RUN R -e "install.packages('remotes')"
-RUN R -e "remotes::install_github('chasemc/IDBacApp@*release')"
-
-# copy previous build to here.
-#COPY --from=build_part_0 /usr/bin/R /usr/bin/R
-#RUN R -e "print('Running R from Dockerfile-0')"
+RUN apt-get update && apt-get install -y # \
+ #       zlib1g-dev \
+ #       r-cran-ncdf4 \
+ #       netcdf-bin \
+ #       netcat \
+ #       r-base-core \
+ #       libnetcdf-dev
+#RUN R -e "install.packages('remotes')"
+#RUN R -e "remotes::install_github('chasemc/IDBacApp@*release')"
 
 ENV PYTHONBUFFERED 1
 ENV PYTHONWRITEBYTECODE 1

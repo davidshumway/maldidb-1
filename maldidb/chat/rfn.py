@@ -24,11 +24,15 @@ R('''
     f <- file.path(getwd(), paste0('media/', f))
     mzML_con <- mzR::openMSfile(f, backend = "pwiz")
     scanNumber <- nrow(mzR::header(mzML_con))
-    if (scanNumber != 1) {
-      return(list('error' = paste('scan number is not one:', scanNumber)))
+    if (scanNumber != 1) { # collapse replicates ~~
+      #return(list('error' = paste('scan number is not one:', scanNumber)))
     }
     spectraImport <- mzR::peaks(mzML_con)
+    print('spectraImport1')
+    print(spectraImport)
     spectraImport <- IDBacApp::spectrumMatrixToMALDIqaunt(spectraImport)
+    print('spectraImport2')
+    print(spectraImport)
     # logical vector of maximum masses of mass vectors.
     # True = small mol, False = protein
     smallIndex <- unlist(lapply(spectraImport, function(x) max(x@mass)))
@@ -36,15 +40,20 @@ R('''
     env1 <- FALSE
     env2 <- FALSE
     if (any(smallIndex)) {
-      env_sm <- IDBacApp::processXMLIndSpectra(spectraImport = spectraImport,
-                                            smallOrProtein = "small",
-                                            index = smallIndex)
+      env_sm <- IDBacApp::processXMLIndSpectra(
+        spectraImport = spectraImport,
+        smallOrProtein = "small",
+        index = smallIndex)
     }
     if (any(!smallIndex)) {
-      env_pr <- IDBacApp::processXMLIndSpectra(spectraImport = spectraImport,
-                                            smallOrProtein = "protein",
-                                            index = !smallIndex)
+      env_pr <- IDBacApp::processXMLIndSpectra(
+        spectraImport = spectraImport,
+        smallOrProtein = "protein",
+        index = !smallIndex)
     }
+    print('env')
+    print(env1)
+    print(env2)
     return(list('env_sm' = env1, 'env_pr' = env2))
   }
 ''')
@@ -58,7 +67,7 @@ R('''
                                  upperMassCutoff, 
                                  minSNR, 
                                  tolerance = 0.002,
-                                 protein){
+                                 protein) {
     
     validate(need(is.numeric(peakPercentPresence), "peakPercentPresence not numeric"))
     validate(need(is.numeric(lowerMassCutoff), "lowerMassCutoff not numeric"))
@@ -67,9 +76,21 @@ R('''
     validate(need(is.numeric(tolerance), "tolerance not numeric"))
     validate(need(is.logical(protein), "protein not logical"))
     
-    temp <- IDBacApp::getPeakData(checkedPool = checkedPool,
-                                  sampleIDs = sampleIDs,
-                                  protein = protein) 
+    #temp <- IDBacApp::getPeakData(checkedPool = checkedPool,
+    #                              sampleIDs = sampleIDs,
+    #                              protein = protein) 
+    # getPeakData::
+    temp <- lapply(results__________,
+      function(x){
+        MALDIquant::createMassPeaks(
+          mass = x$mass,
+          intensity = x$intensity ,
+          snr = as.numeric(x$snr))
+      }
+    )
+
+    
+    
     req(length(temp) > 0)
     # Binning peaks lists belonging to a single sample so we can filter 
     # peaks outside the given threshold of presence 
@@ -111,10 +132,10 @@ R('''
   ''')
 
 R('''
-createMassSpectrum <- function(mass, intensity) {
+createMassSpectrum__ <- function(mass, intensity) {
   MALDIquant::createMassSpectrum(mass, intensity)
 }
-createMassPeaks <- function(mass, intensity, snr) {
+createMassPeaks__ <- function(mass, intensity, snr) {
   MALDIquant::createMassPeaks(
     mass = mass, intensity = intensity, snr = as.numeric(snr)
   )
@@ -122,10 +143,6 @@ createMassPeaks <- function(mass, intensity, snr) {
 ''')
 
 class SpectraScores():
-  '''
-  from rpy2.robjects import r as R
-  import rpy2.robjects as robjects
-  '''
   
   def __init__(self, form = None):
     self.all_peaks = []
@@ -142,10 +159,10 @@ class SpectraScores():
     i = robjects.FloatVector(json.loads('[' + intensity + ']'))
     s = robjects.FloatVector(json.loads('[' + snr + ']'))
     self.all_peaks.append(
-      R['createMassPeaks'](m, i, s)
+      R['createMassPeaks__'](m, i, s)
     )
     self.all_spectra.append(
-      R['createMassSpectrum'](m, i)
+      R['createMassSpectrum__'](m, i)
     )
   
   def info(self):
