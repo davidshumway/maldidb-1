@@ -9,17 +9,17 @@ RUN apt-get update && apt-get install -y # \
  #       r-base-core \
  #       libnetcdf-dev
 #RUN R -e "install.packages('remotes')"
+#RUN R -e "install.packages('BiocManager')"
+#RUN R -e "BiocManager::install('mzR')"
 #RUN R -e "remotes::install_github('chasemc/IDBacApp@*release')"
 
 ENV PYTHONBUFFERED 1
 ENV PYTHONWRITEBYTECODE 1
 
-# Create an app user 
 RUN useradd --user-group --create-home --no-log-init --shell /bin/bash app
 
 ENV APP_HOME=/home/app/web
 
-# Create the staticfiles directory. This avoids permission errors. 
 RUN mkdir -p $APP_HOME/static
 
 WORKDIR $APP_HOME
