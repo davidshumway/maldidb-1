@@ -1,11 +1,11 @@
 # nginx uwsgi
 FROM python:3
 
-RUN apt-get update && apt-get install -y # \
+RUN apt-get update && apt-get install -y \
  #       zlib1g-dev \
  #       r-cran-ncdf4 \
  #       netcdf-bin \
- #       netcat \
+        netcat
  #       r-base-core \
  #       libnetcdf-dev
 #RUN R -e "install.packages('remotes')"

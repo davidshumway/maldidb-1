@@ -12,12 +12,13 @@ services:
     volumes:
       - postgres-data1:/var/lib/postgresql/data1
   plumber:
-    build: rplumber/
+    build: ./rplumber/
+    command: /app/plumber.R
     restart: always
     volumes:
      - ./rplumber:/app
     ports:
-     - "7001:8000"
+     - 7001:8000
   web:
     container_name: django
     build: maldidb/

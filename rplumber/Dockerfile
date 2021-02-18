@@ -13,4 +13,9 @@ RUN apt-get update && apt-get install -y \
 RUN R -e "install.packages('remotes')"
 RUN R -e "remotes::install_github('chasemc/IDBacApp@*release')"
 
-CMD ["/app/plumber.R"]
+#WORKDIR /app/plumber
+
+#CMD ["ls"]
+#CMD ["pwd"]
+
+#CMD ["/app/plumber.R"]

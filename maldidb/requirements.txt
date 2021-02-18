@@ -4,7 +4,6 @@ pytz==2019.1
 sqlparse==0.3.0
 django-tables2==2.3.1
 gunicorn
-rpy2
 dj_database_url
 django-filter
 django-bootstrap4
