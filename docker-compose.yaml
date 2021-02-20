@@ -18,14 +18,14 @@ services:
     env_file:
       - project.env
     ports:
-     - 7001:8000
+     - 7002:8000
     volumes:
      - ./rplumber:/app
   web:
     container_name: django
     build: maldidb/
     command: >
-      gunicorn soMedia.wsgi:application --bind 0.0.0.0:8000 --workers=4
+      gunicorn soMedia.wsgi:application --bind 0.0.0.0:8000 --workers=4 --timeout 1000
     env_file:
       - project.env
     expose:

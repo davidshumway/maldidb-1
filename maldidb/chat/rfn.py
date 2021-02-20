@@ -179,14 +179,28 @@ class SpectraScores():
           'cosineScores' = d
         )
     '''
-    import requests
-    headers = {'Content-Type': 'application/json'}
-    payload = {'ids': self.ids}
-    r = requests.post(
-      'http://localhost:7001/cosine',
-      data = payload, headers = headers, verify = False
-    )
-    return r.json() # built-in requests method
+    from urllib import request, parse
+    p = {'ids': self.ids}
+    data = parse.urlencode(p).encode()
+    req =  request.Request(
+      'http://128.31.25.32:7002/cosine/',
+      data = data,
+      # ~ method = 'GET')
+      method = 'POST')
+    req.add_header('Content-Type', 'application/json')
+    print(req)
+    resp = request.urlopen(req)
+    #print(resp)
+    return json.loads(resp)
+
+    # ~ import requests
+    # ~ headers = {'Content-Type': 'application/json'}
+    # ~ payload = {'ids': self.ids}
+    # ~ r = requests.post(
+      # ~ 'http://127.0.0.1:7002/cosine/',
+      # ~ data = payload, headers = headers, verify = False
+    # ~ )
+    # ~ return r.json() # built-in requests method
     
     
   def process_form(self):

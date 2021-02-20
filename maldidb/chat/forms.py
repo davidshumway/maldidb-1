@@ -393,6 +393,11 @@ class ViewCosineForm(forms.Form):
     to_field_name = "strain_id",
     required = False
   )
+  spectra_id = forms.ModelMultipleChoiceField(
+    queryset = Spectra.objects.all(),
+    to_field_name = "id",
+    required = False
+  )
   
   #class Meta:
     #model = SpectraCosineScore

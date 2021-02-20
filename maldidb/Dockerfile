@@ -2,16 +2,7 @@
 FROM python:3
 
 RUN apt-get update && apt-get install -y \
- #       zlib1g-dev \
- #       r-cran-ncdf4 \
- #       netcdf-bin \
         netcat
- #       r-base-core \
- #       libnetcdf-dev
-#RUN R -e "install.packages('remotes')"
-#RUN R -e "install.packages('BiocManager')"
-#RUN R -e "BiocManager::install('mzR')"
-#RUN R -e "remotes::install_github('chasemc/IDBacApp@*release')"
 
 ENV PYTHONBUFFERED 1
 ENV PYTHONWRITEBYTECODE 1

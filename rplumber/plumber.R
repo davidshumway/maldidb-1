@@ -149,6 +149,8 @@ function(req, id, ids) {
 #* @param ids List of IDs from Spectra table
 #* @post /cosine
 function(req, ids) {
+  print('got ids')
+  print(ids)
   if (class(ids) != 'integer') {
     stop('not an integer (ids)!') # stop throws 500
   }
@@ -185,8 +187,12 @@ function(req, ids) {
     )
   }
   
+  print('made mq')
+  
   binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
   featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
+  
+  print('ran mq')
   
 #~   stop('d')
   d <- stats::as.dist(coop::tcosine(featureMatrix))
@@ -196,6 +202,8 @@ function(req, ids) {
   d[lower.tri(d, diag = FALSE)] <- NA # Discard symmetric part
 #~   stop('d')
   disconnect(c$drv, c$con)
+  
+  print('returning')
   
   library(jsonlite)
   a <- list(
