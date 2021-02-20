@@ -55,7 +55,7 @@ import sqlite3
 # ~ from rpy2.robjects import r as R
 # ~ import rpy2.robjects as robjects
 # ~ #from .rfn import R, robjects, SpectraScores
-# ~ from .rfn import SpectraScores
+from .rfn import SpectraScores
 
 def start_new_thread(function):
   '''Starts a new thread for long-running tasks'''
@@ -851,8 +851,9 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
           created_by = None
         )
       
-      sc = SpectraScores()
-      sc.append_spectra(sm, si, sn)
+      #sc = SpectraScores()
+      #sc.append_spectra(sm, si, sn)
+      search_id = obj.id
       
       # small and large molecules combined, or large only
       # use GET query variables to adjust .filter()
@@ -901,16 +902,27 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
         # ~ print(spectra.strain_id)
         # ~ print(spectra.peak_snr)        
         # ~ return
-          
+        
+      search_ids = []
       for spectra in n:
-        sc.append_spectra(
-          spectra.peak_mass, spectra.peak_intensity, spectra.peak_snr
-        )
+        # ~ sc.append_spectra(
+          # ~ spectra.peak_mass, spectra.peak_intensity, spectra.peak_snr
+        # ~ )
+        search_ids.append(spectra.id)
         idx[count] = spectra
         count += 1
       
       # bin  
-      result = sc.bin_peaks()
+      #result = sc.bin_peaks()
+      import requests
+      headers = {'"Content-Type': 'application/json"'}
+      payload = {'id': search_id, 'ids': search_ids}
+      r = requests.post(
+        'http://localhost:7001/binPeaks',
+        data = payload, headers = headers
+      )
+      result = r.json() # built-in requests method
+      print('result is:', result)
       
       # sort by key
       sorted_list = []

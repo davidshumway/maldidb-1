@@ -15,10 +15,12 @@ services:
     build: ./rplumber/
     command: /app/plumber.R
     restart: always
-    volumes:
-     - ./rplumber:/app
+    env_file:
+      - project.env
     ports:
      - 7001:8000
+    volumes:
+     - ./rplumber:/app
   web:
     container_name: django
     build: maldidb/

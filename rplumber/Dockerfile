@@ -13,6 +13,10 @@ RUN apt-get update && apt-get install -y \
 RUN R -e "install.packages('remotes')"
 RUN R -e "remotes::install_github('chasemc/IDBacApp@*release')"
 
+RUN apt-get install -y libpq-dev # req. for RPostgreSQL
+
+RUN R -e "install.packages('RPostgreSQL')"
+
 #WORKDIR /app/plumber
 
 #CMD ["ls"]
