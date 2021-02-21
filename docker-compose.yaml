@@ -38,7 +38,7 @@ services:
       - /home/ubuntu/r01data:/home/app/r01data/
   nginx:
     container_name: nginx
-    image: nginx:mainline-alpine
+    image: nginx #####:mainline-alpine
     restart: always
     ports:
       - 80:80
@@ -49,6 +49,11 @@ services:
       - web
       - db
       - plumber
+    dns:
+      - 8.8.8.8
+      - 4.4.4.4
+      - 128.31.28.11 
+    #  - 192.168.9.45
 
 volumes:
   postgres-data1:
