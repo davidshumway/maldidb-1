@@ -1,0 +1,32 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+django-heroku = "*"
+gunicorn = "*"
+pytz = "==2019.1"
+sqlparse = "==0.3.0"
+Django = "==2.2.13"
+Pillow = "==6.0.0"
+django-tables2 = "==2.3.1"
+#pygraphviz = "==1.6"
+pyparsing = "==2.4.7"
+pydot = "==1.4.1"
+graphviz = "==0.14.1"
+django-extensions = "==3.0.9"
+django-serve-shiny = "*"
+#alubbock = "*"
+#python-dev = "*"
+#libcurl4-gnutls-dev = "*"
+#r-base-core = "*"
+django-rpy2 = "*"
+
+[requires]
+python_version = "3.7"
+
+[pipenv]
+allow_prereleases = true

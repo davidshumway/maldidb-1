@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load render_table from django_tables2 %}
+
+
+{% block title %}
+	Spectra Details: {{ Spectra.strain_id.strain_id }}
+{% endblock %}
+
+{% block content %}
+
+
+<div class="card">
+<!--
+	{% if lab.picture %}
+		<img class="card-img-top" src='{{ lab.picture }}'>
+	{% else %}
+		<div class="container mt-1 text-center"><i class="fas fa-9x fa-user"></i></div>
+	{% endif %}
+-->
+	<div class="card-body">
+		<div class="card-title">
+			Strain: {{ spectra.strain_id.strain_id }}
+		</div>
+		<div class="card-text">
+			<div class="form-group">
+				<label for="comment">Mass:</label>
+				<textarea class="form-control" rows="5" id="spm" readonly>{{ spectra.peak_mass }}</textarea>
+			</div>
+		</div>
+		<div class="card-text">
+			<div class="form-group">
+				<label for="comment">Intensity:</label>
+				<textarea class="form-control" rows="5" id="spi" readonly>{{ spectra.peak_intensity }}</textarea>
+			</div>
+		</div>
+		<div class="card-text">
+			
+		</div>
+	</div>
+<!--
+	<ul class="list-group list-group-flush">
+		<li class="list-group-item"><strong><i class="fa fa-fw fa-user-alt"></i></strong> {{ user.username }}</li>
+		<li class="list-group-item"><strong><i class="fa fa-fw fa-envelope"></i></strong> {{ user.email }}</li>
+		<li class="list-group-item"><strong><i class="fa fa-fw fa-phone"></i></strong> {{ user.profile.phone }}</li>
+		<li class="list-group-item"><strong><i class="fa fa-fw fa-globe"></i></strong> {{ user.profile.website }}</li>
+		<li class="list-group-item"><strong><i class="fa fa-fw fa-map-marker-alt"></i></strong> {{ user.profile.address }}</li>
+	</ul>
+-->
+
+
+	{% if request.user in lab.owners.all %}
+		<div class="card-body">
+			<a href="{% url 'chat:edit_spectra' spectra.id %}" class="card-link btn btn-danger">Edit Spectra</a>
+		</div>
+	{% endif %}
+	
+</div>
+{% endblock %}

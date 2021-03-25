@@ -9,6 +9,7 @@ db.sqlite3
 *.pyc
 *.sock
 maldidb.sock
+mdb.sock
 media
 media/
 /media

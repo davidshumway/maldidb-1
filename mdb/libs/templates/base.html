@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <title>{% block title %}MALDI-TOF spectra database{% endblock %}</title>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.min.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'css/fontawesome.min.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+  <!-- jquery/popper/bootstrap in head -->
+  <!-- popper required for bootstrap tooltips -->
+
+
+
+  <script src="{% static 'js/jquery-3.3.1.min.js' %}"></script>
+  <script src="{% static 'js/bootstrap.bundle.js' %}"></script>	
+  <!--<script src="{% static 'js/bootstrap.min.js' %}"></script>-->
+
+
+<!--
+  <script src="{% static 'js/jquery-3.3.1.min.js' %}"></script>
+
+  <script src="{% static 'js/popper.min.js' %}"></script>
+
+  <script src="{% static 'js/bootstrap.min.js' %}"></script>
+-->
+
+  <!-- Include D3 -->
+  <script src="{% static 'js/d3.min.js' %}"></script>
+  
+  
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" id="mainNav">
+      
+      <a class="navbar-brand" href="{% url 'chat:home' %}">MALDI-TOF spectra database</a>
+      
+      <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      
+      
+      
+    <div class="collapse navbar-collapse" id="navbarResponsive">
+      <ul class="navbar-nav mr-auto">
+	<li class="nav-item dropdown"><!--class=active-->
+	  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	    Menu
+	  </a>
+	  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+	    <a class="dropdown-item" href="{% url 'chat:home' %}">Home</a>
+	    <a class="dropdown-item" href="{% url 'chat:home' %}">Latest news</a>
+	    <a class="dropdown-item" href="{% url 'chat:home' %}">About</a>
+	    <a class="dropdown-item" href="{% url 'chat:home' %}">Contact</a>
+	    <a class="dropdown-item" href="{% url 'chat:basic_search' %}">Basic Search</a>
+	    <a class="dropdown-item" href="{% url 'chat:basic_search' %}">Advanced Search</a>
+<!--
+	    <a class="dropdown-item" href="{% url 'chat:view_cosine' %}">Cosine similarity &amp; heatmap</a>
+-->
+<!--
+	  <div class="dropdown-divider"></div>
+	    <a class="dropdown-item" href="#">Something else here</a>
+	  </div>
+-->
+	</li>
+	<li class="nav-item dropdown"><!--class=active-->
+	  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	    Browse
+	  </a>
+	  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+	    <a class="dropdown-item" href="{% url 'chat:spectra_results' %}">Spectrum - All</a>
+	    <a class="dropdown-item" href="{% url 'chat:home' %}">Spectrum - Replicates</a>
+	    <a class="dropdown-item" href="{% url 'chat:home' %}">Spectrum - Collapsed</a>
+	    <a class="dropdown-item" href="{% url 'chat:libraries_results' %}">Libraries</a>
+	    <a class="dropdown-item" href="{% url 'chat:metadata_results' %}">Metadata</a>
+	    <a class="dropdown-item" href="{% url 'chat:labgroups_results' %}">Lab Groups</a>
+	    <a class="dropdown-item" href="{% url 'chat:xml_results' %}">XML Data</a>
+	    <a class="dropdown-item" href="{% url 'chat:home' %}">IDBac SQLite</a>
+	  </div>
+	</li>
+	<li class="nav-item dropdown"><!--class=active-->
+	  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	    Add
+	  </a>
+	  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+	    <a class="dropdown-item" href="{% url 'chat:add_post' %}">Spectrum - All</a>
+	    <a class="dropdown-item" href="{% url 'chat:add_post' %}">Spectrum - Replicates</a>
+	    <a class="dropdown-item" href="{% url 'chat:add_post' %}">Spectrum - Collapsed</a>
+	    <a class="dropdown-item" href="{% url 'chat:add_lib' %}">Library</a>
+	    <a class="dropdown-item" href="{% url 'chat:add_metadata' %}">Metadata</a>
+	    <a class="dropdown-item" href="{% url 'chat:add_labgroup' %}">Lab Group</a>
+	    <a class="dropdown-item" href="{% url 'chat:add_xml' %}">XML Data</a>
+	    <a class="dropdown-item" href="{% url 'chat:add_sqlite' %}">IDBac SQLite</a>
+	  </div>
+	</li>
+      </ul>
+	 	
+		
+
+      <!--<ul class="navbar-nav mr-auto">
+        <li class="nav-item"><a href="" class="nav-link" title="">Home</a>
+        </li>
+        <li class="nav-item"><a href="" class="nav-link" title="">Search</a>
+        </li>
+        <li class="nav-item"><a href="" class="nav-link" title="">Browse</a>
+        </li>
+      </ul>-->
+      
+      
+      <!-- Quick search 
+      <form action="{% url 'chat:basic_search' %}" class="form-inline" method="get">
+        <input name="q" class="form-control mr-sm-2" type="search" placeholder="Spectra ID" aria-label="Spectra ID" size=4 />
+        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Go</button>
+      </form>-->
+      
+    </div>
+    
+    <div class="collapse navbar-collapse" id="navbarResponsive">
+        <ul class="navbar-nav ml-auto">
+          {% if request.user.is_authenticated %}
+	    <li class="nav-item dropdown">
+	      <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+		Hello, {{ request.user }}
+	      </a>
+	      <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+		<a class="dropdown-item" href="{% url 'accounts:view-profile' request.user %}">Profile</a>
+		<a class="dropdown-item" href="{% url 'chat:user_tasks' %}">Tasks</a>
+<!--
+		<a class="dropdown-item" href="{% url 'chat:home' %}">Logs</a>
+-->
+		<a class="dropdown-item" href="{% url 'accounts:logout' %}">Logout</a>
+	      </div>
+	    </li>
+	  
+<!--
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'chat:home' %}">
+                <i class="fas fa-fw fa-user"></i> Hello, {{ request.user }}</a>
+            </li>
+-->
+<!--
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts:followers' %}">
+                <i class="fas fa-fw fa-users"></i> Followers
+              </a>
+            </li>
+-->
+<!--
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts:logout' %}">
+                <i class="fas fa-fw fa-sign-out-alt"></i> Logout
+              </a>
+            </li>
+-->
+        {% else %}
+          <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts:login' %}">
+                <i class="fas fa-fw fa-sign-in-alt"></i> Login
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts:register' %}">
+                <i class="fas fa-fw fa-user-check"></i> Register
+              </a>
+            </li>
+        {% endif %}
+      </ul>	
+    </div>
+  </nav>
+  
+  <div class="content-wrapper">    
+    <div class="container-fluid my-5 pt-3">
+      {% block content %}
+      {% endblock %}
+    </div>
+    <!-- /.container-fluid-->
+    <!-- /.content-wrapper-->
+    <footer class="sticky-footer fixed-bottom bg-dark text-light">
+      <div class="container">
+	<div class="text-center">
+	  <small>Copyright © UIC 2020</small>
+	</div>
+      </div>
+    </footer>
+  </div>
+    
+  
+
+    
+</body>
+</html>

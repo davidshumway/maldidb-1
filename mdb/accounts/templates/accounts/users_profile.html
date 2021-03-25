@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}
+	{% if request.user == user %}
+		My Profile
+	{% else %}
+		{{ user.username }}'s Profile 
+	{% endif %}
+{% endblock %}
+
+{% block content %}
+	<div class="container col-md-8">
+		{% include 'accounts/profile.html' %}
+	</div>
+{% endblock %}

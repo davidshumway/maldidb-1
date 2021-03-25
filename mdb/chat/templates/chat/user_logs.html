@@ -1,0 +1,34 @@
+
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}
+	Logs
+{% endblock %}
+
+{% block content %}
+
+{% load render_table from django_tables2 %}
+{% load bootstrap4 %}
+
+{% if filter %}
+  <button class="btn btn-primary" onclick="toggleFilters();">Show filters</button>
+  <form action="" method="get" class="form form-inline toggle-display" style="" id="filter-form">
+    {% bootstrap_form filter.form layout='inline' %}
+    {% bootstrap_button 'filter' %}
+  </form>
+{% endif %}
+
+<div class="row">
+</div>
+{% render_table table %}
+
+
+<script type="text/javascript">
+function toggleFilters() {
+  $('#filter-form').toggleClass('toggle-display');
+}
+</script>
+
+{% endblock %}
+

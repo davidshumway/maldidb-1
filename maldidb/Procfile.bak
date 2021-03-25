@@ -1,1 +1,1 @@
-web: gunicorn soMedia.wsgi --log-file -
+web: gunicorn maldidb.wsgi --log-file -

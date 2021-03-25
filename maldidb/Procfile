@@ -1,2 +1,2 @@
-web: gunicorn soMedia.wsgi
+web: gunicorn maldidb.wsgi
 

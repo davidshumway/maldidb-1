@@ -1,0 +1,110 @@
+/*
+.bg-grey {
+	background: #efffef;
+}
+*/
+body {
+	background: #fafafa;
+}
+/*nav*/
+#mainNav {
+	background: #efefef !important;
+}
+.dropdown, .dropup {
+	margin-left: 10px !important;
+}
+.maintable {
+	font-size: smaller;	
+}
+.maintable th {
+	max-width: 100px;
+	padding: 0 !important;
+	font-size: xx-small;
+	border: 1px solid #bbb;
+	vertical-align: top !important;
+/*
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+*/
+}
+.maintable td {
+	max-width: 100px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	padding: 0 !important;
+	border: 1px solid #bbb;
+}
+/* Override default table container to avoid expanding off the page */
+.table-container {
+	overflow: auto !important;
+}
+/* django-filter fields */
+.orderable input {
+	max-width: 100px !important;
+}
+.orderable select {
+	max-width: 100px !important;
+}
+/**/
+.toggle-tbl-col-filter label {
+	font-size: x-small;
+}
+/* Modal table for table cols */
+.modal-table-cols {
+	font-size: small;
+	width: 100%;	
+}
+/* Align left */
+.modal-table-cols label {
+	display: block;
+}
+/* Spectra search */
+	/* Align left */
+	.search-peakrow div {
+		height: 60px;
+	}
+	/**/
+	.spectra-search-tbl ul {
+		list-style-type: none;
+	}
+	#spectra-search-tbl-cutoff input[type="number"] {
+		max-width: 90px;
+	}
+/* Add sqlite */
+.form-add-sqlite ul {
+	list-style-type: none !important;
+	margin: 0px 0px 20px 0px ;
+	padding: 7px 5px 7px 5px ;
+}
+.form-add-sqlite ul li {
+	display: inline ;
+	padding: 0px 3px 0px 3px ;
+}
+/* everywhere */
+.toggle-display {
+	display: none !important;
+}
+label, select, input {
+	cursor: pointer;
+}
+.ul-radios li {
+	display: inline;
+	padding: 8px;
+}
+.ul-radios ul {
+	list-style-type: none !important;
+	margin: 0px 0px 20px 0px ;
+	padding: 7px 5px 7px 5px ;
+}
+/* Override django-autocomplete-light */
+.dal-form label {
+	display: block !important;
+}
+
+
+
+
+
+

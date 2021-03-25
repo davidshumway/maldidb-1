@@ -10,8 +10,8 @@
 
 ## Docker install with docker-compose
 ```bash
- git clone https://github.com/davidshumway/maldidb
- cd ./maldidb/
+ git clone https://github.com/idbac/maldidb
+ cd ./mdb/
  # Use project.env.template to create project.env
  cp project.env.template project.env
 ```
@@ -26,12 +26,7 @@ Edit project.env to include the following:
     DATABASE_PORT=5432
     SECRET_KEY=<any key>
 
-Update docker-compose.yaml to point to R01 data files, if present, or
-remove the R01 volume, if not present:
-
-```bash
-  - /home/ubuntu/r01data:/home/app/r01data/
-```
+Add R01 data files, if present, to the `./r01data` folder.
 
 Finally, build and run the project:
 
@@ -60,8 +55,8 @@ builds should complete within 15-30 seconds.
 
 ### Clone repository and start a test server
 ```bash
- git clone https://github.com/davidshumway/maldidb
- cd ./maldidb
+ git clone https://github.com/idbac/maldidb
+ cd ./mdb
  # Use project.env.template to create project.env
  # and input settings used in psql. 
  # DATABASE_HOST should be set to "localhost"
@@ -73,14 +68,14 @@ builds should complete within 15-30 seconds.
  sudo pip3 install virtualenv
  virtualenv venv -p python3
  source venv/bin/activate
- cd ./maldidb
+ cd ./mdb
  pip install -r requirements.txt
  # Run server
  python manage.py makemigrations
  python manage.py migrate
 ```
 
-In `maldidb/soMedia/settings.py`, set `Debug = False`.
+In `mdb/mdb/settings.py`, set `Debug = False`.
 
 Execute `python manage.py runserver` to run the project.
 The site should now be available in a browser at `http://localhost:8000/`.

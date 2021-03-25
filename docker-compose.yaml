@@ -23,9 +23,9 @@ services:
      - ./rplumber:/app:z
   web:
     container_name: django
-    build: maldidb/
+    build: mdb/
     command: >
-      gunicorn soMedia.wsgi:application --bind 0.0.0.0:8000 --workers=4 --timeout 1000
+      gunicorn mdb.wsgi:application --bind 0.0.0.0:8000 --workers=4 --timeout 1000
     env_file:
       - project.env
     expose:

@@ -13,4 +13,4 @@ build:
 run:
 
 	docker run -it --rm heroku-docker-r-example:$(APP)
-	web: gunicorn soMedia.wsgi -
+	web: gunicorn maldidb.wsgi -
