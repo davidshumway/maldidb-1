@@ -394,7 +394,6 @@ def add_sqlite(request):
   
 @login_required
 def add_labgroup(request):
-  
   if request.method == 'POST':
     form = AddLabGroupForm(request.POST, request.FILES)
     if form.is_valid():
@@ -411,7 +410,6 @@ def add_labgroup(request):
   
 @login_required
 def add_post(request):
-  
   if request.method == 'POST':
     form = SpectraForm(request.POST, request.FILES)
     if form.is_valid():
@@ -455,7 +453,6 @@ def simple_list(request):
   queryset = Library.objects.all()
   table = SimpleTable(queryset)
   return render(request, 'chat/simple_list.html', {'table': table})
-
 
 
 from django_tables2 import MultiTableMixin
@@ -599,8 +596,6 @@ class LibCollapseListView(MultiTableMixin, TemplateView):
       ]
       return self.queryset
 
-    
-    
 def preview_collapse_lib(request):
   '''Preview collapse of library's replicates'''
   
@@ -1216,40 +1211,7 @@ def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
       
       'max_mass': row[6],
       'min_mass': row[7],
-      'ignore': row[8],
-      'number': row[9],
-      'time_delay': row[10],
-      'time_delta': row[11],
-      'calibration_constants': row[12],
-      'v1_tof_calibration': row[13],
-      'data_type': row[14],
-      'data_system': row[15],
-      'spectrometer_type': row[16],
-      'inlet': row[17],
-      'ionization_mode': row[18],
-      'acquisition_method': row[19],
-      'acquisition_date': row[20],
-      'acquisition_mode': row[21],
-      'tof_mode': row[22],
-      'acquisition_operator_mode': row[23],
-      'laser_attenuation': row[24],
-      'digitizer_type': row[25],
-      'flex_control_version': row[26],
-      'cId': row[27],
-      'instrument': row[28],
-      'instrument_id': row[29],
-      'instrument_type': row[30],
-      'mass_error': row[31],
-      'laser_shots': row[32],
-      'patch': row[33],
-      'path': row[34],
-      'laser_repetition': row[35],
-      'spot': row[36],
-      'spectrum_type': row[37],
-      'target_count': row[38],
-      'target_id_string': row[39],
-      'target_serial_number': row[40],
-      'target_type_number': row[41],
+      'spot': row[36]
     }
     
     # Sanity check ("na" or "nan"): Skip this row.

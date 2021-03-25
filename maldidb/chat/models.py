@@ -449,70 +449,19 @@ class Spectra(AbstractSpectra):
   
   max_mass = models.IntegerField(blank = True, null = True)
   min_mass = models.IntegerField(blank = True, null = True)
-  ignore = models.IntegerField(blank = True, null = True)
-  number = models.IntegerField(blank = True, null = True)  
-  time_delay = models.IntegerField(blank = True, null = True)
-  time_delta = models.DecimalField(max_digits = 30, decimal_places = 20, blank = True, null = True)
-  calibration_constants = models.TextField(blank = True, null = True)
-  v1_tof_calibration = models.TextField(blank = True, null = True)
-  data_type = models.CharField(max_length = 255, blank = True, null = True)
-  data_system = models.CharField(max_length = 255, blank = True, null = True)
-  spectrometer_type = models.CharField(max_length = 255, blank = True, null = True)
-  inlet = models.CharField(max_length = 255, blank = True, null = True)
-  ionization_mode = models.CharField(max_length = 255, blank = True, null = True)
-  acquisition_method = models.CharField(max_length = 255, blank = True, null = True)
-  # ~ acquisition_date = models.DateTimeField(auto_now_add = False)
   acquisition_date = models.CharField(max_length = 255, blank = True, null = True)
   acquisition_mode = models.CharField(max_length = 255, blank = True, null = True)
   
-  tof_mode = models.CharField(
-    max_length = 255,
-    choices = [
-      ('REFLECTOR', 'Reflector'),
-      ('LINEAR', 'Linear'),
-    ],
-    blank = True, null = True 
-    # ~ default = 'LINEAR',
-  )
-  # ~ tof_mode = models.CharField(max_length = 255, blank = True, null = True)
+  # ~ tof_mode = models.CharField(
+    # ~ max_length = 255,
+    # ~ choices = [
+      # ~ ('REFLECTOR', 'Reflector'),
+      # ~ ('LINEAR', 'Linear'),
+    # ~ ],
+    # ~ blank = True, null = True 
+  # ~ )
   
-  acquisition_operator_mode = models.CharField(max_length = 255, blank = True, null = True)
-  laser_attenuation = models.IntegerField(blank = True, null = True)
-  digitizer_type = models.CharField(max_length = 255, blank = True, null = True)
-  flex_control_version = models.CharField(max_length = 255, blank = True, null = True)
-  cId = models.CharField(max_length = 255, blank = True, null = True) # appears to be a key to another table ???
-  instrument = models.CharField(max_length = 255, blank = True, null = True)
-  instrument_id = models.CharField(max_length = 255, blank = True, null = True)
-  instrument_type = models.CharField(max_length = 255, blank = True, null = True)
-  mass_error = models.DecimalField(max_digits = 30, decimal_places = 20, blank = True, null = True)
-  laser_shots = models.IntegerField(blank = True, null = True)
-  patch = models.CharField(max_length = 255, blank = True, null = True)
-  path = models.CharField(max_length = 255, blank = True, null = True)
-  laser_repetition = models.DecimalField(max_digits = 20, decimal_places = 6, blank = True, null = True)
   spot = models.CharField(max_length = 255, blank = True, null = True)
-  spectrum_type = models.CharField(max_length = 255, blank = True, null = True)
-  target_count = models.DecimalField(max_digits = 10, decimal_places = 4, blank = True, null = True)
-  target_id_string = models.CharField(max_length = 255, blank = True, null = True)
-  target_serial_number = models.CharField(max_length = 255, blank = True, null = True)
-  target_type_number = models.CharField(max_length = 255, blank = True, null = True)
-  
-  
-    
-  # Peaks/Intens.
-  # In the format of comma-separated fields: "peak1,peak2,...,peakN"
-  
-  #peaks = models.TextField(blank = True)
-  #intensities = models.TextField(blank = True)
-  #testField = models.TextField(blank = True)
-  #spectraID = models.CharField(
-  #  max_length = 100, blank = True, unique = True, default = uuid.uuid4)
-  
-  # Todo
-  # foreign key to Metadata?
-  #strain_id = models.TextField(blank = True)
-  # Todo
-  # foreign key to XML?
-  #xml_hash = models.TextField(blank = True) 
   
   class Meta:
     indexes = [

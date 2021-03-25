@@ -10,7 +10,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - postgres-data1:/var/lib/postgresql/data1
+      - postgres-data1:/var/lib/postgresql/data1:z
   plumber:
     build: ./rplumber/
     command: /app/plumber.R
@@ -20,7 +20,7 @@ services:
     ports:
      - 7002:8000
     volumes:
-     - ./rplumber:/app
+     - ./rplumber:/app:z
   web:
     container_name: django
     build: maldidb/
@@ -34,8 +34,8 @@ services:
       - db
       - plumber
     volumes:
-      - staticfiles:/home/app/web/static/
-      - /home/ubuntu/r01data:/home/app/r01data/
+      - staticfiles:/home/app/web/static/:z
+      - ./r01data:/home/app/r01data/:z
   nginx:
     container_name: nginx
     image: nginx #####:mainline-alpine
@@ -43,17 +43,12 @@ services:
     ports:
       - 80:80
     volumes:
-      - ./nginx:/etc/nginx/conf.d
-      - staticfiles:/home/app/web/static/
+      - ./nginx:/etc/nginx/conf.d:z
+      - staticfiles:/home/app/web/static/:z
     depends_on:
       - web
       - db
       - plumber
-  #  dns:
-  #    - 8.8.8.8
-  #    - 4.4.4.4
-  #    - 128.31.28.11 
-    #  - 192.168.9.45
 
 volumes:
   postgres-data1:
