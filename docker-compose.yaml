@@ -12,6 +12,7 @@ services:
     volumes:
       - postgres-data1:/var/lib/postgresql/data1:z
   plumber:
+    container_name: rplumber
     build: ./rplumber/
     command: /app/plumber.R
     restart: always
@@ -23,32 +24,33 @@ services:
      - ./rplumber:/app:z
   web:
     container_name: django
-    build: mdb/
+    build: ./mdb/
     command: >
-      gunicorn mdb.wsgi:application --bind 0.0.0.0:8000 --workers=4 --timeout 1000
+      gunicorn mdb.wsgi:application --bind 0.0.0.0:8000 --workers=4 --timeout 1000 --access-logfile -
     env_file:
-      - project.env
+     - project.env
     expose:
-      - 8000
+     - 8000
     depends_on:
-      - db
-      - plumber
+     - db
+     - plumber
     volumes:
-      - staticfiles:/home/app/web/static/:z
-      - ./r01data:/home/app/r01data/:z
+     - ./mdb:/home/app/web:z
+     - staticfiles:/home/app/web/static/:z
+     - ./r01data:/home/app/r01data/:z
   nginx:
     container_name: nginx
     image: nginx #####:mainline-alpine
     restart: always
     ports:
-      - 80:80
+     - 80:80
     volumes:
-      - ./nginx:/etc/nginx/conf.d:z
-      - staticfiles:/home/app/web/static/:z
+     - ./nginx:/etc/nginx/conf.d:z
+     - staticfiles:/home/app/web/static/:z
     depends_on:
-      - web
-      - db
-      - plumber
+     - web
+     - db
+     - plumber
 
 volumes:
   postgres-data1:

@@ -1,5 +1,3 @@
-# ~ from rpy2.robjects import r as R
-# ~ import rpy2.robjects as robjects
 import json
 from .models import Spectra
 
@@ -16,131 +14,6 @@ todo:
 -- show a plot of memory size and number of spectra being compared
 '''
 
-# ~ # process mzml file
-# ~ # 
-# ~ R('''
-  # ~ suppressPackageStartupMessages(library(IDBacApp))
-  # ~ preprocess <- function(f) {
-    # ~ f <- file.path(getwd(), paste0('media/', f))
-    # ~ mzML_con <- mzR::openMSfile(f, backend = "pwiz")
-    # ~ scanNumber <- nrow(mzR::header(mzML_con))
-    # ~ if (scanNumber != 1) { # collapse replicates ~~
-      # ~ #return(list('error' = paste('scan number is not one:', scanNumber)))
-    # ~ }
-    # ~ spectraImport <- mzR::peaks(mzML_con)
-    # ~ print('spectraImport1')
-    # ~ print(spectraImport)
-    # ~ spectraImport <- IDBacApp::spectrumMatrixToMALDIqaunt(spectraImport)
-    # ~ print('spectraImport2')
-    # ~ print(spectraImport)
-    # ~ # logical vector of maximum masses of mass vectors.
-    # ~ # True = small mol, False = protein
-    # ~ smallIndex <- unlist(lapply(spectraImport, function(x) max(x@mass)))
-    # ~ smallIndex <- smallIndex < smallRangeEnd
-    # ~ env1 <- FALSE
-    # ~ env2 <- FALSE
-    # ~ if (any(smallIndex)) {
-      # ~ env_sm <- IDBacApp::processXMLIndSpectra(
-        # ~ spectraImport = spectraImport,
-        # ~ smallOrProtein = "small",
-        # ~ index = smallIndex)
-    # ~ }
-    # ~ if (any(!smallIndex)) {
-      # ~ env_pr <- IDBacApp::processXMLIndSpectra(
-        # ~ spectraImport = spectraImport,
-        # ~ smallOrProtein = "protein",
-        # ~ index = !smallIndex)
-    # ~ }
-    # ~ print('env')
-    # ~ print(env1)
-    # ~ print(env2)
-    # ~ return(list('env_sm' = env1, 'env_pr' = env2))
-  # ~ }
-# ~ ''')
-
-# ~ # collapse
-# ~ R('''
-  # ~ collapseReplicates <- function(checkedPool,
-                                 # ~ sampleIDs,
-                                 # ~ peakPercentPresence,
-                                 # ~ lowerMassCutoff,
-                                 # ~ upperMassCutoff, 
-                                 # ~ minSNR, 
-                                 # ~ tolerance = 0.002,
-                                 # ~ protein) {
-    
-    # ~ validate(need(is.numeric(peakPercentPresence), "peakPercentPresence not numeric"))
-    # ~ validate(need(is.numeric(lowerMassCutoff), "lowerMassCutoff not numeric"))
-    # ~ validate(need(is.numeric(upperMassCutoff), "upperMassCutoff not numeric"))
-    # ~ validate(need(is.numeric(minSNR), "minSNR not numeric"))
-    # ~ validate(need(is.numeric(tolerance), "tolerance not numeric"))
-    # ~ validate(need(is.logical(protein), "protein not logical"))
-    
-    # ~ #temp <- IDBacApp::getPeakData(checkedPool = checkedPool,
-    # ~ #                              sampleIDs = sampleIDs,
-    # ~ #                              protein = protein) 
-    # ~ # getPeakData::
-    # ~ temp <- lapply(results__________,
-      # ~ function(x){
-        # ~ MALDIquant::createMassPeaks(
-          # ~ mass = x$mass,
-          # ~ intensity = x$intensity ,
-          # ~ snr = as.numeric(x$snr))
-      # ~ }
-    # ~ )
-
-    
-    
-    # ~ req(length(temp) > 0)
-    # ~ # Binning peaks lists belonging to a single sample so we can filter 
-    # ~ # peaks outside the given threshold of presence 
-    
-    # ~ for (i in 1:length(temp)) {
-      # ~ snr1 <-  which(MALDIquant::snr(temp[[i]]) >= minSNR)
-      # ~ temp[[i]]@mass <- temp[[i]]@mass[snr1]
-      # ~ temp[[i]]@snr <- temp[[i]]@snr[snr1]
-      # ~ temp[[i]]@intensity <- temp[[i]]@intensity[snr1]
-    # ~ }
-    
-    # ~ specNotZero <- sapply(temp, function(x) length(x@mass) > 0)
-    
-    # ~ # Only binPeaks if spectra(um) has peaks.
-    # ~ # see: https://github.com/sgibb/MALDIquant/issues/61 for more info 
-    # ~ # note: MALDIquant::binPeaks does work if there is only one spectrum
-    # ~ if (any(specNotZero)) {
-      
-      # ~ temp <- temp[specNotZero]
-      # ~ temp <- MALDIquant::binPeaks(temp,
-                                   # ~ tolerance = tolerance, 
-                                   # ~ method = c("strict")) 
-      
-      # ~ temp <- MALDIquant::filterPeaks(temp,
-                                      # ~ minFrequency = peakPercentPresence / 100) 
-      
-      # ~ temp <- MALDIquant::mergeMassPeaks(temp, 
-                                         # ~ method = "mean") 
-      # ~ temp <- MALDIquant::trim(temp,
-                               # ~ c(lowerMassCutoff,
-                                 # ~ upperMassCutoff))
-    # ~ } else {
-      # ~ temp <- MALDIquant::mergeMassPeaks(temp, 
-                                         # ~ method = "mean") 
-    # ~ }
-    
-    # ~ return(temp)
-  # ~ }
-  # ~ ''')
-
-# ~ R('''
-# ~ createMassSpectrum__ <- function(mass, intensity) {
-  # ~ MALDIquant::createMassSpectrum(mass, intensity)
-# ~ }
-# ~ createMassPeaks__ <- function(mass, intensity, snr) {
-  # ~ MALDIquant::createMassPeaks(
-    # ~ mass = mass, intensity = intensity, snr = as.numeric(snr)
-  # ~ )
-# ~ }
-# ~ ''')
 
 class SpectraScores():
   
@@ -169,9 +42,7 @@ class SpectraScores():
   def info(self):
     '''
     Use with process_form to output binPeaks data for inspection.
-    
-    -- example: e = l.rx2(1) # This is the R `[[`, so one-offset indexing
-    -- example: e = l.rx2('binnedPeaks')
+    -- .post to plumber not working??
     -- binPeaksInfo contains:
         list(
           'binnedPeaks' = binnedPeaks,
@@ -179,29 +50,38 @@ class SpectraScores():
           'cosineScores' = d
         )
     '''
-    from urllib import request, parse
-    p = {'ids': self.ids}
-    data = parse.urlencode(p).encode()
+    # urllib request does not work: requests "localhost" not "plumber" ??
+    from urllib import parse
+    data = {'ids': self.ids}
+    # ~ data = parse.urlencode(p).encode()
+    # ~ print(self.ids)
+    import requests
+    r = requests.get('http://plumber:8000/test')
+    # ~ print(r)
+    # ~ headers = {'Content-Type': 'application/json'} #http://
+    r = requests.post('http://plumber:8000/cosine', data = data
+    )
+    # ~ print(r)
+    #return r.json()
+    print(r.json())
+    # ~ print(json.loads(r.json()[0]))
+    return json.loads(r.json()[0])
+    
     req =  request.Request(
-      'http://128.31.25.32:7002/cosine/',
+      # ~ 'plumber:8000/cosine/',
+      'http://plumber:7002/cosine/',
+      # ~ 'http://plumber:8000/cosine/',
+      # ~ 'http://0.0.0.0:7002/cosine/',
+      # ~ 'http://128.31.25.32:7002/cosine/',
       data = data,
       # ~ method = 'GET')
       method = 'POST')
     req.add_header('Content-Type', 'application/json')
-    print(req)
+    #print(req)
+    #return
     resp = request.urlopen(req)
     #print(resp)
     return json.loads(resp)
-
-    # ~ import requests
-    # ~ headers = {'Content-Type': 'application/json'}
-    # ~ payload = {'ids': self.ids}
-    # ~ r = requests.post(
-      # ~ 'http://127.0.0.1:7002/cosine/',
-      # ~ data = payload, headers = headers, verify = False
-    # ~ )
-    # ~ return r.json() # built-in requests method
-    
     
   def process_form(self):
     n = Spectra.objects.all()
@@ -233,131 +113,4 @@ class SpectraScores():
     ## bin
     ## return self.bin_peaks()
       
-# ~ # bin
-# ~ R('''
-  # ~ showMem <- function() {
-    # ~ print('x')
-    # ~ for (itm in ls()) { 
-      # ~ print(formatC(c(itm, object.size(get(itm))), 
-          # ~ format="d", 
-          # ~ big.mark=",", 
-          # ~ width=30), 
-          # ~ quote=F)
-    # ~ }
-  # ~ }
-  # ~ binPeaks <- function(allPeaks, allSpectra) {
-    # ~ showMem()
-    # ~ # Only scores in first row are relevant, i.e., input spectra
-    # ~ # Finally, order the row by score decreasing
-    # ~ binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
-    # ~ # ram issue here:
-    # ~ featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
-    # ~ showMem()
-    
-    # ~ d <- stats::as.dist(coop::tcosine(featureMatrix))
-    # ~ d <- as.matrix(d)
-    # ~ d <- round(d, 3)
-    
-    # ~ # Reorder later
-    # ~ #d <- d[,order(d[,1],decreasing = T)]
-    
-    # ~ # Discard symmetric part of matrix
-    # ~ d[lower.tri(d, diag = FALSE)] <- NA
-    # ~ print(d[2,])
-    
-    # ~ d <- d[1,] # first row
-  # ~ }
-  # ~ binPeaksInfo <- function(allPeaks, allSpectra) {
-    # ~ #library(jsonlite)
-    # ~ # bp: a list of MassPeaks objects
-    # ~ binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
-    # ~ featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
-    # ~ d <- stats::as.dist(coop::tcosine(featureMatrix))
-    # ~ d <- as.matrix(d)
-    # ~ d <- round(d, 3)
-    # ~ ut <- d
-    # ~ ut[lower.tri(ut, diag = FALSE)] <- NA
-    # ~ n <- list(
-      # ~ "binnedPeaks" = binnedPeaks,
-      # ~ "featureMatrix" = featureMatrix,
-      # ~ "cosineScores" = d,
-      # ~ "cosineScoresUt" = ut
-    # ~ )
-    # ~ #toJSON(n, pretty = FALSE)
-    # ~ #return()
-  # ~ }
-  
-  # ~ # heatmap code
-  # ~ binSpectraOLD <- function() {
-    # ~ binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
-    # ~ featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
-    
-    
-    # ~ # Utilizing: github.com/strejcem/MALDIvs16S/blob/master/R/MALDIbacteria.R
-    
-    # ~ # IDBac: stats::as.dist(1 - coop::tcosine(data))
-    # ~ d <- stats::as.dist(coop::tcosine(featureMatrix))
-    
-    # ~ x <- as.matrix(d)
-    # ~ x <- round(x, 2)
-    # ~ #print('d')
-    # ~ #print(d)
-    
-    # ~ #jpeg(file = "test.jpg", quality = 100, width = 2000, height = 2000)
-    # ~ png(file = "test.png", width = 3000, height = 3000, res = 300, pointsize = 6)
-    # ~ heatmap(x, symm = FALSE, Colv = NA, Rowv = NA) #, col = palette, symm = TRUE)
-    # ~ dev.off()
-    
-    # ~ # small section
-    # ~ png(file = "test-sm.png", width = 1000, height = 1000, res = 300, pointsize = 6)
-    # ~ heatmap(x[1:16,1:16], symm = FALSE, Colv = NA, Rowv = NA) #, col = palette, symm = TRUE)
-    # ~ dev.off()
-    
-    # ~ library(gplots)
-    # ~ png(file = "test2-sm.png", width = 1200, height = 1200, res = 300, pointsize = 6)
-    # ~ gplots::heatmap.2(x[1:16,1:16], symm = FALSE, Colv = NA, Rowv = NA, cellnote = x[1:16,1:16], notecex = 0.5, trace = "none")
-    # ~ dev.off()
-    
-    # ~ png(file = "test2-med.png", width = 1200, height = 1200, res = 300, pointsize = 6)
-    # ~ gplots::heatmap.2(x[1:32,1:32], symm = FALSE, Colv = NA, Rowv = NA, cellnote = x[1:32,1:32], notecex = 0.5, trace = "none")
-    # ~ dev.off()
-    
-    # ~ png(file = "test3-sm.png", width = 1200, height = 1200, res = 300, pointsize = 6)
-    # ~ y <- x
-    # ~ y[lower.tri(x, diag = FALSE)] <- NA
-    # ~ gplots::heatmap.2(y[1:16,1:16], symm = FALSE, Colv = NA, Rowv = NA, cellnote = y[1:16,1:16], notecex = 0.5, trace = "none")
-    # ~ dev.off()
-    
-    # ~ png(file = "test3-med.png", width = 1200, height = 1200, res = 300, pointsize = 6)
-    # ~ y <- x
-    # ~ y[lower.tri(x, diag = FALSE)] <- NA
-    # ~ gplots::heatmap.2(y[1:32,1:32], symm = FALSE, Colv = NA, Rowv = NA, cellnote = y[1:32,1:32], notecex = 0.5, trace = "none")
-    # ~ dev.off()
-    
-    # ~ png(file = "test3-full.png", width = 3000, height = 3000, res = 300, pointsize = 6)
-    # ~ y <- x
-    # ~ y[lower.tri(x, diag = FALSE)] <- NA
-    # ~ gplots::heatmap.2(y, symm = FALSE, Colv = NA, Rowv = NA, trace = "none")
-    # ~ dev.off()
-    
-    
-    # ~ png(file = "test4-sm.png", width = 1200, height = 1200, res = 300, pointsize = 6)
-    # ~ y <- x
-    # ~ y[y == 0] <- 1
-    # ~ gplots::heatmap.2(y[1:16,1:16], symm = FALSE, cellnote = y[1:16,1:16], notecex = 0.5, trace = "none")
-    # ~ dev.off()
-    
-    # ~ png(file = "test4-med.png", width = 1200, height = 1200, res = 300, pointsize = 6)
-    # ~ y <- x
-    # ~ y[y == 0] <- 1
-    # ~ gplots::heatmap.2(y[1:32,1:32], symm = FALSE, cellnote = y[1:32,1:32], notecex = 0.5, trace = "none")
-    # ~ dev.off()
-    
-    # ~ png(file = "test4-full.png", width = 3000, height = 3000, res = 300, pointsize = 6)
-    # ~ y <- x
-    # ~ y[y == 0] <- 1
-    # ~ gplots::heatmap.2(y, symm = FALSE, trace = "none")
-    # ~ dev.off()
-    
-  # ~ }
-# ~ ''')
+

@@ -183,21 +183,23 @@ def preprocess_mzml(file, user_task):
     e.g., see the article: "Django Anti-Patterns: Signals"
 
   '''
-  result = R['preprocess'](file)
-  #print(f'pp result{result}')
-  if result.rx2('error'):
-    user_task.statuses.add(
-      UserTaskStatus.objects.create(
-        status = 'error', extra = result.rx2('error'),
-        user_task = user_task
-    ))
-    user_task.statuses.add(
-      UserTaskStatus.objects.create(
-        status = 'complete', user_task = user_task
-    ))
+  pass
+  
+  # ~ result = R['preprocess'](file)
+  # ~ #print(f'pp result{result}')
+  # ~ if result.rx2('error'):
+    # ~ user_task.statuses.add(
+      # ~ UserTaskStatus.objects.create(
+        # ~ status = 'error', extra = result.rx2('error'),
+        # ~ user_task = user_task
+    # ~ ))
+    # ~ user_task.statuses.add(
+      # ~ UserTaskStatus.objects.create(
+        # ~ status = 'complete', user_task = user_task
+    # ~ ))
   
   #if result
-  #
+  
   
 
 def ajax_upload(request):
@@ -218,6 +220,7 @@ def ajax_upload(request):
       form.request = request # pass request to save() method
       form.save()
       if form.cleaned_data['preprocess'] == True:
+        # optional new thread to preprocess
         t = UserTask.objects.create(
           owner = request.user,
           task_description = 'preprocess'
@@ -226,11 +229,9 @@ def ajax_upload(request):
           status = 'start', user_task = t))
         preprocess_mzml(str(form.instance.file), t)
         return JsonResponse({'status': 'preprocessing'}, status=200)
-      else:
-        return JsonResponse({'status': 'ready'}, status=200)
-      # optional new thread to preprocess
       # add to library
       
+      return JsonResponse({'status': 'ready'}, status=200)
     else:
       print('invalid form')
       e = form.errors.as_json()
@@ -680,7 +681,8 @@ def view_cosine(request):
   if request.method == 'POST':
     form = ViewCosineForm(request.POST, request.FILES)
     if form.is_valid():
-      sc = SpectraScores(form).info()      
+      sc = SpectraScores(form).info()
+      #print(sc)
       return render(
         request,
         'chat/view_cosine.html',
