@@ -168,23 +168,16 @@ class MetadataAutocomplete(autocomplete.Select2QuerySetView):
 #-----------------------------------------------------------------------
 
 @start_new_thread
-def preprocess_mzml(file, user_task):
-  '''Run R methods to preprocess mzml file
-  
+def preprocess_file(file, user_task):
+  '''Run R methods to preprocess spectra file
   -- add Spectra and update UserFile
-  -- example: elt = l.rx2(1) # This is the R `[[`, so one-offset indexing
-  -- python docs!
-    Python signal handlers are always executed in the main Python thread,
-    even if the signal was received in another thread. This means that
-    signals can’t be used as a means of inter-thread communication. You
-    can use the synchronization primitives from the threading module
-    instead. Besides, only the main thread is allowed to set a new
-    signal handler.
-    e.g., see the article: "Django Anti-Patterns: Signals"
-
-  '''
-  pass
   
+  '''
+  print(f'preprocess file{file}')
+  import requests
+  data = {'file': file}
+  r = requests.get('http://plumber:8000/preprocess', params = data)
+  # ~ pass
   # ~ result = R['preprocess'](file)
   # ~ #print(f'pp result{result}')
   # ~ if result.rx2('error'):
@@ -227,7 +220,7 @@ def ajax_upload(request):
         )
         t.statuses.add(UserTaskStatus.objects.create(
           status = 'start', user_task = t))
-        preprocess_mzml(str(form.instance.file), t)
+        preprocess_file(str(form.instance.file), t)
         return JsonResponse({'status': 'preprocessing'}, status=200)
       # add to library
       

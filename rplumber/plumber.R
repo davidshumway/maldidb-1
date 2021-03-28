@@ -2,6 +2,9 @@
 #* $ curl -H "Content-Type: application/json" --data '{"ids":[1,2,3]}'
 #*   http://localhost:8000/sum
 
+suppressPackageStartupMessages(library(IDBacApp))
+require('RPostgreSQL')
+
 #* Echo
 #*
 #* @get /test
@@ -13,7 +16,6 @@ function() {
 
 #* Return driver and connection
 connect <- function() {
-  require('RPostgreSQL')
   # env variables
   POSTGRES_USER <- Sys.getenv('POSTGRES_USER')
   POSTGRES_PASSWORD <- Sys.getenv('POSTGRES_PASSWORD')
@@ -43,7 +45,7 @@ print.data.frame <- function (
       if (is.character(xx))
         paste0(substr(xx, 1, maxchar), '...')
       else if (is.list(xx))
-        xx #paste0(substr(xx, 1, maxchar), '...')
+        xx
       else xx
     })
   )
@@ -142,22 +144,20 @@ function(req, id, ids) {
 }
 
 #* Cosine: Get cosine scores for a set of db spectra
-#*  -- ids must correlate to at least 2 rows
+#* -- ids must correlate to at least 2 rows
 #* @param req Built-in
 #* @param ids List of IDs from Spectra table
 #* @post /cosine
 function(req, ids) {
   print('got ids')
   print(ids)
-  print(class(ids))
+  print(class(ids)) # character
 #~   if (class(ids) != 'integer') {
-#~     stop('not an integer (ids)!') # stop throws 500
+#~     stop('not an integer (ids)!')
 #~   }
-  print('in?')
   if (length(ids) < 2) {
     stop('less than two comparison ids given!')
   }
-  print('in2?')
   
   c <- connect()
   s <- paste(unlist(ids), collapse = ',')
@@ -167,7 +167,7 @@ function(req, ids) {
   q <- dbGetQuery(c$con, s)
   if (nrow(q) < 2) {
     disconnect(c$drv, c$con)
-    stop('database returned less than two rows (spectra)!')
+    stop('database returned less than two spectra!')
   }
   
   allSpectra = list()
@@ -188,160 +188,153 @@ function(req, ids) {
     )
   }
   
-  print('made mq')
-  
   binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
   featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
   
-  print('ran mq')
-  
-#~   stop('d')
   d <- stats::as.dist(coop::tcosine(featureMatrix))
   d <- as.matrix(d)
   d <- round(d, 3)
   dfull <- d
   d[lower.tri(d, diag = FALSE)] <- NA # Discard symmetric part
-#~   stop('d')
   disconnect(c$drv, c$con)
   
-  print('returning')
-  
   library(jsonlite)
-  a <- list(
-    'ids' = ids#,
-#~     'allPeaks' = allPeaks,
-#~     'allSpectra' = allSpectra,
-#~     'binnedPeaks' = binnedPeaks,
-#~     'featureMatrix' = featureMatrix,
-#~     'cosineScores' = dfull,
-#~     'cosineScoresUt' = d
+  a <- list( # capture output helpful for serializing S4 class
+    'ids' = ids,
+    'allPeaks' = capture.output(allPeaks),
+    'allSpectra' = capture.output(allSpectra),
+    'binnedPeaks' = capture.output(binnedPeaks),
+    'featureMatrix' = capture.output(featureMatrix),
+    'cosineScores' = capture.output(dfull),
+    'cosineScoresUt' = capture.output(d)
   )
-#### jsonlite::toJSON(a) # simply returning the list or toJSON of list 
-                         # =exception: "No method for S4 class:MassPeaks"
-  jsonlite::serializeJSON(a)
-  
-#~   stop('d')
+  jsonlite::toJSON(a)
 }
 
+#* Preprocess: Preprocess spectra files
+#* @param file File path to preprocess
+#* @get /preprocess
+preprocess <- function(file) {
+  print(getwd())
+  f <- file.path(paste0("/home/app/web/", file))
+  
+#~   f <- file.path(getwd(), paste0('media/', f))
+  mzML_con <- mzR::openMSfile(f, backend = "pwiz")
+  scanNumber <- nrow(mzR::header(mzML_con))
+  print('scanNumber')
+  print(scanNumber)
+  
+  if (scanNumber != 1) { # collapse replicates ~~
+   #return(list('error' = paste('scan number is not one:', scanNumber)))
+   
+   
+  }
+  spectraImport <- mzR::peaks(mzML_con)
+  print('spectraImport1')
+  print(spectraImport)
+  
+  spectraImport <- IDBacApp::spectrumMatrixToMALDIqaunt(spectraImport)
+  print('spectraImport2')
+  print(spectraImport)
+  
+  # logical vector of maximum masses of mass vectors.
+  # True = small mol, False = protein
+  smallIndex <- unlist(lapply(spectraImport, function(x) max(x@mass)))
+  smallIndex <- smallIndex < smallRangeEnd
+  env1 <- FALSE
+  env2 <- FALSE
+  if (any(smallIndex)) {
+   env_sm <- IDBacApp::processXMLIndSpectra(
+     spectraImport = spectraImport,
+     smallOrProtein = "small",
+     index = smallIndex)
+  }
+  if (any(!smallIndex)) {
+   env_pr <- IDBacApp::processXMLIndSpectra(
+     spectraImport = spectraImport,
+     smallOrProtein = "protein",
+     index = !smallIndex)
+  }
+  print('env')
+  print(env1)
+  print(env2)
+  return(list('env_sm' = env1, 'env_pr' = env2))
+}
 
+collapseReplicates <- function() {
+#~     checkedPool,
+#~     sampleIDs,
+#~     peakPercentPresence,
+#~     lowerMassCutoff,
+#~     upperMassCutoff, 
+#~     minSNR, 
+#~     tolerance = 0.002,
+#~     protein
+
+  validate(need(is.numeric(peakPercentPresence), "peakPercentPresence not numeric"))
+  validate(need(is.numeric(lowerMassCutoff), "lowerMassCutoff not numeric"))
+  validate(need(is.numeric(upperMassCutoff), "upperMassCutoff not numeric"))
+  validate(need(is.numeric(minSNR), "minSNR not numeric"))
+  validate(need(is.numeric(tolerance), "tolerance not numeric"))
+  validate(need(is.logical(protein), "protein not logical"))
+
+  #temp <- IDBacApp::getPeakData(checkedPool = checkedPool,
+  #                              sampleIDs = sampleIDs,
+  #                              protein = protein) 
+  # getPeakData::
+  temp <- lapply(temp,
+   function(x){
+     MALDIquant::createMassPeaks(
+       mass = x$mass,
+       intensity = x$intensity ,
+       snr = as.numeric(x$snr))
+   }
+  )
+
+  req(length(temp) > 0)
+  # Binning peaks lists belonging to a single sample so we can filter 
+  # peaks outside the given threshold of presence 
+
+  for (i in 1:length(temp)) {
+   snr1 <-  which(MALDIquant::snr(temp[[i]]) >= minSNR)
+   temp[[i]]@mass <- temp[[i]]@mass[snr1]
+   temp[[i]]@snr <- temp[[i]]@snr[snr1]
+   temp[[i]]@intensity <- temp[[i]]@intensity[snr1]
+  }
+
+  specNotZero <- sapply(temp, function(x) length(x@mass) > 0)
+
+  # Only binPeaks if spectra(um) has peaks.
+  # see: https://github.com/sgibb/MALDIquant/issues/61 for more info 
+  # note: MALDIquant::binPeaks does work if there is only one spectrum
+  if (any(specNotZero)) {
+
+   temp <- temp[specNotZero]
+   temp <- MALDIquant::binPeaks(temp,
+                                tolerance = tolerance, 
+                                method = c("strict")) 
+
+   temp <- MALDIquant::filterPeaks(temp,
+                                   minFrequency = peakPercentPresence / 100) 
+
+   temp <- MALDIquant::mergeMassPeaks(temp, 
+                                      method = "mean") 
+   temp <- MALDIquant::trim(temp,
+                            c(lowerMassCutoff,
+                              upperMassCutoff))
+  } else {
+   temp <- MALDIquant::mergeMassPeaks(temp, 
+                                      method = "mean") 
+  }
+
+  return(temp)
+  }
 
 # --------------------
 # From rfn.py / Rpy2
 # --------------------
-# ~ # process mzml file
-# ~ # 
-# ~ R('''
-  # ~ suppressPackageStartupMessages(library(IDBacApp))
-  # ~ preprocess <- function(f) {
-    # ~ f <- file.path(getwd(), paste0('media/', f))
-    # ~ mzML_con <- mzR::openMSfile(f, backend = "pwiz")
-    # ~ scanNumber <- nrow(mzR::header(mzML_con))
-    # ~ if (scanNumber != 1) { # collapse replicates ~~
-      # ~ #return(list('error' = paste('scan number is not one:', scanNumber)))
-    # ~ }
-    # ~ spectraImport <- mzR::peaks(mzML_con)
-    # ~ print('spectraImport1')
-    # ~ print(spectraImport)
-    # ~ spectraImport <- IDBacApp::spectrumMatrixToMALDIqaunt(spectraImport)
-    # ~ print('spectraImport2')
-    # ~ print(spectraImport)
-    # ~ # logical vector of maximum masses of mass vectors.
-    # ~ # True = small mol, False = protein
-    # ~ smallIndex <- unlist(lapply(spectraImport, function(x) max(x@mass)))
-    # ~ smallIndex <- smallIndex < smallRangeEnd
-    # ~ env1 <- FALSE
-    # ~ env2 <- FALSE
-    # ~ if (any(smallIndex)) {
-      # ~ env_sm <- IDBacApp::processXMLIndSpectra(
-        # ~ spectraImport = spectraImport,
-        # ~ smallOrProtein = "small",
-        # ~ index = smallIndex)
-    # ~ }
-    # ~ if (any(!smallIndex)) {
-      # ~ env_pr <- IDBacApp::processXMLIndSpectra(
-        # ~ spectraImport = spectraImport,
-        # ~ smallOrProtein = "protein",
-        # ~ index = !smallIndex)
-    # ~ }
-    # ~ print('env')
-    # ~ print(env1)
-    # ~ print(env2)
-    # ~ return(list('env_sm' = env1, 'env_pr' = env2))
-  # ~ }
-# ~ ''')
 
-# ~ # collapse
-# ~ R('''
-  # ~ collapseReplicates <- function(checkedPool,
-                                 # ~ sampleIDs,
-                                 # ~ peakPercentPresence,
-                                 # ~ lowerMassCutoff,
-                                 # ~ upperMassCutoff, 
-                                 # ~ minSNR, 
-                                 # ~ tolerance = 0.002,
-                                 # ~ protein) {
-    
-    # ~ validate(need(is.numeric(peakPercentPresence), "peakPercentPresence not numeric"))
-    # ~ validate(need(is.numeric(lowerMassCutoff), "lowerMassCutoff not numeric"))
-    # ~ validate(need(is.numeric(upperMassCutoff), "upperMassCutoff not numeric"))
-    # ~ validate(need(is.numeric(minSNR), "minSNR not numeric"))
-    # ~ validate(need(is.numeric(tolerance), "tolerance not numeric"))
-    # ~ validate(need(is.logical(protein), "protein not logical"))
-    
-    # ~ #temp <- IDBacApp::getPeakData(checkedPool = checkedPool,
-    # ~ #                              sampleIDs = sampleIDs,
-    # ~ #                              protein = protein) 
-    # ~ # getPeakData::
-    # ~ temp <- lapply(results__________,
-      # ~ function(x){
-        # ~ MALDIquant::createMassPeaks(
-          # ~ mass = x$mass,
-          # ~ intensity = x$intensity ,
-          # ~ snr = as.numeric(x$snr))
-      # ~ }
-    # ~ )
 
-    
-    
-    # ~ req(length(temp) > 0)
-    # ~ # Binning peaks lists belonging to a single sample so we can filter 
-    # ~ # peaks outside the given threshold of presence 
-    
-    # ~ for (i in 1:length(temp)) {
-      # ~ snr1 <-  which(MALDIquant::snr(temp[[i]]) >= minSNR)
-      # ~ temp[[i]]@mass <- temp[[i]]@mass[snr1]
-      # ~ temp[[i]]@snr <- temp[[i]]@snr[snr1]
-      # ~ temp[[i]]@intensity <- temp[[i]]@intensity[snr1]
-    # ~ }
-    
-    # ~ specNotZero <- sapply(temp, function(x) length(x@mass) > 0)
-    
-    # ~ # Only binPeaks if spectra(um) has peaks.
-    # ~ # see: https://github.com/sgibb/MALDIquant/issues/61 for more info 
-    # ~ # note: MALDIquant::binPeaks does work if there is only one spectrum
-    # ~ if (any(specNotZero)) {
-      
-      # ~ temp <- temp[specNotZero]
-      # ~ temp <- MALDIquant::binPeaks(temp,
-                                   # ~ tolerance = tolerance, 
-                                   # ~ method = c("strict")) 
-      
-      # ~ temp <- MALDIquant::filterPeaks(temp,
-                                      # ~ minFrequency = peakPercentPresence / 100) 
-      
-      # ~ temp <- MALDIquant::mergeMassPeaks(temp, 
-                                         # ~ method = "mean") 
-      # ~ temp <- MALDIquant::trim(temp,
-                               # ~ c(lowerMassCutoff,
-                                 # ~ upperMassCutoff))
-    # ~ } else {
-      # ~ temp <- MALDIquant::mergeMassPeaks(temp, 
-                                         # ~ method = "mean") 
-    # ~ }
-    
-    # ~ return(temp)
-  # ~ }
-  # ~ ''')
 
 # ~ R('''
 # ~ createMassSpectrum__ <- function(mass, intensity) {

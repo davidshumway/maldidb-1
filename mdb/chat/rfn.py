@@ -51,37 +51,20 @@ class SpectraScores():
         )
     '''
     # urllib request does not work: requests "localhost" not "plumber" ??
-    from urllib import parse
+    #from urllib import parse
     data = {'ids': self.ids}
-    # ~ data = parse.urlencode(p).encode()
-    # ~ print(self.ids)
     import requests
-    r = requests.get('http://plumber:8000/test')
-    # ~ print(r)
-    # ~ headers = {'Content-Type': 'application/json'} #http://
-    r = requests.post('http://plumber:8000/cosine', data = data
-    )
-    # ~ print(r)
-    #return r.json()
-    print(r.json())
-    # ~ print(json.loads(r.json()[0]))
-    return json.loads(r.json()[0])
-    
-    req =  request.Request(
-      # ~ 'plumber:8000/cosine/',
-      'http://plumber:7002/cosine/',
-      # ~ 'http://plumber:8000/cosine/',
-      # ~ 'http://0.0.0.0:7002/cosine/',
-      # ~ 'http://128.31.25.32:7002/cosine/',
-      data = data,
-      # ~ method = 'GET')
-      method = 'POST')
-    req.add_header('Content-Type', 'application/json')
-    #print(req)
-    #return
-    resp = request.urlopen(req)
-    #print(resp)
-    return json.loads(resp)
+    r = requests.post('http://plumber:8000/cosine', data = data)
+    a = json.loads(json.loads(r.text)[0])
+    #print(a)
+    a['ids'] = json.dumps(a['ids'], indent = 2).replace('"','')
+    a['allPeaks'] = json.dumps(a['allPeaks'], indent = 2).replace('"','')
+    a['allSpectra'] = json.dumps(a['allSpectra'], indent = 2).replace('"','')
+    a['binnedPeaks'] = json.dumps(a['binnedPeaks'], indent = 2).replace('"','')
+    a['featureMatrix'] = json.dumps(a['featureMatrix'], indent = 2).replace('"','')
+    a['cosineScores'] = json.dumps(a['cosineScores'], indent = 2).replace('"','')
+    a['cosineScoresUt'] = json.dumps(a['cosineScoresUt'], indent = 2).replace('"','')
+    return a
     
   def process_form(self):
     n = Spectra.objects.all()
