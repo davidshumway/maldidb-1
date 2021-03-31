@@ -32,29 +32,14 @@ from django_tables2.views import SingleTableMixin
 from django_tables2 import SingleTableView
 import django_tables2 as tables
 
-
-# unused
-# ~ from django.contrib.auth import get_user_model
-# ~ User = get_user_model()
-
 # Distance measurement
 from sklearn.metrics.pairwise import cosine_similarity
-
-# R/json for binning
-# ~ from rpy2.robjects import r as R
-# ~ import rpy2.robjects as robjects
-# ~ print('loaded R')
-#import json
-#import asyncio
 
 # json and sqlite3 required for sqlite import
 import json
 import sqlite3
 
 # R
-# ~ from rpy2.robjects import r as R
-# ~ import rpy2.robjects as robjects
-# ~ #from .rfn import R, robjects, SpectraScores
 from .rfn import SpectraScores
 
 def start_new_thread(function):
@@ -129,39 +114,6 @@ class MetadataAutocomplete(autocomplete.Select2QuerySetView):
       ).order_by(self.view).distinct(self.view)
     return qs
 
-  #self.get_result_label(result),
-  # ~ def render_to_response(self, context):
-    # ~ """Return a JSON response in Select2 format."""
-    # ~ q = self.request.GET.get('q', None)
-    # ~ create_option = self.get_create_option(context, q)
-    # ~ return http.JsonResponse({
-      # ~ 'results': self.get_results(context) + create_option,
-      # ~ 'pagination': {
-        # ~ 'more': self.has_more(context)
-      # ~ }
-    # ~ })
-  
-  # ~ def label_from_instance(obj):
-    # ~ print(obj)
-    # ~ return obj.cKingdom
-  
-  # ~ def get_create_option(self, context, q):
-    ## ~ e.g.,
-    ## ~ gco {'paginator': <django.core.paginator.Paginator object at 0x7fc91f02dd90>, 'page_obj': <Page 1 of 297>, 'is_paginated': True, 'object_list': <QuerySet [<Metadata: 1002>, <Metadata: 1004>, <Metadata: 1007>, <Metadata: 1008>, <Metadata: 1009>, <Metadata: 1010>, <Metadata: 1011>, <Metadata: 1012>, <Metadata: 1013>, <Metadata: 1014>]>, 'results': <QuerySet [<Metadata: 1002>, <Metadata: 1004>, <Metadata: 1007>, <Metadata: 1008>, <Metadata: 1009>, <Metadata: 1010>, <Metadata: 1011>, <Metadata: 1012>, <Metadata: 1013>, <Metadata: 1014>]>, 'view': <chat.views.MetadataAutocomplete object at 0x7fc91f02de80>}
-    ## ~ gco b
-    ## ~ gco []
-    # ~ co = super(MetadataAutocomplete, self).get_create_option(context, q)
-    # ~ print(f'gco {context}')
-    # ~ print(f'gco {q}')
-    # ~ print(f'gco {co}')
-    # ~ return co
-  
-  # ~ def get_context_data(self, *args, **kwargs):
-    # ~ context = super().get_context_data(*args, **kwargs)
-    # ~ print(f'c:{context}')
-    # ~ print(f'c:{args}')
-    # ~ print(f'c:{kwargs}')
-    # ~ return context  
     
 #-----------------------------------------------------------------------
 # end autocomplete views
@@ -181,7 +133,6 @@ def preprocess_file(file, user_task):
   import os
   import shutil
   shutil.copyfile('/home/app/web/media/' + file, '/' + f1)
-
   
   import requests
   data = {'file': f1}
@@ -201,8 +152,6 @@ def preprocess_file(file, user_task):
     # ~ ))
   
   #if result
-  
-  
 
 def ajax_upload(request):
   '''
@@ -241,7 +190,6 @@ def ajax_upload(request):
   return JsonResponse({'errors': 'Empty request.'}, status=400)
   
 def user_task_status_profile(request, status_id):
-  
   uts = UserTaskStatus.objects.get(id = status_id)
   return render(
       request,
@@ -250,7 +198,6 @@ def user_task_status_profile(request, status_id):
   )
   
 def metadata_profile(request, strain_id):
-  
   md = Metadata.objects.get(strain_id = strain_id)
   return render(
       request,
@@ -259,7 +206,6 @@ def metadata_profile(request, strain_id):
   )
 
 def xml_profile(request, xml_hash):
-  
   xml = XML.objects.get(xml_hash = xml_hash)
   lab = LabGroup.objects.get(lab_name = xml.lab_name)
   return render(
@@ -269,7 +215,6 @@ def xml_profile(request, xml_hash):
   )
 
 def library_profile(request, library_id):
-  
   lib = Library.objects.get(id = library_id)
   lab = LabGroup.objects.get(lab_name = lib.lab_name)
   s = Spectra.objects.filter(library__exact = lib)
@@ -451,12 +396,10 @@ def add_comment(request, post_id):
     comment = form.save(Spectra.objects.get(id = post_id), request.user)
   return redirect(reverse('chat:home'))
 
-
 def simple_list(request):
   queryset = Library.objects.all()
   table = SimpleTable(queryset)
   return render(request, 'chat/simple_list.html', {'table': table})
-
 
 from django_tables2 import MultiTableMixin
 from django.views.generic.base import TemplateView
@@ -506,45 +449,7 @@ class LibCollapseListView(MultiTableMixin, TemplateView):
         'WHERE s.library_id = {} AND s.max_mass < 6000'
         'GROUP BY s.strain_id' \
         .format(form.cleaned_data['library'].id)
-      )
-      # ~ qs_pr = Spectra.objects.raw(
-        # ~ 'SELECT 1 as id, s.strain_id as "strain_id", '
-          # ~ 'COUNT(s.strain_id) AS "num_replicates" '
-        # ~ 'FROM chat_spectra s '
-        # ~ 'LEFT OUTER JOIN chat_metadata m '
-          # ~ 'ON (s.strain_id = m.id) '
-        # ~ 'WHERE s.library_id = {} AND s.max_mass < 6000'
-        # ~ 'GROUP BY s.strain_id' \
-        # ~ .format(form.cleaned_data['library'].id)
-      # ~ )
-      # 'COUNT(c.strain_id) as "num_collapsed" '
-      # 'LEFT OUTER JOIN chat_collapsedspectra c '
-      # 'ON (s.strain_id in c.strain_id)'
-      
-      # ~ qs = Metadata.objects.filter(
-        # ~ library__exact = form.cleaned_data['library']
-      # ~ )
-      # ~ qs_sm = qs.annotate('num_replicates' = Count(''))
-      
-      
-      # Works (pr) but doesn't retrieve value of strain_id (only col id)
-      # ~ qs = Spectra.objects.filter(
-        # ~ library__exact = form.cleaned_data['library']
-      # ~ )
-      # ~ qs_sm = qs.filter(max_mass__lt = 6000) \
-        # ~ .annotate(num_replicates = Count('strain_id')) \
-        # ~ .order_by('strain_id')
-      # ~ qs_pr = qs.filter(max_mass__gt = 6000) \
-        # ~ .values('strain_id') \
-        # ~ .annotate(num_replicates = Count('strain_id')) #\
-        #.values('strain_id__strain_id') \
-      # ~ qs_pr = qs.filter(max_mass__gt = 6000) \
-        # ~ .values('strain_id__strain_id') \
-        # ~ .annotate(num_replicates = Count('strain_id')) #\
-        # ~ #, num_replicates = Count('strain_id')) #\
-        # ~ #.values('strain_id')# \
-        # ~ #.annotate(strain_id = 'strain_id')
-        
+      ) 
         
       self.tables = [
         LibCollapseTable(qs_sm),
@@ -608,7 +513,6 @@ def preview_collapse_lib(request):
     # ~ )
   # ~ except Library.DoesNotExist:
     # ~ pass    
-  
   # ~ lib = Library.objects.get(id = lib_id)
   # ~ spectra = Spectra.objects.filter(library = lib)
   # ~ md = Metadata.objects.filter(library = lib)
@@ -631,7 +535,6 @@ def preview_collapse_lib(request):
   # ~ )
   
 class SearchResultsView(ListView):
-  
   model = Spectra
   template_name = 'chat/search_results.html'
   
@@ -684,7 +587,6 @@ def view_cosine(request):
     form = ViewCosineForm(request.POST, request.FILES)
     if form.is_valid():
       sc = SpectraScores(form).info()
-      #print(sc)
       return render(
         request,
         'chat/view_cosine.html',
@@ -700,7 +602,6 @@ class SpectraFilter(django_filters.FilterSet):
   library = django_filters.ModelMultipleChoiceFilter(
     queryset = Library.objects.all()
   )
-
   description = django_filters.CharFilter(lookup_expr = 'icontains')
 
   class Meta:
@@ -787,14 +688,6 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     
     return context
   
-  # ~ def get(self, *args, **kwargs):
-    # ~ resp = super().get(*args, **kwargs)
-    # ~ # print(f'get-args: {args}' ) # 
-    # ~ # print(f'get-kw: {kwargs}' ) # 
-    # ~ return resp
-  
-  # ~ def post(self, request, *args, **kwargs):
-
   def get_queryset(self, *args, **kwargs):
     '''
     -- Calling queryset.update does not update the model.
@@ -808,7 +701,6 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     
     if len(self.request.GET) == 0:
       return Spectra.objects.none()
-    
     # ~ print(f'gq-args: {args}' ) # 
     # ~ print(f'gq-kw: {kwargs}' ) # 
     # ~ print(f'gq-sr: {self.request}' ) # 
@@ -822,9 +714,6 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       print('invalid form')
       return self.queryset
     
-    # http://127.0.0.1:8000/search/?peak_mass = 1919%2C1939
-    # &peak_intensity = 1%2C2&peak_snr = 1%2C2&spectra_file = 
-    # &replicates = replicate&spectrum_cutoff = small&preprocessing = processed
     sm = form.cleaned_data['peak_mass'];
     si = form.cleaned_data['peak_intensity'];
     sn = form.cleaned_data['peak_snr'];
@@ -850,22 +739,11 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
           created_by = None
         )
       
-      #sc = SpectraScores()
-      #sc.append_spectra(sm, si, sn)
       search_id = obj.id
-      
-      # small and large molecules combined, or large only
-      # use GET query variables to adjust .filter()
       
       n = Spectra.objects.all()
       
-      # tof_mode (use min/max instead)
-      # ~ if scut == 'small':
-        # ~ n = n.filter(tof_mode__exact = 'REFLECTOR')
-      # ~ elif scut == 'protein': # protein
-        # ~ n = n.filter(tof_mode__exact = 'LINEAR')
-      # ~ else: # protein
-        # ~ pass
+      # tof_mode
       if scut == 'small':
         n = n.filter(max_mass__lt = 6000)
       elif scut == 'protein': # protein
@@ -895,18 +773,8 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       idx = {}
       count = 0
       
-      # ~ try:
-          # ~ ...
-      # ~ except json.JSONDecodeError: # na values in intensity or snr
-        # ~ print(spectra.strain_id)
-        # ~ print(spectra.peak_snr)        
-        # ~ return
-        
       search_ids = []
       for spectra in n:
-        # ~ sc.append_spectra(
-          # ~ spectra.peak_mass, spectra.peak_intensity, spectra.peak_snr
-        # ~ )
         search_ids.append(spectra.id)
         idx[count] = spectra
         count += 1
@@ -941,11 +809,7 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       preserved = Case(*[When(pk = pk, then = pos) for pos, pk in enumerate(pk_list)])
       q = Spectra.objects.filter(id__in = pk_list).order_by(preserved)
       
-      # normal:   -kw: {'data': <QuerySet [
-      # Then:
-      #  self.table_data = {'extra': '12345'
-      # result:   -kw: {'data': {'extra': '12345'
-      # overwrite the table data to add some custom data, i.e., the score
+      # Overwrite table data to add custom data, i.e., the score
       self.table_data = {'scores': scores, 'queryset': q}
       
       # Returns a queryset
@@ -1039,7 +903,7 @@ def handle_uploaded_file(request, tmpForm):
       #connection = sqlite3.connect('/home/app/r01data/' + f) # /home/ubuntu/
       idbac_sqlite_insert(request, tmpForm, '/home/app/r01data/' + f, t)
     
-@start_new_thread #(args = ('test',)) # args, kwargs
+@start_new_thread
 def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
   '''
   -- In the case of erroneous data, save the row data to user's
@@ -1061,20 +925,12 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
       UserTaskStatus.objects.create(
         status = 'complete', user_task = user_task
     ))
-  
-    # ~ UserLogs.objects.create(
-      # ~ owner = request.user,
-      # ~ title = 'Peak mass, intensity, or SNR contains an "NA" value',
-      # ~ description = 'Row data:' + json.dumps(data),
-    # ~ )
-    # ~ data_error = True
 
 def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
   
   idbac_version = '1.0.0'
   connection = sqlite3.connect(uploadFile)
   cursor = connection.cursor()
-  # ~ data_error = False # Save this value to UserTasks
   
   # Version
   rows = cursor.execute("SELECT * FROM version").fetchall()
@@ -1130,8 +986,6 @@ def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
     if form.is_valid():
       entry = form.save(commit = False)
       entry.save()
-    # ~ form_is_valid = await sync_to_async(form.is_valid)()
-    # ~ await sync_to_async(entry.save)()
     else:
       print(form.errors)
       raise ValueError('xxxxx')
@@ -1209,9 +1063,9 @@ def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
       
       'xml_hash': sxml.id,
       'strain_id': smd.id,
-      'peak_mass': ",".join(map(str, pm['mass'])),
-      'peak_intensity': ",".join(map(str, pm['intensity'])),
-      'peak_snr': ",".join(map(str, pm['snr'])),
+      'peak_mass': ','.join(map(str, pm['mass'])),
+      'peak_intensity': ','.join(map(str, pm['intensity'])),
+      'peak_snr': ','.join(map(str, pm['snr'])),
       
       'max_mass': row[6],
       'min_mass': row[7],
@@ -1219,6 +1073,7 @@ def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
     }
     
     # Sanity check ("na" or "nan"): Skip this row.
+    # There are a few NAs in R01 data
     if 'na' in row[4].lower():
       user_task.statuses.add(
         UserTaskStatus.objects.create(
@@ -1238,24 +1093,14 @@ def _idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
       field_errors = [ (field.label, field.errors) for field in form] 
       raise ValueError('xxxxx')
   
-  # Close the db connection  
+  # Close db connection  
   from django.db import connection
   connection.close()
 
-
 def search(request):
-  
   return render(request, 'chat/search.html', {'spectra': {}, 'comment_form': {}})
   
 def home(request):
-  ''' The home news feed page '''
-
-  # Get users whose posts to display on news feed and add users account
-  # ~ users = list(request.user.followers.all())
-  # ~ users.append(request.user)
-
-  # Get posts from users accounts whose posts to display and order by latest
-  #posts = Post.objects.filter(user__in = users).order_by('-posted_date')
   comment_form = CommentForm()
   
   x = XML.objects.all()
@@ -1266,20 +1111,14 @@ def home(request):
   lib = Library.objects.all()
   
   countLib = {}
-  #distinctPostLibs = Post.objects.distinct('library')
   
-  # Some stats for each library
-  # Num spectra per library
-  # Num species per library
+  # Stats
   for libInstance in lib.iterator():
     bb = libInstance
     aa = Spectra.objects.filter(library = libInstance.id).count()
     countLib[libInstance.title] = aa
-    #libInstance.pie = 1
-    #lib[i]['asdf'] = 1
   
   #ib.set
-   
   return render(
     request,
     'chat/home.html',
@@ -1294,4 +1133,3 @@ def home(request):
       'countLib': countLib,
     }
   )
-
