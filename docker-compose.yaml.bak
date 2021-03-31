@@ -10,8 +10,10 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - postgres-data1:/var/lib/postgresql/data1
+      - postgres-data1:/var/lib/postgresql/data1:z
   plumber:
+    user: "root:root"
+    container_name: rplumber
     build: ./rplumber/
     command: /app/plumber.R
     restart: always
@@ -20,41 +22,48 @@ services:
     ports:
      - 7002:8000
     volumes:
-     - ./rplumber:/app
+     - ./rplumber:/app:z
+     #- uploads:/uploads:z
+     #- ./mdb/media/uploads:/app/uploads:z
+     - uploads:/app/uploads/:z
   web:
+    user: "root:root"
     container_name: django
-    build: mdb/
+    build: ./mdb/
     command: >
-      gunicorn mdb.wsgi:application --bind 0.0.0.0:8000 --workers=4 --timeout 1000
+      gunicorn mdb.wsgi:application --bind 0.0.0.0:8000 --workers=4 --timeout 1000 --access-logfile -
     env_file:
-      - project.env
+     - project.env
     expose:
-      - 8000
+     - 8000
     depends_on:
-      - db
-      - plumber
+     - db
+     - plumber
     volumes:
-      - staticfiles:/home/app/web/static/
-      - /home/ubuntu/r01data:/home/app/r01data/
+     - ./mdb:/home/app/web/:z
+     - staticfiles:/home/app/web/static/:z
+     #- ./r01data:/home/app/r01data/:z
+     #- ./mdb/media/uploads:/home/app/web/media/uploads:z
+     - uploads:/home/app/web/media/uploads/:z
+     #- uploads:mdb/media/uploads:z
   nginx:
     container_name: nginx
     image: nginx #####:mainline-alpine
     restart: always
     ports:
-      - 80:80
+     - 80:80
     volumes:
-      - ./nginx:/etc/nginx/conf.d
-      - staticfiles:/home/app/web/static/
+     - ./nginx:/etc/nginx/conf.d:z
+     - staticfiles:/home/app/web/static/:z
+     - uploads:/home/app/web/media/uploads/:z
+     #- ./mdb/media/uploads:/home/app/web/media/uploads:z
     depends_on:
-      - web
-      - db
-      - plumber
-    dns:
-      - 8.8.8.8
-      - 4.4.4.4
-      - 128.31.28.11 
-    #  - 192.168.9.45
+     - web
+     - db
+     - plumber
 
 volumes:
   postgres-data1:
   staticfiles:
+  uploads:
+  #./mdb/media/uploads: #:/uploads

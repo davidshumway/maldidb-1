@@ -174,8 +174,17 @@ def preprocess_file(file, user_task):
   
   '''
   print(f'preprocess file{file}')
+  f1 = file.replace('uploads/', 'uploads/sync/')
+  # file
+  #import os
+  #os.chmod('/home/app/web/media/' + file, 0o777)
+  import os
+  import shutil
+  shutil.copyfile('/home/app/web/media/' + file, '/' + f1)
+
+  
   import requests
-  data = {'file': file}
+  data = {'file': f1}
   r = requests.get('http://plumber:8000/preprocess', params = data)
   # ~ pass
   # ~ result = R['preprocess'](file)

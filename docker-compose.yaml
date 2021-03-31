@@ -1,30 +1,48 @@
 version: '3'
 
 services:
+  volume_configurer:
+    # https://medium.com/ncr-edinburgh/docker-tips-tricks-516b9ba41aa2
+    #chmod -R 777 /shared/;
+    image: busybox
+    volumes:
+     - shared:/shared:z
+    command: ["/bin/sh", "-c", "
+       mkdir -p /shared/sync;
+       chmod -R 777 /shared/sync;
+       echo STARTED > /shared/sync/volumesetter && chmod a+r /shared/sync/volumesetter"]
   db:
     container_name: postgresdb
     image: postgres:latest
     restart: always
     env_file:
-      - project.env
+     - project.env
     ports:
-      - 5432:5432
+     - 5432:5432
     volumes:
-      - postgres-data1:/var/lib/postgresql/data1:z
+     - postgres-data1:/var/lib/postgresql/data1:z
   plumber:
+    build:
+      context: ./
+      dockerfile: ./rplumber/Dockerfile
     container_name: rplumber
-    build: ./rplumber/
     command: /app/plumber.R
     restart: always
     env_file:
-      - project.env
+     - project.env
     ports:
      - 7002:8000
     volumes:
      - ./rplumber:/app:z
+     - shared:/app/uploads:z
+     #- uploads:/app/uploads:z
+     #- ./mdb/media/uploads:/app/uploads:z
+     #- ./mdb:/app/web:z
   web:
+    build:
+      context: ./
+      dockerfile: ./mdb/Dockerfile
     container_name: django
-    build: ./mdb/
     command: >
       gunicorn mdb.wsgi:application --bind 0.0.0.0:8000 --workers=4 --timeout 1000 --access-logfile -
     env_file:
@@ -35,9 +53,13 @@ services:
      - db
      - plumber
     volumes:
-     - ./mdb:/home/app/web:z
+     - ./mdb:/home/app/web/:z
      - staticfiles:/home/app/web/static/:z
-     - ./r01data:/home/app/r01data/:z
+     #- ./r01data:/home/app/r01data/:z
+     #- ./mdb/media/uploads:/home/app/web/media/uploads:z
+     - shared:/uploads/:z
+     #- uploads:/home/app/web/media/uploads/:z
+     #- uploads:mdb/media/uploads:z
   nginx:
     container_name: nginx
     image: nginx #####:mainline-alpine
@@ -47,6 +69,8 @@ services:
     volumes:
      - ./nginx:/etc/nginx/conf.d:z
      - staticfiles:/home/app/web/static/:z
+     #- uploads:/home/app/web/media/uploads/:z
+     #- ./mdb/media/uploads:/home/app/web/media/uploads:z
     depends_on:
      - web
      - db
@@ -55,3 +79,5 @@ services:
 volumes:
   postgres-data1:
   staticfiles:
+  shared:
+  #./mdb/media/uploads: #:/uploads

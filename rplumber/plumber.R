@@ -76,7 +76,7 @@ function(req, id, ids) {
   
   c <- connect()
   s <- paste(unlist(ids), collapse = ',')
-  s <- paste0('SELECT peak_mass,peak_intensity,peak_snr
+  s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
     FROM chat_spectra
     WHERE id IN (', s, ')')
   q <- dbGetQuery(c$con, s)
@@ -84,7 +84,7 @@ function(req, id, ids) {
     disconnect(c$drv, c$con)
     stop('database returned less than one row (spectra)!')
   }
-  s <- paste0('SELECT peak_mass,peak_intensity,peak_snr
+  s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
     FROM chat_searchspectra
     WHERE id = "', id, '"')
   q2 <- dbGetQuery(c$con, s)
@@ -161,7 +161,7 @@ function(req, ids) {
   
   c <- connect()
   s <- paste(unlist(ids), collapse = ',')
-  s <- paste0('SELECT peak_mass,peak_intensity,peak_snr
+  s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
     FROM chat_spectra
     WHERE id IN (', s, ')')
   q <- dbGetQuery(c$con, s)
@@ -215,8 +215,11 @@ function(req, ids) {
 #* @param file File path to preprocess
 #* @get /preprocess
 preprocess <- function(file) {
+  smallRangeEnd <- 6000
+  
   print(getwd())
-  f <- file.path(paste0("/home/app/web/", file))
+  print(file)
+  f <- file.path(paste0("/app/", file))
   
 #~   f <- file.path(getwd(), paste0('media/', f))
   mzML_con <- mzR::openMSfile(f, backend = "pwiz")
@@ -224,44 +227,52 @@ preprocess <- function(file) {
   print('scanNumber')
   print(scanNumber)
   
-  if (scanNumber != 1) { # collapse replicates ~~
-   #return(list('error' = paste('scan number is not one:', scanNumber)))
-   
-   
-  }
-  spectraImport <- mzR::peaks(mzML_con)
+  spectraImport <- mzR::peaks(mzML_con) # matrix
   print('spectraImport1')
-  print(spectraImport)
+  print(class(spectraImport))
+  #print(spectraImport)
   
-  spectraImport <- IDBacApp::spectrumMatrixToMALDIqaunt(spectraImport)
+  spectraImport <- IDBacApp::spectrumMatrixToMALDIqaunt(spectraImport) # mass spectrum
   print('spectraImport2')
-  print(spectraImport)
+  print(class(spectraImport))
+  #print(spectraImport)
   
   # logical vector of maximum masses of mass vectors.
   # True = small mol, False = protein
   smallIndex <- unlist(lapply(spectraImport, function(x) max(x@mass)))
   smallIndex <- smallIndex < smallRangeEnd
-  env1 <- FALSE
-  env2 <- FALSE
+  envSm <- FALSE
+  envPr <- FALSE
   if (any(smallIndex)) {
-   env_sm <- IDBacApp::processXMLIndSpectra(
+   envSm <- IDBacApp::processXMLIndSpectra(
      spectraImport = spectraImport,
      smallOrProtein = "small",
      index = smallIndex)
   }
   if (any(!smallIndex)) {
-   env_pr <- IDBacApp::processXMLIndSpectra(
+   envPr <- IDBacApp::processXMLIndSpectra(
      spectraImport = spectraImport,
      smallOrProtein = "protein",
      index = !smallIndex)
+    x <- collapseReplicates(
+      IDBacApp::processProteinSpectra(spectraImport[!smallIndex])
+    )
   }
   print('env')
-  print(env1)
-  print(env2)
-  return(list('env_sm' = env1, 'env_pr' = env2))
+  print(envSm)
+  print(envPr)
+  print(x)
+  
+#~   if (scanNumber != 1) { # collapse replicates ~~
+   #return(list('error' = paste('scan number is not one:', scanNumber)))
+#~    x <- collapseReplicates(envPr$peakMatrix)
+#~   }
+  
+#~   return(list('env_sm' = envSm, 'env_pr' = envPr))
+  return(list('x' = x))
 }
 
-collapseReplicates <- function() {
+collapseReplicates <- function(temp) {
 #~     checkedPool,
 #~     sampleIDs,
 #~     peakPercentPresence,
@@ -271,26 +282,31 @@ collapseReplicates <- function() {
 #~     tolerance = 0.002,
 #~     protein
 
-  validate(need(is.numeric(peakPercentPresence), "peakPercentPresence not numeric"))
-  validate(need(is.numeric(lowerMassCutoff), "lowerMassCutoff not numeric"))
-  validate(need(is.numeric(upperMassCutoff), "upperMassCutoff not numeric"))
-  validate(need(is.numeric(minSNR), "minSNR not numeric"))
-  validate(need(is.numeric(tolerance), "tolerance not numeric"))
-  validate(need(is.logical(protein), "protein not logical"))
+#~   validate(need(is.numeric(peakPercentPresence), "peakPercentPresence not numeric"))
+#~   validate(need(is.numeric(lowerMassCutoff), "lowerMassCutoff not numeric"))
+#~   validate(need(is.numeric(upperMassCutoff), "upperMassCutoff not numeric"))
+#~   validate(need(is.numeric(minSNR), "minSNR not numeric"))
+#~   validate(need(is.numeric(tolerance), "tolerance not numeric"))
+#~   validate(need(is.logical(protein), "protein not logical"))
 
   #temp <- IDBacApp::getPeakData(checkedPool = checkedPool,
   #                              sampleIDs = sampleIDs,
   #                              protein = protein) 
   # getPeakData::
-  temp <- lapply(temp,
-   function(x){
-     MALDIquant::createMassPeaks(
-       mass = x$mass,
-       intensity = x$intensity ,
-       snr = as.numeric(x$snr))
-   }
-  )
-
+#~   temp <- lapply(temp,
+#~    function(x){
+#~      MALDIquant::createMassPeaks(
+#~        mass = x$mass,
+#~        intensity = x$intensity ,
+#~        snr = as.numeric(x$snr))
+#~    }
+#~   )
+  minSNR <- 3 # min SNR is 3 for protein data
+  tolerance <- 0.002
+  peakPercentPresence <- 70
+  lowerMassCutoff <- 2000
+  upperMassCutoff <- 20000
+  
   req(length(temp) > 0)
   # Binning peaks lists belonging to a single sample so we can filter 
   # peaks outside the given threshold of presence 
@@ -308,15 +324,12 @@ collapseReplicates <- function() {
   # see: https://github.com/sgibb/MALDIquant/issues/61 for more info 
   # note: MALDIquant::binPeaks does work if there is only one spectrum
   if (any(specNotZero)) {
-
    temp <- temp[specNotZero]
    temp <- MALDIquant::binPeaks(temp,
                                 tolerance = tolerance, 
                                 method = c("strict")) 
-
    temp <- MALDIquant::filterPeaks(temp,
                                    minFrequency = peakPercentPresence / 100) 
-
    temp <- MALDIquant::mergeMassPeaks(temp, 
                                       method = "mean") 
    temp <- MALDIquant::trim(temp,
@@ -326,9 +339,8 @@ collapseReplicates <- function() {
    temp <- MALDIquant::mergeMassPeaks(temp, 
                                       method = "mean") 
   }
-
-  return(temp)
-  }
+  temp
+}
 
 # --------------------
 # From rfn.py / Rpy2
