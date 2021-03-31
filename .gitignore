@@ -10,8 +10,8 @@ db.sqlite3
 *.sock
 maldidb.sock
 mdb.sock
-uploads/*
-media/uploads/*
-./media/uploads/*
-./media/posts/*
+*/uploads/*
+*/media/uploads/*
+*/media/uploads/*
+*/media/posts/*
 project.env

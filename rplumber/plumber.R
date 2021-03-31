@@ -263,13 +263,7 @@ preprocess <- function(file) {
   print(envPr)
   print(x)
   
-#~   if (scanNumber != 1) { # collapse replicates ~~
-   #return(list('error' = paste('scan number is not one:', scanNumber)))
-#~    x <- collapseReplicates(envPr$peakMatrix)
-#~   }
-  
-#~   return(list('env_sm' = envSm, 'env_pr' = envPr))
-  return(list('x' = x))
+  return(list('x' = capture.output(x)))
 }
 
 collapseReplicates <- function(temp) {
