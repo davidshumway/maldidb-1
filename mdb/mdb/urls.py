@@ -7,4 +7,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('', include('chat.urls')),
+    path('import/', include('importer.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,7 +1,5 @@
 from django.urls import path, re_path, include
-
 from . import views
-
 app_name = 'chat'
 
 urlpatterns = [
@@ -12,7 +10,6 @@ urlpatterns = [
   
   path('data/add', views.add_post, name='add_post'),
   path('data/add_metadata', views.add_metadata, name='add_metadata'),
-  path('data/add_sqlite', views.add_sqlite, name='add_sqlite'),
   path('data/add_lib', views.add_lib, name='add_lib'),
   path('data/add_labgroup', views.add_labgroup, name='add_labgroup'),
   path('data/add_xml', views.add_xml, name='add_xml'),

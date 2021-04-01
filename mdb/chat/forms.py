@@ -8,7 +8,6 @@ from dal import autocomplete
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
-
 class LibraryCollapseForm(forms.Form):
   '''
   Select: Collapse all replicates marked as "Linear" vs. "Reflector"
@@ -51,22 +50,6 @@ class LibraryCollapseForm(forms.Form):
   class Meta:
     model = Library
     fields = ['id']
-    
-  # ~ def __init__(self, *args, **kwargs):
-    # ~ g = kwargs.pop('get','')
-    
-    # Get initial data passed from the view
-    #self.library = None
-    #if 'library' in kwargs['initial']:
-    #  self.library = kwargs['initial'].pop('library')
-    
-    # ~ super(LibraryCollapseForm, self).__init__(*args, **kwargs)
-      
-    #self.fields['library'].queryset = Library.objects.filter(id=self.library)
-    # ~ print(f'_init_-args: {args}')
-    # ~ print(f'_init_-args: {kwargs}')
-    #if 
-    # ~ self.fields['metadata_strain_ids'] = forms.ModelChoiceField(queryset=Metadata.objects.all())
     
 class SpectraCollectionsForm(forms.ModelForm):
   '''
@@ -446,57 +429,6 @@ class AddLibraryForm(forms.ModelForm):
   class Meta:
     model = Library
     exclude = ('created_by',)
-  
-class LoadSqliteForm(forms.Form):
-  # ~ user = forms.ModelMultipleChoiceField(
-    # ~ queryset = user.objects.all(), to_field_name="username"
-  # ~ )
-  lab_name = forms.ModelChoiceField(
-    queryset = LabGroup.objects.all(), to_field_name="lab_name"
-  )
-  library = forms.ModelChoiceField(
-    queryset = Library.objects.all(), to_field_name="title"
-  )
-  
-  choices = [
-    ('single', 'Load a single IDBac SQLite file'),
-    ('all', 'Load all IDBac R01 data files'),
-  ]
-  upload_type = forms.CharField(
-    label = 'Upload type',
-    widget = forms.RadioSelect(choices = choices),
-    required = True,
-    initial = 'single')
-    
-  file = forms.FileField(required = False,
-    label = 'Select an IDBac SQLite file to upload')
-  
-  PUBLIC = 'PB'
-  PRIVATE = 'PR'
-  privacyChoices = [
-    (PUBLIC, 'Public'),
-    (PRIVATE, 'Private'),
-  ]
-  privacy_level = forms.MultipleChoiceField(choices = privacyChoices)
-  # ~ privacy_level = forms.ModelMultipleChoiceField(
-    # ~ queryset = PrivacyLevel.objects.all(), to_field_name="username"
-     # ~ #User.objects.all() # todo: add more description per entry
-  # ~ )
-  
-  def clean(self):
-    data = self.cleaned_data
-    print('add form',data)
-    # ~ raise forms.ValidationError(
-      # ~ 'Select a file to upload!'
-    # ~ )
-    if data.get('file') == None and data.get('upload_type') == 'single':
-      raise forms.ValidationError(
-        'Select a file to upload!'
-      )
-    else:
-      return data
-      
-
 
 class MetadataModelChoiceField(forms.ModelChoiceField):
   def label_from_instance(self, obj):

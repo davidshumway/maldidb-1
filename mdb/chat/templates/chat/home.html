@@ -14,18 +14,7 @@
 		<div class="col-md-12 col-sm-12"><!--col-md-8-->
 			<h5 class="py-3 px-2 bg-dark text-light d-flex justify-content-between">
 				Latest entries</h5>
-<!--
-        <a href="{% url 'chat:add_lib' %}">
-          <i class="fas fa-plus text-light"></i>Add library</a>
-        <a href="{% url 'chat:add_post' %}">
-          <i class="fas fa-plus text-light"></i>Add spectra</a>
-        <a href="{% url 'chat:add_metadata' %}">
-          <i class="fas fa-plus text-light"></i>Add metadata</a>
-        <a href="{% url 'chat:add_sqlite' %}">
-          <i class="fas fa-plus text-light"></i>Add sqlite</a></h5>
-			<div class="container bg-grey">
--->
-        
+       
         <!-- Libraries -->
         {% for entry in library|slice:":100" %}
           <div class=" my-4 card" style="box-shadow: #484646 0px 4px 1px">

@@ -16,7 +16,7 @@ COPY requirements.txt $APP_HOME
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
-#COPY . $APP_HOME
+COPY . $APP_HOME
 RUN chown -R app:app $APP_HOME
 USER app:app
 

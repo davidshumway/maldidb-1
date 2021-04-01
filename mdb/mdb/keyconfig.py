@@ -16,6 +16,3 @@ class Database:
     self.PORT = os.getenv('DATABASE_PORT')
     self.SECRET_KEY = os.getenv('SECRET_KEY')
 
-#class Secrets:
-#  SECRET_KEY = os.getenv('DJ_SECRET')
-  #SECRET_KEY = "SuperSecretSecretKey"
