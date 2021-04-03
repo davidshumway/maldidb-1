@@ -14,7 +14,6 @@ todo:
 -- show a plot of memory size and number of spectra being compared
 '''
 
-
 class SpectraScores():
   
   def __init__(self, form = None):

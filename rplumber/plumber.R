@@ -206,7 +206,8 @@ function(req, ids) {
     'binnedPeaks' = capture.output(binnedPeaks),
     'featureMatrix' = capture.output(featureMatrix),
     'cosineScores' = capture.output(dfull),
-    'cosineScoresUt' = capture.output(d)
+    #'cosineScoresUt' = capture.output(d),
+    'cosineScoresUt' = d
   )
   jsonlite::toJSON(a)
 }

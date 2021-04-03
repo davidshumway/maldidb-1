@@ -6,11 +6,11 @@ services:
     #chmod -R 777 /shared/;
     image: busybox
     volumes:
-     - shared:/shared:z
+      - shared:/shared:z
     command: ["/bin/sh", "-c", "
-       mkdir -p /shared/sync;
-       chmod -R 777 /shared/sync;
-       echo STARTED > /shared/sync/volumesetter && chmod a+r /shared/sync/volumesetter"]
+      mkdir -p /shared/sync;
+      chmod -R 777 /shared/sync;
+      echo STARTED > /shared/sync/volumesetter && chmod a+r /shared/sync/volumesetter"]
   db:
     container_name: postgresdb
     image: postgres:latest
@@ -18,26 +18,27 @@ services:
     env_file:
      - project.env
     ports:
-     - 5432:5432
+      - 5432:5432
     volumes:
-     - postgres-data1:/var/lib/postgresql/data1:z
+      - postgres-data1:/var/lib/postgresql/data1:z
   plumber:
     build:
       context: ./
       dockerfile: ./rplumber/Dockerfile
     container_name: rplumber
     command: /app/plumber.R
+    #command: ["/bin/sh", "-c", "
+    #  Rscript /app/plumber.R;
+    #  Rscript /app/start_idbac.R"]
     restart: always
     env_file:
-     - project.env
+      - project.env
     ports:
-     - 7002:8000
+      - 7002:8000
+      - 7125:7125
     volumes:
-     - ./rplumber:/app:z
-     - shared:/app/uploads:z
-     #- uploads:/app/uploads:z
-     #- ./mdb/media/uploads:/app/uploads:z
-     #- ./mdb:/app/web:z
+      - ./rplumber:/app:z
+      - shared:/app/uploads:z
   web:
     build:
       context: ./
@@ -46,35 +47,31 @@ services:
     command: >
       gunicorn mdb.wsgi:application --bind 0.0.0.0:8000 --workers=4 --timeout 1000 --access-logfile -
     env_file:
-     - project.env
+      - project.env
     expose:
-     - 8000
+      - 8000
     depends_on:
-     - db
-     - plumber
+      - db
+      - plumber
     volumes:
-     - ./mdb:/home/app/web/:z
-     - staticfiles:/home/app/web/static/:z
-     #- ./r01data:/home/app/r01data/:z
-     #- ./mdb/media/uploads:/home/app/web/media/uploads:z
-     - shared:/uploads/:z
-     #- uploads:/home/app/web/media/uploads/:z
-     #- uploads:mdb/media/uploads:z
+      - ./mdb:/home/app/web/:z
+      - staticfiles:/home/app/web/static/:z
+      - shared:/uploads/:z
   nginx:
     container_name: nginx
     image: nginx #####:mainline-alpine
     restart: always
     ports:
-     - 80:80
+      - 80:80
     volumes:
-     - ./nginx:/etc/nginx/conf.d:z
-     - staticfiles:/home/app/web/static/:z
+      - ./nginx:/etc/nginx/conf.d:z
+      - staticfiles:/home/app/web/static/:z
      #- uploads:/home/app/web/media/uploads/:z
      #- ./mdb/media/uploads:/home/app/web/media/uploads:z
     depends_on:
-     - web
-     - db
-     - plumber
+      - web
+      - db
+      - plumber
 
 volumes:
   postgres-data1:

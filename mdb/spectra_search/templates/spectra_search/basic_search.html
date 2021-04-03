@@ -1,4 +1,3 @@
-
 {% extends 'base.html' %}
 {% load widget_tweaks %}
 
@@ -44,7 +43,7 @@ function show_filter(e) {
 </div>-->
 
 <!-- After file upload form, get-form-div is placed inside this form. -->
-<form action="{% url 'chat:basic_search' %}" class="" method="GET" style="" id="search-form">
+<form action="{% url 'spectra_search:basic_search' %}" class="" method="GET" style="" id="search-form">
 </form>
 
 <div style="" id="" class="container">
@@ -84,7 +83,7 @@ function show_filter(e) {
               <div class="card-body" id="nss-card-1" style="">
                 
                 <!-- File upload form -->
-                <form action="{% url 'chat:ajax_upload' %}" class="" method="POST" style="" id="upload_form">
+                <form action="{% url 'spectra_search:ajax_upload' %}" class="" method="POST" style="" id="upload_form">
                 {% csrf_token %}
                 
                 <div class="custom-file">
@@ -573,7 +572,7 @@ function upload(event) {
     
     dataType: "JSON",
     data: new FormData(this),
-    url: "{% url 'chat:ajax_upload' %}",
+    url: "{% url 'spectra_search:ajax_upload' %}",
     type: 'POST',
     processData: false,
     contentType: false,
