@@ -224,6 +224,9 @@ from django.utils.decorators import method_decorator
 
 @method_decorator(login_required, name = 'dispatch')
 class LibCollapseListView(MultiTableMixin, TemplateView):
+  '''
+  -- This uses a class-based login decorator
+  '''
   model = Library
   table_class = LibCollapseTable
   template_name = 'chat/collapse_library.html'  

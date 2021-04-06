@@ -1,5 +1,5 @@
 #!/bin/sh
 
-Rscript start_idbac.R
+#Rscript start_idbac.R
 
 exec "$@"

@@ -100,6 +100,8 @@ def preprocess_file(file, user_task):
   import requests
   data = {'file': f1}
   r = requests.get('http://plumber:8000/preprocess', params = data)
+  print(f'py r{r}')
+  
   # ~ pass
   # ~ result = R['preprocess'](file)
   # ~ #print(f'pp result{result}')

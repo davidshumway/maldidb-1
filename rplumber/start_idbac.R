@@ -11,7 +11,4 @@ x <- shiny::shinyApp(
 )
 print(x)
 
-# not working
-#IDBacApp::run_app(port=7125)
-
 

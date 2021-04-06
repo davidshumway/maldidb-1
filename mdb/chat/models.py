@@ -2,7 +2,6 @@ from django.db import models
 from django.conf import settings
 import uuid
 from django.urls import reverse
-from django.core.validators import FileExtensionValidator
 
 # For model triggers
 # ~ from django.db.models.signals import post_save, m2m_changed
@@ -21,28 +20,7 @@ from django.core.validators import FileExtensionValidator
   # ~ log_date = models.DateTimeField(auto_now_add = True, blank = False)
   # ~ title = models.CharField(max_length = 255, blank = False)
   # ~ description = models.TextField(blank = False)
-  
-class UserFile(models.Model):
-  '''
-  Spectra files uploaded by users.
-  
-  -- May be associated with one or more Spectra.
-  '''
-  owner = models.ForeignKey(
-    settings.AUTH_USER_MODEL,
-    on_delete = models.CASCADE,
-    blank = False,
-    null = False)
-  file = models.FileField(
-    upload_to = 'uploads/',
-    validators=[
-      FileExtensionValidator(allowed_extensions = ['mzml', 'mzxml', 'fid'])
-    ]
-  )
-  upload_date = models.DateTimeField(auto_now_add = True, blank = False)
-  #extension = models.CharField(max_length = 255, blank = True, null = True)
-  spectra = models.ManyToManyField('Spectra', blank = True)
-  
+
 class UserTask(models.Model):
   '''
   '''

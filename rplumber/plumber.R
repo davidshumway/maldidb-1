@@ -212,30 +212,83 @@ function(req, ids) {
   jsonlite::toJSON(a)
 }
 
+
 #* Preprocess: Preprocess spectra files
+#* e.g.,   observeEvent(input$runMsconvert, { ...
 #* @param file File path to preprocess
 #* @get /preprocess
 preprocess <- function(file) {
-  smallRangeEnd <- 6000
-  
-  print(getwd())
-  print(file)
   f <- file.path(paste0("/app/", file))
-  
-#~   f <- file.path(getwd(), paste0('media/', f))
   mzML_con <- mzR::openMSfile(f, backend = "pwiz")
   scanNumber <- nrow(mzR::header(mzML_con))
-  print('scanNumber')
+  print('scanNumber:')
   print(scanNumber)
   
-  spectraImport <- mzR::peaks(mzML_con) # matrix
-  print('spectraImport1')
-  print(class(spectraImport))
+  mzFilePaths <- list(file.path(paste0("/app/", file)))
+  f <- sanitize(file)
+  IDBacApp:::idbac_create(
+    fileName = f,
+    filePath = './uploads/sync/')
+  idbacPool <- IDBacApp:::idbac_connect(
+    fileName = f,
+    filePath = './uploads/sync/')[[1]]
+  IDBacApp:::db_from_mzml(
+    mzFilePaths = mzFilePaths,
+    sampleIds = base::basename(tools::file_path_sans_ext(mzFilePaths)),
+    idbacPool = idbacPool,
+    acquisitionInfo = NULL) #...)
+  pool::poolClose(idbacPool)
+}
+sanitize <- function(filename, replacement = "") {
+  illegal <- "[/\\?<>\\:*|\":]"
+  control <- "[[:cntrl:]]"
+  reserved <- "^[.]+$"
+  windows_reserved <- "^(con|prn|aux|nul|com[0-9]|lpt[0-9])([.].*)?$"
+  windows_trailing <- "[. ]+$"
+  
+  filename <- gsub(illegal, replacement, filename)
+  filename <- gsub(control, replacement, filename)
+  filename <- gsub(reserved, replacement, filename)
+  filename <- gsub(windows_reserved, replacement, filename, ignore.case = TRUE)
+  filename <- gsub(windows_trailing, replacement, filename)
+  filename <- gsub("\\.","_", filename)
+  filename <- gsub(" ", "_", filename)
+  
+  while (grepl("__", filename)) {
+    filename <- gsub("__","_", filename)
+  }
+  
+  # TODO: this substr should really be unicode aware, so it doesn't chop a
+  # multibyte code point in half.
+  filename <- substr(filename, 1, 50)
+  if (replacement == "") {
+    return(filename)
+  }
+  sanitize(filename, "")
+}
+
+#* Preprocess: Preprocess spectra files
+#* e.g.,   observeEvent(input$runMsconvert, { ...
+#* @param file File path to preprocess
+#* @get /preprocess
+preprocess2 <- function(file) {
+  smallRangeEnd <- 6000
+  f <- file.path(paste0("/app/", file))
+  mzML_con <- mzR::openMSfile(f, backend = "pwiz")
+  scanNumber <- nrow(mzR::header(mzML_con))
+  print('scanNumber:')
+  print(scanNumber)
+  
+  # matrix
+  spectraImport <- mzR::peaks(mzML_con)
+  #print('spectraImport1')
+  #print(class(spectraImport))
   #print(spectraImport)
   
-  spectraImport <- IDBacApp::spectrumMatrixToMALDIqaunt(spectraImport) # mass spectrum
-  print('spectraImport2')
-  print(class(spectraImport))
+  # mass spectrum
+  spectraImport <- IDBacApp::spectrumMatrixToMALDIqaunt(spectraImport)
+  #print('spectraImport2')
+  #print(class(spectraImport))
   #print(spectraImport)
   
   # logical vector of maximum masses of mass vectors.
@@ -259,12 +312,16 @@ preprocess <- function(file) {
       IDBacApp::processProteinSpectra(spectraImport[!smallIndex])
     )
   }
-  print('env')
-  print(envSm)
-  print(envPr)
-  print(x)
   
-  return(list('x' = capture.output(x)))
+  # write to db
+  # UserFile = get$file
+  # Spectra = get$spectra
+#~   print('env')
+#~   print(envSm)
+#~   print(envPr)
+#~   print(x)
+  #return(list('x' = capture.output(x)))
+  x
 }
 
 collapseReplicates <- function(temp) {
@@ -276,14 +333,12 @@ collapseReplicates <- function(temp) {
 #~     minSNR, 
 #~     tolerance = 0.002,
 #~     protein
-
 #~   validate(need(is.numeric(peakPercentPresence), "peakPercentPresence not numeric"))
 #~   validate(need(is.numeric(lowerMassCutoff), "lowerMassCutoff not numeric"))
 #~   validate(need(is.numeric(upperMassCutoff), "upperMassCutoff not numeric"))
 #~   validate(need(is.numeric(minSNR), "minSNR not numeric"))
 #~   validate(need(is.numeric(tolerance), "tolerance not numeric"))
 #~   validate(need(is.logical(protein), "protein not logical"))
-
   #temp <- IDBacApp::getPeakData(checkedPool = checkedPool,
   #                              sampleIDs = sampleIDs,
   #                              protein = protein) 
@@ -303,9 +358,9 @@ collapseReplicates <- function(temp) {
   upperMassCutoff <- 20000
   
   req(length(temp) > 0)
+  
   # Binning peaks lists belonging to a single sample so we can filter 
   # peaks outside the given threshold of presence 
-
   for (i in 1:length(temp)) {
    snr1 <-  which(MALDIquant::snr(temp[[i]]) >= minSNR)
    temp[[i]]@mass <- temp[[i]]@mass[snr1]
@@ -322,17 +377,17 @@ collapseReplicates <- function(temp) {
    temp <- temp[specNotZero]
    temp <- MALDIquant::binPeaks(temp,
                                 tolerance = tolerance, 
-                                method = c("strict")) 
+                                method = c("strict"))
    temp <- MALDIquant::filterPeaks(temp,
-                                   minFrequency = peakPercentPresence / 100) 
-   temp <- MALDIquant::mergeMassPeaks(temp, 
-                                      method = "mean") 
+                                   minFrequency = peakPercentPresence / 100)
+   temp <- MALDIquant::mergeMassPeaks(temp,
+                                      method = "mean")
    temp <- MALDIquant::trim(temp,
                             c(lowerMassCutoff,
                               upperMassCutoff))
   } else {
-   temp <- MALDIquant::mergeMassPeaks(temp, 
-                                      method = "mean") 
+   temp <- MALDIquant::mergeMassPeaks(temp,
+                                      method = "mean")
   }
   temp
 }

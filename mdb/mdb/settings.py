@@ -28,6 +28,7 @@ INSTALLED_APPS = [
   'accounts',
   'chat',
   'importer',
+  'files',
   'spectra_search',
   'django_tables2',
   'django_filters',

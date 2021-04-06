@@ -19,29 +19,6 @@ function show_filter(e) {
 }
 </script>
 
-<!--Upload modal
-<div>
-  <div id="upload_modal" class="modal fade" role="dialog">
-    <div class="modal-dialog" style="margin: 2.5rem !important; max-width: none !important;">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title">Upload Unknown Isolate</h4>
-        </div>
-        <noscript>
-          <p>Please enable JavaScript to use file uploader.</p>
-        </noscript>
-        <div class="modal-body">
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-default">Upload</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>-->
-
 <!-- After file upload form, get-form-div is placed inside this form. -->
 <form action="{% url 'spectra_search:basic_search' %}" class="" method="GET" style="" id="search-form">
 </form>
@@ -84,91 +61,54 @@ function show_filter(e) {
                 
                 <!-- File upload form -->
                 <form action="{% url 'spectra_search:ajax_upload' %}" class="" method="POST" style="" id="upload_form">
-                {% csrf_token %}
-                
-                <div class="custom-file">
-                  <input type="file" class="custom-file-input" id="customFile" name="file">
-                  <label class="custom-file-label" for="customFile">Choose file</label>
-                </div>
-                <div class="alert alert-danger toggle-display" id="file-error">
+                  {% csrf_token %}
+                  
+                  <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="customFile" name="file">
+                    <label class="custom-file-label" for="customFile">Choose file</label>
                   </div>
-                
-                <p class="card-text">
-                  <a href="#" id="upload-more-opts" onclick="return false;">Show more options</a>
-                </p>
-                
-                <div id="div-upload-opts" style="display:none;">
-                  <div class="form-check">
-                    {% with f=upload_form.save_to_library %}
-                      {{ f }}
-                      <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
-                    {% endwith %}
+                  <div class="alert alert-danger toggle-display" id="file-error">
+                    </div>
+                  
+                  <p class="card-text">
+                    <a href="#" id="upload-more-opts" onclick="return false;">Show more options</a>
+                  </p>
+                  
+                  <div id="div-upload-opts" style="display:none;">
+                    <div class="form-check">
+                      {% with f=upload_form.save_to_library %}
+                        {{ f }}
+                        <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
+                      {% endwith %}
+                    </div>
+                    
+                    <div class="w-75">
+                      <div class="form-group">
+                        {% with f=upload_form.lab_name %}
+                        {{ f }}
+                        {% endwith %}
+                      </div>
+                      <div class="form-group">
+                        {% with f=upload_form.library %}
+                        {{ f }}
+                        {% endwith %}
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      {% with f=upload_form.preprocess %}
+                        {{ f }}
+                        <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
+                      {% endwith %}
+                    </div>
                   </div>
                   
-                  <div class="w-75">
-                    <div class="form-group">
-                      {% with f=upload_form.lab_name %}
-                      {{ f }}
-                      {% endwith %}
-                    </div>
-                    <div class="form-group">
-                      {% with f=upload_form.library %}
-                      {{ f }}
-                      {% endwith %}
-                    </div>
+                  <div class="text-center">
+                    <button type="submit" class="btn btn-default">Upload</button>
                   </div>
-                  <div class="form-group">
-                    {% with f=upload_form.preprocess %}
-                      {{ f }}
-                      <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
-                    {% endwith %}
-                  </div>
-                </div>
-                
-                <div class="text-center">
-                  <button type="submit" class="btn btn-default">Upload</button>
-                </div>
                 </form>
                 <!-- End file upload form -->
                 
               </div>
-
-<!-- Turn off these options for now
-
-              <div class="card-body toggle-display" id="nss-card-2">
-                <h5 class="card-title">title</h5>
-                <p class="card-text">text</p>
-              </div>
-              <div class="card-body toggle-display" id="nss-card-3">
-                <h5 class="card-title">title</h5>
-                <p class="card-text">text</p>
-              </div>
-              <div class="card-body toggle-display" id="nss-card-4">
-                <p class="card-text">Manually enter values for peak mass, intensity, and
-                    signal-to-noise ratio of the unknown isolate</p>
-                
-                {% with f=form.peak_mass g=form.peak_intensity h=form.peak_snr %}
-                  <div class="form-group row">
-                    <label class="col-sm-2 col-form-label" for="{{ f.auto_id }}">{{ f.label }}</label>
-                    <div class="col-sm-10">
-                      {{ f }}
-                    </div>
-                  </div>
-                  <div class="form-group row">
-                    <label class="col-sm-2 col-form-label" for="{{ g.auto_id }}">{{ g.label }}</label>
-                    <div class="col-sm-10">
-                      {{ g }}
-                    </div>
-                  </div>
-                  <div class="form-group row">
-                    <label class="col-sm-2 col-form-label" for="{{ h.auto_id }}">{{ h.label }}</label>
-                    <div class="col-sm-10">
-                      {{ h }}
-                    </div>
-                  </div>
-                {% endwith %}
-              </div>
--->
             </div>
             <!-- search button -->
             <button class="btn btn-primary">Start search</button>
@@ -187,7 +127,8 @@ function show_filter(e) {
     </div>
     <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
       <div class="card-body">
-            <div class="card" style="height:550px !important;"><!--Makes all tabs same height to keep card body height from always changing upon tab selection.-->
+            <div class="card" style="height:550px !important;">
+            <!--Keep card body height upon tab selection.-->
               <div class="card-header">
                 <ul class="nav nav-tabs card-header-tabs" id="nav-search-2">
                   <li class="nav-item">
@@ -204,27 +145,7 @@ function show_filter(e) {
                     {% csrf_token %}
                     
                     {{ metadata_form }}
-
-          <!--
-                    <table style="display: none">
-                        {{ view.formset.empty_form }}
-                    </table>
-
-                    <table>
-                        {{ view.formset }}
-                    </table>
-          -->
-
-          <!--
-                    <span id="add-form" class="button">Add form</span>
-          -->
-
-          <!--
-                    <input type="submit" />
-          -->
                   </form>
-                  
-                  
               </div>
             {{ metadata_form.media }}
             </div>
@@ -234,105 +155,6 @@ function show_filter(e) {
     </div>
   </div>
   
-  <!-- 
-  <div class="card">
-    <div class="card-header" id="headingThree">
-      <h5 class="mb-0">
-        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-          Additional filters
-        </button>
-      </h5>
-    </div>
-    <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
-      <div class="card-body">
-                  <table class="table spectra-search-tbl">
-                    
-                    {% with f=form.replicates %}
-                    <tr class="search-addl-fields">
-                    <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-                      {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
-                    </td>
-                    <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-                      {{ f }}
-                      {% if f.help_text %}
-                        <p class="help">{{ f.help_text|safe }}</p>
-                      {% endif %}
-                    </td>
-                    {% endwith %}
-                    
-                    {% with f=form.spectrum_cutoff g=form.spectrum_cutoff_low h=form.spectrum_cutoff_high %}
-                    <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-                      {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
-                    </td>
-                    <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-                      <ul>
-                      {% for c in f %}
-                        {% if c.choice_label != "Custom" %}
-                          <li>{{ c.tag }}
-                            <label for="id_spectrum_cutoff_{{ forloop.counter0 }}">
-                              {{ c.choice_label }}</label>
-                          </li>
-                        {% endif %}
-                      {% endfor %}
-                      </ul>
-                      {% if f.help_text %}
-                        <p class="help">{{ f.help_text|safe }}</p>
-                      {% endif %}
-                    </td>
-                    {% endwith %}
-                    
-                    {% with f=form.preprocessing %}
-                    <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-                      {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
-                    </td>
-                    <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-                      {{ f }}
-                      {% if f.help_text %}
-                        <p class="help">{{ f.help_text|safe }}</p>
-                      {% endif %}
-                    </td>
-                    </tr>
-                    {% endwith %}
-                    
-                    <tr class="search-addl-fields">
-                    {% for f in secondary_form_fields %}
-                      {% if forloop.counter0|divisibleby:3  %}
-                      </tr>
-                      <tr class="search-addl-fields">
-                      {% endif %}
-
-                        <td class="" aria-required={% if field.required %}"true"{% else %}"false"{% endif %}>
-                          {{ f.label_tag }}{% if f.field.required %}<span class="required">*</span>{% endif %}
-                        </td>
-                        <td class="" aria-required={% if f.field.required %}"true"{% else %}"false"{% endif %}>
-                          {{ f }}
-                          {% if f.help_text %}
-                            <p class="help">{{ f.help_text|safe }}</p>
-                          {% endif %}
-                        </td>
-
-                    {% endfor %}
-                    </tr>
-                    
-                    {% if form.errors %}
-                     {% for field in form %}
-                         {% if field.errors %}
-                           {% for error in field.errors %} 
-                              <tr><td colspan="6" align="center">
-                              <div class="alert alert-danger">
-                                   <strong>Error with search field "{{field.label_tag}}": {{ error|escape }}</strong>
-                              </div>
-                              </td></tr>
-                          {% endfor %}
-                        {% endif %}
-                      {% endfor %}
-                    {% endif %}
-                    
-                  </table>
-                  <button class="btn btn-primary">Start search</button>
-      </div>
-    </div>
-  </div>-->
 </div>
 </div>
   

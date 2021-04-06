@@ -35,7 +35,7 @@ services:
       - project.env
     ports:
       - 7002:8000
-      - 7125:7125
+    #  - 7125:7125 #idbac
     volumes:
       - ./rplumber:/app:z
       - shared:/app/uploads:z
