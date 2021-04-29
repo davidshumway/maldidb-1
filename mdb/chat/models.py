@@ -208,11 +208,11 @@ class AbstractSpectra(models.Model):
   
 class CollapsedSpectra(AbstractSpectra):
   '''
-  Inherits strain_id
-  Pipeline cols: peak_percent_presence, lower_mass_cutoff,
+  -- Inherits strain_id
+  -- Pipeline cols: peak_percent_presence, lower_mass_cutoff,
     upper_mass_cutoff, min_snr, tolerance
-  Remove lower and upper mass cutoff.
-  MALDIQuant docs: 4.10 Feature Matrix We choose a very low
+  -- Remove lower and upper mass cutoff.
+  -- MALDIQuant docs: 4.10 Feature Matrix: We choose a very low
     signal-to-noise ratio to keep as much features as possible.
     To remove some false positive peaks we remove less frequent peaks.
   '''
@@ -243,7 +243,6 @@ class CollapsedSpectra(AbstractSpectra):
   )
   
   generated_date = models.DateTimeField(auto_now_add = True, blank = True)
-
 
 class PrivacyLevel(models.Model):
   ''' Privacy level for library, spectra, etc.
@@ -389,7 +388,6 @@ class Spectra(AbstractSpectra):
   data as you wish, these types are recommended not required.'
   -- DecimalField: Using parameters max_digits = 30, decimal_places = 20
   -- IntegerField: -2147483648 to 2147483647
-  
   -- Original columns that were integer / numeric:
       time_delay                            INTEGER,
       time_delta                            NUMERIC,

@@ -126,7 +126,7 @@ function(req, id, ids) {
   }
   
 #~   print('len')
-#~   print(length(allPeaks))
+#~   print(length(allPeaks))columns
 #~   print('dim')
 #~   print(dim(allPeaks))
   
@@ -153,7 +153,7 @@ function(req, ids) {
   print(ids)
   print(class(ids)) # character
 #~   if (class(ids) != 'integer') {
-#~     stop('not an integer (ids)!')
+#~     stop('not an integer (ids)!columns')
 #~   }
   if (length(ids) < 2) {
     stop('less than two comparison ids given!')
@@ -212,20 +212,66 @@ function(req, ids) {
   jsonlite::toJSON(a)
 }
 
+# Helper function to retrive list of IDs from Django's DB
+dbSpectra <- function(ids) {
+  if (class(ids) != 'integer') {
+#~     print(class(ids))
+    stop('dbSpectra: not integer!') # stop throws 500
+  }
+  if (length(ids) < 1) {
+    stop('less than one comparison id given!')
+  }
+  
+  c <- connect()
+  s <- paste(unlist(ids), collapse = ',')
+  s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
+    FROM chat_spectra
+    WHERE id IN (', s, ')')
+  q <- dbGetQuery(c$con, s)
+  if (nrow(q) < 1) {
+    disconnect(c$drv, c$con)
+    stop('database returned less than one row (spectra)!')
+  }
+    
+  allSpectra = list()
+  allPeaks = list()
+  
+  for(i in 1:nrow(q)) {
+    row <- q[i,]
+    allPeaks <- append(allPeaks,
+      MALDIquant::createMassPeaks(
+        mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
+        intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]),
+        snr = as.numeric(strsplit(row$peak_snr, ",")[[1]]))
+    )
+    allSpectra <- append(allSpectra,
+      MALDIquant::createMassSpectrum(
+        mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
+        intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]))
+    )
+  }
+  
+  list('peaks' = allPeaks, 'spectra' = allSpectra)
+}
 
-#* Preprocess: Preprocess spectra files
-#* e.g.,   observeEvent(input$runMsconvert, { ...
+#* Preprocess: Preprocess spectra files and compare to DB ids
 #* @param file File path to preprocess
 #* @get /preprocess
 preprocess <- function(file) {
-  f <- file.path(paste0("/app/", file))
-  mzML_con <- mzR::openMSfile(f, backend = "pwiz")
-  scanNumber <- nrow(mzR::header(mzML_con))
-  print('scanNumber:')
-  print(scanNumber)
+#~   f <- file.path(paste0("/app/", file))
+#~   mzML_con <- mzR::openMSfile(f, backend = "pwiz")
+#~   scanNumber <- nrow(mzR::header(mzML_con))
+#~   print('scanNumber:')
+#~   print(scanNumber)
+#~   ids <- c(1:1000)
   
   mzFilePaths <- list(file.path(paste0("/app/", file)))
-  f <- sanitize(file)
+  sIDs <- base::basename(tools::file_path_sans_ext(mzFilePaths))
+  print('sIDs')
+  print(sIDs)
+  f <- sanitize(sub('uploads/sync/', '', file))
+  print('f')
+  print(f)
   IDBacApp:::idbac_create(
     fileName = f,
     filePath = './uploads/sync/')
@@ -234,9 +280,66 @@ preprocess <- function(file) {
     filePath = './uploads/sync/')[[1]]
   IDBacApp:::db_from_mzml(
     mzFilePaths = mzFilePaths,
-    sampleIds = base::basename(tools::file_path_sans_ext(mzFilePaths)),
+    sampleIds = sIDs,
     idbacPool = idbacPool,
     acquisitionInfo = NULL) #...)
+  
+  # return location of the idbac sqlite file.  
+  print('return f')
+  print(f)
+  return(f)
+  
+  spectra <- IDBacApp:::idbac_get_spectra( # createMassSpectrum
+    idbacPool, sIDs, "protein", MALDIquant = TRUE
+  )
+  # Collapse a sample's MALDIquant peak objects into a single peak object
+  # return a single trimmed and binned MALDIquant peak object
+  # 9016 x 1 sparse Matrix of class "dgCMatrix".
+  
+  peaks <- IDBacApp:::idbac_get_peaks(
+    idbacPool,
+    sIDs,
+    minFrequency = 0,
+    minNumber = NA, 
+    lowerMassCutoff = 2000,
+    upperMassCutoff = 20000, 
+    minSNR = 3,
+    tolerance = 0.002,
+    type = "protein",
+    mergeReplicates = TRUE,
+    method = "strict",
+    verbose = FALSE
+  )
+  print(peaks)
+  emptyProtein <- unlist(
+    lapply(peaks, MALDIquant::isEmpty)
+  )
+  print(emptyProtein)
+  a <- dbSpectra(ids)
+  #peaks <- c(peaks, a['peaks'])
+  #print(peaks)
+  
+  # cosine score
+  #binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
+  #featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
+  emptyProtein <- unlist(
+    lapply(peaks, MALDIquant::isEmpty)
+  )
+  proteinMatrix <- IDBacApp:::createFuzzyVector(
+    massStart = 2000,
+    massEnd = 20000,
+    ppm = 1000,
+    massList = lapply(peaks[!emptyProtein], function(x) x@mass),
+    intensityList = lapply(peaks[!emptyProtein], function(x) x@intensity))
+  print(proteinMatrix)
+  x <- idbac_dendrogram_creator(
+    bootstraps = 0L,
+    distanceMethod = 'cosine',
+    clusteringMethod = 'average',
+    proteinMatrix
+  )
+  print(x)
+  
   pool::poolClose(idbacPool)
 }
 sanitize <- function(filename, replacement = "") {
@@ -395,8 +498,6 @@ collapseReplicates <- function(temp) {
 # --------------------
 # From rfn.py / Rpy2
 # --------------------
-
-
 
 # ~ R('''
 # ~ createMassSpectrum__ <- function(mass, intensity) {

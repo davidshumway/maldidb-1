@@ -1,5 +1,6 @@
 from django import forms
 from chat.models import *
+from files.models import UserFile
 from dal import autocomplete
 from django.contrib.auth import get_user_model
 User = get_user_model()

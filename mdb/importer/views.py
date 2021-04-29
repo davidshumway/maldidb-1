@@ -3,7 +3,8 @@ from .forms import LoadSqliteForm
 from chat.forms import *
 from chat.models import Spectra, SearchSpectra, SpectraCosineScore, \
   SearchSpectraCosineScore, Metadata, XML, Locale, Version, Library, \
-  LabGroup, UserTask, UserTaskStatus, UserFile
+  LabGroup, UserTask, UserTaskStatus
+from files.models import UserFile
 import json
 import sqlite3
 from django.contrib.auth.decorators import login_required
@@ -11,12 +12,11 @@ from mdb.utils import *
 
 @login_required
 def add_sqlite(request):
-  '''goes into views.py'''
   if request.method == 'POST':
     form = LoadSqliteForm(request.POST, request.FILES)
     if form.is_valid():
       result = handle_uploaded_file(request, form)
-      print('result---', result)
+      #print('result---', result)
       return redirect('chat:user_tasks')
   else:
     form = LoadSqliteForm()
@@ -24,11 +24,13 @@ def add_sqlite(request):
 
 def handle_uploaded_file(request, tmpForm):
   '''
+  
   Spectra is inserted last as it depends on XML and Metadata tables.
   Requires json and sqlite3 libraries.
+  Metadata strain_id and XML xml_hash should both be unique but they
+  are not in R01 data?
   
-  Metadata strain_id and XML xml_hash should both be unique but they are 
-  not in R01 data?
+  :param tmpForm: Copy of the LoadSqliteForm
   '''
   if request.FILES and request.FILES['file']:
     f = request.FILES['file']
@@ -66,22 +68,26 @@ def handle_uploaded_file(request, tmpForm):
         owner = request.user,
         task_description = 'idbac_sql'
       )
-      t.statuses.add(UserTaskStatus.objects.create(status = 'start',
-        user_task = t))
-      t.statuses.add(
-        UserTaskStatus.objects.create(
-          status = 'info', extra = 'Loading SQLite file ' + f,
-          user_task = t
+      t.statuses.add(UserTaskStatus.objects.create(
+        status = 'start',
+        user_task = t
+      ))
+      t.statuses.add(UserTaskStatus.objects.create(
+        status = 'info',
+        extra = 'Loading SQLite file ' + f,
+        user_task = t
       ))
       idbac_sqlite_insert(request, tmpForm, '/home/app/r01data/' + f, t)
     
 @start_new_thread
 def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
   '''
-  -- In the case of erroneous data, save the row data to user's
+  
+  In the case of erroneous data, save the row data to user's
   error log. E.g., if mass, intensity, or snr contain "na" or "nan".
-  -- Wrap entire insert in try-catch, noting errors for 
+  Wrap entire insert in try-catch, noting errors for 
   later inspection.
+  
   '''  
   try:
     _insert(request, tmpForm, uploadFile, user_task)
@@ -263,6 +269,10 @@ def _insert(request, tmpForm, uploadFile, user_task):
       form.non_field_errors()
       field_errors = [ (field.label, field.errors) for field in form] 
       raise ValueError('xxxxx')
+  
+  # Collapse pipeline
+  
+  
   
   # Close db connection  
   from django.db import connection
