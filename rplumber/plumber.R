@@ -254,6 +254,26 @@ dbSpectra <- function(ids) {
   list('peaks' = allPeaks, 'spectra' = allSpectra)
 }
 
+#* 
+#* @param libraryId
+#* @get /collapseLibraryReplicates
+collapseLibraryReplicates <- function(libraryId) {
+  if (class(libraryId) != 'integer') {
+    stop('not an integer!')
+  }
+  c <- connect()
+  s <- paste0('SELECT distinct(strain_id)
+    FROM chat_spectra
+    WHERE library = ', libraryId)
+  q <- dbGetQuery(c$con, s)
+  if (nrow(q) < 1) {
+    disconnect(c$drv, c$con)
+    stop('no strain IDs in database!')
+  }
+  print(head(q, 1))
+  disconnect(c$drv, c$con)
+}
+
 #* Preprocess: Preprocess spectra files and compare to DB ids
 #* @param file File path to preprocess
 #* @get /preprocess
