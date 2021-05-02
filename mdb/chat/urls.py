@@ -8,7 +8,6 @@ urlpatterns = [
   # API endpoint to retrieve binned peaks, intensity matrix, cosine score
   path('cosine/', views.view_cosine, name='view_cosine'),
   
-  path('data/add', views.add_post, name='add_post'),
   path('data/add_metadata', views.add_metadata, name='add_metadata'),
   path('data/add_lib', views.add_lib, name='add_lib'),
   path('data/add_labgroup', views.add_labgroup, name='add_labgroup'),
@@ -31,9 +30,6 @@ urlpatterns = [
   path('xml/', views.XmlListView.as_view(), name='xml_results'),
   path('xml/<xml_hash>/', views.xml_profile, name='view_xml'),
   path('xml/edit/<xml_hash>/', views.edit_xml, name='edit_xml'),
-  
-  path('spectra/<spectra_id>/', views.spectra_profile, name='view_spectra'),
-  path('spectra/edit/<spectra_id>/', views.edit_spectra, name='edit_spectra'),
   
   path('library/<library_id>/', views.library_profile, name='view_library'),
   path('library/edit/<library_id>/', views.edit_libprofile, name='edit_libprofile'),

@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import FileExtensionValidator
+from spectra.models import *
 
 class UserFile(models.Model):
   '''
@@ -21,5 +22,5 @@ class UserFile(models.Model):
   )
   upload_date = models.DateTimeField(auto_now_add = True, blank = False)
   #extension = models.CharField(max_length = 255, blank = True, null = True)
-  spectra = models.ManyToManyField('chat.Spectra', blank = True)
+  spectra = models.ManyToManyField('spectra.Spectra', blank = True)
   # ~ spectra = models.ManyToManyField('Spectra', blank = True)

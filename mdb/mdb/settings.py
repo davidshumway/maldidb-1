@@ -30,11 +30,13 @@ INSTALLED_APPS = [
   'importer',
   'files',
   'spectra_search',
+  'spectra',
   'django_tables2',
   'django_filters',
   'bootstrap4',
   'jquery',
   'django_extensions',
+  'rest_framework',
   #'ajaxuploader',
 ]
 

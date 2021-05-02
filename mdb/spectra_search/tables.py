@@ -1,5 +1,6 @@
 import django_tables2 as tables
 from chat.models import *
+from spectra.models import *
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join, html_safe
 

@@ -73,6 +73,7 @@
 	    Browse
 	  </a>
 	  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+	    <!--<a class="dropdown-item" href=" url 'spectra_search:spectra_results' ">Spectrum - All</a>-->
 	    <a class="dropdown-item" href="{% url 'spectra_search:spectra_results' %}">Spectrum - All</a>
 	    <a class="dropdown-item" href="{% url 'chat:home' %}">Spectrum - Replicates</a>
 	    <a class="dropdown-item" href="{% url 'chat:home' %}">Spectrum - Collapsed</a>
@@ -88,9 +89,9 @@
 	    Add
 	  </a>
 	  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-	    <a class="dropdown-item" href="{% url 'chat:add_post' %}">Spectrum - All</a>
-	    <a class="dropdown-item" href="{% url 'chat:add_post' %}">Spectrum - Replicates</a>
-	    <a class="dropdown-item" href="{% url 'chat:add_post' %}">Spectrum - Collapsed</a>
+	    <a class="dropdown-item" href="{% url 'spectra:add_post' %}">Spectrum - All</a>
+	    <a class="dropdown-item" href="{% url 'spectra:add_post' %}">Spectrum - Replicates</a>
+	    <a class="dropdown-item" href="{% url 'spectra:add_post' %}">Spectrum - Collapsed</a>
 	    <a class="dropdown-item" href="{% url 'chat:add_lib' %}">Library</a>
 	    <a class="dropdown-item" href="{% url 'chat:add_metadata' %}">Metadata</a>
 	    <a class="dropdown-item" href="{% url 'chat:add_labgroup' %}">Lab Group</a>

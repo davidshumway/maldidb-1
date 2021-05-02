@@ -60,10 +60,6 @@ def lab_profile(request, lab_id):
   '''View profile of lab with lab_name'''
   lab = LabGroup.objects.get(id = lab_id)
   return render(request, 'chat/lab_profile.html', {'lab': lab})
-  
-def spectra_profile(request, spectra_id):
-  spectra = Spectra.objects.get(id = spectra_id)
-  return render(request, 'chat/spectra_profile.html', {'spectra': spectra})
 
 @login_required
 def edit_metadata(request, strain_id):
@@ -89,19 +85,6 @@ def edit_xml(request, xml_hash):
   else:
     form = XmlForm(instance = XML.objects.get(xml_hash = xml_hash))
   return render(request, 'chat/edit_xml.html', {'form': form})
-
-@login_required
-def edit_spectra(request, spectra_id):
-  ''' edit details of library '''    
-  if request.method == "POST":
-    # instance kwargs passed in sets the user on the modelForm
-    form = SpectraEditForm(request.POST, request.FILES, instance = Spectra.objects.get(id = spectra_id))
-    if form.is_valid():
-      form.save()
-      return redirect(reverse('chat:view_spectra', args = (lib_id, )))
-  else:
-    form = SpectraEditForm(instance = Spectra.objects.get(id = spectra_id))
-  return render(request, 'chat/edit_spectra.html', {'form': form})
 
 @login_required
 def edit_libprofile(request, library_id):
@@ -171,20 +154,6 @@ def add_labgroup(request):
   else:
     form = AddLabGroupForm()
   return render(request, 'chat/add_labgroup.html', {'form': form})
-  
-@login_required
-def add_post(request):
-  if request.method == 'POST':
-    form = SpectraForm(request.POST, request.FILES)
-    if form.is_valid():
-      post = form.save(commit = False)
-      post.user = request.user
-      post.created_by_id = request.user.id
-      post.save()
-      return redirect('chat:home')
-  else:
-    form = SpectraForm()
-  return render(request, 'chat/add_post.html', {'form': form})
 
 @login_required
 def add_metadata(request):
@@ -416,15 +385,6 @@ def view_cosine(request):
     form = ViewCosineForm() #instance = None)
   print('trace2')
   return render(request, 'chat/view_cosine.html', {'form': form})
-  
-class SpectraListView(SingleTableView):
-  model = Spectra
-  table_class = SpectraTable
-  template_name = 'chat/spectra.html'
-  
-  def get_queryset(self):
-    filter = SpectraFilter(request.GET, queryset = Spectra.objects.all())
-    return render(request, 'chat/spectra.html', {'filter': filter})
 
 class MetadataListView(SingleTableView):
   model = Metadata

@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from mdb.utils import *
 from chat.models import *
+from spectra.models import *
 from .forms import *
 from django.http import JsonResponse
 from .tables import *
@@ -14,7 +15,7 @@ from chat.rfn import SpectraScores
 # Distance measurement
 from sklearn.metrics.pairwise import cosine_similarity
 # spectra table
-from chat.tables import SpectraTable
+from spectra.tables import SpectraTable
 
 #-----------------------------------------------------------------------
 # begin autocomplete views

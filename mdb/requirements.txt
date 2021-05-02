@@ -16,3 +16,4 @@ django-autocomplete-light
 pandas
 requests
 pydotplus
+djangorestframework

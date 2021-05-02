@@ -1,5 +1,6 @@
 from django import forms
 from chat.models import *
+from spectra.models import *
 from files.models import UserFile
 from dal import autocomplete
 from django.contrib.auth import get_user_model
@@ -78,6 +79,20 @@ class SpectraCollectionsForm(forms.ModelForm):
     # ~ empty_label='Select a library'
   # ~ )
   
+# ~ class SpectraUploadForm(forms.ModelForm):
+  # ~ pass
+  # ~ class Meta:
+    # ~ model = UserFile
+    # ~ exclude = ('id', 'owner', 'upload_date', 'extension')
+    # ~ #custom-select
+    # ~ widgets = {
+      # ~ 'lab_name': forms.Select(
+        # ~ attrs = {
+          # ~ 'class': 'custom-select'}
+      # ~ ),
+    # ~ }
+    
+##???
 class SpectraUploadForm(forms.ModelForm):
   file = forms.FileField(
     label = 'Upload a file',
@@ -141,7 +156,6 @@ class SpectraUploadForm(forms.ModelForm):
     instance = super().save(commit=False)
     instance.owner = self.request.user
     instance.save(commit)
-    # ~ print('userfile instance',instance)
     return instance
     
   def clean(self):
@@ -152,26 +166,26 @@ class SpectraUploadForm(forms.ModelForm):
     s1 = (
       data.get('save_to_library') == True and (data.get('lab_name') == '' or data.get('library') == '')
     )
-    # ~ ll_err = False
-    # ~ if data.get('save_to_library') == True:
-      # ~ try:
-        # ~ LabGroup.objects.get(data.get('lab_name'))
-      # ~ except:
-        # ~ ll_err = forms.ValidationError(
-          # ~ 'Lab group not found!'
-        # ~ )
-      # ~ try:
-        # ~ Library.objects.get(data.get('library'))
-      # ~ except:# Library.DoesNotExist:
-        # ~ ll_err = forms.ValidationError(
-          # ~ 'Library not found!'
-        # ~ )
+    #  ll_err = False
+    #  if data.get('save_to_library') == True:
+      #  try:
+        #  LabGroup.objects.get(data.get('lab_name'))
+      #  except:
+        #  ll_err = forms.ValidationError(
+          #  'Lab group not found!'
+        #  )
+      #  try:
+        #  Library.objects.get(data.get('library'))
+      #  except:# Library.DoesNotExist:
+        #  ll_err = forms.ValidationError(
+          #  'Library not found!'
+        #  )
     if s1:
       raise forms.ValidationError(
         'Lab group and library must be specified if "Save to Library" is selected!'
       )
-    # ~ elif ll_err:
-      # ~ raise ll_err
+    #  elif ll_err:
+      #  raise ll_err
     else:
       return data
       
@@ -283,8 +297,8 @@ class SpectraSearchForm(forms.ModelForm):
     '''
     model = Spectra
     exclude = (
-      'id','picture','description','library','strain_id','lab_name',
-      'created_by','xml_hash'
+      'id', 'picture', 'description', 'library', 'strain_id', 'lab_name',
+      'created_by', 'xml_hash'
     )
     widgets = {
       'peak_mass': forms.TextInput(
