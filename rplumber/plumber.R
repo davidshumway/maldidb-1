@@ -257,14 +257,14 @@ dbSpectra <- function(ids) {
 #* 
 #* @param libraryId
 #* @get /collapseLibraryReplicates
-collapseLibraryReplicates <- function(libraryId) {
-  if (class(libraryId) != 'integer') {
-    stop('not an integer!')
-  }
+collapseLibraryReplicates <- function(id) {
+#~   if (class(id) != 'integer') {
+#~     stop('not an integer!')
+#~   }
   c <- connect()
   s <- paste0('SELECT distinct(strain_id)
     FROM chat_spectra
-    WHERE library = ', libraryId)
+    WHERE library_id = ', as.numeric(id))
   q <- dbGetQuery(c$con, s)
   if (nrow(q) < 1) {
     disconnect(c$drv, c$con)

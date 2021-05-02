@@ -12,11 +12,15 @@ ENV APP_HOME=/home/app/web
 RUN mkdir -p $APP_HOME/static
 WORKDIR $APP_HOME
 
-COPY . $APP_HOME
+COPY ./mdb/requirements.txt $APP_HOME
 RUN chown -R app:app $APP_HOME
 USER app:app
 
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
+
+# "WARNING: The scripts ... are installed in '/home/app/.local/bin'
+#   which is not on PATH."
+ENV PATH /home/app/.local/bin:$PATH 
 
 ENTRYPOINT ["/home/app/web/entrypoint.sh"]

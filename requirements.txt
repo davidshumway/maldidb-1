@@ -1,0 +1,17 @@
+Django==3.1
+Pillow
+pytz
+sqlparse
+django-tables2
+gunicorn
+dj_database_url
+django-filter
+django-bootstrap4
+sklearn
+django-jquery
+psycopg2
+psycopg2-binary
+django-extensions
+django-autocomplete-light
+pandas
+requests
