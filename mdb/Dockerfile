@@ -1,7 +1,7 @@
 FROM python:3
 
 RUN apt-get update && apt-get install -y \
-        netcat
+        netcat graphviz
 
 ENV PYTHONBUFFERED 1
 ENV PYTHONWRITEBYTECODE 1

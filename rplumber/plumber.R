@@ -270,7 +270,56 @@ collapseLibraryReplicates <- function(id) {
     disconnect(c$drv, c$con)
     stop('no strain IDs in database!')
   }
-  print(head(q, 1))
+  print(head(q, 10))
+  disconnect(c$drv, c$con)
+}
+#* @param lid
+#* @param sid
+collapseLibraryStrain <- function(lid, sid) {
+  c <- connect()
+  s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
+    FROM chat_spectra
+    WHERE library_id = ', as.numeric(lid), ' && strain_id = ',
+    as.numeric(sid))
+  q <- dbGetQuery(c$con, s)
+  if (nrow(q) < 1) {
+    disconnect(c$drv, c$con)
+    stop('no spectra matching library and strain!')
+  } else if (nrow(q) < 2) {
+    disconnect(c$drv, c$con)
+    stop('library + strain produce only one spectra!')
+  }
+  
+#~   allSpectra = list()
+  allPeaks = list()
+  
+  for(i in 1:nrow(q)) {
+    row <- q[i,]
+    allPeaks <- append(allPeaks,
+      MALDIquant::createMassPeaks(
+        mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
+        intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]),
+        snr = as.numeric(strsplit(row$peak_snr, ",")[[1]]))
+    )
+#~     allSpectra <- append(allSpectra,
+#~       MALDIquant::createMassSpectrum(
+#~         mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
+#~         intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]))
+#~     )
+  }
+  
+  t <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
+  
+  # minFrequency: double, remove all peaks which occur in less than
+  #  minFrequency*length(l) '>MassPeaks objects. It is a relative threshold.
+  # minNumber: double, remove all peaks which occur in less than
+  #  minNumber '>MassPeaks objects. It is an absolute threshold.
+  #
+  t <- filterPeaks(t,
+    minFrequency = 70 / 100,
+    minNumber = 1)
+#~   print(head(q, 10))
+  t <- mergeMassPeaks(t, method = "mean")
   disconnect(c$drv, c$con)
 }
 
