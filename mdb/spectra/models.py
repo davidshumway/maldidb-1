@@ -219,9 +219,51 @@ class Spectra(AbstractSpectra):
     ]
 
   def __str__(self):
-    if self.created_by != None:
-      return f"{self.created_by.username}'s spectra"
-    else: return 'Created by an anonymous user'
+    return f"id:{self.id} spot:{self.spot} strain_id:{self.strain_id}"
+    # ~ if self.created_by != None:
+      # ~ return f"{self.created_by.username}"
+    # ~ else: return 'Created by an anonymous user'
   
   def get_fields(self):
     return [(field.verbose_name, field.value_to_string(self)) for field in Spectra._meta.fields]
+  
+class AbstractCosineScore(models.Model):
+  score = models.DecimalField(
+    max_digits = 10, decimal_places = 6, blank = False)
+    
+  class Meta:
+    abstract = True
+
+class CollapsedCosineScore(AbstractCosineScore):
+  spectra1 = models.ForeignKey(
+    'CollapsedSpectra',
+    related_name = 'spectra1',
+    on_delete = models.CASCADE)
+  spectra2 = models.ForeignKey(
+    'CollapsedSpectra',
+    related_name = 'spectra2',
+    on_delete = models.CASCADE)
+  # ~ score = models.DecimalField(
+    # ~ max_digits = 10, decimal_places = 6, blank = False)
+      
+class SpectraCosineScore(AbstractCosineScore):
+  spectra1 = models.ForeignKey(
+    'Spectra',
+    related_name = 'spectra1',
+    on_delete = models.CASCADE)
+  spectra2 = models.ForeignKey(
+    'Spectra',
+    related_name = 'spectra2',
+    on_delete = models.CASCADE)
+  # ~ score = models.DecimalField(
+    # ~ max_digits = 10, decimal_places = 6, blank = False)
+
+class SearchSpectraCosineScore(AbstractCosineScore):
+  spectra1 = models.ForeignKey(
+    'SearchSpectra',
+    related_name = 'search_spectra1',
+    on_delete = models.CASCADE)
+  spectra2 = models.ForeignKey(
+    'Spectra',
+    related_name = 'search_spectra2',
+    on_delete = models.CASCADE)

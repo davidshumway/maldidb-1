@@ -7,8 +7,10 @@ from django import forms
 
 from .forms import *
 from .models import *
-
 from .tables import *
+from .serializers import *
+
+from spectra_search.views import SpectraFilter
 
 import django_filters
 from django_filters.views import FilterView
@@ -16,6 +18,29 @@ from django_tables2.views import SingleTableMixin
 from django_tables2 import SingleTableView
 import django_tables2 as tables
 
+from rest_framework.viewsets import ModelViewSet
+
+
+class SpectraViewSet(ModelViewSet):
+  '''
+  curl -H "Content-Type: application/json" -X POST -d '{"name": "masnun", "age": 12}' http://localhost/spectra/api/
+  '''
+  serializer_class = SpectraSerializer
+  queryset = Spectra.objects.all()[:1] #filter() #all()
+  
+  def post():
+    pass
+    
+class CollapsedSpectraViewSet(ModelViewSet):
+  '''
+  Showing first three entries.
+  '''
+  serializer_class = CollapsedSpectraSerializer
+  queryset = CollapsedSpectra.objects.all()[:3] #filter() #all()
+  
+  def post():
+    pass
+    
 def spectra_profile(request, spectra_id):
   spectra = Spectra.objects.get(id = spectra_id)
   return render(request, 'spectra/spectra_profile.html', {'spectra': spectra})
@@ -47,12 +72,15 @@ def add_post(request):
   else:
     form = SpectraForm()
   return render(request, 'spectra/add_post.html', {'form': form})
-
+      
 class SpectraListView(SingleTableView):
   model = Spectra
   table_class = SpectraTable
-  template_name = 'chat/spectra.html'
+  template_name = 'spectra/spectra.html'
   
-  def get_queryset(self):
-    filter = SpectraFilter(request.GET, queryset = Spectra.objects.all())
-    return render(request, 'chat/spectra.html', {'filter': filter})
+  def get_queryset(self, *args, **kwargs):
+    # ~ print('xx')
+    # ~ print(Spectra.objects.filter(created_by = self.request.user))
+    # ~ print(Spectra.objects.all())
+    return Spectra.objects.filter(created_by = self.request.user) \
+      .order_by('-id')

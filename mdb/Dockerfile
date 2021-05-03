@@ -14,6 +14,7 @@ WORKDIR $APP_HOME
 
 COPY ./mdb/requirements.txt $APP_HOME
 RUN chown -R app:app $APP_HOME
+
 USER app:app
 
 RUN pip install --upgrade pip

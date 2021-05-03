@@ -1,6 +1,7 @@
 from django.shortcuts import redirect, render
 from .forms import LoadSqliteForm
 from chat.forms import *
+from spectra.forms import SpectraForm
 from chat.models import Spectra, SearchSpectra, SpectraCosineScore, \
   SearchSpectraCosineScore, Metadata, XML, Locale, Version, Library, \
   LabGroup, UserTask, UserTaskStatus

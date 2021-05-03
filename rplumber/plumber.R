@@ -4,6 +4,8 @@
 
 suppressPackageStartupMessages(library(IDBacApp))
 require('RPostgreSQL')
+library(curl)
+library(jsonlite)
 
 #* Echo
 #*
@@ -77,7 +79,7 @@ function(req, id, ids) {
   c <- connect()
   s <- paste(unlist(ids), collapse = ',')
   s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
-    FROM chat_spectra
+    FROM spectra_spectra
     WHERE id IN (', s, ')')
   q <- dbGetQuery(c$con, s)
   if (nrow(q) < 1) {
@@ -85,7 +87,7 @@ function(req, id, ids) {
     stop('database returned less than one row (spectra)!')
   }
   s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
-    FROM chat_searchspectra
+    FROM spectra_searchspectra
     WHERE id = "', id, '"')
   q2 <- dbGetQuery(c$con, s)
   if (nrow(q2) != 1) {
@@ -162,7 +164,7 @@ function(req, ids) {
   c <- connect()
   s <- paste(unlist(ids), collapse = ',')
   s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
-    FROM chat_spectra
+    FROM spectra_spectra
     WHERE id IN (', s, ')')
   q <- dbGetQuery(c$con, s)
   if (nrow(q) < 2) {
@@ -225,7 +227,7 @@ dbSpectra <- function(ids) {
   c <- connect()
   s <- paste(unlist(ids), collapse = ',')
   s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
-    FROM chat_spectra
+    FROM spectra_spectra
     WHERE id IN (', s, ')')
   q <- dbGetQuery(c$con, s)
   if (nrow(q) < 1) {
@@ -254,59 +256,73 @@ dbSpectra <- function(ids) {
   list('peaks' = allPeaks, 'spectra' = allSpectra)
 }
 
-#* 
 #* @param libraryId
-#* @get /collapseLibraryReplicates
-collapseLibraryReplicates <- function(id) {
+#* @get /collapseLibrary
+collapseLibrary <- function(id) {
 #~   if (class(id) != 'integer') {
 #~     stop('not an integer!')
 #~   }
   c <- connect()
-  s <- paste0('SELECT distinct(strain_id)
-    FROM chat_spectra
+  s <- paste0('SELECT distinct(strain_id) as strain_id
+    FROM spectra_spectra
     WHERE library_id = ', as.numeric(id))
   q <- dbGetQuery(c$con, s)
   if (nrow(q) < 1) {
     disconnect(c$drv, c$con)
-    stop('no strain IDs in database!')
+    stop('no strain IDs in library!')
   }
-  print(head(q, 10))
   disconnect(c$drv, c$con)
+  for(i in 1:nrow(q)) {
+    row <- q[i,]
+    print(paste0('collapsing ', as.character(row), '...'))
+    collapseLibraryByStrain(id, row, 'protein')
+    collapseLibraryByStrain(id, row, 'sm')
+  }
+  
 }
+#* e.g. http://localhost:7002/collapseLibraryStrains?lid=1&sid=1&type=protein
 #* @param lid
 #* @param sid
-collapseLibraryStrain <- function(lid, sid) {
+#* @param type: protein or sm
+#* @get /collapseLibraryByStrain
+collapseLibraryByStrain <- function(lid, sid, type) {
+  lid <- as.numeric(lid)
+  sid <- as.numeric(sid)
+  if (type == 'protein')
+    sym <- '>'
+  else
+    sym <- '<'
   c <- connect()
-  s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
-    FROM chat_spectra
-    WHERE library_id = ', as.numeric(lid), ' && strain_id = ',
-    as.numeric(sid))
+  s <- paste0('SELECT peak_mass, peak_intensity, peak_snr, id
+    FROM spectra_spectra
+    WHERE library_id = ', as.numeric(lid), ' AND strain_id = ',
+    as.numeric(sid), ' AND max_mass ', sym, ' 6000'
+  )
   q <- dbGetQuery(c$con, s)
   if (nrow(q) < 1) {
     disconnect(c$drv, c$con)
-    stop('no spectra matching library and strain!')
+    return()
+#~     stop('no spectra matching library and strain!')
   } else if (nrow(q) < 2) {
     disconnect(c$drv, c$con)
-    stop('library + strain produce only one spectra!')
+    return()
+#~     stop('library + strain produce only one spectra!')
   }
   
-#~   allSpectra = list()
   allPeaks = list()
+  strainIds = c()
   
   for(i in 1:nrow(q)) {
     row <- q[i,]
+    strainIds <- append(strainIds, row$id)
     allPeaks <- append(allPeaks,
       MALDIquant::createMassPeaks(
         mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
         intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]),
         snr = as.numeric(strsplit(row$peak_snr, ",")[[1]]))
     )
-#~     allSpectra <- append(allSpectra,
-#~       MALDIquant::createMassSpectrum(
-#~         mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
-#~         intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]))
-#~     )
   }
+  disconnect(c$drv, c$con)
   
   t <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
   
@@ -314,13 +330,40 @@ collapseLibraryStrain <- function(lid, sid) {
   #  minFrequency*length(l) '>MassPeaks objects. It is a relative threshold.
   # minNumber: double, remove all peaks which occur in less than
   #  minNumber '>MassPeaks objects. It is an absolute threshold.
-  #
-  t <- filterPeaks(t,
-    minFrequency = 70 / 100,
-    minNumber = 1)
-#~   print(head(q, 10))
-  t <- mergeMassPeaks(t, method = "mean")
-  disconnect(c$drv, c$con)
+  # e.g. minNumber = 1
+  t <- MALDIquant::filterPeaks(t, minFrequency = 70 / 100)
+
+  t <- MALDIquant::mergeMassPeaks(t, method = 'mean')
+  
+  # save to Django's DB
+  # --curl
+  #  "Content-Type: application/json" 
+  h <- new_handle()
+  x <- paste0(
+    '{',
+      '"peak_mass":', mqSerial(MALDIquant::mass(t)), ',',
+      '"peak_intensity":', mqSerial(MALDIquant::intensity(t)), ',',
+      '"peak_snr":', mqSerial(MALDIquant::snr(t)), ',',
+      '"max_mass":', as.character(max(MALDIquant::mass(t))), ',',
+      '"min_mass":', as.character(min(MALDIquant::mass(t))), ',',
+      '"strain_id":', as.character(sid), ',',
+      '"library":', as.character(lid), ',',
+      '"collapsed_spectra":', toJSON(strainIds),
+    '}'
+  )
+  handle_setheaders(h,
+    'Content-Type' = 'application/json',
+    'Cache-Control' = 'no-cache'
+  )
+  handle_setopt(h, copypostfields = x)
+  req <- curl_fetch_memory('http://django:8000/spectra/cs/', handle = h)
+  if (req$status_code >= 300) {
+    stop('status code:', req$status_code)
+  }
+}
+#* @param l: List to serialize
+mqSerial <- function(l) {
+  as.character(paste0('"', paste(l, collapse = ','), '"'))
 }
 
 #* Preprocess: Preprocess spectra files and compare to DB ids

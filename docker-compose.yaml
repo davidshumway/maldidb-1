@@ -3,14 +3,18 @@ version: '3'
 services:
   volume_configurer:
     # https://medium.com/ncr-edinburgh/docker-tips-tricks-516b9ba41aa2
-    #chmod -R 777 /shared/;
+    # More:
+    # https://github.com/docker/compose/issues/3270#issuecomment-537763768
     image: busybox
     volumes:
       - shared:/shared:z
+      - static:/static:z
     command: ["/bin/sh", "-c", "
+      mkdir -p /static;
+      chmod -R 777 /static;
       mkdir -p /shared/sync;
       chmod -R 777 /shared/sync;
-      echo STARTED > /shared/sync/volumesetter && chmod a+r /shared/sync/volumesetter"]
+      echo STARTED > /shared/sync/volumesetter && chmod a+r /shared/sync/volumesetter"] # chmod -R 777 /static;
   db:
     container_name: postgresdb
     image: postgres:latest
@@ -55,7 +59,9 @@ services:
       - plumber
     volumes:
       - ./mdb:/home/app/web/:z
-      - staticfiles:/home/app/web/static/:z
+      #~ - staticfiles:/home/app/web/static/:z
+      - static:/home/app/web/static/:z
+      #~ - static:/static/:z
       - shared:/uploads/:z
   nginx:
     container_name: nginx
@@ -65,9 +71,12 @@ services:
       - 80:80
     volumes:
       - ./nginx:/etc/nginx/conf.d:z
-      - staticfiles:/home/app/web/static/:z
+      #~ - static:/static/:z
+      - static:/home/app/web/static/:z
+      #~ - staticfiles:/home/app/web/static/:z
      #- uploads:/home/app/web/media/uploads/:z
      #- ./mdb/media/uploads:/home/app/web/media/uploads:z
+    #entrypoint: /bin/sh -c "chown -v app:app staticfiles"
     depends_on:
       - web
       - db
@@ -75,6 +84,7 @@ services:
 
 volumes:
   postgres-data1:
-  staticfiles:
+  static: 
+  #~ staticfiles: 
   shared:
   #./mdb/media/uploads: #:/uploads

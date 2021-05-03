@@ -87,47 +87,6 @@ class UserTaskStatus(models.Model):
     # ~ related_name = '',
     on_delete = models.CASCADE,
     blank = True, null = True)
-  
-class AbstractCosineScore(models.Model):
-  score = models.DecimalField(
-    max_digits = 10, decimal_places = 6, blank = False)
-    
-  class Meta:
-    abstract = True
-
-class CollapsedCosineScore(AbstractCosineScore):
-  spectra1 = models.ForeignKey(
-    'spectra.CollapsedSpectra',
-    related_name = 'spectra1',
-    on_delete = models.CASCADE)
-  spectra2 = models.ForeignKey(
-    'spectra.CollapsedSpectra',
-    related_name = 'spectra2',
-    on_delete = models.CASCADE)
-  # ~ score = models.DecimalField(
-    # ~ max_digits = 10, decimal_places = 6, blank = False)
-      
-class SpectraCosineScore(AbstractCosineScore):
-  spectra1 = models.ForeignKey(
-    'spectra.Spectra',
-    related_name = 'spectra1',
-    on_delete = models.CASCADE)
-  spectra2 = models.ForeignKey(
-    'spectra.Spectra',
-    related_name = 'spectra2',
-    on_delete = models.CASCADE)
-  # ~ score = models.DecimalField(
-    # ~ max_digits = 10, decimal_places = 6, blank = False)
-
-class SearchSpectraCosineScore(AbstractCosineScore):
-  spectra1 = models.ForeignKey(
-    'spectra.SearchSpectra',
-    related_name = 'search_spectra1',
-    on_delete = models.CASCADE)
-  spectra2 = models.ForeignKey(
-    'spectra.Spectra',
-    related_name = 'search_spectra2',
-    on_delete = models.CASCADE)
 
 class PrivacyLevel(models.Model):
   ''' Privacy level for library, spectra, etc.

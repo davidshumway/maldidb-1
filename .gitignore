@@ -15,3 +15,5 @@ mdb.sock
 */media/uploads/*
 */media/posts/*
 project.env
+.goutputstream*
+/mdb/static/

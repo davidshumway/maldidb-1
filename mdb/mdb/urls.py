@@ -7,7 +7,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('', include('chat.urls')),
-    path('s/', include('spectra.urls')),
+    path('spectra/', include('spectra.urls')),
     path('import/', include('importer.urls')),
     path('search/', include('spectra_search.urls')),
     path('files/', include('files.urls')),
