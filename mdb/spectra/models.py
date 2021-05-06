@@ -97,6 +97,8 @@ class CollapsedSpectra(AbstractSpectra):
     max_digits = 4, decimal_places = 1, blank = False, default = 70.0)
   # ~ lower_mass_cutoff = models.IntegerField(blank = True) #e.g. 0
   # ~ upper_mass_cutoff = models.IntegerField(blank = True) #e.g. 6000
+  max_mass = models.IntegerField(blank = True, null = True)
+  min_mass = models.IntegerField(blank = True, null = True)
   
   min_snr = models.DecimalField(
     max_digits = 4, decimal_places = 2, blank = False, default = 0.25) #e.g. 0-1???

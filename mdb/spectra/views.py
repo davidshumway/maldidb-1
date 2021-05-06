@@ -23,20 +23,20 @@ from rest_framework.viewsets import ModelViewSet
 
 class SpectraViewSet(ModelViewSet):
   '''
-  curl -H "Content-Type: application/json" -X POST -d '{"name": "masnun", "age": 12}' http://localhost/spectra/api/
+  Showing latest three entries.
   '''
   serializer_class = SpectraSerializer
-  queryset = Spectra.objects.all()[:1] #filter() #all()
+  queryset = Spectra.objects.all()[:3]
   
   def post():
     pass
     
 class CollapsedSpectraViewSet(ModelViewSet):
   '''
-  Showing first three entries.
+  Showing latest three entries.
   '''
   serializer_class = CollapsedSpectraSerializer
-  queryset = CollapsedSpectra.objects.all()[:3] #filter() #all()
+  queryset = CollapsedSpectra.objects.order_by('-id')[:3]
   
   def post():
     pass

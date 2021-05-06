@@ -275,8 +275,8 @@ collapseLibrary <- function(id) {
   for(i in 1:nrow(q)) {
     row <- q[i,]
     print(paste0('collapsing ', as.character(row), '...'))
-    collapseLibraryByStrain(id, row, 'protein')
-    collapseLibraryByStrain(id, row, 'sm')
+    collapseLibraryByStrain(id, row, 'PR')
+    collapseLibraryByStrain(id, row, 'SM')
   }
   
 }
@@ -288,10 +288,12 @@ collapseLibrary <- function(id) {
 collapseLibraryByStrain <- function(lid, sid, type) {
   lid <- as.numeric(lid)
   sid <- as.numeric(sid)
-  if (type == 'protein')
+  if (type == 'PR')
     sym <- '>'
-  else
+  else {
     sym <- '<'
+    type <- 'SM' # validate
+  }
   c <- connect()
   s <- paste0('SELECT peak_mass, peak_intensity, peak_snr, id
     FROM spectra_spectra
@@ -344,10 +346,14 @@ collapseLibraryByStrain <- function(lid, sid, type) {
       '"peak_mass":', mqSerial(MALDIquant::mass(t)), ',',
       '"peak_intensity":', mqSerial(MALDIquant::intensity(t)), ',',
       '"peak_snr":', mqSerial(MALDIquant::snr(t)), ',',
-      '"max_mass":', as.character(max(MALDIquant::mass(t))), ',',
-      '"min_mass":', as.character(min(MALDIquant::mass(t))), ',',
+      '"max_mass":', as.character(round(max(MALDIquant::mass(t)))), ',',
+      '"min_mass":', as.character(round(min(MALDIquant::mass(t)))), ',',
       '"strain_id":', as.character(sid), ',',
       '"library":', as.character(lid), ',',
+      '"min_snr":0.25,',
+      '"tolerance":0.002,',
+      '"peak_percent_presence":0.7,',
+      '"spectra_content":"', as.character(type), '",',
       '"collapsed_spectra":', toJSON(strainIds),
     '}'
   )
