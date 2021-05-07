@@ -256,6 +256,7 @@ dbSpectra <- function(ids) {
   list('peaks' = allPeaks, 'spectra' = allSpectra)
 }
 
+#* Collapse every strain in a given library
 #* @param libraryId
 #* @get /collapseLibrary
 collapseLibrary <- function(id) {
@@ -280,6 +281,7 @@ collapseLibrary <- function(id) {
   }
   
 }
+#* Collapse a single strain (sid) from a single library (lid)
 #* e.g. http://localhost:7002/collapseLibraryStrains?lid=1&sid=1&type=protein
 #* @param lid
 #* @param sid

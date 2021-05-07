@@ -33,11 +33,11 @@ class UserTask(models.Model):
   # ~ task_complete = models.BooleanField(blank = False, null = False,
     # ~ default = False)
   task_choices = [
-    ('idbac_sql','Insert IDBac SQLite data to database'),
-    ('spectra','Add spectra files to database'),
-    ('preprocess','Preprocess spectra'),
-    ('collapse','Collapse replicates'),
-    ('cos_search','Cosine score search'),
+    ('idbac_sql', 'Insert IDBac SQLite data to database'),
+    ('spectra', 'Add spectra files to database'),
+    ('preprocess', 'Preprocess spectra'),
+    ('collapse', 'Collapse replicates'),
+    ('cos_search', 'Cosine score search'),
   ]
   task_description = models.CharField(
     max_length = 255,
@@ -298,8 +298,6 @@ class Locale(models.Model):
     return [(field.verbose_name, field.value_to_string(self)) for field in Locale._meta.fields]
     
 class Comment(models.Model):
-  ''' The comments Models '''
-
   user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name = 'comments', on_delete = models.CASCADE)
   spectra = models.ForeignKey('spectra.Spectra', related_name = 'comments', on_delete = models.CASCADE)
   text = models.TextField(max_length = 2048, blank = True)

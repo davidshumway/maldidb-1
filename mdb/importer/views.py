@@ -25,7 +25,6 @@ def add_sqlite(request):
 
 def handle_uploaded_file(request, tmpForm):
   '''
-  
   Spectra is inserted last as it depends on XML and Metadata tables.
   Requires json and sqlite3 libraries.
   Metadata strain_id and XML xml_hash should both be unique but they
@@ -45,6 +44,11 @@ def handle_uploaded_file(request, tmpForm):
       task_description = 'idbac_sql'
     )
     t.statuses.add(UserTaskStatus.objects.create(status = 'start'))
+    t.statuses.add(UserTaskStatus.objects.create(
+      status = 'info',
+      extra = 'Loading SQLite file ' + f,
+      user_task = t
+    ))
     thread = idbac_sqlite_insert(request, tmpForm, '/tmp/test.db', t)
     
   elif tmpForm.cleaned_data['upload_type'] == 'all': # hosted on server
@@ -195,7 +199,7 @@ def _insert(request, tmpForm, uploadFile, user_task):
       entry.save()
     else:
       form.non_field_errors()
-      field_errors = [ (field.label, field.errors) for field in form] 
+      field_errors = [(field.label, field.errors) for field in form] 
       raise ValueError('xxxxx')
   
   # Locale
@@ -219,7 +223,8 @@ def _insert(request, tmpForm, uploadFile, user_task):
       user_task = user_task
   ))
   t = 'IndividualSpectra' if idbac_version == '1.0.0' else 'spectra'
-  rows = cursor.execute('SELECT * FROM '+t).fetchall()
+  rows = cursor.execute('SELECT * FROM ' + t).fetchall()
+  strains = set() # Python set array, list, dictionary, set
   for row in rows:
     sxml = XML.objects.filter(xml_hash = row[2])
     if sxml:
@@ -250,8 +255,8 @@ def _insert(request, tmpForm, uploadFile, user_task):
       'spot': row[36]
     }
     
-    # Sanity check ("na" or "nan"): Skip this row.
-    # There are a few NAs in R01 data
+    # Sanity check ("na" or "nan"): Skip this spectra.
+    # There are a few NA spectras in R01 data
     if 'na' in row[4].lower():
       user_task.statuses.add(
         UserTaskStatus.objects.create(
@@ -266,14 +271,30 @@ def _insert(request, tmpForm, uploadFile, user_task):
     if form.is_valid():
       entry = form.save(commit = False)
       entry.save()
+      strains.add(smd.id)
     else:
       form.non_field_errors()
-      field_errors = [ (field.label, field.errors) for field in form] 
+      field_errors = [(field.label, field.errors) for field in form]
       raise ValueError('xxxxx')
   
   # Collapse pipeline
-  
-  
+  # Collapse library (i.e., no more spectra will be added)
+  # Collapse strains (i.e., more spectra may be added but no more for a given strain)
+  user_task.statuses.add(
+    UserTaskStatus.objects.create(
+      status = 'info', extra = 'Collapsing spectra',
+      user_task = user_task
+  ))
+  import requests
+  data = {
+    'strains': strains,
+    'library': tmpForm.cleaned_data['library'].id
+  }
+  print(f'sending{data}')
+  r = requests.get('http://plumber:8000/collapse', params = data)
+  print(r)
+  print(r.content)
+  print(f'py r{r}')
   
   # Close db connection  
   from django.db import connection

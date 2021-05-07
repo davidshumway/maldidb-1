@@ -4,6 +4,28 @@ from spectra.models import *
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
+class LibraryCollapseForm2(forms.Form):
+  '''
+  Collapse a library using default values.
+  '''
+  library = forms.ModelChoiceField(
+    queryset = Library.objects.all(),
+    required = True
+  )
+  
+  def clean(self):
+    data = self.cleaned_data
+    print(data)
+    if data['library'] not in Library.objects.filter(owner = self.request.user):
+      raise forms.ValidationError(
+        'Cannot access library or library does not exist!'
+      )
+    return data
+    
+  #class Meta:
+  #  model = Library
+  #  fields = ['id']
+  
 class LibraryCollapseForm(forms.Form):
   '''
   Select: Collapse all replicates marked as "Linear" vs. "Reflector"
@@ -167,8 +189,8 @@ class CommentForm(forms.Form):
   """
 
   text = forms.CharField(
-    label="Comment",
-    widget=forms.Textarea(attrs={'rows': 2})
+    label = "Comment",
+    widget = forms.Textarea(attrs = {'rows': 2})
   )
 
   def save(self, spectra, user):
@@ -176,6 +198,7 @@ class CommentForm(forms.Form):
     custom save method to create comment
     """
     comment = Comment.objects.create(
-      text=self.cleaned_data.get('text', None),
+      text = self.cleaned_data.get('text', None),
       post = spectra,
-      user = user)
+      user = user
+    )

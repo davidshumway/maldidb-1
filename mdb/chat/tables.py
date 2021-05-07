@@ -84,17 +84,20 @@ class LibraryTable(tables.Table):
   created_by = tables.Column(linkify = True)
   lab_name = tables.Column(linkify = True)
   title = tables.Column(linkify = True)
-  #test = tables.CheckBoxColumn(accessor='test')
   collapse_replicates = tables.Column(accessor = 'id',
-    verbose_name = 'Collapse Replicates')#, linkify=True)
+    verbose_name = 'Collapse Replicates')
   selector = tables.CheckBoxColumn(accessor = 'id')
   
   def render_collapse_replicates(self, value):
-    # pass lib_id
-    r = reverse('chat:preview_collapse_lib') #, args=(value, )
+    r = reverse('chat:collapse_library', args = [str(value)])
     return format_html(
-      '<a href="{}?library='+str(value)+'">preview</a>', r
+      '<a href="{}">collapse</a>', r
     )
+    # old version
+    # ~ r = reverse('chat:preview_collapse_lib') #, args=(value, )
+    # ~ return format_html(
+      # ~ '<a href="{}?library='+str(value)+'">preview</a>', r
+    # ~ )
     
   class Meta:
     model = Library

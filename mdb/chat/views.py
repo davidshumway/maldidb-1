@@ -191,6 +191,28 @@ from django.views.generic.base import TemplateView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 
+@login_required
+def collapse_library(request, lib_id):
+  ''''''    
+  if request.method == 'GET':
+    try:
+      lib = Library.objects.get(pk = lib_id)
+    except Library.DoesNotExist:
+      return redirect(reverse('chat:libraries_results'))
+      # ~ Library not found!
+    if lib not in Library.objects.filter(created_by = request.user):
+      return redirect(reverse('chat:libraries_results'))
+      # ~ You are not the owner of that library!
+    # Valid. Collapse and redirect.
+    # --
+    return redirect(reverse('chat:user_tasks'))
+  else:
+    return render(request, 'chat/libraries.html')
+  # ~ form = LibraryCollapseForm2(
+    # ~ instance = Library.objects.get(id = lib_id)
+  # ~ )
+  
+  
 @method_decorator(login_required, name = 'dispatch')
 class LibCollapseListView(MultiTableMixin, TemplateView):
   '''
@@ -204,7 +226,7 @@ class LibCollapseListView(MultiTableMixin, TemplateView):
   def get_context_data(self, **kwargs):
     #context = super(SearchResultsView, self).get_context_data(**kwargs)
     context = super().get_context_data(**kwargs)
-     
+    
     initial = {
       'library': self.request.GET.get('library', None),
       'peak_percent_presence':
@@ -368,7 +390,7 @@ class LibrariesListView(SingleTableView):
 def view_cosine(request):
   '''API for exploring cosine data
   
-  --Returns three objects: binned peaks (list), feature matrix (list),
+  Returns three objects: binned peaks (list), feature matrix (list),
     cosine scores (matrix)
   '''
   if request.method == 'POST':

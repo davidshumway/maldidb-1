@@ -2,11 +2,13 @@
 {% load i18n %}
 {% block table-wrapper %}
 
-{% if table.sfilter %}
-<!--
--->
+{% if libform %}
+  {% if libform.error %}
+    <div class="alert alert-danger">
+      <strong>{{ libform.error|escape }}</strong>
+    </div>
+  {% endif %}
 {% endif %}
-
 
 <div>
   <!-- Trigger the modal with a button -->
@@ -50,9 +52,6 @@
 <!-- show columns -->
 <div class="container col-md-8">
   
-  
-  
-
 <div class="card">
   <!-- maldidb selector -->
   <!--(one or more libraries, or one or more spectra)-->
