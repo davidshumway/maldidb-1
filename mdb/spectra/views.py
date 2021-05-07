@@ -79,8 +79,5 @@ class SpectraListView(SingleTableView):
   template_name = 'spectra/spectra.html'
   
   def get_queryset(self, *args, **kwargs):
-    # ~ print('xx')
-    # ~ print(Spectra.objects.filter(created_by = self.request.user))
-    # ~ print(Spectra.objects.all())
     return Spectra.objects.filter(created_by = self.request.user) \
       .order_by('-id')

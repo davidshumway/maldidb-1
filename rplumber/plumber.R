@@ -258,8 +258,10 @@ dbSpectra <- function(ids) {
 
 #* Collapse every strain in a given library
 #* @param libraryId
+#* @param owner User undertaking the process
+#* @param taskId Reference to a Django user task
 #* @get /collapseLibrary
-collapseLibrary <- function(id) {
+collapseLibrary <- function(id, owner, taskId) {
 #~   if (class(id) != 'integer') {
 #~     stop('not an integer!')
 #~   }
@@ -276,20 +278,28 @@ collapseLibrary <- function(id) {
   for(i in 1:nrow(q)) {
     row <- q[i,]
     print(paste0('collapsing ', as.character(row), '...'))
-    collapseLibraryByStrain(id, row, 'PR')
-    collapseLibraryByStrain(id, row, 'SM')
+    collapseLibraryByStrain(id, row, 'PR', owner)
+    collapseLibraryByStrain(id, row, 'SM', owner)
   }
   
+  #* Show task complete
+#~   c <- connect()
+#~   s <- paste0('INSERT INTO chat_usertask
+#~     WHERE library_id = ', as.numeric(id))
+#~   q <- dbGetQuery(c$con, s)
+#~   disconnect(c$drv, c$con)
 }
 #* Collapse a single strain (sid) from a single library (lid)
 #* e.g. http://localhost:7002/collapseLibraryStrains?lid=1&sid=1&type=protein
 #* @param lid
 #* @param sid
 #* @param type: protein or sm
+#* @param owner User undertaking the process
 #* @get /collapseLibraryByStrain
-collapseLibraryByStrain <- function(lid, sid, type) {
+collapseLibraryByStrain <- function(lid, sid, type, owner) {
   lid <- as.numeric(lid)
   sid <- as.numeric(sid)
+  owner <- as.numeric(owner)
   if (type == 'PR')
     sym <- '>'
   else {
@@ -356,6 +366,7 @@ collapseLibraryByStrain <- function(lid, sid, type) {
       '"tolerance":0.002,',
       '"peak_percent_presence":0.7,',
       '"spectra_content":"', as.character(type), '",',
+      '"created_by":"', owner, '",',
       '"collapsed_spectra":', toJSON(strainIds),
     '}'
   )

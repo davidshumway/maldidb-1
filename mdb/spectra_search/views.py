@@ -93,45 +93,19 @@ def preprocess_file(file, user_task):
   print(f'preprocess file{file}')
   print('??')
   f1 = file.replace('uploads/', 'uploads/sync/')
-  print('??')
-  # file
-  #import os
-  #os.chmod('/home/app/web/media/' + file, 0o777)
   
   current_loc = '/home/app/web/media/' + file
   new_loc = '/' + file.replace('uploads/', 'uploads/sync/')
-  
-  print('??')
   os.system('cp ' + current_loc + ' ' + new_loc)
   
   #shutil.copyfile(current_loc, new_loc)
-  print('??')
   
   import requests
   data = {'file': f1}
-  print('??')
-  print(f'sending{data}')
+  print(f'send{data}')
   r = requests.get('http://plumber:8000/preprocess', params = data)
   print(r)
   print(r.content)
-  print('here?')
-  print(f'py r{r}')
-  
-  # ~ pass
-  # ~ result = R['preprocess'](file)
-  # ~ #print(f'pp result{result}')
-  # ~ if result.rx2('error'):
-    # ~ user_task.statuses.add(
-      # ~ UserTaskStatus.objects.create(
-        # ~ status = 'error', extra = result.rx2('error'),
-        # ~ user_task = user_task
-    # ~ ))
-    # ~ user_task.statuses.add(
-      # ~ UserTaskStatus.objects.create(
-        # ~ status = 'complete', user_task = user_task
-    # ~ ))
-  
-  #if result
 
 def ajax_upload(request):
   '''

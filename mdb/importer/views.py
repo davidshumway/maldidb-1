@@ -41,7 +41,7 @@ def handle_uploaded_file(request, tmpForm):
     # New entry in user's tasks
     t = UserTask.objects.create(
       owner = request.user,
-      task_description = 'idbac_sql'
+      task_description = 'collapse'
     )
     t.statuses.add(UserTaskStatus.objects.create(status = 'start'))
     t.statuses.add(UserTaskStatus.objects.create(
@@ -280,21 +280,12 @@ def _insert(request, tmpForm, uploadFile, user_task):
   # Collapse pipeline
   # Collapse library (i.e., no more spectra will be added)
   # Collapse strains (i.e., more spectra may be added but no more for a given strain)
-  user_task.statuses.add(
-    UserTaskStatus.objects.create(
-      status = 'info', extra = 'Collapsing spectra',
-      user_task = user_task
-  ))
-  import requests
-  data = {
-    'strains': strains,
-    'library': tmpForm.cleaned_data['library'].id
-  }
-  print(f'sending{data}')
-  r = requests.get('http://plumber:8000/collapse', params = data)
-  print(r)
-  print(r.content)
-  print(f'py r{r}')
+  # ~ user_task.statuses.add(
+    # ~ UserTaskStatus.objects.create(
+      # ~ status = 'info', extra = 'Collapsing spectra',
+      # ~ user_task = user_task
+  # ~ ))
+  
   
   # Close db connection  
   from django.db import connection

@@ -21,6 +21,8 @@ import django_tables2 as tables
 
 from mdb.utils import *
 
+import requests
+
 def user_task_status_profile(request, status_id):
   uts = UserTaskStatus.objects.get(id = status_id)
   return render(
@@ -190,7 +192,7 @@ from django_tables2 import MultiTableMixin
 from django.views.generic.base import TemplateView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-
+    
 @login_required
 def collapse_library(request, lib_id):
   ''''''    
@@ -199,19 +201,15 @@ def collapse_library(request, lib_id):
       lib = Library.objects.get(pk = lib_id)
     except Library.DoesNotExist:
       return redirect(reverse('chat:libraries_results'))
-      # ~ Library not found!
+      # ~ Library not found
     if lib not in Library.objects.filter(created_by = request.user):
       return redirect(reverse('chat:libraries_results'))
-      # ~ You are not the owner of that library!
+      # ~ You are not the owner of that library
     # Valid. Collapse and redirect.
-    # --
+    BgProcess.collapse_lib(id = lib_id, owner = request.user)
     return redirect(reverse('chat:user_tasks'))
   else:
     return render(request, 'chat/libraries.html')
-  # ~ form = LibraryCollapseForm2(
-    # ~ instance = Library.objects.get(id = lib_id)
-  # ~ )
-  
   
 @method_decorator(login_required, name = 'dispatch')
 class LibCollapseListView(MultiTableMixin, TemplateView):
