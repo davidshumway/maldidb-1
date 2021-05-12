@@ -7,16 +7,14 @@ class AbstractSpectra(models.Model):
     # ~ 'PrivacyLevel',
     # ~ on_delete = models.CASCADE,
     # ~ blank = True)
-  PUBLIC = 'PB'
-  PRIVATE = 'PR'
   privacyChoices = [
-    (PUBLIC, 'Public'),
-    (PRIVATE, 'Private'),
+    ('PB', 'Public'),
+    ('PR', 'Private'),
   ]
   privacy_level = models.CharField(
     max_length = 2,
     choices = privacyChoices,
-    default = PUBLIC,
+    default = 'PB',
     blank = True,
     null = True
   )

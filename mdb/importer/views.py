@@ -137,7 +137,6 @@ def _insert(request, tmpForm, uploadFile, user_task):
       status = 'info', extra = 'Inserting metadata',
       user_task = user_task
   ))
-  
   rows = cursor.execute("SELECT * FROM metaData").fetchall()
   for row in rows:
     data = {
@@ -285,7 +284,6 @@ def _insert(request, tmpForm, uploadFile, user_task):
       # ~ status = 'info', extra = 'Collapsing spectra',
       # ~ user_task = user_task
   # ~ ))
-  
   
   # Close db connection  
   from django.db import connection

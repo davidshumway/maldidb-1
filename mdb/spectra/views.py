@@ -20,7 +20,6 @@ import django_tables2 as tables
 
 from rest_framework.viewsets import ModelViewSet
 
-
 class SpectraViewSet(ModelViewSet):
   '''
   Showing latest three entries.

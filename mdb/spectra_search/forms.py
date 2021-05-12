@@ -91,8 +91,7 @@ class SpectraCollectionsForm(forms.ModelForm):
           # ~ 'class': 'custom-select'}
       # ~ ),
     # ~ }
-    
-##???
+
 class SpectraUploadForm(forms.ModelForm):
   file = forms.FileField(
     label = 'Upload a file',
@@ -134,12 +133,25 @@ class SpectraUploadForm(forms.ModelForm):
     disabled = True,
     empty_label = 'Select a library'
   )
-  
-  # perform (default) preprocessing?
+  forms.MultipleChoiceField(choices = [
+      ('PB', 'Public'),
+      ('PR', 'Private'),
+    ],
+    initial = 'PR'
+  )
+  # ~ privacy_level = forms.ChoiceField(
+    # ~ choices = [
+      # ~ ('PUBLIC', 'Public'),
+      # ~ ('PRIVATE', 'Private')
+    # ~ ],
+    # ~ required = True,
+    # ~ initial = 'PRIVATE',
+    # ~ label = 'Privacy:')
+    
   preprocess = forms.BooleanField(
-    required = False,
+    required = True,
     initial = True,
-    label = 'Perform spectra preprocessing? (optional)')
+    label = 'Perform spectra preprocessing?')
   
   class Meta:
     model = UserFile
@@ -182,7 +194,7 @@ class SpectraUploadForm(forms.ModelForm):
         #  )
     if s1:
       raise forms.ValidationError(
-        'Lab group and library must be specified if "Save to Library" is selected!'
+        'Lab group and library must be specified if "Save to Library" is selected'
       )
     #  elif ll_err:
       #  raise ll_err

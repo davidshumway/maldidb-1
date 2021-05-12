@@ -110,10 +110,11 @@ class Library(models.Model):
     settings.AUTH_USER_MODEL,
     # ~ related_name = 'created_by',
     on_delete = models.CASCADE,
-    blank = True,
-    null = True)
+    blank = True, null = True)
   
-  lab_name = models.ForeignKey('LabGroup', on_delete = models.CASCADE)
+  lab_name = models.ForeignKey(
+    'LabGroup', on_delete = models.CASCADE,
+    blank = True, null = True)
   
   title = models.CharField(max_length = 200)
   description = models.TextField(blank = True)
@@ -155,13 +156,20 @@ class Library(models.Model):
     return reverse('chat:view_library', args = (self.id,))
       
 class LabGroup(models.Model):
-  '''At least one owner. Zero or more members.'''
+  '''
+  
+  At least one owner. Zero or more members.
+  "LabGroup.members: null has no effect on ManyToManyField."
+  "LabGroup.owners: null has no effect on ManyToManyField."
+  '''
   lab_name = models.CharField(max_length = 200)
   lab_description = models.TextField(blank = True)
-  owners = models.ManyToManyField(settings.AUTH_USER_MODEL)
+  owners = models.ManyToManyField(settings.AUTH_USER_MODEL,
+    blank = True,
+    related_name = 'lab_owners')
   members = models.ManyToManyField(settings.AUTH_USER_MODEL,
     blank = True,
-    related_name = "lab_members")
+    related_name = 'lab_members')
   
     #models.ForeignKey(
     #settings.AUTH_USER_MODEL,

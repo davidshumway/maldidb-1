@@ -100,6 +100,11 @@ function show_filter(e) {
                         <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
                       {% endwith %}
                     </div>
+<!--
+                    <div class="form-group">
+                      privacy_level
+                    </div>
+-->
                   </div>
                   
                   <div class="text-center">
@@ -337,7 +342,8 @@ function upload(event) {
   <div class="modal-dialog">\
     <div class="modal-content">\
       <div class="modal-header">\
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>\
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">\
+        <span aria-hidden="true">&times;</span></button>\
         <h4 class="modal-title">Uploading</h4>\
       </div>\
       <div class="modal-body">\
@@ -371,10 +377,9 @@ function upload(event) {
       var xhr = new window.XMLHttpRequest();
 
       // Upload
-      xhr.upload.addEventListener("progress", function(evt){
+      xhr.upload.addEventListener('progress', function(evt){
         if (evt.lengthComputable) {
           var percent = 100 * evt.loaded / evt.total;
-          //~ console.log(percentComplete);
           t.progress.attr('aria-valuenow', percent);
           t.progress.text(percent + '%');
           t.progress.css('width', percent + '%');
@@ -382,17 +387,16 @@ function upload(event) {
      }, false);
      
      // Download
-     xhr.addEventListener("progress", function(evt){
+     xhr.addEventListener('progress', function(evt){
        if (evt.lengthComputable) {
          var percentComplete = evt.loaded / evt.total;
-         console.log(percentComplete);
        }
      }, false);
      
      return xhr;
     },
     
-    dataType: "JSON",
+    dataType: 'JSON',
     data: new FormData(this),
     url: "{% url 'spectra_search:ajax_upload' %}",
     type: 'POST',
@@ -402,6 +406,12 @@ function upload(event) {
     success: function(response) {
       console.log(response);
       t.modal('hide');
+      
+      if (response.status == 'preprocessing') {
+        t.title.text('Preprocessing');
+        t.progress.text('0%');
+      }
+      
       // Fails when file uploaded second time
       
       //~ if (response.is_taken == true) {

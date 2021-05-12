@@ -32,9 +32,9 @@
 		<div class="card-title">
 			Lab: {{ library.lab_name }}
 		</div>
-		<div class="card-title"><!--TODO: href best practice?-->
+		<div class="card-title"><!--TODO: href-->
 			Spectra:
-			<a href="{% url 'chat:spectra_results' %}?library={{library.id}}" class="card-link">
+			<a href="{% url 'spectra_search:spectra_results' %}?library={{library.id}}" class="card-link">
 				{{ spectra|length }}</a>
 		</div>
 	</div>

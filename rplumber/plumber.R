@@ -409,11 +409,21 @@ preprocess <- function(file) {
   idbacPool <- IDBacApp:::idbac_connect(
     fileName = f,
     filePath = './uploads/sync/')[[1]]
-  IDBacApp:::db_from_mzml(
-    mzFilePaths = mzFilePaths,
-    sampleIds = sIDs,
-    idbacPool = idbacPool,
-    acquisitionInfo = NULL) #...)
+  IDBacApp:::spectraProcessingFunction(
+    rawDataFilePath = file.path(paste0("/app/", file)),
+    sampleID = sIDs,
+    pool = idbacPool, 
+    acquisitionInfo = NULL,
+  )
+#~   IDBacApp:::db_from_mzml(
+#~     mzFilePaths = mzFilePaths,
+#~     sampleIds = sIDs,
+#~     idbacPool = idbacPool,
+#~     acquisitionInfo = NULL) #...)
+  
+  # add as django Spectra
+  # connect the django Spectra to the django UserFile
+  # perform a cosine similarity scoring
   
   # return location of the idbac sqlite file.  
   print('return f')

@@ -16,6 +16,12 @@ from chat.rfn import SpectraScores
 from sklearn.metrics.pairwise import cosine_similarity
 # spectra table
 from spectra.tables import SpectraTable
+# importer
+from importer.views import idbac_sqlite_insert
+# preprocess
+import requests
+import os
+import shutil
 
 #-----------------------------------------------------------------------
 # begin autocomplete views
@@ -84,58 +90,86 @@ class MetadataAutocomplete(autocomplete.Select2QuerySetView):
 #-----------------------------------------------------------------------
 
 @start_new_thread
-def preprocess_file(file, user_task):
+def preprocess_file(request, file, user_task, form):
   '''Run R methods to preprocess spectra file
-  -- add Spectra and update UserFile
-  '''
-  import os
-  import shutil
-  print(f'preprocess file{file}')
-  print('??')
-  f1 = file.replace('uploads/', 'uploads/sync/')
   
+  Add Spectra and update UserFile
+  '''
+  print(f'preprocess file{file}')
+  f1 = file.replace('uploads/', 'uploads/sync/')
   current_loc = '/home/app/web/media/' + file
   new_loc = '/' + file.replace('uploads/', 'uploads/sync/')
   os.system('cp ' + current_loc + ' ' + new_loc)
-  
   #shutil.copyfile(current_loc, new_loc)
-  
-  import requests
   data = {'file': f1}
   print(f'send{data}')
   r = requests.get('http://plumber:8000/preprocess', params = data)
-  print(r)
-  print(r.content)
 
+  # contains sqlite file path
+  print('r', r)
+  print('content', r.content)
+  print('content', r.json())
+  print('content', r.json()[0])
+  print('request', request)
+  print('form', form.cleaned_data)
+  print('f1', f1)
+  print('current_loc', current_loc)
+  # if no library selected, then create a new library for the user.
+  # if the user is anonymous, then create a new anonymous library.
+  # add the sqlite new spectra to db
+  # def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
+  # ~ print(os.system('ls -al ' + '/uploads/sync/' + r.content.decode('utf-8') + '.sqlite'))
+  idbac_sqlite_insert(request, form,
+    '/uploads/sync/' + str(r.json()[0]) + '.sqlite',
+    user_task)
+  
+  # if multiple spectra, await user response
+  # if single spectra, perform cosine score
+
+def upload_status(request):
+	pass 
+  
 def ajax_upload(request):
   '''
-  -- Preprocessing (optional) - Once uploaded, spawn new thread to preprocess.
-  -- UserFile has file location, e.g., "uploads/Bacillus_ByZQI1O.mzXML".
-  -- Library (optional) - After optional preprocessing, add file
-    to the user's requested library, or user's "uploaded" spectra
-    if not selected, or "anonymous" spectra collection if uploaded by
-    a guest user.
-  -- What happens if file / mzml contains more than one spectra?
-    Answer: Probably throw an error.
+  Preprocessing (optional) - Once uploaded, spawn new thread to preprocess.
+  UserFile has file location, e.g., "uploads/Bacillus_ByZQI1O.mzXML".
+  Library (optional) - 1) User owned 2) Create new for user
+   3) Create new for anonymous user
+  What happens if file / mzml contains more than one spectra?
   '''
   if request.method == 'POST':
-    form = SpectraUploadForm(data=request.POST, files=request.FILES)
+    form = SpectraUploadForm(data = request.POST, files = request.FILES)
     if form.is_valid():
-      print('valid form')
       form.request = request # pass request to save() method
       form.save()
       if form.cleaned_data['preprocess'] == True:
-        # optional new thread to preprocess
+        file = str(form.instance.file)
+        filename = file.replace('uploads/', '')
+        form.cleaned_data['privacy_level'] = ['PR']
         t = UserTask.objects.create(
           owner = request.user,
           task_description = 'preprocess'
         )
         t.statuses.add(UserTaskStatus.objects.create(
           status = 'start', user_task = t))
-        preprocess_file(str(form.instance.file), t)
-        return JsonResponse({'status': 'preprocessing'}, status=200)
-      # add to library..
-      
+        if form.cleaned_data['library'] == None:
+          if request.user.is_authenticated:
+            l = Library.objects.create(created_by = request.user,
+              title = filename)
+            form.cleaned_data['library'] = l
+          else: # anonymous
+            l = Library.objects.create(
+              title = filename)
+        if form.cleaned_data['lab_name'] == None:
+          l = LabGroup.objects.create(lab_name = filename)
+          form.cleaned_data['lab_name'] = l
+          if request.user.is_authenticated:
+            l.owners.add(request.user)
+            l.members.add(request.user)
+        preprocess_file(request, file, t, form)
+        return JsonResponse(
+          {'status': 'preprocessing', 'task': t.id},
+          status=200)
       return JsonResponse({'status': 'ready'}, status=200)
     else:
       print('invalid form')
