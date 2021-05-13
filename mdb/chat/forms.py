@@ -15,7 +15,6 @@ class LibraryCollapseForm2(forms.Form):
   
   def clean(self):
     data = self.cleaned_data
-    print(data)
     if data['library'] not in Library.objects.filter(owner = self.request.user):
       raise forms.ValidationError(
         'Cannot access library or library does not exist!'

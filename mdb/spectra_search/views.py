@@ -22,6 +22,7 @@ from importer.views import idbac_sqlite_insert
 import requests
 import os
 import shutil
+import websocket
 
 #-----------------------------------------------------------------------
 # begin autocomplete views
@@ -95,6 +96,10 @@ def preprocess_file(request, file, user_task, form):
   
   Add Spectra and update UserFile
   '''
+  ws = websocket.WebSocket()
+  print(ws.connect('ws://localhost:8000/ws/pollData'))
+  print(ws.send('{"message": "test from django"}'))
+  
   print(f'preprocess file{file}')
   f1 = file.replace('uploads/', 'uploads/sync/')
   current_loc = '/home/app/web/media/' + file
@@ -117,15 +122,54 @@ def preprocess_file(request, file, user_task, form):
   # if no library selected, then create a new library for the user.
   # if the user is anonymous, then create a new anonymous library.
   # add the sqlite new spectra to db
-  # def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
-  # ~ print(os.system('ls -al ' + '/uploads/sync/' + r.content.decode('utf-8') + '.sqlite'))
-  idbac_sqlite_insert(request, form,
+  # idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
+  info = idbac_sqlite_insert(request, form,
     '/uploads/sync/' + str(r.json()[0]) + '.sqlite',
-    user_task)
+    user_task
+  )
   
-  # if multiple spectra, await user response
-  # if single spectra, perform cosine score
-
+  # TODO
+  #  if multiple spectra, await user response
+  #  if single spectra, continue
+  
+  # if more than one protein spectra, then collapse
+  if info['spectra']['protein'] > 1:
+    data = {
+      'id': form.cleaned_data['library'].id,
+      'owner': request.user.id,
+      'task_id': user_task.id,
+      # ~ 'sid': str(r.json()[0])
+    }
+    print(f'send{data}')
+    r = requests.get(
+      'http://plumber:8000/collapseLibrary',
+      params = data
+    )
+    n1 = CollapsedSpectra.objects.filter(
+      library_id__exact = form.cleaned_data['library'].id,
+      max_mass__gt = 6000
+    ).first()
+    n2 = CollapsedSpectra.objects.filter(
+      library__title__exact = 'R01 Data',
+      max_mass__gt = 6000
+    ).values('id')
+    data = {
+      'ids': [n1.id] + [s['id'] for s in list(n2)]
+    }
+    r = requests.post(
+      'http://plumber:8000/cosine',
+      params = data
+    )
+    print('content', r.content)
+    # add as a spectra score
+  else:
+    pass
+    # ~ r = requests.post(
+      # ~ 'http://plumber:8000/cosine',
+      # ~ params = data
+    # ~ )
+  #scoring
+  
 def upload_status(request):
 	pass 
   
@@ -308,7 +352,6 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     srep = form.cleaned_data['replicates'];
     scut = form.cleaned_data['spectrum_cutoff'];
     if sm and si and sn and srep and scut:
-      print('valid data')
       self.show_tbl = True
       
       # Create a search object for user, or anonymous user
@@ -317,15 +360,13 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
           peak_mass = sm,
           peak_intensity = si,
           peak_snr = sn,
-          created_by = self.request.user
-        )
+          created_by = self.request.user)
       except:
         obj, created = SearchSpectra.objects.get_or_create(
           peak_mass = sm,
           peak_intensity = si,
           peak_snr = sn,
-          created_by = None
-        )
+          created_by = None)
       
       search_id = obj.id
       

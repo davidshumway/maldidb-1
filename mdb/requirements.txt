@@ -17,3 +17,8 @@ pandas
 requests
 pydotplus
 djangorestframework
+channels
+websocket-client
+uvicorn
+uvloop
+daphne

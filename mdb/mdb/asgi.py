@@ -7,10 +7,52 @@ For more information on this file, see
 https://docs.djangoproject.com/en/3.0/howto/deployment/asgi/
 """
 
+# ~ import os
+# ~ import django
+# ~ from django.core.asgi import get_asgi_application
+# ~ from channels.routing import get_default_application
+# ~ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mdb.settings')
+# ~ django.setup()
+# ~ application = get_default_application()
+
+# ~ import os
+# ~ from django.core.asgi import get_asgi_application
+# ~ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mdb.settings')
+# ~ application = get_asgi_application()
+
 import os
-
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mdb.settings')
+import django
+django.setup()
+from channels.routing import get_default_application
 from django.core.asgi import get_asgi_application
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddlewareStack
+from django.urls import path
+from chat import consumer
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'djangoproject.settings')
+application = ProtocolTypeRouter({
+  'http': get_asgi_application(),
+  # ~ 'http': get_default_application(),
+  'websocket': AuthMiddlewareStack(
+    URLRouter([
+      # ~ path('ws/pollData', consumer.DashConsumer),
+      path('ws/pollData', consumer.DashConsumer.as_asgi()),
+    ])
+  )
+})
 
-application = get_asgi_application()
+# ~ import os
+# ~ from channels.auth import AuthMiddlewareStack
+# ~ from channels.routing import ProtocolTypeRouter, URLRouter
+# ~ from django.core.asgi import get_asgi_application
+# ~ import mdb.routing
+# ~ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mdb.settings")
+# ~ application = ProtocolTypeRouter({
+  # ~ "http": get_asgi_application(),
+  # ~ "websocket": AuthMiddlewareStack(
+    # ~ URLRouter(
+      # ~ mdb.routing.websocket_urlpatterns
+    # ~ )
+  # ~ ),
+# ~ })

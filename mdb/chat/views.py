@@ -401,9 +401,7 @@ def view_cosine(request):
         {'form': form, 'sc': sc}
       )
   else:
-    print('trace')
     form = ViewCosineForm() #instance = None)
-  print('trace2')
   return render(request, 'chat/view_cosine.html', {'form': form})
 
 class MetadataListView(SingleTableView):

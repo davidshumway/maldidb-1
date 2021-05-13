@@ -146,7 +146,8 @@ function(req, id, ids) {
 }
 
 #* Cosine: Get cosine scores for a set of db spectra
-#* -- ids must correlate to at least 2 rows
+#* Ids must correlate to at least 2 rows
+#* Todo: library=, lab=, strain=, user=, ...
 #* @param req Built-in
 #* @param ids List of IDs from Spectra table
 #* @post /cosine
@@ -157,6 +158,7 @@ function(req, ids) {
 #~   if (class(ids) != 'integer') {
 #~     stop('not an integer (ids)!columns')
 #~   }
+  ids <- as.numeric(ids)
   if (length(ids) < 2) {
     stop('less than two comparison ids given!')
   }
@@ -164,7 +166,7 @@ function(req, ids) {
   c <- connect()
   s <- paste(unlist(ids), collapse = ',')
   s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
-    FROM spectra_spectra
+    FROM spectra_collapsedspectra
     WHERE id IN (', s, ')')
   q <- dbGetQuery(c$con, s)
   if (nrow(q) < 2) {
@@ -189,29 +191,71 @@ function(req, ids) {
         intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]))
     )
   }
+  disconnect(c$drv, c$con)
   
   binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
   featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
-  
   d <- stats::as.dist(coop::tcosine(featureMatrix))
   d <- as.matrix(d)
   d <- round(d, 3)
-  dfull <- d
-  d[lower.tri(d, diag = FALSE)] <- NA # Discard symmetric part
-  disconnect(c$drv, c$con)
+  d[lower.tri(d, diag = FALSE)] <- NA # Discard symmetric part of matrix
+  d <- d[1,] # return just first row
+  return(d)
   
-  library(jsonlite)
-  a <- list( # capture output helpful for serializing S4 class
-    'ids' = ids,
-    'allPeaks' = capture.output(allPeaks),
-    'allSpectra' = capture.output(allSpectra),
-    'binnedPeaks' = capture.output(binnedPeaks),
-    'featureMatrix' = capture.output(featureMatrix),
-    'cosineScores' = capture.output(dfull),
-    #'cosineScoresUt' = capture.output(d),
-    'cosineScoresUt' = d
+  
+  t <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
+  # non-collapsed spectra:
+  #     t <- MALDIquant::filterPeaks(t, minFrequency = 70 / 100)
+  #     t <- MALDIquant::mergeMassPeaks(t, method = 'mean')
+#~   print('x')
+#~   print(head(t))
+#~   t <- list(t)
+#~   print(lapply(t, MALDIquant::isEmpty))
+  
+  emptyProtein <- unlist(
+    lapply(t, MALDIquant::isEmpty)
   )
-  jsonlite::toJSON(a)
+  
+  test <- lapply(t, function(x) x@mass)
+#~   test <- lapply(t[!emptyProtein], function(x) x@mass)
+  print(head(test,2))
+  test <- lapply(t[!emptyProtein], function(x) x@intensity)
+  print(head(test,2))
+  proteinMatrix <- IDBacApp:::createFuzzyVector(
+    massStart = 2000,
+    massEnd = 20000,
+    ppm = 1000,
+    massList = lapply(t[!emptyProtein], function(x) x@mass),
+    intensityList = lapply(t[!emptyProtein], function(x) x@intensity))
+  print(head(proteinMatrix, 1))
+  x <- idbac_dendrogram_creator(
+    bootstraps = 0L,
+    distanceMethod = 'cosine',
+    clusteringMethod = 'average',
+    proteinMatrix
+  )
+  print(x)
+  return(x)
+  
+#~   featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
+#~   d <- stats::as.dist(coop::tcosine(featureMatrix))
+#~   d <- as.matrix(d)
+#~   d <- round(d, 3)
+#~   dfull <- d
+#~   d[lower.tri(d, diag = FALSE)] <- NA # Discard symmetric part
+#~   disconnect(c$drv, c$con)
+#~   library(jsonlite)
+#~   a <- list( # capture output helpful for serializing S4 class
+#~     'ids' = ids,
+#~     'allPeaks' = capture.output(allPeaks),
+#~     'allSpectra' = capture.output(allSpectra),
+#~     'binnedPeaks' = capture.output(binnedPeaks),
+#~     'featureMatrix' = capture.output(featureMatrix),
+#~     'cosineScores' = capture.output(dfull),
+#~     #'cosineScoresUt' = capture.output(d),
+#~     'cosineScoresUt' = d
+#~   )
+#~   jsonlite::toJSON(a)
 }
 
 # Helper function to retrive list of IDs from Django's DB
@@ -278,8 +322,8 @@ collapseLibrary <- function(id, owner, taskId) {
   for(i in 1:nrow(q)) {
     row <- q[i,]
     print(paste0('collapsing ', as.character(row), '...'))
-    collapseLibraryByStrain(id, row, 'PR', owner)
-    collapseLibraryByStrain(id, row, 'SM', owner)
+    collapseStrainsInLibrary(id, row, 'PR', owner)
+    collapseStrainsInLibrary(id, row, 'SM', owner)
   }
   
   #* Show task complete
@@ -294,9 +338,9 @@ collapseLibrary <- function(id, owner, taskId) {
 #* @param lid
 #* @param sid
 #* @param type: protein or sm
-#* @param owner User undertaking the process
-#* @get /collapseLibraryByStrain
-collapseLibraryByStrain <- function(lid, sid, type, owner) {
+#* @param owner: User undertaking the process
+#* @get /collapseStrainsInLibrary
+collapseStrainsInLibrary <- function(lid, sid, type, owner) {
   lid <- as.numeric(lid)
   sid <- as.numeric(sid)
   owner <- as.numeric(owner)
@@ -345,8 +389,8 @@ collapseLibraryByStrain <- function(lid, sid, type, owner) {
   # minNumber: double, remove all peaks which occur in less than
   #  minNumber '>MassPeaks objects. It is an absolute threshold.
   # e.g. minNumber = 1
+  
   t <- MALDIquant::filterPeaks(t, minFrequency = 70 / 100)
-
   t <- MALDIquant::mergeMassPeaks(t, method = 'mean')
   
   # save to Django's DB
@@ -460,12 +504,6 @@ preprocess <- function(file) {
   #peaks <- c(peaks, a['peaks'])
   #print(peaks)
   
-  # cosine score
-  #binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
-  #featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
-  emptyProtein <- unlist(
-    lapply(peaks, MALDIquant::isEmpty)
-  )
   proteinMatrix <- IDBacApp:::createFuzzyVector(
     massStart = 2000,
     massEnd = 20000,

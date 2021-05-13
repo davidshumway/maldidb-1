@@ -17,7 +17,6 @@ def add_sqlite(request):
     form = LoadSqliteForm(request.POST, request.FILES)
     if form.is_valid():
       result = handle_uploaded_file(request, form)
-      #print('result---', result)
       return redirect('chat:user_tasks')
   else:
     form = LoadSqliteForm()
@@ -37,20 +36,17 @@ def handle_uploaded_file(request, tmpForm):
     with open('/tmp/test.db', 'wb+') as destination:
       for chunk in f.chunks():
         destination.write(chunk)
-    
-    # New entry in user's tasks
     t = UserTask.objects.create(
       owner = request.user,
-      task_description = 'collapse'
+      task_description = 'idbac_sql'
     )
     t.statuses.add(UserTaskStatus.objects.create(status = 'start'))
     t.statuses.add(UserTaskStatus.objects.create(
       status = 'info',
-      extra = 'Loading SQLite file ' + f,
+      extra = 'Loading SQLite file ' + str(f),
       user_task = t
     ))
-    thread = idbac_sqlite_insert(request, tmpForm, '/tmp/test.db', t)
-    
+    thread = _insert(request, tmpForm, '/tmp/test.db', t)
   elif tmpForm.cleaned_data['upload_type'] == 'all': # hosted on server
     hc = [
       '2019_04_15_10745_db-2_0_0.sqlite',
@@ -68,7 +64,6 @@ def handle_uploaded_file(request, tmpForm):
       '2019_11_20_1003534_db-2_0_0.sqlite',
     ]
     for f in hc:
-      # New entry in user's tasks
       t = UserTask.objects.create(
         owner = request.user,
         task_description = 'idbac_sql'
@@ -82,10 +77,10 @@ def handle_uploaded_file(request, tmpForm):
         extra = 'Loading SQLite file ' + f,
         user_task = t
       ))
-      idbac_sqlite_insert(request, tmpForm, '/home/app/r01data/' + f, t)
+      _insert(request, tmpForm, '/home/app/r01data/' + f, t)
     
 @start_new_thread
-def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
+def _insert(request, tmpForm, uploadFile, user_task):
   '''
   
   In the case of erroneous data, save the row data to user's
@@ -95,7 +90,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
   
   '''  
   try:
-    _insert(request, tmpForm, uploadFile, user_task)
+    idbac_sqlite_insert(request, tmpForm, uploadFile, user_task)
   except Exception as e:
     user_task.statuses.add(
       UserTaskStatus.objects.create(
@@ -109,11 +104,19 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
         status = 'complete', user_task = user_task
     ))
 
-def _insert(request, tmpForm, uploadFile, user_task):
-  
+def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
+  '''
+  :return: Optionally returns an info object detailing results
+  '''
   idbac_version = '1.0.0'
   connection = sqlite3.connect(uploadFile)
   cursor = connection.cursor()
+  info = {
+    'spectra': {
+      'protein': 0,
+      'sm': 0
+    }
+  }
   
   # Version
   rows = cursor.execute("SELECT * FROM version").fetchall()
@@ -223,7 +226,7 @@ def _insert(request, tmpForm, uploadFile, user_task):
   ))
   t = 'IndividualSpectra' if idbac_version == '1.0.0' else 'spectra'
   rows = cursor.execute('SELECT * FROM ' + t).fetchall()
-  strains = set() # Python set array, list, dictionary, set
+  strains = set() # Python set
   for row in rows:
     sxml = XML.objects.filter(xml_hash = row[2])
     if sxml:
@@ -231,7 +234,6 @@ def _insert(request, tmpForm, uploadFile, user_task):
     smd = Metadata.objects.filter(strain_id = row[3])
     if smd:
       smd = smd[0]
-    
     pm = json.loads(row[4])
     
     data = {
@@ -271,6 +273,7 @@ def _insert(request, tmpForm, uploadFile, user_task):
       entry = form.save(commit = False)
       entry.save()
       strains.add(smd.id)
+      info['spectra']['protein' if row[6] > 6000 else 'sm'] += 1
     else:
       form.non_field_errors()
       field_errors = [(field.label, field.errors) for field in form]
@@ -285,6 +288,7 @@ def _insert(request, tmpForm, uploadFile, user_task):
       # ~ user_task = user_task
   # ~ ))
   
-  # Close db connection  
   from django.db import connection
   connection.close()
+  
+  return info

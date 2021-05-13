@@ -17,6 +17,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
+  'channels',
   'dal', # autocomplete, before admin in case used in admin
   'dal_select2',
   'django.contrib.admin',
@@ -70,6 +71,13 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'mdb.wsgi.application'
+ASGI_APPLICATION = 'mdb.routing.application'
+
+CHANNEL_LAYERS = {
+  "default": {
+    "BACKEND": "channels.layers.InMemoryChannelLayer"
+  },
+}
 
 DATABASES = {
   "default": {
