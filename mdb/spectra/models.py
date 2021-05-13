@@ -234,17 +234,27 @@ class AbstractCosineScore(models.Model):
   class Meta:
     abstract = True
 
-class CollapsedCosineScore(AbstractCosineScore):
-  spectra1 = models.ForeignKey(
+# ~ class CollapsedCosineScore(AbstractCosineScore):
+class CollapsedCosineScore(models.Model):
+  spectra = models.ForeignKey(
     'CollapsedSpectra',
-    related_name = 'spectra1',
+    # ~ related_name = 'spectra',
     on_delete = models.CASCADE)
-  spectra2 = models.ForeignKey(
-    'CollapsedSpectra',
-    related_name = 'spectra2',
+  library = models.ForeignKey(
+    'chat.Library',
     on_delete = models.CASCADE)
-  # ~ score = models.DecimalField(
-    # ~ max_digits = 10, decimal_places = 6, blank = False)
+  scores = models.TextField()
+  spectra_ids = models.TextField()
+  
+# ~ class CollapsedCosineScore(AbstractCosineScore):
+  # ~ spectra1 = models.ForeignKey(
+    # ~ 'CollapsedSpectra',
+    # ~ related_name = 'spectra1',
+    # ~ on_delete = models.CASCADE)
+  # ~ spectra2 = models.ForeignKey(
+    # ~ 'CollapsedSpectra',
+    # ~ related_name = 'spectra2',
+    # ~ on_delete = models.CASCADE)
       
 class SpectraCosineScore(AbstractCosineScore):
   spectra1 = models.ForeignKey(
@@ -255,8 +265,6 @@ class SpectraCosineScore(AbstractCosineScore):
     'Spectra',
     related_name = 'spectra2',
     on_delete = models.CASCADE)
-  # ~ score = models.DecimalField(
-    # ~ max_digits = 10, decimal_places = 6, blank = False)
 
 class SearchSpectraCosineScore(AbstractCosineScore):
   spectra1 = models.ForeignKey(
