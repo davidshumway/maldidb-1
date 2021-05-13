@@ -10,3 +10,9 @@ class SpectraSerializer(serializers.ModelSerializer):
   class Meta:
     model = Spectra
     fields = '__all__'
+
+class CollapsedCosineScoreSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = CollapsedCosineScore
+    fields = '__all__'
+

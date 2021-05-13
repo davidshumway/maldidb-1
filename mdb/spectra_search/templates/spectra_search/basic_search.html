@@ -336,16 +336,17 @@ window.addEventListener('DOMContentLoaded', (event) => {
 //const myDiv = document.getElementById('poll_data')
 let socket = new WebSocket('ws://127.0.0.1:8000/ws/pollData');
 socket.onopen = function(e){
-  alert('connection established');
+  //~ alert('connection established');
+  console.log(e)
 }
 socket.onmessage = function(e){
   console.log(e.data);
   result = JSON.parse(e.data);
   console.log(result)
-  //~ myDiv.textContent = result.value2;
 }
 socket.onclose = function(e){
-  alert('connection closed');
+  console.log(e)
+  //~ alert('connection closed');
 }
 
 // upload form

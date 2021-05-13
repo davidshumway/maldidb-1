@@ -1,7 +1,12 @@
 from django.urls import path, include
 from . import views
-
 app_name = 'spectra_search'
+
+# ~ from rest_framework.routers import SimpleRouter
+# ~ from .views import CollapsedCosineScoreViewSet
+# ~ router = SimpleRouter()
+# ~ router.register('ccs', CollapsedCosineScoreViewSet)
+
 urlpatterns = [
   # basic / advanced search
   path('', views.FilteredSpectraSearchListView.as_view(), name='basic_search'),

@@ -20,12 +20,23 @@ import django_tables2 as tables
 
 from rest_framework.viewsets import ModelViewSet
 
+class CollapsedCosineScoreViewSet(ModelViewSet):
+  '''
+  Showing latest three entries.
+  '''
+  serializer_class = CollapsedCosineScoreSerializer
+  queryset = CollapsedCosineScore.objects.all().order_by('-id')[:3]
+  print('----------')
+  
+  def post():
+    pass
+    
 class SpectraViewSet(ModelViewSet):
   '''
   Showing latest three entries.
   '''
   serializer_class = SpectraSerializer
-  queryset = Spectra.objects.all()[:3]
+  queryset = Spectra.objects.all().order_by('-id')[:3]
   
   def post():
     pass

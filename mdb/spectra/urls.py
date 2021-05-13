@@ -5,9 +5,11 @@ app_name = 'spectra'
 from rest_framework.routers import SimpleRouter
 from .views import SpectraViewSet
 from .views import CollapsedSpectraViewSet
+from .views import CollapsedCosineScoreViewSet
 router = SimpleRouter()
 router.register('s', SpectraViewSet)
 router.register('cs', CollapsedSpectraViewSet)
+router.register('ccs', CollapsedCosineScoreViewSet)
 
 urlpatterns = [
 

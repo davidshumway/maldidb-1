@@ -3,8 +3,9 @@ from mdb.utils import *
 from chat.models import *
 from spectra.models import *
 from .forms import *
-from django.http import JsonResponse
 from .tables import *
+from .serializers import *
+from django.http import JsonResponse
 import django_filters
 from django_filters.views import FilterView
 from django_tables2.views import SingleTableMixin
@@ -13,7 +14,7 @@ import django_tables2 as tables
 # R
 from chat.rfn import SpectraScores
 # Distance measurement
-from sklearn.metrics.pairwise import cosine_similarity
+#from sklearn.metrics.pairwise import cosine_similarity
 # spectra table
 from spectra.tables import SpectraTable
 # importer
@@ -25,6 +26,16 @@ import shutil
 import websocket
 import operator
 
+# ~ from rest_framework.viewsets import ModelViewSet
+# ~ class CollapsedCosineScoreViewSet(ModelViewSet):
+  # ~ '''
+  # ~ Showing latest three entries.
+  # ~ '''
+  # ~ serializer_class = CollapsedCosineScoreSerializer
+  # ~ queryset = CollapsedCosineScore.objects.all()[:3]
+  # ~ def post():
+    # ~ pass
+    
 #-----------------------------------------------------------------------
 # begin autocomplete views
 #-----------------------------------------------------------------------
@@ -185,10 +196,10 @@ def preprocess_file(request, file, user_task, form):
     # ~ print(pk_list[0:10])
     # ~ print(preserved[0:10])
     
+    # create a dictionary and sort by its values
     k = [str(s['id']) for s in list(n2)]
     o = dict(zip(k, map(float, r.json())))
     sorted_tuples = sorted(o.items(), key=operator.itemgetter(1))
-    # ~ print(sorted_tuples)
     sorted_dict = {k: v for k, v in sorted_tuples}
     
     CollapsedCosineScore.objects.create(
