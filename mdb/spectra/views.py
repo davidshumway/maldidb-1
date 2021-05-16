@@ -26,7 +26,6 @@ class CollapsedCosineScoreViewSet(ModelViewSet):
   '''
   serializer_class = CollapsedCosineScoreSerializer
   queryset = CollapsedCosineScore.objects.all().order_by('-id')[:3]
-  print('----------')
   
   def post():
     pass

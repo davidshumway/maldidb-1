@@ -334,19 +334,48 @@ window.addEventListener('DOMContentLoaded', (event) => {
 });
 
 //const myDiv = document.getElementById('poll_data')
-let socket = new WebSocket('ws://127.0.0.1:8000/ws/pollData');
+//~ var socket = new WebSocket('ws://127.0.0.1:8000/');
+var socket = new WebSocket('ws://127.0.0.1:8000/ws/pollData');
 socket.onopen = function(e){
-  //~ alert('connection established');
-  console.log(e)
+  console.log(e);
 }
 socket.onmessage = function(e){
   console.log(e.data);
   result = JSON.parse(e.data);
-  console.log(result)
+  console.log(result);
 }
 socket.onclose = function(e){
-  console.log(e)
-  //~ alert('connection closed');
+  console.log(e);
+}
+//~ socket = new WebSocket('ws://localhost:8010/ws/pollData');
+socket = new WebSocket('ws://localhost/ws/pollData');
+socket.onopen = function(e){
+  console.log(e);
+}
+socket.onmessage = function(e){
+  console.log(e.data);
+  result = JSON.parse(e.data);
+  console.log(result);
+}
+socket.onclose = function(e){
+  console.log(e);
+}
+//~ socket = new WebSocket('ws://django:8000/ws/pollData');
+//~ socket = new WebSocket('ws://django/ws/pollData');
+//~ socket = new WebSocket('ws://mdb:8010/ws/pollData');
+//~ socket = new WebSocket('ws://mdb/ws/pollData');
+//~ socket = new WebSocket('ws://0.0.0.0:8010/ws/pollData');
+socket = new WebSocket('ws://0.0.0.0/ws/pollData');
+socket.onopen = function(e){
+  console.log(e);
+}
+socket.onmessage = function(e){
+  console.log(e.data);
+  result = JSON.parse(e.data);
+  console.log(result);
+}
+socket.onclose = function(e){
+  console.log(e);
 }
 
 // upload form

@@ -110,7 +110,31 @@ def preprocess_file(request, file, user_task, form):
   '''
   ws = websocket.WebSocket()
   print(ws.connect('ws://localhost:8000/ws/pollData'))
+  # ~ print(ws.connect('ws://localhost/ws/pollData'))
+  # ~ print(ws.connect('ws://0.0.0.0/ws/pollData'))
   print(ws.send('{"message": "test from django"}'))
+  # ~ print(ws.connect('ws://localhost/ws/pollData'))
+  # ~ print(ws.send('{"message": "test from django"}'))
+  # ~ print(ws.connect('ws://django/ws/pollData'))
+  # ~ print(ws.send('{"message": "test from django"}'))
+  # ~ print(ws.connect('ws://django:8000/ws/pollData'))
+  # ~ print(ws.send('{"message": "test from django"}'))
+  # ~ print(ws.connect('ws://0.0.0.0:8000/ws/pollData'))
+  # ~ print(ws.send('{"message": "test from django"}'))
+  # ~ print(ws.connect('ws://mdb:8000/ws/pollData'))
+  # ~ print(ws.send('{"message": "test from django"}'))
+  # ~ print(ws.connect('ws://localhost/ws/pollData'))
+  # ~ print(ws.send('{"message": "test from django"}'))
+  # ~ print(ws.connect('ws://django/ws/pollData'))
+  # ~ print(ws.send('{"message": "test from django"}'))
+  # ~ print(ws.connect('ws://0.0.0.0/ws/pollData'))
+  # ~ print(ws.send('{"message": "test from django"}'))
+  # ~ print(ws.connect('ws://mdb/ws/pollData'))
+  # ~ print(ws.send('{"message": "test from django"}'))
+  # ~ print(ws.connect('wss://localhost:8000/ws/pollData'))
+  # ~ print(ws.send('{"message": "test from django"}'))
+  # ~ print(ws.connect('wss://mdb:8000/ws/pollData'))
+  # ~ print(ws.send('{"message": "test from django"}'))
   
   print(f'preprocess file{file}')
   f1 = file.replace('uploads/', 'uploads/sync/')
@@ -198,16 +222,19 @@ def preprocess_file(request, file, user_task, form):
     
     # create a dictionary and sort by its values
     k = [str(s['id']) for s in list(n2)]
-    o = dict(zip(k, map(float, r.json())))
-    sorted_tuples = sorted(o.items(), key=operator.itemgetter(1))
-    sorted_dict = {k: v for k, v in sorted_tuples}
+    v = map(float, r.json())
+    o = dict(zip(k, v))
+    # ~ sorted_tuples = sorted(o.items(), key=operator.itemgetter(1))
+    # ~ sorted_dict = {k: v for k, v in sorted_tuples}
     
     CollapsedCosineScore.objects.create(
       spectra = n1,
       library = form.cleaned_data['library'],
       # ~ scores = ','.join(list(r.json())),
-      scores = ','.join(map(str, list(sorted_dict.values()))),
-      spectra_ids = ','.join(map(str, sorted_dict.keys())))
+      scores = ','.join(map(str, list(o.values()))),
+      spectra_ids = ','.join(map(str, o.keys())))
+      # ~ scores = ','.join(map(str, list(sorted_dict.values()))),
+      # ~ spectra_ids = ','.join(map(str, sorted_dict.keys())))
   else:
     pass
     # ~ r = requests.post(

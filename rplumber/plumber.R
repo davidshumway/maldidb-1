@@ -165,7 +165,7 @@ function(req, ids) {
   
   c <- connect()
   s <- paste(unlist(ids), collapse = ',')
-  s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
+  s <- paste0('SELECT peak_mass, peak_intensity, peak_snr, id
     FROM spectra_collapsedspectra
     WHERE id IN (', s, ')')
   q <- dbGetQuery(c$con, s)
@@ -176,9 +176,11 @@ function(req, ids) {
   
   allSpectra = list()
   allPeaks = list()
+  dbIds = list()
   
   for(i in 1:nrow(q)) {
     row <- q[i,]
+    dbIds <- append(dbIds, row$id)
     allPeaks <- append(allPeaks,
       MALDIquant::createMassPeaks(
         mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
@@ -192,6 +194,7 @@ function(req, ids) {
     )
   }
   disconnect(c$drv, c$con)
+  print(dbIds)
 #~   print('x')
   binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
 #~   print(head(binnedPeaks, 1))
@@ -202,9 +205,9 @@ function(req, ids) {
 #~   return()
   d <- as.matrix(d)
   d <- round(d, 3)
+  print(d)
   d[lower.tri(d, diag = FALSE)] <- NA # Discard symmetric part of matrix
   d <- d[1,] # return just first row
-  print('x')
   return(d)
   
   

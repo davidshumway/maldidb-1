@@ -72,6 +72,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mdb.wsgi.application'
 ASGI_APPLICATION = 'mdb.routing.application'
+# ~ ASGI_APPLICATION = 'mdb.asgi.application'
 
 CHANNEL_LAYERS = {
   "default": {
