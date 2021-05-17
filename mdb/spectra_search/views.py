@@ -196,45 +196,25 @@ def preprocess_file(request, file, user_task, form):
       'http://plumber:8000/cosine',
       params = data
     )
-    # ~ print('content', r.content)
-    # add as a spectra score
-    # sort by key
-    # ~ from django.db.models import Case, When
-    # ~ sorted_list = []
-    # ~ pk_list = []
-    # ~ scores = {}
-    # ~ first = True
-    # ~ for key, value in list(r.json()).items():
-      # ~ if first: # skip first
-        # ~ first = False
-        # ~ continue
-      # ~ k = int(key) - 2 # starts with 1, and 1st is search spectra
-      # ~ sorted_list.append({'id': idx[k].id, 'score': float(value)})
-      # ~ scores[idx[k].id] = float(value)
-    # ~ sorted_list.sort(key = sort_func, reverse = True)
-    # ~ pk_list = [key.get('id') for key in sorted_list]
-    # ~ preserved = Case(*[When(pk = pk, then = pos) for pos, pk in enumerate(pk_list)])
-    
-    # ~ print(scores[0:10])
-    # ~ print(sorted_list[0:10])
-    # ~ print(pk_list[0:10])
-    # ~ print(preserved[0:10])
-    
+    # ~ import requests
+    # ~ data = {'ids': [197] + [65,67]}
+    # ~ r = requests.post('http://plumber:8000/cosine', params = data)
+    # ~ n2 = [65,67]
+
     # create a dictionary and sort by its values
-    k = [str(s['id']) for s in list(n2)]
-    v = map(float, r.json())
-    o = dict(zip(k, v))
-    # ~ sorted_tuples = sorted(o.items(), key=operator.itemgetter(1))
-    # ~ sorted_dict = {k: v for k, v in sorted_tuples}
-    
+    from collections import OrderedDict
+    k = [str(s['id']) for s in list(n2)] # one less
+    v = r.json()[1:] # one more, remove first
+    o = OrderedDict(
+      sorted(dict(zip(k, v)).items(),
+        key = lambda x: (x[1], x[0]), reverse = True)
+    )
+
     CollapsedCosineScore.objects.create(
       spectra = n1,
       library = form.cleaned_data['library'],
-      # ~ scores = ','.join(list(r.json())),
       scores = ','.join(map(str, list(o.values()))),
       spectra_ids = ','.join(map(str, o.keys())))
-      # ~ scores = ','.join(map(str, list(sorted_dict.values()))),
-      # ~ spectra_ids = ','.join(map(str, sorted_dict.keys())))
   else:
     pass
     # ~ r = requests.post(
