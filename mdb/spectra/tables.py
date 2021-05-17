@@ -5,7 +5,7 @@ from django.utils.html import format_html, format_html_join, html_safe
 
 class SpectraTable(tables.Table):
   created_by = tables.Column(linkify=True)
-  lab_name = tables.Column(linkify=True)
+  lab = tables.Column(linkify=True)
   library = tables.Column(linkify=True)
   id = tables.Column(linkify=True)
   selector = tables.CheckBoxColumn()

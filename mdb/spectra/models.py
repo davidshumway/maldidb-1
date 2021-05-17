@@ -32,7 +32,7 @@ class AbstractSpectra(models.Model):
     blank = True,
     null = True)
   
-  lab_name = models.ForeignKey(
+  lab = models.ForeignKey(
     'chat.LabGroup',
     on_delete = models.CASCADE,
     blank = True,

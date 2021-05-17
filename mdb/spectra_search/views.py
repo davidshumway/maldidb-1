@@ -257,9 +257,9 @@ def ajax_upload(request):
           else: # anonymous
             l = Library.objects.create(
               title = filename)
-        if form.cleaned_data['lab_name'] == None:
+        if form.cleaned_data['lab'] == None:
           l = LabGroup.objects.create(lab_name = filename)
-          form.cleaned_data['lab_name'] = l
+          form.cleaned_data['lab'] = l
           if request.user.is_authenticated:
             l.owners.add(request.user)
             l.members.add(request.user)
@@ -435,7 +435,7 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       
       # optionals
       slib = form.cleaned_data['libraryXX'];
-      slab = form.cleaned_data['lab_nameXX'];
+      slab = form.cleaned_data['labXX'];
       ssid = form.cleaned_data['strain_idXX'];
       sxml = form.cleaned_data['xml_hashXX'];
       scrb = form.cleaned_data['created_byXX'];

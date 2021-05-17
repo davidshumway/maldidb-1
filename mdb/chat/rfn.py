@@ -70,7 +70,7 @@ class SpectraScores():
     n = n.filter(max_mass__gt = 6000)
     # optionals
     slib = self.form.cleaned_data['library'];
-    slab = self.form.cleaned_data['lab_name'];
+    slab = self.form.cleaned_data['lab'];
     ssid = self.form.cleaned_data['strain_id'];
     # ~ sxml = form.cleaned_data['xml_hashXX'];
     # ~ scrb = form.cleaned_data['created_byXX'];

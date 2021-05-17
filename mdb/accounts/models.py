@@ -15,7 +15,7 @@ class User(AbstractUser):
         Users can be in many groups.
     """
     followers = models.ManyToManyField("self", blank=True)
-    lab_name = models.ManyToManyField(LabGroup, blank=True) 
+    lab = models.ManyToManyField(LabGroup, blank=True) 
     
     def is_following(self, user):
         return user in self.followers.all()

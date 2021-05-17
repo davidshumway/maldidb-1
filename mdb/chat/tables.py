@@ -65,7 +65,7 @@ class LibCollapseTable(tables.Table):
     
 class XmlTable(tables.Table):
   created_by = tables.Column(linkify=True)
-  lab_name = tables.Column(linkify=True)
+  lab = tables.Column(linkify=True)
   xml_hash = tables.Column(linkify=True)
   selector = tables.CheckBoxColumn()
   
@@ -78,7 +78,7 @@ class XmlTable(tables.Table):
     
 class LibraryTable(tables.Table):
   created_by = tables.Column(linkify = True)
-  lab_name = tables.Column(linkify = True)
+  lab = tables.Column(linkify = True)
   title = tables.Column(linkify = True)
   collapse_replicates = tables.Column(accessor = 'id',
     verbose_name = 'Collapse Replicates')
@@ -110,7 +110,7 @@ class MetadataTable(tables.Table):
     exclude = ("id",)
 
 class LabgroupTable(tables.Table):
-  lab_name = tables.Column(linkify=True)
+  lab = tables.Column(linkify=True)
   class Meta:
     model = LabGroup
     attrs = {"class": "table maintable"}

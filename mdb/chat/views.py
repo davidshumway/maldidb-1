@@ -41,7 +41,7 @@ def metadata_profile(request, strain_id):
 
 def xml_profile(request, xml_hash):
   xml = XML.objects.get(xml_hash = xml_hash)
-  lab = LabGroup.objects.get(lab_name = xml.lab_name)
+  lab = LabGroup.objects.get(id = xml.lab.id)
   return render(
       request,
       'chat/xml_profile.html',
@@ -50,7 +50,7 @@ def xml_profile(request, xml_hash):
 
 def library_profile(request, library_id):
   lib = Library.objects.get(id = library_id)
-  lab = LabGroup.objects.get(lab_name = lib.lab_name)
+  lab = LabGroup.objects.get(lab = lib.lab.id)
   s = Spectra.objects.filter(library__exact = lib)
   return render(
       request,
@@ -384,7 +384,21 @@ class LibrariesListView(SingleTableView):
     context = super().get_context_data(**kwargs)
     context['table'].table_type = 'libraries'
     return context
-
+  
+  def get_queryset(self, *args, **kwargs):
+    u = self.request.user
+    if u.is_authenticated is False:
+      return Library.objects.filter(privacy_level__exact = 'PB')
+    # Otherwise logged in
+    user_labs = LabGroup.objects \
+      .filter(Q(owners__in = [u]) | Q(members__in = [u]))
+    print(user_labs)
+    print('-------------')
+    return Library.objects \
+      .filter(lab__in = user_labs) \
+      .order_by('-id')
+      #Library.objects.filter(lab = user_labs)
+      
 def view_cosine(request):
   '''API for exploring cosine data
   

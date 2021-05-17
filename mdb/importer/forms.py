@@ -2,7 +2,7 @@ from django import forms
 from chat.models import Library, LabGroup
   
 class LoadSqliteForm(forms.Form):
-  lab_name = forms.ModelChoiceField(
+  lab = forms.ModelChoiceField(
     queryset = LabGroup.objects.all(), to_field_name="lab_name"
   )
   library = forms.ModelChoiceField(

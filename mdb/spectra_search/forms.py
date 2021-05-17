@@ -111,7 +111,7 @@ class SpectraUploadForm(forms.ModelForm):
     )
   )
   # If yes... todo: filter by user's membership and/or public libs
-  lab_name = forms.ModelChoiceField(
+  lab = forms.ModelChoiceField(
     queryset = LabGroup.objects.all(),
     to_field_name = "lab_name",
     required = False,
@@ -158,7 +158,7 @@ class SpectraUploadForm(forms.ModelForm):
     exclude = ('id', 'owner', 'upload_date', 'extension')
     #custom-select
     widgets = {
-      'lab_name': forms.Select(
+      'lab': forms.Select(
         attrs = {
           'class': 'custom-select'}
       ),
@@ -176,7 +176,7 @@ class SpectraUploadForm(forms.ModelForm):
     '''
     data = self.cleaned_data
     s1 = (
-      data.get('save_to_library') == True and (data.get('lab_name') == '' or data.get('library') == '')
+      data.get('save_to_library') == True and (data.get('lab') == '' or data.get('library') == '')
     )
     #  ll_err = False
     #  if data.get('save_to_library') == True:
@@ -254,7 +254,7 @@ class SpectraSearchForm(forms.ModelForm):
   # on raw, include preprocessing options
   # (todo?)
   
-  lab_nameXX = forms.ModelMultipleChoiceField(
+  labXX = forms.ModelMultipleChoiceField(
     queryset = LabGroup.objects.all(),
     to_field_name = "lab_name",
     required = False
@@ -309,7 +309,7 @@ class SpectraSearchForm(forms.ModelForm):
     '''
     model = Spectra
     exclude = (
-      'id', 'picture', 'description', 'library', 'strain_id', 'lab_name',
+      'id', 'picture', 'description', 'library', 'strain_id', 'lab',
       'created_by', 'xml_hash'
     )
     widgets = {

@@ -112,7 +112,7 @@ class Library(models.Model):
     on_delete = models.CASCADE,
     blank = True, null = True)
   
-  lab_name = models.ForeignKey(
+  lab = models.ForeignKey(
     'LabGroup', on_delete = models.CASCADE,
     blank = True, null = True)
   
@@ -230,7 +230,7 @@ class Metadata(models.Model):
     blank = True,
     null = True)
   
-  lab_name = models.ForeignKey(
+  lab = models.ForeignKey(
     'LabGroup',
     on_delete = models.CASCADE,
     blank = True,
@@ -275,7 +275,7 @@ class XML(models.Model):
     blank = True,
     null = True)
   
-  lab_name = models.ForeignKey(
+  lab = models.ForeignKey(
     'LabGroup',
     on_delete = models.CASCADE,
     blank = True,

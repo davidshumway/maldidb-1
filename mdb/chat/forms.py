@@ -72,7 +72,7 @@ class ViewCosineForm(forms.Form):
   '''
   Select any spectra from lab, library, metadata
   '''
-  lab_name = forms.ModelMultipleChoiceField(
+  lab = forms.ModelMultipleChoiceField(
     queryset = LabGroup.objects.all(),
     to_field_name = "lab_name",
     required = False

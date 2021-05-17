@@ -164,7 +164,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
       'dna_16s': row[18],
       'created_by': request.user.id,
       'library': tmpForm.cleaned_data['library'].id,
-      'lab_name': tmpForm.cleaned_data['lab_name'].id,
+      'lab': tmpForm.cleaned_data['lab'].id,
     }
     form = MetadataForm(data)
     
@@ -193,7 +193,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
       'instrument_metafile': row[7],
       'created_by': request.user.id,
       'library': tmpForm.cleaned_data['library'].id,
-      'lab_name': tmpForm.cleaned_data['lab_name'].id,
+      'lab': tmpForm.cleaned_data['lab'].id,
     }
     form = XmlForm(data)
     if form.is_valid():
@@ -239,7 +239,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
     data = {
       'created_by': request.user.id,
       'library': tmpForm.cleaned_data['library'].id,
-      'lab_name': tmpForm.cleaned_data['lab_name'].id,
+      'lab': tmpForm.cleaned_data['lab'].id,
       'privacy_level': tmpForm.cleaned_data['privacy_level'][0],
       
       'spectrum_mass_hash': row[0],
