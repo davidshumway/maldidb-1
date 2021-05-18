@@ -301,7 +301,7 @@ dbSpectra <- function(ids) {
 }
 
 #* Collapse every strain in a given library
-#* @param libraryId
+#* @param id Library id to collapse
 #* @param owner User undertaking the process
 #* @param taskId Reference to a Django user task
 #* @get /collapseLibrary
@@ -321,7 +321,9 @@ collapseLibrary <- function(id, owner, taskId) {
   disconnect(c$drv, c$con)
   for(i in 1:nrow(q)) {
     row <- q[i,]
-    print(paste0('collapsing ', as.character(row), '...'))
+    print(paste0(
+      'collapsing pr/sm for strain_id: ', as.character(row), '...'
+    ))
     collapseStrainsInLibrary(id, row, 'PR', owner)
     collapseStrainsInLibrary(id, row, 'SM', owner)
   }

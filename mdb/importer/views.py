@@ -77,7 +77,7 @@ def handle_uploaded_file(request, tmpForm):
         extra = 'Loading SQLite file ' + f,
         user_task = t
       ))
-      _insert(request, tmpForm, '/home/app/r01data/' + f, t)
+      _insert(request, tmpForm, '/home/app/web/r01data/' + f, t)
     
 @start_new_thread
 def _insert(request, tmpForm, uploadFile, user_task):

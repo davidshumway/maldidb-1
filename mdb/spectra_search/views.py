@@ -111,7 +111,7 @@ def preprocess_file(request, file, user_task, form):
   '''
   ws = websocket.WebSocket()
   ws.connect('ws://localhost:8000/ws/pollData')
-  #ws.send('{"message": "test from django"}')
+  ws.send('{"message": "test from django"}')
   
   print(f'preprocess file{file}')
   f1 = file.replace('uploads/', 'uploads/sync/')
