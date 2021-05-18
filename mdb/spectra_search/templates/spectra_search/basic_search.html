@@ -109,6 +109,11 @@ function show_filter(e) {
                         <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
                       {% endwith %}
                     </div>
+                    <div class="form-group">
+                      {% with f=upload_form.search_library %}
+                        {{ f }}
+                      {% endwith %}
+                    </div>
 <!--
                     <div class="form-group">
                       privacy_level
@@ -348,33 +353,25 @@ window.addEventListener('DOMContentLoaded', (event) => {
 });
 
 //const myDiv = document.getElementById('poll_data')
-//~ var socket = new WebSocket('ws://127.0.0.1:8000/');
 //~ var socket = new WebSocket('ws://127.0.0.1:8000/ws/pollData');
-//~ socket.onopen = function(e){
-  //~ console.log(e);
-//~ }
-//~ socket.onmessage = function(e){
-  //~ console.log(e.data);
-  //~ result = JSON.parse(e.data);
-  //~ console.log(result);
-//~ }
-//~ socket.onclose = function(e){
-  //~ console.log(e);
-//~ }
+//~ var socket = new WebSocket('ws://127.0.0.1/ws/pollData');
 
-//~ socket = new WebSocket('ws://localhost/ws/pollData');
-//~ socket.onopen = function(e){
-  //~ console.log(e);
-//~ }
-//~ socket.onmessage = function(e){
-  //~ console.log(e.data);
-  //~ result = JSON.parse(e.data);
-  //~ console.log(result);
-//~ }
-//~ socket.onclose = function(e){
-  //~ console.log(e);
-//~ }
-var socket = new WebSocket('ws://0.0.0.0/ws/pollData');
+//~ var socket = new WebSocket('ws://localhost/ws/pollData');
+
+//~ var socket = new WebSocket('ws://localhost/ws/pollData'); // works locally?
+//~ var socket = new WebSocket('ws://0.0.0.0/ws/pollData'); // works locally
+
+//~ var socket = new WebSocket('ws://0.0.0.0/ws/pollData', 'echo-protocol');
+//~ var socket = new WebSocket('ws://0.0.0.0:8000/ws/pollData');
+//~ var socket = new WebSocket('ws://django:8000/ws/pollData');
+//~ var socket = new WebSocket('ws://django/ws/pollData', 'echo-protocol');
+//~ var socket = new WebSocket('ws://localhost:8000/ws/pollData');
+//~ var socket = new WebSocket('ws://localhost:8000/ws/pollData', 'echo-protocol');
+//~ var socket = new WebSocket('ws://localhost/ws/pollData', 'echo-protocol');
+
+//~ var socket = new WebSocket('ws://<ip>/ws/pollData'); // works remotely
+var socket = new WebSocket('ws://' + location.host + '/ws/pollData'); // works remotely
+
 socket.onopen = function(e){
   console.log(e);
 }

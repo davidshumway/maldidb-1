@@ -4,6 +4,7 @@ from spectra.models import *
 from files.models import UserFile
 from dal import autocomplete
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 User = get_user_model()
 
 class SpectraCollectionsForm(forms.ModelForm):
@@ -113,7 +114,7 @@ class SpectraUploadForm(forms.ModelForm):
   # If yes... todo: filter by user's membership and/or public libs
   lab = forms.ModelChoiceField(
     queryset = LabGroup.objects.all(),
-    to_field_name = "lab_name",
+    to_field_name = 'lab_name',
     required = False,
     widget = forms.Select(
       attrs = {
@@ -124,7 +125,7 @@ class SpectraUploadForm(forms.ModelForm):
   )
   library = forms.ModelChoiceField(
     queryset = Library.objects.all(),
-    to_field_name = "title",
+    to_field_name = 'title',
     required = False,
     widget = forms.Select(
       attrs = {
@@ -152,7 +153,39 @@ class SpectraUploadForm(forms.ModelForm):
     required = True,
     initial = True,
     label = 'Perform spectra preprocessing?')
+
+  search_library = forms.ModelChoiceField(
+    queryset = Library.objects.all(),
+    to_field_name = 'title',
+    required = True,
+    widget = forms.Select(
+      attrs = {
+        'class': 'custom-select'}
+    ),
+    disabled = False,
+    #initial = Library.objects.filter(title__exact = 'R01 Data'),
+    empty_label = 'Search library'
+  )
   
+  # ~ def __init__(self, *args, **kwargs):
+    # ~ '''
+    # ~ Set access control for search library
+    # ~ '''
+    # ~ super().__init__(*args, **kwargs)
+    # super(SpectraUploadForm, self).__init__(*args, **kwargs)
+    # ~ u = self.request.user
+    # ~ q = None
+    # ~ if u.is_authenticated is False:
+      # ~ q = Library.objects.filter(privacy_level__exact = 'PB')
+    # ~ else:
+      # ~ user_labs = LabGroup.objects \
+        # ~ .filter(Q(owners__in = [u]) | Q(members__in = [u]))
+      # ~ Library.objects.filter( \
+        # ~ Q(lab__in = user_labs) | Q(privacy_level__exact = 'PB') | \
+        # ~ Q(created_by__exact = u)
+      # ~ ).order_by('-id')
+    # ~ self.fields['search_library'].queryset = q
+
   class Meta:
     model = UserFile
     exclude = ('id', 'owner', 'upload_date', 'extension')

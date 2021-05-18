@@ -118,6 +118,9 @@ class CollapsedSpectra(AbstractSpectra):
   
   generated_date = models.DateTimeField(auto_now_add = True, blank = True)
   
+  def get_absolute_url(self):
+    return reverse('spectra:view_spectra2', kwargs = {'spectra_id' : self.id})
+  
 class SearchSpectra(AbstractSpectra):
   peak_mass = models.TextField(blank = True)
   peak_intensity = models.TextField(blank = True)

@@ -16,6 +16,7 @@ urlpatterns = [
   path('', views.SpectraListView.as_view(), name='home'),
   path('data/add', views.add_post, name='add_post'),
   path('spectra/<spectra_id>/', views.spectra_profile, name='view_spectra'),
+  path('spectra2/<spectra_id>/', views.spectra2_profile, name='view_spectra2'),
   path('spectra/edit/<spectra_id>/', views.edit_spectra, name='edit_spectra'),
   
 ] + router.urls

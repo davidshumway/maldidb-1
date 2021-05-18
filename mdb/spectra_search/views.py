@@ -111,7 +111,9 @@ def preprocess_file(request, file, user_task, form):
   '''
   ws = websocket.WebSocket()
   ws.connect('ws://localhost:8000/ws/pollData')
-  ws.send('{"message": "test from django"}')
+  # ~ ws.connect('ws://0.0.0.0:8000/ws/pollData')
+  # ~ ws.send('{"message": "test from django"}')
+  # ~ return
   
   print(f'preprocess file{file}')
   f1 = file.replace('uploads/', 'uploads/sync/')
@@ -162,7 +164,8 @@ def preprocess_file(request, file, user_task, form):
       max_mass__gt = 6000
     ).first()
     n2 = CollapsedSpectra.objects.filter(
-      library__title__exact = 'R01 Data',
+      library__exact = form.cleaned_data['search_library'].id,
+      # ~ library__title__exact = 'R01 Data',
       max_mass__gt = 6000
     ).values('id')
     data = {
@@ -353,6 +356,18 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     
     # upload form
     context['upload_form'] = SpectraUploadForm()
+    u = self.request.user
+    q = Library.objects.none()
+    if u.is_authenticated is False:
+      q = Library.objects.filter(privacy_level__exact = 'PB')
+    else:
+      user_labs = LabGroup.objects \
+        .filter(Q(owners__in = [u]) | Q(members__in = [u]))
+      q = Library.objects.filter( \
+        Q(lab__in = user_labs) | Q(privacy_level__exact = 'PB') | \
+        Q(created_by__exact = u)
+      ).order_by('-id')
+    context['upload_form'].fields['search_library'].queryset = q
     
     f = SpectraFilter(self.request.GET, queryset = self.queryset)
     context['filter'] = f

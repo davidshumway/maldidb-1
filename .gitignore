@@ -1,19 +1,20 @@
-./venv/
-venv
 /venv
-venv/
 db.*
 db.sqlite3
+*.sqlite
 .Rhistory
 .RData
 *.pyc
 *.sock
 maldidb.sock
 mdb.sock
-*/uploads/*
-*/media/uploads/*
-*/media/uploads/*
-*/media/posts/*
+uploads/**
+media/uploads/**
+/mdb/media/uploads/**
+media/posts/**
 project.env
 .goutputstream*
 /mdb/static/
+# ignore any files in /mdb/r01data/
+r01data/**
+

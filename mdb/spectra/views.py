@@ -53,6 +53,10 @@ class CollapsedSpectraViewSet(ModelViewSet):
 def spectra_profile(request, spectra_id):
   spectra = Spectra.objects.get(id = spectra_id)
   return render(request, 'spectra/spectra_profile.html', {'spectra': spectra})
+
+def spectra2_profile(request, spectra_id):
+  spectra = CollapsedSpectra.objects.get(id = spectra_id)
+  return render(request, 'spectra/spectra_profile.html', {'spectra': spectra})
   
 @login_required
 def edit_spectra(request, spectra_id):
