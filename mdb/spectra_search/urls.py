@@ -13,6 +13,7 @@ urlpatterns = [
   path('ajax_upload/', views.ajax_upload, name='ajax_upload'),
   # Search result
   path('spectra/', views.FilteredSpectraListView.as_view(), name='spectra_results'),
+  path('spectra2/', views.FilteredCollapsedSpectraListView.as_view(), name='spectra_results2'),
   
   path('metadata_autocomplete_kingdom/',
     views.MetadataAutocomplete.as_view(view='cKingdom'),

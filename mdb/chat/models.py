@@ -25,11 +25,11 @@ from spectra.models import *
 class UserTask(models.Model):
   '''
   '''
-  owner = models.ForeignKey(
+  owner = models.ForeignKey( # Empty owner implies anonymous user
     settings.AUTH_USER_MODEL,
     on_delete = models.CASCADE,
-    blank = False,
-    null = False)
+    blank = True,
+    null = True)
   # ~ task_complete = models.BooleanField(blank = False, null = False,
     # ~ default = False)
   task_choices = [

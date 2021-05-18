@@ -12,7 +12,21 @@ class SpectraTable(tables.Table):
   
   class Meta:
     model = Spectra
-    attrs = {"class": "table maintable"}
-    template_name = "chat/bootstrap4_mod.html"
+    attrs = {'class': 'table maintable'}
+    template_name = 'chat/bootstrap4_mod.html'
+    exclude = ()
+    sequence = ('selector','id', 'strain_id', '...')
+
+class CollapsedSpectraTable(tables.Table):
+  # ~ created_by = tables.Column(linkify=True)
+  lab = tables.Column(linkify=True)
+  library = tables.Column(linkify=True)
+  id = tables.Column(linkify=True)
+  selector = tables.CheckBoxColumn()
+  
+  class Meta:
+    model = CollapsedSpectra
+    attrs = {'class': 'table maintable'}
+    template_name = 'chat/bootstrap4_mod.html'
     exclude = ()
     sequence = ('selector','id', 'strain_id', '...')

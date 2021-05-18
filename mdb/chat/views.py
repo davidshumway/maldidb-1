@@ -50,12 +50,13 @@ def xml_profile(request, xml_hash):
 
 def library_profile(request, library_id):
   lib = Library.objects.get(id = library_id)
-  lab = LabGroup.objects.get(lab = lib.lab.id)
+  lab = LabGroup.objects.get(id = lib.lab.id)
   s = Spectra.objects.filter(library__exact = lib)
+  s2 = CollapsedSpectra.objects.filter(library__exact = lib)
   return render(
       request,
       'chat/library_profile.html',
-      {'library': lib, 'lab': lab, 'spectra': s}
+      {'library': lib, 'lab': lab, 'spectra': s, 'collapsed_spectra': s2}
   )
 
 def lab_profile(request, lab_id):
@@ -391,13 +392,12 @@ class LibrariesListView(SingleTableView):
       return Library.objects.filter(privacy_level__exact = 'PB')
     # Otherwise logged in
     user_labs = LabGroup.objects \
-      .filter(Q(owners__in = [u]) | Q(members__in = [u]))
-    print(user_labs)
-    print('-------------')
-    return Library.objects \
-      .filter(lab__in = user_labs) \
-      .order_by('-id')
-      #Library.objects.filter(lab = user_labs)
+      .filter(Q(owners__in = [u]) | Q(members__in = [u])
+      )
+    return Library.objects.filter( \
+        Q(lab__in = user_labs) | Q(privacy_level__exact = 'PB') | \
+        Q(created_by__exact = u)
+      ).order_by('-id')
       
 def view_cosine(request):
   '''API for exploring cosine data

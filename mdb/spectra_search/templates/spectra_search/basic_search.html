@@ -11,6 +11,10 @@
 {% load bootstrap4 %}
 {% load static %}
 
+<link rel="stylesheet" type="text/css" href="{% static 'css/datatables.min.css' %}"/>
+ 
+<script type="text/javascript" src="{% static 'js/datatables.min.js' %}"></script>
+
 <script type="text/javascript">
 function show_filter(e) {
   document.getElementById('filters').style.display='block';
@@ -38,11 +42,16 @@ function show_filter(e) {
     <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
       <div class="card-body">
         
-            <div class="card" style="height:450px !important;"><!--Makes all tabs same height to keep card body height from always changing upon tab selection.-->
+            <div class="card" style="">
+              <!--Height: All tabs same height to keep card body height from always changing upon tab selection.
+              height:450px !important;-->
               <div class="card-header">
                 <ul class="nav nav-tabs card-header-tabs" id="nav-search-source">
                   <li class="nav-item">
-                    <a class="nav-link active" href="#" id="nss-1">-</a>
+                    <a class="nav-link active" href="#" id="nss-1">Input</a>
+                  </li>
+                  <li class="nav-item" id="result" style="display: none;">
+                    <a class="nav-link" href="#" id="nss-2">Result</a>
                   </li>
 <!--Turn off these options for now
                   <li class="nav-item">
@@ -112,8 +121,13 @@ function show_filter(e) {
                   </div>
                 </form>
                 <!-- End file upload form -->
-                
               </div>
+              <!-- end card body 1 -->
+
+              <div class="card-body" id="nss-card-2" style="display:none;">
+                <table id="data-table"></table>
+              </div>
+
             </div>
             <!-- search button -->
             <button class="btn btn-primary">Start search</button>
@@ -335,44 +349,57 @@ window.addEventListener('DOMContentLoaded', (event) => {
 
 //const myDiv = document.getElementById('poll_data')
 //~ var socket = new WebSocket('ws://127.0.0.1:8000/');
-var socket = new WebSocket('ws://127.0.0.1:8000/ws/pollData');
+//~ var socket = new WebSocket('ws://127.0.0.1:8000/ws/pollData');
+//~ socket.onopen = function(e){
+  //~ console.log(e);
+//~ }
+//~ socket.onmessage = function(e){
+  //~ console.log(e.data);
+  //~ result = JSON.parse(e.data);
+  //~ console.log(result);
+//~ }
+//~ socket.onclose = function(e){
+  //~ console.log(e);
+//~ }
+
+//~ socket = new WebSocket('ws://localhost/ws/pollData');
+//~ socket.onopen = function(e){
+  //~ console.log(e);
+//~ }
+//~ socket.onmessage = function(e){
+  //~ console.log(e.data);
+  //~ result = JSON.parse(e.data);
+  //~ console.log(result);
+//~ }
+//~ socket.onclose = function(e){
+  //~ console.log(e);
+//~ }
+var socket = new WebSocket('ws://0.0.0.0/ws/pollData');
 socket.onopen = function(e){
   console.log(e);
 }
 socket.onmessage = function(e){
   console.log(e.data);
-  result = JSON.parse(e.data);
+  result = JSON.parse(JSON.parse(e.data));
   console.log(result);
-}
-socket.onclose = function(e){
-  console.log(e);
-}
-//~ socket = new WebSocket('ws://localhost:8010/ws/pollData');
-socket = new WebSocket('ws://localhost/ws/pollData');
-socket.onopen = function(e){
-  console.log(e);
-}
-socket.onmessage = function(e){
-  console.log(e.data);
-  result = JSON.parse(e.data);
-  console.log(result);
-}
-socket.onclose = function(e){
-  console.log(e);
-}
-//~ socket = new WebSocket('ws://django:8000/ws/pollData');
-//~ socket = new WebSocket('ws://django/ws/pollData');
-//~ socket = new WebSocket('ws://mdb:8010/ws/pollData');
-//~ socket = new WebSocket('ws://mdb/ws/pollData');
-//~ socket = new WebSocket('ws://0.0.0.0:8010/ws/pollData');
-socket = new WebSocket('ws://0.0.0.0/ws/pollData');
-socket.onopen = function(e){
-  console.log(e);
-}
-socket.onmessage = function(e){
-  console.log(e.data);
-  result = JSON.parse(e.data);
-  console.log(result);
+  //~ console.log(JSON.parse(result));
+  $('#result').toggle();
+  $('#nss-1').removeClass('active');
+  $('#nss-2').addClass('active');
+  $('#nss-card-1').css('display', 'none');
+  $('#nss-card-2').css('display', 'block');
+  var t = $('#data-table').DataTable({
+    data: result,
+    columns: [
+      {data: 'score', title: 'Score'},
+      {data: 'strain', title: 'Strain'},
+      {data: 'order', title: 'Order'},
+      {data: 'genus', title: 'Genus'},
+      {data: 'species', title: 'Species'},
+    ]
+  });
+  t.order([0, 'desc']) // reorder in correct direction
+    .draw();
 }
 socket.onclose = function(e){
   console.log(e);

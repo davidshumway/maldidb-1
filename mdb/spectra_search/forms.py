@@ -166,7 +166,8 @@ class SpectraUploadForm(forms.ModelForm):
   
   def save(self, commit = True):
     instance = super().save(commit=False)
-    instance.owner = self.request.user
+    if self.request.user.is_authenticated:
+      instance.owner = self.request.user
     instance.save(commit)
     return instance
     
@@ -269,7 +270,8 @@ class SpectraSearchForm(forms.ModelForm):
     to_field_name = "strain_id",
     required = False
   )
-  distinct_users = Spectra.objects.order_by('created_by').values_list('created_by',flat=True).distinct()
+  distinct_users = Spectra.objects.order_by('created_by') \
+    .values_list('created_by',flat=True).distinct()
   created_byXX = forms.ModelMultipleChoiceField(
     queryset = User.objects.all().filter(id__in = distinct_users),
     to_field_name = "username", 

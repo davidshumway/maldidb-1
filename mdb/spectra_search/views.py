@@ -16,7 +16,7 @@ from chat.rfn import SpectraScores
 # Distance measurement
 #from sklearn.metrics.pairwise import cosine_similarity
 # spectra table
-from spectra.tables import SpectraTable
+from spectra.tables import *
 # importer
 from importer.views import idbac_sqlite_insert
 # preprocess
@@ -25,6 +25,7 @@ import os
 import shutil
 import websocket
 import operator
+import json
 
 # ~ from rest_framework.viewsets import ModelViewSet
 # ~ class CollapsedCosineScoreViewSet(ModelViewSet):
@@ -109,32 +110,8 @@ def preprocess_file(request, file, user_task, form):
   Add Spectra and update UserFile
   '''
   ws = websocket.WebSocket()
-  print(ws.connect('ws://localhost:8000/ws/pollData'))
-  # ~ print(ws.connect('ws://localhost/ws/pollData'))
-  # ~ print(ws.connect('ws://0.0.0.0/ws/pollData'))
-  print(ws.send('{"message": "test from django"}'))
-  # ~ print(ws.connect('ws://localhost/ws/pollData'))
-  # ~ print(ws.send('{"message": "test from django"}'))
-  # ~ print(ws.connect('ws://django/ws/pollData'))
-  # ~ print(ws.send('{"message": "test from django"}'))
-  # ~ print(ws.connect('ws://django:8000/ws/pollData'))
-  # ~ print(ws.send('{"message": "test from django"}'))
-  # ~ print(ws.connect('ws://0.0.0.0:8000/ws/pollData'))
-  # ~ print(ws.send('{"message": "test from django"}'))
-  # ~ print(ws.connect('ws://mdb:8000/ws/pollData'))
-  # ~ print(ws.send('{"message": "test from django"}'))
-  # ~ print(ws.connect('ws://localhost/ws/pollData'))
-  # ~ print(ws.send('{"message": "test from django"}'))
-  # ~ print(ws.connect('ws://django/ws/pollData'))
-  # ~ print(ws.send('{"message": "test from django"}'))
-  # ~ print(ws.connect('ws://0.0.0.0/ws/pollData'))
-  # ~ print(ws.send('{"message": "test from django"}'))
-  # ~ print(ws.connect('ws://mdb/ws/pollData'))
-  # ~ print(ws.send('{"message": "test from django"}'))
-  # ~ print(ws.connect('wss://localhost:8000/ws/pollData'))
-  # ~ print(ws.send('{"message": "test from django"}'))
-  # ~ print(ws.connect('wss://mdb:8000/ws/pollData'))
-  # ~ print(ws.send('{"message": "test from django"}'))
+  ws.connect('ws://localhost:8000/ws/pollData')
+  #ws.send('{"message": "test from django"}')
   
   print(f'preprocess file{file}')
   f1 = file.replace('uploads/', 'uploads/sync/')
@@ -174,7 +151,6 @@ def preprocess_file(request, file, user_task, form):
       'id': form.cleaned_data['library'].id,
       'owner': request.user.id,
       'task_id': user_task.id,
-      # ~ 'sid': str(r.json()[0])
     }
     print(f'send{data}')
     r = requests.get(
@@ -196,10 +172,24 @@ def preprocess_file(request, file, user_task, form):
       'http://plumber:8000/cosine',
       params = data
     )
-    # ~ import requests
-    # ~ data = {'ids': [197] + [65,67]}
-    # ~ r = requests.post('http://plumber:8000/cosine', params = data)
-    # ~ n2 = [65,67]
+    
+# ~ # test
+# ~ from spectra.models import *
+# ~ import requests
+# ~ n2 = CollapsedSpectra.objects.filter(
+  # ~ library__title__exact = 'R01 Data',
+  # ~ max_mass__gt = 6000
+# ~ ).values('id')
+# ~ data = {'ids': [2] + [s['id'] for s in list(n2)]}
+# ~ r = requests.post('http://plumber:8000/cosine', params = data)
+# ~ # create a dictionary and sort by its values
+# ~ from collections import OrderedDict
+# ~ k = [str(s['id']) for s in list(n2)] # one less
+# ~ v = r.json()[1:] # one more, remove first
+# ~ o = OrderedDict(
+  # ~ sorted(dict(zip(k, v)).items(),
+    # ~ key = lambda x: (x[1], x[0]), reverse = True)
+# ~ )
 
     # create a dictionary and sort by its values
     from collections import OrderedDict
@@ -210,11 +200,32 @@ def preprocess_file(request, file, user_task, form):
         key = lambda x: (x[1], x[0]), reverse = True)
     )
 
-    CollapsedCosineScore.objects.create(
+    obj = CollapsedCosineScore.objects.create(
       spectra = n1,
       library = form.cleaned_data['library'],
       scores = ','.join(map(str, list(o.values()))),
       spectra_ids = ','.join(map(str, o.keys())))
+    
+    if obj:
+      l = []
+      #v = CollapsedSpectra.objects.filter(id__in = list(o.keys())) \
+      #  .order_by(','.join(map(str, o.keys())))
+      #  # ~ .order_by(list(o.keys()))
+      from django.db.models import Case, When
+      preserved = Case(*[When(pk = pk, then = pos) for pos, pk in enumerate(o)])
+      q = CollapsedSpectra.objects.filter(id__in = o.keys()).order_by(preserved)
+      for cs in q:
+        # ~ cs.score = o[str(cs.id)]
+        l.append({
+          'score': o[str(cs.id)],
+          'strain': cs.strain_id.strain_id,
+          'order': cs.strain_id.cOrder,
+          'genus': cs.strain_id.cGenus,
+          'species': cs.strain_id.cSpecies,
+        })
+      ws.send(json.dumps(l))
+      # ~ ws.send(json.dumps(list(q.values())))
+      # ~ ws.send('{"message": "test from django"}')
   else:
     pass
     # ~ r = requests.post(
@@ -229,16 +240,23 @@ def upload_status(request):
 def ajax_upload(request):
   '''
   Preprocessing (optional) - Once uploaded, spawn new thread to preprocess.
+  
   UserFile has file location, e.g., "uploads/Bacillus_ByZQI1O.mzXML".
   Library (optional) - 1) User owned 2) Create new for user
    3) Create new for anonymous user
-  What happens if file / mzml contains more than one spectra?
+   
+  Todo: anonymous session to access anon. upload
   '''
   if request.method == 'POST':
     form = SpectraUploadForm(data = request.POST, files = request.FILES)
     if form.is_valid():
       form.request = request # pass request to save() method
       form.save()
+      lab, created = LabGroup.objects.get_or_create(
+        lab_name = 'FileUploads' # initialize file uploads group
+      )
+      form.cleaned_data['lab'] = lab
+      
       if form.cleaned_data['preprocess'] == True:
         file = str(form.instance.file)
         filename = file.replace('uploads/', '')
@@ -252,17 +270,17 @@ def ajax_upload(request):
         if form.cleaned_data['library'] == None:
           if request.user.is_authenticated:
             l = Library.objects.create(created_by = request.user,
-              title = filename)
+              title = filename, privacy_level = 'PR', lab = lab)
             form.cleaned_data['library'] = l
-          else: # anonymous
-            l = Library.objects.create(
-              title = filename)
-        if form.cleaned_data['lab'] == None:
-          l = LabGroup.objects.create(lab_name = filename)
-          form.cleaned_data['lab'] = l
-          if request.user.is_authenticated:
-            l.owners.add(request.user)
-            l.members.add(request.user)
+          else: # anonymous/ todo: later accessible via anon. session
+            l = Library.objects.create(title = filename,
+              privacy_level = 'PR', lab = lab)
+        # ~ if form.cleaned_data['lab'] == None:
+          # ~ l = LabGroup.objects.create(lab_name = filename)
+          # ~ form.cleaned_data['lab'] = l
+          # ~ if request.user.is_authenticated:
+            # ~ l.owners.add(request.user)
+            # ~ l.members.add(request.user)
         preprocess_file(request, file, t, form)
         return JsonResponse(
           {'status': 'preprocessing', 'task': t.id},
@@ -282,13 +300,32 @@ class SpectraFilter(django_filters.FilterSet):
 
   class Meta:
     model = Spectra
-    exclude = ('id','picture') #fields = ['name', 'price', 'manufacturer']
+    exclude = ('id', 'picture')
+  
+class CollapsedSpectraFilter(django_filters.FilterSet):
+  library = django_filters.ModelMultipleChoiceFilter(
+    queryset = Library.objects.all()
+  )
+  description = django_filters.CharFilter(lookup_expr = 'icontains')
+
+  class Meta:
+    model = CollapsedSpectra
+    exclude = ('id', 'picture')
 
 class FilteredSpectraListView(SingleTableMixin, FilterView):
   table_class = SpectraTable
   model = Spectra
   template_name = 'spectra_search/search_results.html'
   filterset_class = SpectraFilter
+  
+  def get_queryset(self):
+    pass
+
+class FilteredCollapsedSpectraListView(SingleTableMixin, FilterView):
+  table_class = CollapsedSpectraTable
+  model = CollapsedSpectra
+  template_name = 'spectra_search/search_results.html'
+  filterset_class = CollapsedSpectraFilter
   
   def get_queryset(self):
     pass
@@ -423,7 +460,10 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
       
       search_id = obj.id
       
-      n = Spectra.objects.all()
+      if srep == 'collapsed':
+        n = CollapsedSpectra.objects.all()
+      else:
+        n = Spectra.objects.all()
       
       # tof_mode
       if scut == 'small':

@@ -152,12 +152,9 @@ function(req, id, ids) {
 #* @param ids List of IDs from Spectra table
 #* @post /cosine
 function(req, ids) {
-  print('got ids')
-  print(ids)
-  print(class(ids)) # character
-#~   if (class(ids) != 'integer') {
-#~     stop('not an integer (ids)!columns')
-#~   }
+  #print('got ids')
+  #print(ids)
+  #print(class(ids))
   ids <- as.numeric(ids)
   if (length(ids) < 2) {
     stop('less than two comparison ids given!')
@@ -195,14 +192,9 @@ function(req, ids) {
   }
   disconnect(c$drv, c$con)
   print(dbIds)
-#~   print('x')
   binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
-#~   print(head(binnedPeaks, 1))
   featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
-#~   print(head(featureMatrix, 1))
   d <- stats::as.dist(coop::tcosine(featureMatrix))
-#~   print(head(d, 1))
-#~   return()
   d <- as.matrix(d)
   d <- round(d, 3)
   print(d)
@@ -437,8 +429,9 @@ mqSerial <- function(l) {
   as.character(paste0('"', paste(l, collapse = ','), '"'))
 }
 
-#* Preprocess: Preprocess spectra files and compare to DB ids
+#* Preprocess: Preprocess spectra file uploads
 #* @param file File path to preprocess
+#* @return File path of resulting sqlite file
 #* @get /preprocess
 preprocess <- function(file) {
 #~   f <- file.path(paste0("/app/", file))

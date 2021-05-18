@@ -60,6 +60,7 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
   async def deprocessing(self, event):
     print('==================4')
     valOther = event['value']
-    valOther = f'IP VALUE: {valOther}'
+    valOther = f'VALUE: {valOther}'
     # send for frontend
-    await self.send(text_data = json.dumps({'value2': valOther}))
+    await self.send(text_data = json.dumps(event['value']))
+    # ~ await self.send(text_data = json.dumps({'value2': valOther}))
