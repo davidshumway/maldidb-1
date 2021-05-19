@@ -20,7 +20,7 @@ urlpatterns = [
   # All spectra from a library / filter
   # ~ path('spectra/<library_id/', FilteredSpectraLibListView.as_view(), name='spectra_library_results'),
   
-  path('metadata/', views.MetadataListView.as_view(), name='metadata_results'),
+  path('metadata/', views.FilteredMetadataListView.as_view(), name='metadata_results'),
   path('metadata/<strain_id>/', views.metadata_profile, name='view_metadata'),
   path('metadata/edit/<strain_id>/', views.edit_metadata, name='edit_metadata'),
   

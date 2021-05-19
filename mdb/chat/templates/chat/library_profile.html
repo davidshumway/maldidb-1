@@ -42,6 +42,11 @@
 			<a href="{% url 'spectra_search:spectra_results2' %}?library={{library.id}}" class="card-link">
 				{{ collapsed_spectra|length }}</a>
 		</div>
+		<div class="card-title"><!--TODO: href-->
+			Metadata:
+			<a href="{% url 'chat:metadata_results' %}?library={{library.id}}" class="card-link">
+				{{ metadata|length }}</a>
+		</div>
 	</div>
 <!--
 	only lab owners can add/update/remove libraries

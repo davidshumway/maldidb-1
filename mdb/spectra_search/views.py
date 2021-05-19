@@ -331,8 +331,14 @@ class FilteredCollapsedSpectraListView(SingleTableMixin, FilterView):
   filterset_class = CollapsedSpectraFilter
   
   def get_queryset(self):
-    pass
-
+    # self.queryset
+    #pass
+    #self.queryset
+    from django.db.models import Count
+    qs = super().get_queryset()
+    qs = qs.annotate(num_spectra = Count('collapsed_spectra'))
+    return qs
+    
 class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
   '''
   todo: combine filter.form and table

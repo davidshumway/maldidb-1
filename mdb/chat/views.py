@@ -26,37 +26,39 @@ import requests
 def user_task_status_profile(request, status_id):
   uts = UserTaskStatus.objects.get(id = status_id)
   return render(
-      request,
-      'chat/user_task_status_profile.html',
-      {'user_task_status': uts}
+    request,
+    'chat/user_task_status_profile.html',
+    {'user_task_status': uts}
   )
   
 def metadata_profile(request, strain_id):
   md = Metadata.objects.get(strain_id = strain_id)
   return render(
-      request,
-      'chat/metadata_profile.html',
-      {'metadata': md}
+    request,
+    'chat/metadata_profile.html',
+    {'metadata': md}
   )
 
 def xml_profile(request, xml_hash):
   xml = XML.objects.get(xml_hash = xml_hash)
   lab = LabGroup.objects.get(id = xml.lab.id)
   return render(
-      request,
-      'chat/xml_profile.html',
-      {'xml': xml, 'lab': lab}
+    request,
+    'chat/xml_profile.html',
+    {'xml': xml, 'lab': lab}
   )
 
 def library_profile(request, library_id):
   lib = Library.objects.get(id = library_id)
   lab = LabGroup.objects.get(id = lib.lab.id)
   s = Spectra.objects.filter(library__exact = lib)
+  m = Metadata.objects.filter(library__exact = lib)
   s2 = CollapsedSpectra.objects.filter(library__exact = lib)
   return render(
-      request,
-      'chat/library_profile.html',
-      {'library': lib, 'lab': lab, 'spectra': s, 'collapsed_spectra': s2}
+    request,
+    'chat/library_profile.html',
+    {'library': lib, 'lab': lab, 'spectra': s, 'collapsed_spectra': s2,
+    'metadata': m}
   )
 
 def lab_profile(request, lab_id):
@@ -418,10 +420,29 @@ def view_cosine(request):
     form = ViewCosineForm() #instance = None)
   return render(request, 'chat/view_cosine.html', {'form': form})
 
-class MetadataListView(SingleTableView):
-  model = Metadata
+# ~ class MetadataListView(SingleTableView):
+  # ~ model = Metadata
+  # ~ table_class = MetadataTable
+  # ~ template_name = 'chat/metadata.html'
+
+class MetadataFilter(django_filters.FilterSet):
+  library = django_filters.ModelMultipleChoiceFilter(
+    queryset = Library.objects.all()
+  )
+  description = django_filters.CharFilter(lookup_expr = 'icontains')
+
+  class Meta:
+    model = Metadata
+    exclude = ('id',)
+    
+class FilteredMetadataListView(SingleTableMixin, FilterView):
   table_class = MetadataTable
+  model = Metadata
   template_name = 'chat/metadata.html'
+  filterset_class = MetadataFilter
+  
+  def get_queryset(self):
+    pass
 
 class LabgroupsListView(SingleTableView):
   model = LabGroup

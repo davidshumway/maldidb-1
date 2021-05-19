@@ -24,6 +24,10 @@ class CollapsedSpectraTable(tables.Table):
   id = tables.Column(linkify=True)
   selector = tables.CheckBoxColumn()
   collapsed_spectra = tables.ManyToManyColumn()
+  num_spectra = tables.Column()
+  # ~ num_spectra = tables.ManyToManyColumn(accessor = 'collapsed_spectra',
+    # ~ transform = lambda user: u.name
+  # ~ )
   
   # ~ def render_collapsed_spectra(self, value):
     # ~ return value.collapsed_spectra
