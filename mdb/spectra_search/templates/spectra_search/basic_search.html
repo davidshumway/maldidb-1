@@ -388,7 +388,10 @@ window.addEventListener('DOMContentLoaded', (event) => {
 
 //~ var socket = new WebSocket('ws://<ip>/ws/pollData'); // works remotely
 var socket = new WebSocket('ws://' + location.host + '/ws/pollData'); // works remotely
-
+//~ var tooltip = d3.select("body").append("div")
+  //~ .attr("class", "tooltip-donut")
+  //~ .style("opacity", 0);
+     
 socket.onopen = function(e){
   console.log(e);
 }
@@ -432,6 +435,21 @@ socket.onmessage = function(e){
     .append('g')
       .attr('transform',
         'translate(' + margin.left + ',' + margin.top + ')');
+  // tooltip
+  var tooltip = d3.select('body')
+    .append('div')
+    .style('opacity', 0)
+    //~ .attr('class', 'tooltip')
+    .style('background-color', 'lightsteelblue')
+    .style('border', 'solid')
+    .style('border-width', '2px')
+    .style('border-radius', '5px')
+    .style('padding', '5px')
+    .style('position', 'absolute')
+    .style('text-align', 'center')
+    .style('width', '160px')
+    .style('height', '40px');
+    
   // X axis
   var x = d3.scaleLinear()
     .domain([1900, 17000])// div. by 10
@@ -455,35 +473,29 @@ socket.onmessage = function(e){
     //~ var a = Math.round(pmo[i], 3);
     //~ var a = Number.parseFloat(pmo[i]).toPrecision(2);
     var a = Number.parseFloat(pmo[i]).toFixed(1);
-    //~ var a = pmo[i];
     pmo_dict[a] = true;
   }
   data.result.forEach(function(d) {
     var pm = d.peak_mass.split(',');
-    //~ console.log(d);
     for (var j in pm) {
       //~ var a = Math.round(pm[j] / 10);
       //~ var a = Math.round(pm[j], 3);
       var a = Number.parseFloat(pm[j]).toFixed(1);
-      //~ var a = pm[j]
       if (pmo_dict[a]) { // has key
         rslt_long_matched.push({
+          strain: d.strain,
           x: a,
           y: parseInt(d.rowcount) // index
         });
       } else { // no match
         rslt_long_unmatched.push({
+          strain: d.strain,
           x: a,
           y: parseInt(d.rowcount) // index
         });
       }
     }
   });
-  //~ console.log(rslt_long_matched);
-  //~ console.log(rslt_long_unmatched);
-  //~ return;
-  //~ rslt_long_matched = rslt_long_matched.slice(0, 400);
-  
   
   // Add circles (matching)
   // i is index
@@ -501,7 +513,26 @@ socket.onmessage = function(e){
       .attr("cx", function (d, i) { return x(d.x); } ) 
       .attr("cy", function (d, i) { return y(d.y); } )
       .attr("r", 1.25)
-      .style("fill", "#00dd00")
+      .style("fill", "#00cc00")
+      .on('mouseover', function (event, d) {
+        var c = d3.pointer(event);
+        console.log(c)
+        var x = c[0];
+        var y = c[1];
+        tooltip.html(d.strain)
+          .style("left", (event.pageX) + "px")             
+          .style("top", (event.pageY - 28) + "px");
+          //~ .style("left", (x + 70) + "px")
+          //~ .style("top", (y) + "px")
+        tooltip.transition()
+          .duration(200)
+          .style("opacity", 0.9);
+      });
+      //~ .on('mouseleave', function (event, d) {
+        //~ tooltip.transition()
+          //~ .duration(50)
+          //~ .style("opacity", 0);
+     //~ });
   return;
   svg.append('g')
     .selectAll("dot")
