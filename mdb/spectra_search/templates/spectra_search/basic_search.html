@@ -393,9 +393,9 @@ socket.onopen = function(e){
   console.log(e);
 }
 socket.onmessage = function(e){
-  console.log(e.data);
+  //~ console.log(e.data);
   var data = JSON.parse(JSON.parse(e.data));
-  console.log(data);
+  //~ console.log(data);
   //~ console.log(JSON.parse(result));
   $('#result').toggle();
   $('#nss-1').removeClass('active');
@@ -423,8 +423,8 @@ socket.onmessage = function(e){
   $('#col-left').addClass('col-6');
   $('#col-right').addClass('col-6');
   var margin = {top: 10, right: 30, bottom: 30, left: 60},
-    width = 460 - margin.left - margin.right,
-    height = 400 - margin.top - margin.bottom;
+    width = 660 - margin.left - margin.right,
+    height = 600 - margin.top - margin.bottom;
   var svg = d3.select('#col-right')
     .append('svg')
       .attr('width', width + margin.left + margin.right)
@@ -452,25 +452,28 @@ socket.onmessage = function(e){
   var pmo_dict = {}
   for (var i in pmo) {
     //~ var a = Math.round(pmo[i] / 10);
-    var a = Math.round(pmo[i]);
-    var a = pmo[i];
+    //~ var a = Math.round(pmo[i], 3);
+    //~ var a = Number.parseFloat(pmo[i]).toPrecision(2);
+    var a = Number.parseFloat(pmo[i]).toFixed(1);
+    //~ var a = pmo[i];
     pmo_dict[a] = true;
   }
   data.result.forEach(function(d) {
     var pm = d.peak_mass.split(',');
     //~ console.log(d);
     for (var j in pm) {
-      //~ var mz = Math.round(pm[j] / 10);
-      var mz = Math.round(pm[j]);
-      var mz = pm[j]
-      if (pmo_dict[mz]) { // has key
+      //~ var a = Math.round(pm[j] / 10);
+      //~ var a = Math.round(pm[j], 3);
+      var a = Number.parseFloat(pm[j]).toFixed(1);
+      //~ var a = pm[j]
+      if (pmo_dict[a]) { // has key
         rslt_long_matched.push({
-          x: mz,
+          x: a,
           y: parseInt(d.rowcount) // index
         });
       } else { // no match
         rslt_long_unmatched.push({
-          x: mz,
+          x: a,
           y: parseInt(d.rowcount) // index
         });
       }
@@ -486,7 +489,7 @@ socket.onmessage = function(e){
   // i is index
   svg.append('g')
     .selectAll("dot")
-    .data(rslt_long_matched) // for each result, return the 
+    .data(rslt_long_matched)
     //~ .data(function(d, i) {// for each result, return the index + points to map
       //~ return d.peak_mass.split(',');
       //~ return d.peak_mass.map(function (attr_val) {
@@ -495,12 +498,20 @@ socket.onmessage = function(e){
     //~ })
     .enter() // for each result
     .append("circle")
-      //.filter(
       .attr("cx", function (d, i) { return x(d.x); } ) 
-      .attr("cy", function (d, i) { console.log(d); return y(d.y); } )
+      .attr("cy", function (d, i) { return y(d.y); } )
+      .attr("r", 1.25)
+      .style("fill", "#00dd00")
+  return;
+  svg.append('g')
+    .selectAll("dot")
+    .data(rslt_long_unmatched)
+    .enter() // for each result
+    .append("circle")
+      .attr("cx", function (d, i) { return x(d.x); } ) 
+      .attr("cy", function (d, i) { return y(d.y); } )
       .attr("r", 1.0)
-      .style("fill", "#69b3a2")
-  // Add squares (no match)
+      .style("fill", "#ff0000")
 }
 socket.onclose = function(e){
   console.log(e);

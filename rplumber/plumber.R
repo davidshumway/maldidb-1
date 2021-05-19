@@ -191,13 +191,13 @@ function(req, ids) {
     )
   }
   disconnect(c$drv, c$con)
-  print(dbIds)
+#~   print(dbIds)
   binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
   featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
   d <- stats::as.dist(1 - coop::tcosine(featureMatrix))
   d <- as.matrix(d)
   d <- round(d, 3)
-  print(d)
+#~   print(d)
   d[lower.tri(d, diag = FALSE)] <- NA # Discard symmetric part of matrix
   d <- d[1,] # return just first row
   return(d)
