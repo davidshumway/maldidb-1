@@ -159,7 +159,7 @@ def preprocess_file(request, file, user_task, form):
       'http://plumber:8000/collapseLibrary',
       params = data
     )
-    n1 = CollapsedSpectra.objects.filter(
+    n1 = CollapsedSpectra.objects.filter( # unknown spectra
       library_id__exact = form.cleaned_data['library'].id,
       max_mass__gt = 6000
     ).first()
@@ -210,22 +210,32 @@ def preprocess_file(request, file, user_task, form):
       spectra_ids = ','.join(map(str, o.keys())))
     
     if obj:
-      l = []
+      l = {
+        'result': [],
+        'original': {
+          'peak_mass': n1.peak_mass
+        }
+      }
+      
       #v = CollapsedSpectra.objects.filter(id__in = list(o.keys())) \
       #  .order_by(','.join(map(str, o.keys())))
       #  # ~ .order_by(list(o.keys()))
       from django.db.models import Case, When
       preserved = Case(*[When(pk = pk, then = pos) for pos, pk in enumerate(o)])
       q = CollapsedSpectra.objects.filter(id__in = o.keys()).order_by(preserved)
+      rowcount = 1
       for cs in q:
         # ~ cs.score = o[str(cs.id)]
-        l.append({
+        l['result'].append({
           'score': o[str(cs.id)],
           'strain': cs.strain_id.strain_id,
           'order': cs.strain_id.cOrder,
           'genus': cs.strain_id.cGenus,
           'species': cs.strain_id.cSpecies,
+          'rowcount': rowcount,
+          'peak_mass': cs.peak_mass,
         })
+        rowcount += 1
       ws.send(json.dumps(l))
       # ~ ws.send(json.dumps(list(q.values())))
       # ~ ws.send('{"message": "test from django"}')

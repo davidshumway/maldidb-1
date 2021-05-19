@@ -15,6 +15,8 @@
  
 <script type="text/javascript" src="{% static 'js/datatables.min.js' %}"></script>
 
+<script type="text/javascript" src="{% static 'js/d3.min.js' %}"></script>
+
 <script type="text/javascript">
 function show_filter(e) {
   document.getElementById('filters').style.display='block';
@@ -27,9 +29,13 @@ function show_filter(e) {
 <form action="{% url 'spectra_search:basic_search' %}" class="" method="GET" style="" id="search-form">
 </form>
 
-<div style="" id="" class="container">
+<div style="" id="" class="container" style="max-width: 1600px !important !important;">
+  <!-- begin row -->
+  <div class="row">
+  <!-- begin col left -->
+  <div class="col-12" id="col-left">
+  <!-- start accordion -->
   <div id="accordion">
-    
   <!-- search type -->
   <div class="card">
     <div class="card-header" id="headingOne">
@@ -179,8 +185,19 @@ function show_filter(e) {
     </div>
   </div>
   
+  </div>
+  <!-- end accordion -->
+  
+  </div>
+  <!-- end col left -->
+  <div class="col-0" id="col-right">
+  </div>
+    
+  </div>
+  <!-- end row -->
+  
 </div>
-</div>
+<!-- end container -->
   
 <!-- if search results, minimize search form -->
 <div class="row">
@@ -377,8 +394,8 @@ socket.onopen = function(e){
 }
 socket.onmessage = function(e){
   console.log(e.data);
-  result = JSON.parse(JSON.parse(e.data));
-  console.log(result);
+  var data = JSON.parse(JSON.parse(e.data));
+  console.log(data);
   //~ console.log(JSON.parse(result));
   $('#result').toggle();
   $('#nss-1').removeClass('active');
@@ -386,7 +403,7 @@ socket.onmessage = function(e){
   $('#nss-card-1').css('display', 'none');
   $('#nss-card-2').css('display', 'block');
   var t = $('#data-table').DataTable({
-    data: result,
+    data: data.result,
     columns: [
       {data: 'score', title: 'Score'},
       {data: 'strain', title: 'Strain'},
@@ -397,6 +414,93 @@ socket.onmessage = function(e){
   });
   t.order([0, 'desc']) // reorder in correct direction
     .draw();
+    
+  // d3
+  // col-left, col-right
+  // e.g. https://www.d3-graph-gallery.com/graph/scatter_basic.html
+  $('#col-left').removeClass('col-12');
+  $('#col-right').removeClass('col-0');
+  $('#col-left').addClass('col-6');
+  $('#col-right').addClass('col-6');
+  var margin = {top: 10, right: 30, bottom: 30, left: 60},
+    width = 460 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+  var svg = d3.select('#col-right')
+    .append('svg')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+    .append('g')
+      .attr('transform',
+        'translate(' + margin.left + ',' + margin.top + ')');
+  // X axis
+  var x = d3.scaleLinear()
+    .domain([1900, 17000])// div. by 10
+    .range([ 0, width ]);
+  svg.append("g")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(x));
+  // Y axis
+  var y = d3.scaleLinear()
+    .domain([0, data.result.length])
+    .range([ height, 0]);
+  svg.append("g")
+    .call(d3.axisLeft(y));
+  // reshape
+  var rslt_long_matched = [];
+  var rslt_long_unmatched = [];
+  var pmo = data.original.peak_mass.split(',');
+  var pmo_dict = {}
+  for (var i in pmo) {
+    //~ var a = Math.round(pmo[i] / 10);
+    var a = Math.round(pmo[i]);
+    var a = pmo[i];
+    pmo_dict[a] = true;
+  }
+  data.result.forEach(function(d) {
+    var pm = d.peak_mass.split(',');
+    //~ console.log(d);
+    for (var j in pm) {
+      //~ var mz = Math.round(pm[j] / 10);
+      var mz = Math.round(pm[j]);
+      var mz = pm[j]
+      if (pmo_dict[mz]) { // has key
+        rslt_long_matched.push({
+          x: mz,
+          y: parseInt(d.rowcount) // index
+        });
+      } else { // no match
+        rslt_long_unmatched.push({
+          x: mz,
+          y: parseInt(d.rowcount) // index
+        });
+      }
+    }
+  });
+  //~ console.log(rslt_long_matched);
+  //~ console.log(rslt_long_unmatched);
+  //~ return;
+  //~ rslt_long_matched = rslt_long_matched.slice(0, 400);
+  
+  
+  // Add circles (matching)
+  // i is index
+  svg.append('g')
+    .selectAll("dot")
+    .data(rslt_long_matched) // for each result, return the 
+    //~ .data(function(d, i) {// for each result, return the index + points to map
+      //~ return d.peak_mass.split(',');
+      //~ return d.peak_mass.map(function (attr_val) {
+        //~ return {attr_val: attr_val, parent_idx: i};
+      //~ });
+    //~ })
+    .enter() // for each result
+    .append("circle")
+      //.filter(
+      .attr("cx", function (d, i) { return x(d.x); } ) 
+      .attr("cy", function (d, i) { console.log(d); return y(d.y); } )
+      .attr("r", 1.0)
+      .style("fill", "#69b3a2")
+  // Add squares (no match)
 }
 socket.onclose = function(e){
   console.log(e);
