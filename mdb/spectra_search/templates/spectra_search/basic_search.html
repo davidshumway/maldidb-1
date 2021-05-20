@@ -512,18 +512,16 @@ socket.onmessage = function(e){
     .append("circle")
       .attr("cx", function (d, i) { return x(d.x); } ) 
       .attr("cy", function (d, i) { return y(d.y); } )
-      .attr("r", 1.25)
+      .attr("r", 1.25) 
       .style("fill", "#00cc00")
       .on('mouseover', function (event, d) {
-        var c = d3.pointer(event);
-        console.log(c)
-        var x = c[0];
-        var y = c[1];
+        //~ var c = d3.pointer(event);
+        //~ console.log(c)
+        //~ var x = c[0];
+        //~ var y = c[1];
         tooltip.html(d.strain)
           .style("left", (event.pageX) + "px")             
           .style("top", (event.pageY - 28) + "px");
-          //~ .style("left", (x + 70) + "px")
-          //~ .style("top", (y) + "px")
         tooltip.transition()
           .duration(200)
           .style("opacity", 0.9);

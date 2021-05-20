@@ -57,93 +57,87 @@ print.data.frame <- function (
   )
 }
 
-#* Bin peaks: Get cosine scores for an unknown vs. set of db spectra
-#*  -- ids must correlate to at least 1 row
-#*     furthermore, stop if ids does not match db results??
-#*  -- id refers to spectra in question, from SearchSpectra table
-#* @param req Built-in
-#* @param id List of IDs from SearchSpectra table
-#* @param ids List of IDs from Spectra table
-#* @post /binPeaks
-function(req, id, ids) {
-  if (class(ids) != 'integer') {
-    stop('not an integer (ids)!') # stop throws 500
-  }
-  if (class(id) != 'integer') {
-    stop('not an integer (id)!')
-  }
-  if (length(ids) < 1) {
-    stop('less than one comparison id given!')
-  }
+#~ #* Bin peaks: Get cosine scores for an unknown vs. set of db spectra
+#~ #*  -- ids must correlate to at least 1 row
+#~ #*     furthermore, stop if ids does not match db results??
+#~ #*  -- id refers to spectra in question, from SearchSpectra table
+#~ #* @param req Built-in
+#~ #* @param id List of IDs from SearchSpectra table
+#~ #* @param ids List of IDs from Spectra table
+#~ #* @post /binPeaks
+#~ function(req, id, ids) {
+#~   if (class(ids) != 'integer') {
+#~     stop('not an integer (ids)!') # stop throws 500
+#~   }
+#~   if (class(id) != 'integer') {
+#~     stop('not an integer (id)!')
+#~   }
+#~   if (length(ids) < 1) {
+#~     stop('less than one comparison id given!')
+#~   }
   
-  c <- connect()
-  s <- paste(unlist(ids), collapse = ',')
-  s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
-    FROM spectra_spectra
-    WHERE id IN (', s, ')')
-  q <- dbGetQuery(c$con, s)
-  if (nrow(q) < 1) {
-    disconnect(c$drv, c$con)
-    stop('database returned less than one row (spectra)!')
-  }
-  s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
-    FROM spectra_searchspectra
-    WHERE id = "', id, '"')
-  q2 <- dbGetQuery(c$con, s)
-  if (nrow(q2) != 1) {
-    disconnect(c$drv, c$con)
-    stop('database did not return exactly one row (searchspectra)!')
-  }
+#~   c <- connect()
+#~   s <- paste(unlist(ids), collapse = ',')
+#~   s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
+#~     FROM spectra_spectra
+#~     WHERE id IN (', s, ')')
+#~   q <- dbGetQuery(c$con, s)
+#~   if (nrow(q) < 1) {
+#~     disconnect(c$drv, c$con)
+#~     stop('database returned less than one row (spectra)!')
+#~   }
+#~   s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
+#~     FROM spectra_searchspectra
+#~     WHERE id = "', id, '"')
+#~   q2 <- dbGetQuery(c$con, s)
+#~   if (nrow(q2) != 1) {
+#~     disconnect(c$drv, c$con)
+#~     stop('database did not return exactly one row (searchspectra)!')
+#~   }
   
-  allSpectra = list()
-  allPeaks = list()
+#~   allSpectra = list()
+#~   allPeaks = list()
   
-  for(i in 1:nrow(q2)) { # unknown spectra
-    row <- q2[i,]
-    allPeaks <- append(allPeaks,
-      MALDIquant::createMassPeaks(
-        mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
-        intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]),
-        snr = as.numeric(strsplit(row$peak_snr, ",")[[1]]))
-    )
-    allSpectra <- append(allSpectra,
-      MALDIquant::createMassSpectrum(
-        mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
-        intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]))
-    )
-  }
-  for(i in 1:nrow(q)) {
-    row <- q[i,]
-    allPeaks <- append(allPeaks,
-      MALDIquant::createMassPeaks(
-        mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
-        intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]),
-        snr = as.numeric(strsplit(row$peak_snr, ",")[[1]]))
-    )
-    allSpectra <- append(allSpectra,
-      MALDIquant::createMassSpectrum(
-        mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
-        intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]))
-    )
-  }
-  
-#~   print('len')
-#~   print(length(allPeaks))columns
-#~   print('dim')
-#~   print(dim(allPeaks))
-  
-  binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
-  featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
+#~   for(i in 1:nrow(q2)) { # unknown spectra
+#~     row <- q2[i,]
+#~     allPeaks <- append(allPeaks,
+#~       MALDIquant::createMassPeaks(
+#~         mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
+#~         intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]),
+#~         snr = as.numeric(strsplit(row$peak_snr, ",")[[1]]))
+#~     )
+#~     allSpectra <- append(allSpectra,
+#~       MALDIquant::createMassSpectrum(
+#~         mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
+#~         intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]))
+#~     )
+#~   }
+#~   for(i in 1:nrow(q)) {
+#~     row <- q[i,]
+#~     allPeaks <- append(allPeaks,
+#~       MALDIquant::createMassPeaks(
+#~         mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
+#~         intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]),
+#~         snr = as.numeric(strsplit(row$peak_snr, ",")[[1]]))
+#~     )
+#~     allSpectra <- append(allSpectra,
+#~       MALDIquant::createMassSpectrum(
+#~         mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
+#~         intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]))
+#~     )
+#~   }
+#~   binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
+#~   featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
 
-  d <- stats::as.dist(coop::tcosine(featureMatrix))
-  d <- as.matrix(d)
-  d <- round(d, 3)
-  d[lower.tri(d, diag = FALSE)] <- NA # Discard symmetric part of matrix
-  d <- d[1,] # return just first row
+#~   d <- stats::as.dist(coop::tcosine(featureMatrix))
+#~   d <- as.matrix(d)
+#~   d <- round(d, 3)
+#~   d[lower.tri(d, diag = FALSE)] <- NA # Discard symmetric part of matrix
+#~   d <- d[1,] # return just first row
   
-  disconnect(c$drv, c$con)
-  d
-}
+#~   disconnect(c$drv, c$con)
+#~   d
+#~ }
 
 #* Cosine: Get cosine scores for a set of db spectra
 #* Ids must correlate to at least 2 rows
@@ -191,16 +185,53 @@ function(req, ids) {
     )
   }
   disconnect(c$drv, c$con)
-#~   print(dbIds)
-  binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
-  featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
-  d <- stats::as.dist(1 - coop::tcosine(featureMatrix))
+#~   binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
+#~   featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
+#~   d <- stats::as.dist(1 - coop::tcosine(featureMatrix))
+#~   d <- as.matrix(d)
+#~   d <- round(d, 3)
+#~   d[lower.tri(d, diag = FALSE)] <- NA # Discard symmetric part of matrix
+#~   d <- d[1,] # return just first row
+  
+  emptyProtein <- unlist(
+    lapply(allPeaks, MALDIquant::isEmpty)
+  )
+  
+  proteinMatrix <- IDBacApp:::createFuzzyVector(
+    massStart = 200,
+    massEnd = 40000,
+    ppm = 1000,
+    massList = lapply(allPeaks[!emptyProtein], function(x) x@mass), #peaks[!emptyProtein]
+    intensityList = lapply(allPeaks[!emptyProtein], function(x) x@intensity)) #peaks[!emptyProtein]
+#~   x <- IDBacApp:::idbac_dendrogram_creator(
+#~     bootstraps = 0L,
+#~     distanceMethod = 'cosine',
+#~     clusteringMethod = 'average',
+#~     proteinMatrix
+#~   )
+  
+  d <- stats::as.dist(1 - coop::cosine(proteinMatrix)) # 1 - coop::cosine(proteinMatrix)
   d <- as.matrix(d)
   d <- round(d, 3)
-#~   print(d)
   d[lower.tri(d, diag = FALSE)] <- NA # Discard symmetric part of matrix
   d <- d[1,] # return just first row
+  
   return(d)
+  
+#~   print(x['dendrogram'])
+#~   print(x['bootstraps'])
+  #print()# first col
+  
+  
+  # dendrogram = dend,
+              #bootstraps = bootstraps,
+              #distance = distance_matrix
+#~   a <- as.matrix(x['distance'])
+  a <- round(x['distance'], 3)
+#~   a <- round(a, 3)
+  
+  return(a[1,])
+#~   return(d)
   
   
   t <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
