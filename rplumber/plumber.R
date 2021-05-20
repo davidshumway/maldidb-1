@@ -209,8 +209,12 @@ function(req, ids) {
 #~     clusteringMethod = 'average',
 #~     proteinMatrix
 #~   )
-  
-  d <- stats::as.dist(1 - coop::cosine(proteinMatrix)) # 1 - coop::cosine(proteinMatrix)
+  # Sparse matrix to hold the peak probability data
+  # Columns are samples, rows are m/z/intensity probabilities 
+  # transform back to actual m/z can be accessed via rownames()
+  print(head(proteinMatrix, 100))
+  print(head(rownames(proteinMatrix), 100))
+  d <- stats::as.dist(coop::cosine(proteinMatrix)) # 1 - coop::cosine(proteinMatrix)
   d <- as.matrix(d)
   d <- round(d, 3)
   d[lower.tri(d, diag = FALSE)] <- NA # Discard symmetric part of matrix
@@ -218,56 +222,8 @@ function(req, ids) {
   
   return(d)
   
-#~   print(x['dendrogram'])
-#~   print(x['bootstraps'])
-  #print()# first col
-  
-  
-  # dendrogram = dend,
-              #bootstraps = bootstraps,
-              #distance = distance_matrix
-#~   a <- as.matrix(x['distance'])
-  a <- round(x['distance'], 3)
-#~   a <- round(a, 3)
-  
-  return(a[1,])
-#~   return(d)
-  
-  
-  t <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
-  # non-collapsed spectra:
-  #     t <- MALDIquant::filterPeaks(t, minFrequency = 70 / 100)
-  #     t <- MALDIquant::mergeMassPeaks(t, method = 'mean')
-#~   print('x')
-#~   print(head(t))
-#~   t <- list(t)
-#~   print(lapply(t, MALDIquant::isEmpty))
-  
-  emptyProtein <- unlist(
-    lapply(t, MALDIquant::isEmpty)
-  )
-  
-  test <- lapply(t, function(x) x@mass)
-#~   test <- lapply(t[!emptyProtein], function(x) x@mass)
-  print(head(test,2))
-  test <- lapply(t[!emptyProtein], function(x) x@intensity)
-  print(head(test,2))
-  proteinMatrix <- IDBacApp:::createFuzzyVector(
-    massStart = 2000,
-    massEnd = 20000,
-    ppm = 1000,
-    massList = lapply(t[!emptyProtein], function(x) x@mass),
-    intensityList = lapply(t[!emptyProtein], function(x) x@intensity))
-  print(head(proteinMatrix, 1))
-  x <- idbac_dendrogram_creator(
-    bootstraps = 0L,
-    distanceMethod = 'cosine',
-    clusteringMethod = 'average',
-    proteinMatrix
-  )
-  print(x)
-  return(x)
-  
+
+
 #~   featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
 #~   d <- stats::as.dist(coop::tcosine(featureMatrix))
 #~   d <- as.matrix(d)
