@@ -150,7 +150,7 @@ function(req, ids) {
   #print(ids)
   #print(class(ids))
   ids <- as.numeric(ids)
-  if (length(ids) < 2) {
+  if (length(ids) < 2) {#----
     stop('less than two comparison ids given!')
   }
   
@@ -185,52 +185,144 @@ function(req, ids) {
     )
   }
   disconnect(c$drv, c$con)
-#~   binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
-#~   featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
-#~   d <- stats::as.dist(1 - coop::tcosine(featureMatrix))
-#~   d <- as.matrix(d)
-#~   d <- round(d, 3)
-#~   d[lower.tri(d, diag = FALSE)] <- NA # Discard symmetric part of matrix
-#~   d <- d[1,] # return just first row
   
   emptyProtein <- unlist(
     lapply(allPeaks, MALDIquant::isEmpty)
   )
   
+  # Sparse matrix to hold the peak probability data
+  # Columns are samples, rows are m/z/intensity probabilities 
+  # transform back to actual m/z can be accessed via rownames()
+
   proteinMatrix <- IDBacApp:::createFuzzyVector(
     massStart = 200,
     massEnd = 40000,
     ppm = 1000,
-    massList = lapply(allPeaks[!emptyProtein], function(x) x@mass), #peaks[!emptyProtein]
-    intensityList = lapply(allPeaks[!emptyProtein], function(x) x@intensity)) #peaks[!emptyProtein]
+    massList = lapply(allPeaks[!emptyProtein], function(x) x@mass),
+    intensityList = lapply(allPeaks[!emptyProtein], function(x) x@intensity))
+    
 #~   x <- IDBacApp:::idbac_dendrogram_creator(
 #~     bootstraps = 0L,
 #~     distanceMethod = 'cosine',
 #~     clusteringMethod = 'average',
 #~     proteinMatrix
 #~   )
-  # Sparse matrix to hold the peak probability data
-  # Columns are samples, rows are m/z/intensity probabilities 
-  # transform back to actual m/z can be accessed via rownames()
-  print(head(proteinMatrix, 100))
-  print(head(rownames(proteinMatrix), 100))
+
   d <- stats::as.dist(coop::cosine(proteinMatrix)) # 1 - coop::cosine(proteinMatrix)
   d <- as.matrix(d)
   d <- round(d, 3)
   d[lower.tri(d, diag = FALSE)] <- NA # Discard symmetric part of matrix
-  d <- d[1,] # return just first row
+  d <- d[1,]
+  return(d) # returns first row
   
+  ## not used
+  # visualizing the sparse matrix
+  
+  # 200k rows
+  ordering <- sort(d, decreasing = F, index.return = T)
+  ordering <- ordering$ix
+  print(ordering)
+  pmReorder <- proteinMatrix[, ordering]
+  
+  png(file = 'scatterplot.png',  width = 10, height = 10, units = 'in', res = 600)
+  image(
+    t(as.matrix(pmReorder)[1:10000,]),
+    axes = FALSE,
+    col = colorRampPalette(c("white", "darkorange", "black"))(30),
+    breaks = c(seq(0, 3, length.out = 30), 1), #, 100)
+    main = "Reduced matrix",
+    useRaster = TRUE
+  )
+  dev.off()
+  
+  # times 1 when first column is not 0, otherwise 0
+  x <- proteinMatrix * ceiling(proteinMatrix[, 1])
+  
+  # times first column
+#~   x <- proteinMatrix * proteinMatrix[, 1]
+
+  x <- x[, ordering]
+  png(file = 'scatterplot2.png',  width = 10, height = 10, units = 'in', res = 600)
+  image(
+    t(as.matrix(x)[1:10000,]),
+    axes = FALSE,
+    col = colorRampPalette(c("white", "darkorange", "black"))(30),
+    breaks = c(seq(0, 3, length.out = 30), 1), #, 100)
+    main = "Reduced matrix",
+    useRaster = TRUE
+  )
+  dev.off()
+  
+  redim_matrix <- function(
+    mat,
+    target_height = 100,
+    target_width = 100,
+    summary_func = function(x) max(x, na.rm = TRUE),
+    output_type = 0.0, #vapply style
+    n_core = 1 # parallel processing
+    ) {
+
+    if(target_height > nrow(mat) | target_width > ncol(mat)) {
+      stop("Input matrix must be bigger than target width and height.")
+    }
+
+    seq_height <- round(seq(1, nrow(mat), length.out = target_height + 1))
+    seq_width  <- round(seq(1, ncol(mat), length.out = target_width  + 1))
+
+    # complicated way to write a double for loop
+    do.call(rbind, parallel::mclapply(seq_len(target_height), function(i) { # i is row
+      vapply(seq_len(target_width), function(j) { # j is column
+        summary_func(
+          mat[
+            seq(seq_height[i], seq_height[i + 1]),
+            seq(seq_width[j] , seq_width[j + 1] )
+            ]
+        )
+      }, output_type)
+    }, mc.cores = n_core))
+  }
+  
+#~   genmatred <- redim_matrix(as.matrix(pmReorder), target_height = 600, target_width = 50) 
+  g <- redim_matrix(as.matrix(x), target_height = 1000, target_width = ncol(x)) 
+  png(file = 'scatterplot3.png')
+  image(
+    t(g),
+    axes = F,
+    col = colorRampPalette(c("white", "darkorange", "black"))(30),
+    breaks = c(seq(0, 3, length.out = 30), 1), #, 100)
+    main = "Reduced matrix",
+    useRaster = T
+  )
+  dev.off()
+  
+#~   g <- redim_matrix(as.matrix(x), target_height = 1000, target_width = ncol(x)) 
+#~   png(file = 'scatterplot4.png')
+#~   image(
+#~     t(g),
+#~     axes = F,
+#~     col = colorRampPalette(c("white", "darkorange", "black"))(30),
+#~     breaks = c(seq(0, 3, length.out = 30), 1), #, 100)
+#~     main = "Reduced matrix",
+#~     useRaster = TRUE
+#~   )
+#~   dev.off()
+  
+#~   g <- redim_matrix(as.matrix(x), target_height = 1000, target_width = ncol(x)) 
+#~   png(file = 'scatterplot5.png')
+#~   Heatmap(
+#~     g[nrow(g):1, ],
+#~     col = circlize::colorRamp2(c(0, 1.5, 3), c("white", "darkorange", "black")),
+#~     cluster_rows = FALSE, cluster_columns = FALSE,
+#~     show_heatmap_legend = FALSE,
+#~     use_raster = TRUE,
+#~     raster_resize = TRUE, raster_device = "png",
+#~     column_title = "With rasterisation"
+#~   )
+#~   dev.off()
+
   return(d)
   
 
-
-#~   featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
-#~   d <- stats::as.dist(coop::tcosine(featureMatrix))
-#~   d <- as.matrix(d)
-#~   d <- round(d, 3)
-#~   dfull <- d
-#~   d[lower.tri(d, diag = FALSE)] <- NA # Discard symmetric part
-#~   disconnect(c$drv, c$con)
 #~   library(jsonlite)
 #~   a <- list( # capture output helpful for serializing S4 class
 #~     'ids' = ids,
