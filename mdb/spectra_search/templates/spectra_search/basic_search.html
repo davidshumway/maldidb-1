@@ -128,7 +128,8 @@ function show_filter(e) {
                   </div>
                   
                   <div class="text-center">
-                    <button type="submit" class="btn btn-default">Upload</button>
+                    <button type="submit" class="btn btn-default"
+                    onclick="this.disabled = true;">Upload</button>
                   </div>
                 </form>
                 <!-- End file upload form -->
@@ -574,7 +575,7 @@ function upload(event) {
       // Upload
       xhr.upload.addEventListener('progress', function(evt){
         if (evt.lengthComputable) {
-          var percent = 100 * evt.loaded / evt.total;
+          var percent = Math.round(100 * evt.loaded / evt.total);
           t.progress.attr('aria-valuenow', percent);
           t.progress.text(percent + '%');
           t.progress.css('width', percent + '%');
