@@ -3,10 +3,6 @@ from django.urls import reverse
 from chat.models import *
 
 class AbstractSpectra(models.Model):
-  # ~ privacy_level = models.ForeignKey(
-    # ~ 'PrivacyLevel',
-    # ~ on_delete = models.CASCADE,
-    # ~ blank = True)
   privacyChoices = [
     ('PB', 'Public'),
     ('PR', 'Private'),

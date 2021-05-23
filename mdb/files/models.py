@@ -7,13 +7,15 @@ class UserFile(models.Model):
   '''
   Spectra files uploaded by users.
   
-  -- May be associated with one or more Spectra.
+  May be associated with one or more Spectra.
+  
+  Owner is optional allows for anonymous user uploads. 
   '''
   owner = models.ForeignKey(
     settings.AUTH_USER_MODEL,
     on_delete = models.CASCADE,
-    blank = False,
-    null = False)
+    blank = True,
+    null = True)
   file = models.FileField(
     upload_to = 'uploads/',
     validators = [

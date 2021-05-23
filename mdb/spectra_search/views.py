@@ -104,7 +104,7 @@ class MetadataAutocomplete(autocomplete.Select2QuerySetView):
 #-----------------------------------------------------------------------
 
 @start_new_thread
-def preprocess_file(request, file, user_task, form):
+def process_file(request, file, form, owner):
   '''Run R methods to preprocess spectra file
   
   Add Spectra and update UserFile
@@ -126,21 +126,21 @@ def preprocess_file(request, file, user_task, form):
   r = requests.get('http://plumber:8000/preprocess', params = data)
 
   # contains sqlite file path
-  print('r', r)
-  print('content', r.content)
-  print('content', r.json())
-  print('content', r.json()[0])
-  print('request', request)
-  print('form', form.cleaned_data)
-  print('f1', f1)
-  print('current_loc', current_loc)
+  # ~ print('r', r)
+  # ~ print('content', r.content)
+  # ~ print('content', r.json())
+  # ~ print('content', r.json()[0])
+  # ~ print('request', request)
+  # ~ print('form', form.cleaned_data)
+  # ~ print('f1', f1)
+  # ~ print('current_loc', current_loc)
   # if no library selected, then create a new library for the user.
   # if the user is anonymous, then create a new anonymous library.
   # add the sqlite new spectra to db
   # idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
   info = idbac_sqlite_insert(request, form,
     '/uploads/sync/' + str(r.json()[0]) + '.sqlite',
-    user_task
+    user_task = False
   )
   
   # TODO
@@ -151,8 +151,7 @@ def preprocess_file(request, file, user_task, form):
   if info['spectra']['protein'] > 1:
     data = {
       'id': form.cleaned_data['library'].id,
-      'owner': request.user.id,
-      'task_id': user_task.id,
+      'owner': owner
     }
     print(f'send{data}')
     r = requests.get(
@@ -225,7 +224,6 @@ def preprocess_file(request, file, user_task, form):
       q = CollapsedSpectra.objects.filter(id__in = o.keys()).order_by(preserved)
       rowcount = 1
       for cs in q:
-        # ~ cs.score = o[str(cs.id)]
         l['result'].append({
           'score': o[str(cs.id)],
           'strain': cs.strain_id.strain_id,
@@ -237,8 +235,6 @@ def preprocess_file(request, file, user_task, form):
         })
         rowcount += 1
       ws.send(json.dumps(l))
-      # ~ ws.send(json.dumps(list(q.values())))
-      # ~ ws.send('{"message": "test from django"}')
   else:
     pass
     # ~ r = requests.post(
@@ -255,16 +251,19 @@ def ajax_upload(request):
   Preprocessing (optional) - Once uploaded, spawn new thread to preprocess.
   
   UserFile has file location, e.g., "uploads/Bacillus_ByZQI1O.mzXML".
-  Library (optional) - 1) User owned 2) Create new for user
-   3) Create new for anonymous user
+  
+  If owner=None, then CollapsedSpectra.create(created_by=None) still works.
    
-  Todo: anonymous session to access anon. upload
+  Todo: Anonymous session to access anon. upload.
   '''
   if request.method == 'POST':
+    print('sk', request.session)
+    print('sk', request.session.session_key)
     form = SpectraUploadForm(data = request.POST, files = request.FILES)
     if form.is_valid():
       form.request = request # pass request to save() method
       form.save()
+      owner = request.user.id if request.user.is_authenticated else None
       lab, created = LabGroup.objects.get_or_create(
         lab_name = 'FileUploads' # initialize file uploads group
       )
@@ -274,29 +273,18 @@ def ajax_upload(request):
         file = str(form.instance.file)
         filename = file.replace('uploads/', '')
         form.cleaned_data['privacy_level'] = ['PR']
-        t = UserTask.objects.create(
-          owner = request.user,
-          task_description = 'preprocess'
-        )
-        t.statuses.add(UserTaskStatus.objects.create(
-          status = 'start', user_task = t))
         if form.cleaned_data['library'] == None:
           if request.user.is_authenticated:
             l = Library.objects.create(created_by = request.user,
               title = filename, privacy_level = 'PR', lab = lab)
-            form.cleaned_data['library'] = l
           else: # anonymous/ todo: later accessible via anon. session
             l = Library.objects.create(title = filename,
               privacy_level = 'PR', lab = lab)
-        # ~ if form.cleaned_data['lab'] == None:
-          # ~ l = LabGroup.objects.create(lab_name = filename)
-          # ~ form.cleaned_data['lab'] = l
-          # ~ if request.user.is_authenticated:
-            # ~ l.owners.add(request.user)
-            # ~ l.members.add(request.user)
-        preprocess_file(request, file, t, form)
+          form.cleaned_data['library'] = l
+        process_file(request, file, form, owner)
         return JsonResponse(
-          {'status': 'preprocessing', 'task': t.id},
+          {'status': 'preprocessing'},
+          # ~ {'status': 'preprocessing', 'task': t.id},
           status=200)
       return JsonResponse({'status': 'ready'}, status=200)
     else:

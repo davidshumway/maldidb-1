@@ -212,8 +212,8 @@ function(req, ids) {
   # Sparse matrix to hold the peak probability data
   # Columns are samples, rows are m/z/intensity probabilities 
   # transform back to actual m/z can be accessed via rownames()
-  print(head(proteinMatrix, 100))
-  print(head(rownames(proteinMatrix), 100))
+#~   print(head(proteinMatrix, 100))
+#~   print(head(rownames(proteinMatrix), 100))
   d <- stats::as.dist(coop::cosine(proteinMatrix)) # 1 - coop::cosine(proteinMatrix)
   d <- as.matrix(d)
   d <- round(d, 3)
@@ -292,10 +292,7 @@ dbSpectra <- function(ids) {
 #* @param owner User undertaking the process
 #* @param taskId Reference to a Django user task
 #* @get /collapseLibrary
-collapseLibrary <- function(id, owner, taskId) {
-#~   if (class(id) != 'integer') {
-#~     stop('not an integer!')
-#~   }
+collapseLibrary <- function(id, owner = F) {
   c <- connect()
   s <- paste0('SELECT distinct(strain_id) as strain_id
     FROM spectra_spectra
@@ -314,25 +311,24 @@ collapseLibrary <- function(id, owner, taskId) {
     collapseStrainsInLibrary(id, row, 'PR', owner)
     collapseStrainsInLibrary(id, row, 'SM', owner)
   }
-  
-  #* Show task complete
-#~   c <- connect()
-#~   s <- paste0('INSERT INTO chat_usertask
-#~     WHERE library_id = ', as.numeric(id))
-#~   q <- dbGetQuery(c$con, s)
-#~   disconnect(c$drv, c$con)
 }
 #* Collapse a single strain (sid) from a single library (lid)
 #* e.g. http://localhost:7002/collapseLibraryStrains?lid=1&sid=1&type=protein
 #* @param lid
 #* @param sid
 #* @param type: protein or sm
-#* @param owner: User undertaking the process
+#* @param owner: User undertaking the process, or None for anonymous
 #* @get /collapseStrainsInLibrary
 collapseStrainsInLibrary <- function(lid, sid, type, owner) {
   lid <- as.numeric(lid)
   sid <- as.numeric(sid)
-  owner <- as.numeric(owner)
+  if (!owner) {
+    print('owner is anon.')
+    owner <- ''
+  } else {
+    print('owner is not anon.')
+    owner <- paste0('"created_by":"', as.numeric(owner), '",')
+  }
   if (type == 'PR')
     sym <- '>'
   else {
@@ -399,7 +395,7 @@ collapseStrainsInLibrary <- function(lid, sid, type, owner) {
       '"tolerance":0.002,',
       '"peak_percent_presence":0.7,',
       '"spectra_content":"', as.character(type), '",',
-      '"created_by":"', owner, '",',
+      owner,
       '"collapsed_spectra":', toJSON(strainIds),
     '}'
   )

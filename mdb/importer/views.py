@@ -104,7 +104,7 @@ def _insert(request, tmpForm, uploadFile, user_task):
         status = 'complete', user_task = user_task
     ))
 
-def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
+def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
   '''
   :return: Optionally returns an info object detailing results
   '''
@@ -135,11 +135,12 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
         raise ValueError('xxxxx')
         
   # Metadata
-  user_task.statuses.add(
-    UserTaskStatus.objects.create(
-      status = 'info', extra = 'Inserting metadata',
-      user_task = user_task
-  ))
+  if user_task:
+    user_task.statuses.add(
+      UserTaskStatus.objects.create(
+        status = 'info', extra = 'Inserting metadata',
+        user_task = user_task
+    ))
   rows = cursor.execute("SELECT * FROM metaData").fetchall()
   for row in rows:
     data = {
@@ -176,10 +177,11 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
       raise ValueError('xxxxx')
   
   # XML
-  user_task.statuses.add(
-    UserTaskStatus.objects.create(
-      status = 'info', extra = 'Inserting XML', user_task = user_task
-  ))
+  if user_task:
+    user_task.statuses.add(
+      UserTaskStatus.objects.create(
+        status = 'info', extra = 'Inserting XML', user_task = user_task
+    ))
   rows = cursor.execute("SELECT * FROM XML").fetchall()
   for row in rows:
     data = {
@@ -218,12 +220,13 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
         raise ValueError('xxxxx')
     
   # Spectra
-  # row[5] spectrumIntensity ??
-  user_task.statuses.add(
-    UserTaskStatus.objects.create(
-      status = 'info', extra = 'Inserting spectra',
-      user_task = user_task
-  ))
+  # row[5] spectrumIntensity ?
+  if user_task:
+    user_task.statuses.add(
+      UserTaskStatus.objects.create(
+        status = 'info', extra = 'Inserting spectra',
+        user_task = user_task
+    ))
   t = 'IndividualSpectra' if idbac_version == '1.0.0' else 'spectra'
   rows = cursor.execute('SELECT * FROM ' + t).fetchall()
   strains = set() # Python set
@@ -259,13 +262,14 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
     # Sanity check ("na" or "nan"): Skip this spectra.
     # There are a few NA spectras in R01 data
     if 'na' in row[4].lower():
-      user_task.statuses.add(
-        UserTaskStatus.objects.create(
-          status = 'error',
-          extra = 'Peak mass, intensity, or SNR contains an "NA" value:\n\n'
-            'Row data:\n\n' + json.dumps(data),
-          user_task = user_task
-      ))
+      if user_task:
+        user_task.statuses.add(
+          UserTaskStatus.objects.create(
+            status = 'error',
+            extra = 'Peak mass, intensity, or SNR contains an "NA" value:\n\n'
+              'Row data:\n\n' + json.dumps(data),
+            user_task = user_task
+        ))
       continue
     
     form = SpectraForm(data)
@@ -278,15 +282,6 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
       form.non_field_errors()
       field_errors = [(field.label, field.errors) for field in form]
       raise ValueError('xxxxx')
-  
-  # Collapse pipeline
-  # Collapse library (i.e., no more spectra will be added)
-  # Collapse strains (i.e., more spectra may be added but no more for a given strain)
-  # ~ user_task.statuses.add(
-    # ~ UserTaskStatus.objects.create(
-      # ~ status = 'info', extra = 'Collapsing spectra',
-      # ~ user_task = user_task
-  # ~ ))
   
   from django.db import connection
   connection.close()

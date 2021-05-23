@@ -417,7 +417,9 @@ socket.onmessage = function(e){
   });
   t.order([0, 'desc']) // reorder in correct direction
     .draw();
-    
+  
+  return;
+  
   // d3
   // col-left, col-right
   // e.g. https://www.d3-graph-gallery.com/graph/scatter_basic.html
@@ -469,17 +471,12 @@ socket.onmessage = function(e){
   var pmo = data.original.peak_mass.split(',');
   var pmo_dict = {}
   for (var i in pmo) {
-    //~ var a = Math.round(pmo[i] / 10);
-    //~ var a = Math.round(pmo[i], 3);
-    //~ var a = Number.parseFloat(pmo[i]).toPrecision(2);
     var a = Number.parseFloat(pmo[i]).toFixed(1);
     pmo_dict[a] = true;
   }
   data.result.forEach(function(d) {
     var pm = d.peak_mass.split(',');
     for (var j in pm) {
-      //~ var a = Math.round(pm[j] / 10);
-      //~ var a = Math.round(pm[j], 3);
       var a = Number.parseFloat(pm[j]).toFixed(1);
       if (pmo_dict[a]) { // has key
         rslt_long_matched.push({
@@ -502,12 +499,6 @@ socket.onmessage = function(e){
   svg.append('g')
     .selectAll("dot")
     .data(rslt_long_matched)
-    //~ .data(function(d, i) {// for each result, return the index + points to map
-      //~ return d.peak_mass.split(',');
-      //~ return d.peak_mass.map(function (attr_val) {
-        //~ return {attr_val: attr_val, parent_idx: i};
-      //~ });
-    //~ })
     .enter() // for each result
     .append("circle")
       .attr("cx", function (d, i) { return x(d.x); } ) 
@@ -515,10 +506,6 @@ socket.onmessage = function(e){
       .attr("r", 1.25) 
       .style("fill", "#00cc00")
       .on('mouseover', function (event, d) {
-        //~ var c = d3.pointer(event);
-        //~ console.log(c)
-        //~ var x = c[0];
-        //~ var y = c[1];
         tooltip.html(d.strain)
           .style("left", (event.pageX) + "px")             
           .style("top", (event.pageY - 28) + "px");
@@ -526,11 +513,6 @@ socket.onmessage = function(e){
           .duration(200)
           .style("opacity", 0.9);
       });
-      //~ .on('mouseleave', function (event, d) {
-        //~ tooltip.transition()
-          //~ .duration(50)
-          //~ .style("opacity", 0);
-     //~ });
   return;
   svg.append('g')
     .selectAll("dot")
