@@ -22,30 +22,30 @@ from rest_framework.viewsets import ModelViewSet
 
 class CollapsedCosineScoreViewSet(ModelViewSet):
   '''
-  Showing latest three entries.
+  Showing latest ten entries.
   '''
   serializer_class = CollapsedCosineScoreSerializer
-  queryset = CollapsedCosineScore.objects.all().order_by('-id')[:3]
+  queryset = CollapsedCosineScore.objects.all().order_by('-id')[:10]
   
   def post():
     pass
     
 class SpectraViewSet(ModelViewSet):
   '''
-  Showing latest three entries.
+  Showing latest ten entries.
   '''
   serializer_class = SpectraSerializer
-  queryset = Spectra.objects.all().order_by('-id')[:3]
+  queryset = Spectra.objects.all().order_by('-id')[:10]
   
   def post():
     pass
     
 class CollapsedSpectraViewSet(ModelViewSet):
   '''
-  Showing latest three entries.
+  Showing latest ten entries.
   '''
   serializer_class = CollapsedSpectraSerializer
-  queryset = CollapsedSpectra.objects.order_by('-id')[:3]
+  queryset = CollapsedSpectra.objects.order_by('-id')[:10]
   
   def post():
     pass

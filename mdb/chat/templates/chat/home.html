@@ -16,7 +16,7 @@
 				Latest entries</h5>
        
         <!-- Libraries -->
-        {% for entry in library|slice:":100" %}
+        {% for entry in library|slice:":4" %}
           <div class=" my-4 card" style="box-shadow: #484646 0px 4px 1px">
             <div class="card-body">{{countLib}} 
 							<div class="card-title text-right">
@@ -254,7 +254,6 @@
   }
   
   function makeChart(el, dataXY) {
-  //~ function makeChart(el, dataX, dataY) {
     
     // Data parsing
     // Quit on error

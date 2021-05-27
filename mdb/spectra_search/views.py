@@ -148,12 +148,11 @@ def process_file(request, file, form, owner):
   #  if single spectra, continue
   
   # if more than one protein spectra, then collapse
-  if info['spectra']['protein'] > 1:
+  if info['spectra']['protein'] > 0: ##### > 1
     data = {
       'id': form.cleaned_data['library'].id,
       'owner': owner
     }
-    print(f'send{data}')
     r = requests.get(
       'http://plumber:8000/collapseLibrary',
       params = data
@@ -204,7 +203,7 @@ def process_file(request, file, form, owner):
 
     obj = CollapsedCosineScore.objects.create(
       spectra = n1,
-      library = form.cleaned_data['library'],
+      library = form.cleaned_data['library'], # lib unnecessary in ccs model
       scores = ','.join(map(str, list(o.values()))),
       spectra_ids = ','.join(map(str, o.keys())))
     
@@ -216,9 +215,6 @@ def process_file(request, file, form, owner):
         }
       }
       
-      #v = CollapsedSpectra.objects.filter(id__in = list(o.keys())) \
-      #  .order_by(','.join(map(str, o.keys())))
-      #  # ~ .order_by(list(o.keys()))
       from django.db.models import Case, When
       preserved = Case(*[When(pk = pk, then = pos) for pos, pk in enumerate(o)])
       q = CollapsedSpectra.objects.filter(id__in = o.keys()).order_by(preserved)
@@ -257,8 +253,6 @@ def ajax_upload(request):
   Todo: Anonymous session to access anon. upload.
   '''
   if request.method == 'POST':
-    print('sk', request.session)
-    print('sk', request.session.session_key)
     form = SpectraUploadForm(data = request.POST, files = request.FILES)
     if form.is_valid():
       form.request = request # pass request to save() method
@@ -367,10 +361,12 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     else:
       user_labs = LabGroup.objects \
         .filter(Q(owners__in = [u]) | Q(members__in = [u]))
-      q = Library.objects.filter( \
-        Q(lab__in = user_labs) | Q(privacy_level__exact = 'PB') | \
-        Q(created_by__exact = u)
-      ).order_by('-id')
+      q = Library.objects \
+        .filter(~Q(lab__lab_name__exact = 'FileUploads')) \
+        .filter(\
+          Q(lab__in = user_labs) | Q(privacy_level__exact = 'PB') | \
+          Q(created_by__exact = u)
+        ).order_by('-id')
     context['upload_form'].fields['search_library'].queryset = q
     
     f = SpectraFilter(self.request.GET, queryset = self.queryset)

@@ -60,7 +60,8 @@ class AbstractSpectra(models.Model):
     db_column = 'strain_id',
     on_delete = models.CASCADE,
     blank = True,
-    null = True)
+    null = True,
+    db_index=True) # sort by sid
   
   # ~ unique_together = (
     # ~ strain_id,

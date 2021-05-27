@@ -57,97 +57,18 @@ print.data.frame <- function (
   )
 }
 
-#~ #* Bin peaks: Get cosine scores for an unknown vs. set of db spectra
-#~ #*  -- ids must correlate to at least 1 row
-#~ #*     furthermore, stop if ids does not match db results??
-#~ #*  -- id refers to spectra in question, from SearchSpectra table
-#~ #* @param req Built-in
-#~ #* @param id List of IDs from SearchSpectra table
-#~ #* @param ids List of IDs from Spectra table
-#~ #* @post /binPeaks
-#~ function(req, id, ids) {
-#~   if (class(ids) != 'integer') {
-#~     stop('not an integer (ids)!') # stop throws 500
-#~   }
-#~   if (class(id) != 'integer') {
-#~     stop('not an integer (id)!')
-#~   }
-#~   if (length(ids) < 1) {
-#~     stop('less than one comparison id given!')
-#~   }
-  
-#~   c <- connect()
-#~   s <- paste(unlist(ids), collapse = ',')
-#~   s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
-#~     FROM spectra_spectra
-#~     WHERE id IN (', s, ')')
-#~   q <- dbGetQuery(c$con, s)
-#~   if (nrow(q) < 1) {
-#~     disconnect(c$drv, c$con)
-#~     stop('database returned less than one row (spectra)!')
-#~   }
-#~   s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
-#~     FROM spectra_searchspectra
-#~     WHERE id = "', id, '"')
-#~   q2 <- dbGetQuery(c$con, s)
-#~   if (nrow(q2) != 1) {
-#~     disconnect(c$drv, c$con)
-#~     stop('database did not return exactly one row (searchspectra)!')
-#~   }
-  
-#~   allSpectra = list()
-#~   allPeaks = list()
-  
-#~   for(i in 1:nrow(q2)) { # unknown spectra
-#~     row <- q2[i,]
-#~     allPeaks <- append(allPeaks,
-#~       MALDIquant::createMassPeaks(
-#~         mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
-#~         intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]),
-#~         snr = as.numeric(strsplit(row$peak_snr, ",")[[1]]))
-#~     )
-#~     allSpectra <- append(allSpectra,
-#~       MALDIquant::createMassSpectrum(
-#~         mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
-#~         intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]))
-#~     )
-#~   }
-#~   for(i in 1:nrow(q)) {
-#~     row <- q[i,]
-#~     allPeaks <- append(allPeaks,
-#~       MALDIquant::createMassPeaks(
-#~         mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
-#~         intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]),
-#~         snr = as.numeric(strsplit(row$peak_snr, ",")[[1]]))
-#~     )
-#~     allSpectra <- append(allSpectra,
-#~       MALDIquant::createMassSpectrum(
-#~         mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
-#~         intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]))
-#~     )
-#~   }
-#~   binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
-#~   featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
-
-#~   d <- stats::as.dist(coop::tcosine(featureMatrix))
-#~   d <- as.matrix(d)
-#~   d <- round(d, 3)
-#~   d[lower.tri(d, diag = FALSE)] <- NA # Discard symmetric part of matrix
-#~   d <- d[1,] # return just first row
-  
-#~   disconnect(c$drv, c$con)
-#~   d
-#~ }
-
 #* Cosine: Get cosine scores for a set of db spectra
 #* Ids must correlate to at least 2 rows
+#*     https://github.com/strejcem/MALDIvs16S/../R/MALDIbacteria.Rsimilarity
+#*     coop::cosine(t(featureMatrix))
 #* Todo: library=, lab=, strain=, user=, ...
+#* Bug: database result is reordered on id acending
 #* @param req Built-in
 #* @param ids List of IDs from Spectra table
 #* @post /cosine
 function(req, ids) {
   #print('got ids')
-  #print(ids)
+  print(ids)
   #print(class(ids))
   ids <- as.numeric(ids)
   if (length(ids) < 2) {#----
@@ -171,6 +92,7 @@ function(req, ids) {
   
   for(i in 1:nrow(q)) {
     row <- q[i,]
+    #print(row$)
     dbIds <- append(dbIds, row$id)
     allPeaks <- append(allPeaks,
       MALDIquant::createMassPeaks(
@@ -185,6 +107,18 @@ function(req, ids) {
     )
   }
   disconnect(c$drv, c$con)
+  print(dbIds)
+  
+  binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
+  featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
+  # (manual inspection)
+  print(toString(featureMatrix[0,]))
+  #print(toString(featureMatrix[1,]))
+  #print(toString(featureMatrix[2,]))
+  print(coop::cosine(featureMatrix[1,], featureMatrix[2,]))
+  d <- coop::cosine(t(featureMatrix))
+  d <- round(d, 3)
+  return(d[1,])
   
   emptyProtein <- unlist(
     lapply(allPeaks, MALDIquant::isEmpty)
@@ -195,8 +129,8 @@ function(req, ids) {
   # transform back to actual m/z can be accessed via rownames()
 
   proteinMatrix <- IDBacApp:::createFuzzyVector(
-    massStart = 200,
-    massEnd = 40000,
+    massStart = 1600,
+    massEnd = 20000,
     ppm = 1000,
     massList = lapply(allPeaks[!emptyProtein], function(x) x@mass),
     intensityList = lapply(allPeaks[!emptyProtein], function(x) x@intensity))
@@ -207,15 +141,16 @@ function(req, ids) {
 #~     clusteringMethod = 'average',
 #~     proteinMatrix
 #~   )
-
-  # Sparse matrix to hold the peak probability data
-  # Columns are samples, rows are m/z/intensity probabilities 
-  # transform back to actual m/z can be accessed via rownames()
-
-  d <- stats::as.dist(coop::cosine(proteinMatrix)) # 1 - coop::cosine(proteinMatrix)
+  
+  d <- as.dist(coop::cosine(proteinMatrix)) # 1 - coop::cosine(proteinMatrix)
+  d <- round(d, 3)
+  print(head(d, 1))
+  
+  
   d <- as.matrix(d)
   d <- round(d, 3)
-  d[lower.tri(d, diag = FALSE)] <- NA # Discard symmetric part of matrix
+  #d[lower.tri(d, diag = FALSE)] <- NA # Discard symmetric part of matrix
+#~   print(head(d, 2))
   d <- d[1,]
   return(d) # returns first row
   
@@ -418,7 +353,7 @@ collapseLibrary <- function(id, owner = F) {
 collapseStrainsInLibrary <- function(lid, sid, type, owner) {
   lid <- as.numeric(lid)
   sid <- as.numeric(sid)
-  if (!owner) {
+  if (owner == F) {
     print('owner is anon.')
     owner <- ''
   } else {
@@ -439,13 +374,14 @@ collapseStrainsInLibrary <- function(lid, sid, type, owner) {
   )
   q <- dbGetQuery(c$con, s)
   if (nrow(q) < 1) {
+    # no spectra matching library and strain
     disconnect(c$drv, c$con)
     return()
-#~     stop('no spectra matching library and strain!')
   } else if (nrow(q) < 2) {
-    disconnect(c$drv, c$con)
-    return()
-#~     stop('library + strain produce only one spectra!')
+    # library + strain produce only one spectra
+    # allow ?
+    #disconnect(c$drv, c$con)
+    #return()
   }
   
   allPeaks = list()
@@ -516,7 +452,15 @@ mqSerial <- function(l) {
 #* @get /preprocess
 preprocess <- function(file) {
 #~   f <- file.path(paste0("/app/", file))
-#~   mzML_con <- mzR::openMSfile(f, backend = "pwiz")
+  # test
+  #dir <- system.file('./', package = 'MALDIquantForeign')
+  #s <- import(file.path(dir, 'brukerflex'), verbose = F)
+#~   mz <- mzR::openMSfile(f, backend = "pwiz")
+#~   print(mzR::header(mz))
+#~   fileName(mz)
+#~   instrumentInfo(mz)
+#~   runInfo(mz)
+#~   close(mz)
 #~   scanNumber <- nrow(mzR::header(mzML_con))
 #~   print('scanNumber:')
 #~   print(scanNumber)
