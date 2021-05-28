@@ -441,10 +441,6 @@ preprocess <- function(file) {
 #~     idbacPool = idbacPool,
 #~     acquisitionInfo = NULL) #...)
   
-  # add as django Spectra
-  # connect the django Spectra to the django UserFile
-  # perform a cosine similarity scoring
-  
   # return location of the idbac sqlite file.  
   print('sqlite file:')
   print(f)
