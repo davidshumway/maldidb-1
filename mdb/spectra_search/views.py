@@ -157,13 +157,17 @@ def process_file(request, file, form, owner):
       'http://plumber:8000/collapseLibrary',
       params = data
     )
+    # In the case of a collapsed spectra which had mass > 6000 but
+    # when collapsed lost those peaks, it is necessary to 
+    # retrieve the CollapsedSpectra using the spectra_content
+    # attribute.
     n1 = CollapsedSpectra.objects.filter( # unknown spectra
       library_id__exact = form.cleaned_data['library'].id,
-      max_mass__gt = 6000
+      spectra_content__exact = 'PR'
+      #max_mass__gt = 6000
     ).first()
     n2 = CollapsedSpectra.objects.filter(
       library__exact = form.cleaned_data['search_library'].id,
-      # ~ library__title__exact = 'R01 Data',
       max_mass__gt = 6000
     ).values('id')
     data = {
