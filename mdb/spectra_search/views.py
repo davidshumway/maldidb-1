@@ -227,7 +227,11 @@ def process_file(request, file, form, owner):
         l['result'].append({
           'score': o[str(cs.id)],
           'strain': cs.strain_id.strain_id,
+          'kingdom': cs.strain_id.cKingdom,
+          'phylum': cs.strain_id.cPhylum,
+          'class': cs.strain_id.cClass,
           'order': cs.strain_id.cOrder,
+          # ~ 'family': cs.strain_id.cFamily,
           'genus': cs.strain_id.cGenus,
           'species': cs.strain_id.cSpecies,
           'rowcount': rowcount,

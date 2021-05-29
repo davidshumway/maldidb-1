@@ -411,6 +411,9 @@ socket.onmessage = function(e){
     columns: [
       {data: 'score', title: 'Score'},
       {data: 'strain', title: 'Strain'},
+      {data: 'kingdom', title: 'Kingdom'},
+      {data: 'phylum', title: 'Phylum'},
+      {data: 'class', title: 'Class'},
       {data: 'order', title: 'Order'},
       {data: 'genus', title: 'Genus'},
       {data: 'species', title: 'Species'},
@@ -419,9 +422,121 @@ socket.onmessage = function(e){
   t.order([0, 'desc']) // reorder in correct direction
     .draw();
   
+  //~ return;
+  
+  // d3 stacked bar
+  // https://www.d3-graph-gallery.com/graph/barplot_stacked_basicWide.html
+  // set the dimensions and margins of the graph
+  $('#col-left').removeClass('col-12');
+  $('#col-right').removeClass('col-0');
+  $('#col-left').addClass('col-6');
+  $('#col-right').addClass('col-6');
+  var margin = {top: 10, right: 30, bottom: 20, left: 50},
+    width = 460 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+  var svg = d3.select("#col-right")
+    .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+  var selector = d3.select("#col-right")
+    .append("select");
+  // 101 elements to include 0 (0.0) and 100 (1.0)
+  var groups = Array.from({length: 101}, (x, i) => i / 100)
+  // Histogram
+  for (var i in data.result) {
+    data.result[i].histScore = Math.round(
+        data.result[i].score*100
+      ) / 100;
+  }
+  // max number per histogram
+  var max_num = 0;
+  var bins = {};
+  var subgroups = new Set(); // default = species
+  var regroupedData = [];
+  for (var i in data.result) {
+    try {
+      bins[data.result[i].histScore] += 1;
+    } catch(e) {
+      bins[data.result[i].histScore] = 1;
+    }
+    subgroups.add(data.result[i].species);
+    if (bins[data.result[i].histScore] > max_num) {
+      max_num = bins[data.result[i].histScore];
+    }
+    try {
+      regroupedData[data.result[i].histScore][data.result[i].species] += 1;
+    } catch(e) { // new array
+      try {
+        regroupedData[data.result[i].histScore][data.result[i].species] = 1;
+      } catch(e2) {
+        regroupedData[data.result[i].histScore] = [];
+        regroupedData[data.result[i].histScore][data.result[i].species] = 1;
+      }
+    }
+  }
+  console.log(data);
+  console.log(data.original);
+  console.log(subgroups);
+  subgroups = [...subgroups] // spread operator convert to array
+  // X axis
+  var x = d3.scaleBand()
+    .domain(groups)
+    .range([0, width])
+    .padding([0.2])
+  svg.append("g")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(x).tickSizeOuter(0));
+  // Y axis
+  var y = d3.scaleLinear()
+    .domain([0, max_num])
+    .range([ height, 0 ]);
+  svg.append("g")
+    .call(d3.axisLeft(y));
+  //~ d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/data_stacked.csv", function(data) {
+    //~ // List of subgroups = header of the csv files = soil condition here
+    //~ var subgroups = data.columns.slice(1)
+    // List of groups = species here = value of the first column called group -> I show them on the X axis
+    //~ var groups = d3.map(data, function(d){return(d.group)}).keys()
+  
+  console.log(subgroups);
+    
+  // color palette = one color per subgroup
+  var color = d3.scaleOrdinal()
+    .domain(subgroups)
+    .range(['#e41a1c','#377eb8','#4daf4a'])
+  console.log('color',color);
+  
+  //stack the data? --> stack per subgroup
+  //~ var stackedData = d3.stack().keys(subgroups)(data.result);
+  var stackedData = d3.stack().keys(subgroups)(regroupedData);
+    //;
+  console.log('sd', stackedData);//(data.results)
+  //~ console.log('sd',stackedData(data.result));//(data.results)
+  
+  // Show the bars
+  svg.append("g")
+    .selectAll("g")
+    // Enter in the stack data = loop key per key = group per group
+    .data(stackedData)
+    .enter().append("g")
+      .attr("fill", function(d) { return color(d.key); })
+      .selectAll("rect")
+      // enter a second time = loop subgroup per subgroup to add all rectangles
+      .data(function(d) { return d; })
+      .enter().append("rect")
+        .attr("x", function(d) { return x(d.data.species); })
+        .attr("y", function(d) { return y(d[1]); })
+        .attr("height", function(d) { return y(d[0]) - y(d[1]); })
+        .attr("width", x.bandwidth());
   return;
   
-  // d3
+  
+  
+  
+  // d3 scatterplot
   // col-left, col-right
   // e.g. https://www.d3-graph-gallery.com/graph/scatter_basic.html
   $('#col-left').removeClass('col-12');
@@ -476,7 +591,7 @@ socket.onmessage = function(e){
     pmo_dict[a] = true;
   }
   data.result.forEach(function(d) {
-    var pm = d.peak_mass.split(',');
+    var pm = d.peak_mass.split(','); // e.g. 100 peaks per sample
     for (var j in pm) {
       var a = Number.parseFloat(pm[j]).toFixed(1);
       if (pmo_dict[a]) { // has key
@@ -500,7 +615,7 @@ socket.onmessage = function(e){
   svg.append('g')
     .selectAll("dot")
     .data(rslt_long_matched)
-    .enter() // for each result
+    .enter()
     .append("circle")
       .attr("cx", function (d, i) { return x(d.x); } ) 
       .attr("cy", function (d, i) { return y(d.y); } )
@@ -518,7 +633,7 @@ socket.onmessage = function(e){
   svg.append('g')
     .selectAll("dot")
     .data(rslt_long_unmatched)
-    .enter() // for each result
+    .enter()
     .append("circle")
       .attr("cx", function (d, i) { return x(d.x); } ) 
       .attr("cy", function (d, i) { return y(d.y); } )
