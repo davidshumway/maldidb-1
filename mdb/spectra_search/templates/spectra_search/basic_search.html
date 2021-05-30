@@ -15,7 +15,7 @@
  
 <script type="text/javascript" src="{% static 'js/datatables.min.js' %}"></script>
 
-<script type="text/javascript" src="{% static 'js/d3.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/d3.6.7.0.min.js' %}"></script>
 
 <script type="text/javascript">
 function show_filter(e) {
@@ -29,125 +29,193 @@ function show_filter(e) {
 <form action="{% url 'spectra_search:basic_search' %}" class="" method="GET" style="" id="search-form">
 </form>
 
-<div style="" id="" class="container" style="max-width: 1600px !important !important;">
+<div id="" class="container" style="width:100%;max-width:inherit;"><!--max-width: 1600px !important !important;-->
   <!-- begin row -->
   <div class="row">
   <!-- begin col left -->
-  <div class="col-12" id="col-left">
+  <div class="col-6" id="col-left">
   <!-- start accordion -->
-  <div id="accordion">
-  <!-- search type -->
-  <div class="card">
-    <div class="card-header" id="headingOne">
-      <h5 class="mb-0">
-        <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-          Upload new file of unknown isolate
-        </button>
-      </h5>
-    </div>
-    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
-      <div class="card-body">
-        
-            <div class="card" style="">
-              <!--Height: All tabs same height to keep card body height from always changing upon tab selection.
-              height:450px !important;-->
-              <div class="card-header">
-                <ul class="nav nav-tabs card-header-tabs" id="nav-search-source">
-                  <li class="nav-item">
-                    <a class="nav-link active" href="#" id="nss-1">Input</a>
-                  </li>
-                  <li class="nav-item" id="result" style="display: none;">
-                    <a class="nav-link" href="#" id="nss-2">Result</a>
-                  </li>
-<!--Turn off these options for now
-                  <li class="nav-item">
-                    <a class="nav-link" href="#" id="nss-2">Previously uploaded files</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="#" id="nss-3">Library spectra</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="#" id="nss-4">Manual spectra entry</a>
-                  </li>
--->
-                </ul>
-              </div>
-              <div class="card-body" id="nss-card-1" style="">
-                
-                <!-- File upload form -->
-                <form action="{% url 'spectra_search:ajax_upload' %}" class="" method="POST" style="" id="upload_form">
-                  {% csrf_token %}
-                  
-                  <div class="custom-file">
-                    <input type="file" class="custom-file-input" id="customFile" name="file">
-                    <label class="custom-file-label" for="customFile">Choose file</label>
-                  </div>
-                  <div class="alert alert-danger toggle-display" id="file-error">
-                    </div>
-                  
-                  <p class="card-text">
-                    <a href="#" id="upload-more-opts" onclick="return false;">Show more options</a>
-                  </p>
-                  
-                  <div id="div-upload-opts" style="display:none;">
-                    <div class="form-check">
-                      {% with f=upload_form.save_to_library %}
-                        {{ f }}
-                        <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
-                      {% endwith %}
-                    </div>
-                    
-                    <div class="w-75">
-                      <div class="form-group">
-                        {% with f=upload_form.lab %}
-                        {{ f }}
-                        {% endwith %}
-                      </div>
-                      <div class="form-group">
-                        {% with f=upload_form.library %}
-                        {{ f }}
-                        {% endwith %}
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      {% with f=upload_form.preprocess %}
-                        {{ f }}
-                        <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
-                      {% endwith %}
-                    </div>
-                    <div class="form-group">
-                      {% with f=upload_form.search_library %}
-                        {{ f }}
-                      {% endwith %}
-                    </div>
 <!--
-                    <div class="form-group">
-                      privacy_level
-                    </div>
+  <div id="accordion">
 -->
+  <!-- search type -->
+<!--
+  <div class="card">
+    <div class="card-body">
+-->
+      
+          <div class="card" style="">
+            <!--Height: All tabs same height to keep card body height from always changing upon tab selection.
+            height:450px !important;-->
+            <div class="card-header">
+              <ul class="nav nav-tabs card-header-tabs" id="nav-search-source">
+                <li class="nav-item">
+                  <a class="nav-link active" href="#" id="nss-1">Upload file of unknown isolate</a>
+                </li>
+                <li class="nav-item" id="result" style="display: none;">
+                  <a class="nav-link" href="#" id="nss-2">Result</a>
+                </li>
+<!--Turn off these options for now
+                <li class="nav-item">
+                  <a class="nav-link" href="#" id="nss-2">Previously uploaded files</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#" id="nss-3">Library spectra</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#" id="nss-4">Manual spectra entry</a>
+                </li>
+-->
+              </ul>
+            </div>
+            <div class="card-body" id="nss-card-1" style="">
+              
+              <!-- File upload form -->
+              <form action="{% url 'spectra_search:ajax_upload' %}" class="" method="POST" style="" id="upload_form">
+                {% csrf_token %}
+                
+                <div class="custom-file">
+                  <input type="file" class="custom-file-input" id="customFile" name="file">
+                  <label class="custom-file-label" for="customFile">Choose file</label>
+                </div>
+                <div class="alert alert-danger toggle-display" id="file-error">
+                  </div>
+                
+                <p class="card-text">
+                  <a href="#" id="upload-more-opts" onclick="return false;">Show more options</a>
+                </p>
+                
+                <!-- Begin more options -->
+                <div id="div-upload-opts" style="display:none;">
+                  <div class="form-check">
+                    {% with f=upload_form.save_to_library %}
+                      {{ f }}
+                      <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
+                    {% endwith %}
                   </div>
                   
-                  <div class="text-center">
-                    <button type="submit" class="btn btn-default"
-                    onclick="this.disabled = true;">Upload</button>
+                  <div class="w-75">
+                    <div class="form-group">
+                      {% with f=upload_form.lab %}
+                      {{ f }}
+                      {% endwith %}
+                    </div>
+                    <div class="form-group">
+                      {% with f=upload_form.library %}
+                      {{ f }}
+                      {% endwith %}
+                    </div>
                   </div>
-                </form>
-                <!-- End file upload form -->
-              </div>
-              <!-- end card body 1 -->
+                  <div class="form-group">
+                    {% with f=upload_form.preprocess %}
+                      {{ f }}
+                      <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
+                    {% endwith %}
+                  </div>
+                  <div class="form-group">
+                    {% with f=upload_form.search_library %}
+                      {{ f }}
+                    {% endwith %}
+                  </div>
+                  
+                  <div class="form-group">
+                    {% with f=upload_form.cKingdom %}
+                      {{ f }}
+                    {% endwith %}
+                  </div>
+                  <div class="form-group">
+                    {% with f=upload_form.cPhylum %}
+                      {{ f }}
+                    {% endwith %}
+                  </div>
+                  <div class="form-group">
+                    {% with f=upload_form.cClass %}
+                      {{ f }}
+                    {% endwith %}
+                  </div>
+                  <div class="form-group">
+                    {% with f=upload_form.cOrder %}
+                      {{ f }}
+                    {% endwith %}
+                  </div>
+                  <div class="form-group">
+                    {% with f=upload_form.cGenus %}
+                      {{ f }}
+                    {% endwith %}
+                  </div>
+                  <div class="form-group">
+                    {% with f=upload_form.cSpecies %}
+                      {{ f }}
+                    {% endwith %}
+                  </div>
+                  
+<!--
+                  <div class="form-group">
+                    privacy_level
+                  </div>
+-->
+                  <!--Keep card body height upon tab selection.-->
+<!--
+                  <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="nav-search-2">
+                      <li class="nav-item">
+                        <a class="nav-link active" href="#" id="ns2-1">Select collection</a>
+                      </li>
+                      <li class="nav-item">
+                        <a class="nav-link" href="#" id="ns2-2">Select dendrogram</a>
+                      </li>
+                    </ul>
+                  </div>
+-->
+                
+<!--
+                  <div>
+-->
+<!--
+                    <form action="" method="post" class="dal-form container">
+-->
+<!--
+                        {% csrf_token %}
+-->
+                        
+<!--
+                        {{ metadata_form }}
+-->
+<!--
+                      </form>
+-->
+<!--
+                  </div>
+-->
+                  {{ metadata_form.media }}
 
-              <div class="card-body" id="nss-card-2" style="display:none;">
-                <table id="data-table"></table>
-              </div>
-
+                  
+                </div>
+                <!-- End more options -->
+                
+                <div class="text-center">
+                  <button type="submit" class="btn btn-default"
+                  onclick="this.disabled = true;">Upload</button>
+                </div>
+              </form>
+              <!-- End file upload form -->
             </div>
-            <!-- search button -->
-            <button class="btn btn-primary">Start search</button>
-      </div>
+            <!-- end card body 1 -->
+
+            <div class="card-body" id="nss-card-2" style="display:none;">
+              <table id="data-table"></table>
+            </div>
+
+          </div>
+          
+          
+<!--
     </div>
   </div>
+-->
 
   <!-- -->
+<!--
   <div class="card">
     <div class="card-header" id="headingTwo">
       <h5 class="mb-0">
@@ -157,36 +225,14 @@ function show_filter(e) {
       </h5>
     </div>
     <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
-      <div class="card-body">
-            <div class="card" style="height:550px !important;">
-            <!--Keep card body height upon tab selection.-->
-              <div class="card-header">
-                <ul class="nav nav-tabs card-header-tabs" id="nav-search-2">
-                  <li class="nav-item">
-                    <a class="nav-link active" href="#" id="ns2-1">Select collection</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="#" id="ns2-2">Select dendrogram</a>
-                  </li>
-                </ul>
-              </div>
-            
-              <div>
-                <form action="" method="post" class="dal-form container">
-                    {% csrf_token %}
-                    
-                    {{ metadata_form }}
-                  </form>
-              </div>
-            {{ metadata_form.media }}
-            </div>
-            <!-- search button -->
-            <button class="btn btn-primary">Start search</button>
-      </div>
+      
     </div>
   </div>
+-->
   
+<!--
   </div>
+-->
   <!-- end accordion -->
   
   </div>
@@ -282,7 +328,6 @@ function toggleSearchForm() {
   }
 }
 
-//~ var showAddl = false
 function toggleAddlFields() {
   $('.search-addl-fields').toggleClass('toggle-display');
   if ($(this).text() == 'Additional search options') {
@@ -396,6 +441,146 @@ var socket = new WebSocket('ws://' + location.host + '/ws/pollData'); // works r
 socket.onopen = function(e){
   console.log(e);
 }
+function drawHisto() {
+  
+  var s = document.getElementById('select-histo');
+  var selected = s.options[s.selectedIndex].value.toLowerCase();
+  var data = s.data;
+  
+  var margin = {top: 10, right: 30, bottom: 40, left: 50},
+    width = 460 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+  if (document.getElementById('svg-histo')) {
+    document.getElementById('svg-histo').parentNode
+      .removeChild(document.getElementById('svg-histo'))
+  }
+  var svg = d3.select('#col-right')
+    .append('svg')
+      .attr('id', 'svg-histo')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+    .append('g')
+      .attr('transform',
+        'translate(' + margin.left + ',' + margin.top + ')');
+  
+  // 101 elements to include 0 (0.0) and 100 (1.0)
+  var groups = Array.from({length: 101}, (x, i) => String(i / 100))
+  // Histogram
+  for (var i in data.result) {
+    data.result[i].histScore = Math.round(
+        data.result[i].score*100
+      ) / 100;
+  }
+  // Unique selected grouping (species/genus/...)
+  var subgroups = d3.map(data.result, function(d) {
+    return(d[selected])
+    //~ return(d.species)
+  });
+  subgroups = [...new Set(subgroups)]; // spread operator
+  
+  // max number per histogram
+  var max_num = 0;
+  var bins = {};
+  var regroupedData = [];
+  for (var i in data.result) {
+    var h = data.result[i].histScore; 
+    var s = data.result[i][selected]; // selected: "species", "genus", ...
+    try {
+      if (bins[h])
+        bins[h] += 1;
+      else
+        bins[h] = 1;
+    } catch(e) {
+      bins[h] = 1;
+    }
+    if (bins[h] > max_num) {
+      max_num = bins[h];
+    }
+    try {
+      if (regroupedData[h][s])
+        regroupedData[h][s] += 1;
+      else
+        regroupedData[h][s] = 1;
+    } catch(e) {
+      try {
+        regroupedData[h][s] = 1;
+      } catch(e) {
+        regroupedData[h] = {group: String(h)};
+        regroupedData[h][s] = 1;
+      }
+    }
+  }
+  for (var i in regroupedData) { // set subgroup to 0 where not present
+    for (var j in subgroups) {
+      var s = subgroups[j];
+      if (!regroupedData[i][s]) {
+        regroupedData[i][s] = 0;
+      }
+    }
+  }
+  var rg = [];
+  for (var i in regroupedData) {
+    rg.push(regroupedData[i]);
+  }
+  regroupedData = rg;
+  var x = d3.scaleBand()
+    .domain(groups)
+    .range([0, width])
+    .padding([0.0])
+    //~ .padding([0.2])
+  svg.append('g')
+    .attr('transform', 'translate(0,' + height + ')')
+    .call(
+      d3.axisBottom(x)
+        .tickValues(Array.from({length: 11}, (x, i) => i / 10))
+    );
+  // Y axis
+  var y = d3.scaleLinear()
+    .domain([0, max_num])
+    .range([ height, 0 ]);
+  svg.append('g')
+    .call(d3.axisLeft(y));
+    
+  var colorBand = d3.scaleBand().domain(subgroups).range([0, 1]);
+  var color = d3.scaleSequential(function(t) {
+    return d3.interpolateRainbow(t);
+  });
+  
+  // stack per subgroup
+  var stackedData = d3.stack().keys(subgroups)(regroupedData);
+  console.log('sd', stackedData);
+  
+  // Show bars
+  svg.append('g')
+    .selectAll('g')
+    // Enter in the stack data = loop key per key = group per group
+    .data(stackedData)
+    .enter().append('g')
+      .attr('fill', function(d) { return color(colorBand(d.key));})
+      .selectAll('rect')
+      // enter a second time = loop subgroup per subgroup to add all rectangles
+      .data(function(d) { return d; })
+      .enter().append('rect')
+        .attr('fill', function(d) { return color(d.key); })
+        .attr('x', function(d) { return x(d.data.group); })
+        .attr('y', function(d) { return y(d[1]); })
+        .attr('height', function(d) { return y(d[0]) - y(d[1]); })
+        .attr('width', x.bandwidth());
+  
+  // X
+  svg.append("text")
+    .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.bottom - 4) + ")")
+    .style("text-anchor", "middle")
+    .text("Cosine similarity");
+  // Y
+  svg.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 0 - margin.left)
+    .attr("x",0 - (height / 2))
+    .attr("dy", "1em")
+    .style("text-anchor", "middle")
+    .text("Number of samples");
+}
 socket.onmessage = function(e){
   //~ console.log(e.data);
   var data = JSON.parse(JSON.parse(e.data));
@@ -429,108 +614,25 @@ socket.onmessage = function(e){
   // set the dimensions and margins of the graph
   $('#col-left').removeClass('col-12');
   $('#col-right').removeClass('col-0');
-  $('#col-left').addClass('col-6');
-  $('#col-right').addClass('col-6');
-  var margin = {top: 10, right: 30, bottom: 20, left: 50},
-    width = 460 - margin.left - margin.right,
-    height = 400 - margin.top - margin.bottom;
-  var svg = d3.select("#col-right")
-    .append("svg")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-      .attr("transform",
-            "translate(" + margin.left + "," + margin.top + ")");
-  var selector = d3.select("#col-right")
-    .append("select");
-  // 101 elements to include 0 (0.0) and 100 (1.0)
-  var groups = Array.from({length: 101}, (x, i) => i / 100)
-  // Histogram
-  for (var i in data.result) {
-    data.result[i].histScore = Math.round(
-        data.result[i].score*100
-      ) / 100;
-  }
-  // max number per histogram
-  var max_num = 0;
-  var bins = {};
-  var subgroups = new Set(); // default = species
-  var regroupedData = [];
-  for (var i in data.result) {
-    try {
-      bins[data.result[i].histScore] += 1;
-    } catch(e) {
-      bins[data.result[i].histScore] = 1;
-    }
-    subgroups.add(data.result[i].species);
-    if (bins[data.result[i].histScore] > max_num) {
-      max_num = bins[data.result[i].histScore];
-    }
-    try {
-      regroupedData[data.result[i].histScore][data.result[i].species] += 1;
-    } catch(e) { // new array
-      try {
-        regroupedData[data.result[i].histScore][data.result[i].species] = 1;
-      } catch(e2) {
-        regroupedData[data.result[i].histScore] = [];
-        regroupedData[data.result[i].histScore][data.result[i].species] = 1;
-      }
-    }
-  }
-  console.log(data);
-  console.log(data.original);
-  console.log(subgroups);
-  subgroups = [...subgroups] // spread operator convert to array
-  // X axis
-  var x = d3.scaleBand()
-    .domain(groups)
-    .range([0, width])
-    .padding([0.2])
-  svg.append("g")
-    .attr("transform", "translate(0," + height + ")")
-    .call(d3.axisBottom(x).tickSizeOuter(0));
-  // Y axis
-  var y = d3.scaleLinear()
-    .domain([0, max_num])
-    .range([ height, 0 ]);
-  svg.append("g")
-    .call(d3.axisLeft(y));
-  //~ d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/data_stacked.csv", function(data) {
-    //~ // List of subgroups = header of the csv files = soil condition here
-    //~ var subgroups = data.columns.slice(1)
-    // List of groups = species here = value of the first column called group -> I show them on the X axis
-    //~ var groups = d3.map(data, function(d){return(d.group)}).keys()
+  $('#col-left').addClass('col-8');
+  $('#col-right').addClass('col-4');
+  var selector = d3.select('#col-right')
+    .append('select')
+    .attr('id', 'select-histo')
+    .selectAll('option')
+    .data(['Kingdom', 'Phylum', 'Class', 'Order', 'Genus', 'Species'])
+    .enter()
+    .append('option')
+    .attr('value', function (d) { return d; })
+    .text(function (d) { return d;});
   
-  console.log(subgroups);
-    
-  // color palette = one color per subgroup
-  var color = d3.scaleOrdinal()
-    .domain(subgroups)
-    .range(['#e41a1c','#377eb8','#4daf4a'])
-  console.log('color',color);
+  var s = document.getElementById('select-histo');
+  s.data = data;
   
-  //stack the data? --> stack per subgroup
-  //~ var stackedData = d3.stack().keys(subgroups)(data.result);
-  var stackedData = d3.stack().keys(subgroups)(regroupedData);
-    //;
-  console.log('sd', stackedData);//(data.results)
-  //~ console.log('sd',stackedData(data.result));//(data.results)
+  drawHisto();
   
-  // Show the bars
-  svg.append("g")
-    .selectAll("g")
-    // Enter in the stack data = loop key per key = group per group
-    .data(stackedData)
-    .enter().append("g")
-      .attr("fill", function(d) { return color(d.key); })
-      .selectAll("rect")
-      // enter a second time = loop subgroup per subgroup to add all rectangles
-      .data(function(d) { return d; })
-      .enter().append("rect")
-        .attr("x", function(d) { return x(d.data.species); })
-        .attr("y", function(d) { return y(d[1]); })
-        .attr("height", function(d) { return y(d[0]) - y(d[1]); })
-        .attr("width", x.bandwidth());
+  
+  s.onchange = drawHisto;
   return;
   
   

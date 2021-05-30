@@ -57,42 +57,7 @@ class SpectraCollectionsForm(forms.ModelForm):
       # ~ 'cGenus': autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete'),
       # ~ 'cClass': autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete'),
     # ~ }
-  # ~ lab_name = forms.ModelChoiceField(
-    # ~ queryset = LabGroup.objects.all(),
-    # ~ to_field_name = "lab_name",
-    # ~ required = False,
-    # ~ widget = forms.Select(
-      # ~ attrs = {
-        # ~ 'class': 'custom-select'}
-    # ~ ),
-    # ~ disabled = True,
-    # ~ empty_label='Select a lab'
-  # ~ )
-  # ~ library = forms.ModelChoiceField(
-    # ~ queryset = Library.objects.all(),
-    # ~ to_field_name = "title",
-    # ~ required = False,
-    # ~ widget = forms.Select(
-      # ~ attrs = {
-        # ~ 'class': 'custom-select'}
-    # ~ ),
-    # ~ disabled = True,
-    # ~ empty_label='Select a library'
-  # ~ )
   
-# ~ class SpectraUploadForm(forms.ModelForm):
-  # ~ pass
-  # ~ class Meta:
-    # ~ model = UserFile
-    # ~ exclude = ('id', 'owner', 'upload_date', 'extension')
-    # ~ #custom-select
-    # ~ widgets = {
-      # ~ 'lab_name': forms.Select(
-        # ~ attrs = {
-          # ~ 'class': 'custom-select'}
-      # ~ ),
-    # ~ }
-
 class SpectraUploadForm(forms.ModelForm):
   file = forms.FileField(
     label = 'Upload a file',
@@ -185,7 +150,38 @@ class SpectraUploadForm(forms.ModelForm):
         # ~ Q(created_by__exact = u)
       # ~ ).order_by('-id')
     # ~ self.fields['search_library'].queryset = q
-
+  
+  cKingdom = forms.ModelMultipleChoiceField(
+    queryset = Metadata.objects.all(),
+    label = 'Kingdom', required = False,
+    widget = autocomplete.ModelSelect2Multiple(
+	    url = 'spectra_search:metadata_autocomplete_kingdom')) # attrs = {'class': 'form-check-input'}
+  cPhylum = forms.ModelMultipleChoiceField(
+    queryset = Metadata.objects.all(),
+    label = 'Phylum', required = False,
+    widget = autocomplete.ModelSelect2Multiple(
+      url = 'spectra_search:metadata_autocomplete_phylum', forward=('cKingdom',)))
+  cClass = forms.ModelMultipleChoiceField(
+    queryset = Metadata.objects.all(),
+    label = 'Class', required = False,
+    widget = autocomplete.ModelSelect2Multiple(
+      url = 'spectra_search:metadata_autocomplete_class', forward=['cKingdom','cPhylum']))
+  cOrder = forms.ModelMultipleChoiceField(
+    queryset = Metadata.objects.all(),
+    label = 'Order', required = False,
+    widget = autocomplete.ModelSelect2Multiple(
+      url = 'spectra_search:metadata_autocomplete_order', forward=['cKingdom','cPhylum','cClass']))
+  cGenus = forms.ModelMultipleChoiceField(
+    queryset = Metadata.objects.all(),
+    label = 'Genus', required = False,
+    widget = autocomplete.ModelSelect2Multiple(
+      url = 'spectra_search:metadata_autocomplete_genus', forward=['cKingdom','cPhylum','cClass','cOrder']))
+  cSpecies = forms.ModelMultipleChoiceField(
+    queryset = Metadata.objects.all(),
+    label = 'Species', required = False,
+    widget = autocomplete.ModelSelect2Multiple(
+      url = 'spectra_search:metadata_autocomplete_species', forward=['cKingdom','cPhylum','cClass','cOrder','cGenus']))
+  
   class Meta:
     model = UserFile
     exclude = ('id', 'owner', 'upload_date', 'extension')
@@ -206,11 +202,16 @@ class SpectraUploadForm(forms.ModelForm):
     
   def clean(self):
     '''
-    -- If saving, then lab/library must be present and valid selection
     '''
-    data = self.cleaned_data
+    # ~ print(f'cd: {self.cleaned_data}')
+    # ~ if self.cleaned_data.get('cKingdom') != '':
+      # ~ self.cleaned_data['cKingdom'] = 1
+    # ~ self.cleaned_data['cKingdom'] = 1
+    
+    # Lab/library must be present and valid
+    d = self.cleaned_data
     s1 = (
-      data.get('save_to_library') == True and (data.get('lab') == '' or data.get('library') == '')
+      d.get('save_to_library') == True and (d.get('lab') == '' or d.get('library') == '')
     )
     #  ll_err = False
     #  if data.get('save_to_library') == True:
@@ -233,7 +234,7 @@ class SpectraUploadForm(forms.ModelForm):
     #  elif ll_err:
       #  raise ll_err
     else:
-      return data
+      return self.cleaned_data
       
 class SpectraSearchForm(forms.ModelForm):
   '''Replicated, Collapsed, all

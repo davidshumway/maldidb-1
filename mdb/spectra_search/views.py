@@ -125,19 +125,9 @@ def process_file(request, file, form, owner):
   print(f'send{data}')
   r = requests.get('http://plumber:8000/preprocess', params = data)
 
-  # contains sqlite file path
-  # ~ print('r', r)
-  # ~ print('content', r.content)
-  # ~ print('content', r.json())
-  # ~ print('content', r.json()[0])
-  # ~ print('request', request)
-  # ~ print('form', form.cleaned_data)
-  # ~ print('f1', f1)
-  # ~ print('current_loc', current_loc)
-  # if no library selected, then create a new library for the user.
-  # if the user is anonymous, then create a new anonymous library.
-  # add the sqlite new spectra to db
-  # idbac_sqlite_insert(request, tmpForm, uploadFile, user_task):
+  # If no library selected, create a new library for the user.
+  # If user is anonymous, create a new anonymous library.
+  # Add sqlite new spectra to db
   info = idbac_sqlite_insert(request, form,
     '/uploads/sync/' + str(r.json()[0]) + '.sqlite',
     user_task = False
@@ -261,13 +251,17 @@ def ajax_upload(request):
   Todo: Anonymous session to access anon. upload.
   '''
   if request.method == 'POST':
+    # ~ changed_data = dict(request.POST)
+    # ~ changed_data['cKingdom'] = 1
     form = SpectraUploadForm(data = request.POST, files = request.FILES)
+    #print(form)
+    #return JsonResponse({'errors': 'Empty request.'}, status=400)
     if form.is_valid():
       form.request = request # pass request to save() method
       form.save()
       owner = request.user.id if request.user.is_authenticated else None
       lab, created = LabGroup.objects.get_or_create(
-        lab_name = 'FileUploads' # initialize file uploads group
+        lab_name = 'FileUploads' # initializes file uploads group
       )
       form.cleaned_data['lab'] = lab
       
