@@ -199,17 +199,27 @@ class SpectraUploadForm(forms.ModelForm):
       instance.owner = self.request.user
     instance.save(commit)
     return instance
+  
+  # ~ def __init__(self, *args, **kwargs):
+    # ~ super(SpectraUploadForm, self).__init__(*args, **kwargs)
+    # ~ #if ticket:
+    # ~ #self.fields['state'] = State.GetTicketStateField(ticket.Type)
+    # ~ #self.fields['cKingdom'] = Library.
+    # ~ print(f'args{args}')
+    # ~ print(f'kwargs{kwargs}')
+  # ~ def clean_cKingdom(self):
+    # ~ data = self.cleaned_data['cKingdom']
+    # ~ return Metadata.objects.none()
     
   def clean(self):
     '''
     '''
-    # ~ print(f'cd: {self.cleaned_data}')
-    # ~ if self.cleaned_data.get('cKingdom') != '':
-      # ~ self.cleaned_data['cKingdom'] = 1
-    # ~ self.cleaned_data['cKingdom'] = 1
+    d = super().clean()
+    # ~ cleaned_data['cKingdom'] = Metadata.objects.none()
+    # ~ d['cKingdom'] = Metadata.objects.filter(cKingdom__exact = 'Bacteria')
+    # ~ d['cClass'] = Metadata.objects.filter(cClass__exact = 'Gammaproteobacteria')
     
-    # Lab/library must be present and valid
-    d = self.cleaned_data
+    # Lab/library present and valid
     s1 = (
       d.get('save_to_library') == True and (d.get('lab') == '' or d.get('library') == '')
     )
@@ -229,12 +239,12 @@ class SpectraUploadForm(forms.ModelForm):
         #  )
     if s1:
       raise forms.ValidationError(
-        'Lab group and library must be specified if "Save to Library" is selected'
+        'Lab and library are required if "Save to Library" is selected'
       )
     #  elif ll_err:
       #  raise ll_err
     else:
-      return self.cleaned_data
+      return d
       
 class SpectraSearchForm(forms.ModelForm):
   '''Replicated, Collapsed, all

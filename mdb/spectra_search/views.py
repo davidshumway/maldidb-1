@@ -96,8 +96,7 @@ class MetadataAutocomplete(autocomplete.Select2QuerySetView):
         '{0}__{1}'.format(self.view, 'icontains'): self.q
         # ~ , '{0}__{1}'.format('name', 'endswith'): 'Z'
       }
-      qs = qs.filter(**kwargs
-      ).order_by(self.view).distinct(self.view)
+      qs = qs.filter(**kwargs).order_by(self.view).distinct(self.view)
     return qs
 #-----------------------------------------------------------------------
 # end autocomplete views
@@ -205,7 +204,8 @@ def process_file(request, file, form, owner):
       l = {
         'result': [],
         'original': {
-          'peak_mass': n1.peak_mass
+          'peak_mass': n1.peak_mass,
+          'peak_intensity': n1.peak_intensity,
         }
       }
       
@@ -226,6 +226,7 @@ def process_file(request, file, form, owner):
           'species': cs.strain_id.cSpecies,
           'rowcount': rowcount,
           'peak_mass': cs.peak_mass,
+          'peak_intensity': cs.peak_intensity,
         })
         rowcount += 1
       ws.send(json.dumps(l))
@@ -251,11 +252,10 @@ def ajax_upload(request):
   Todo: Anonymous session to access anon. upload.
   '''
   if request.method == 'POST':
-    # ~ changed_data = dict(request.POST)
-    # ~ changed_data['cKingdom'] = 1
+    # ~ post = request.POST.copy()
+    # ~ post['cKingdom'] = 1
+    # ~ form = SpectraUploadForm(data = post, files = request.FILES)
     form = SpectraUploadForm(data = request.POST, files = request.FILES)
-    #print(form)
-    #return JsonResponse({'errors': 'Empty request.'}, status=400)
     if form.is_valid():
       form.request = request # pass request to save() method
       form.save()
