@@ -558,14 +558,17 @@ function drawHisto() {
     .style("text-anchor", "middle")
     .text("Number of samples");
 }
-var allStrains = [];
+var mirror = {
+  svg: null
+}
+var allStrains = {};
 function sp(el) {
-  var strain = el.getAttribute('data-id');
-  for (var i in allStrains) {
-    d3.select('#rect-strain-' + allStrains[i]).style('visibility', 'hidden');
-  }
-  d3.select('#rect-strain-' + strain).style('visibility', 'visible');
-  d3.select('#mirror-title').text(strain);
+  //makeChartBtm
+  var id = el.getAttribute('data-id').trim().replace(/\s/g, '');
+  var data = allStrains[id];
+  //~ d3.select(id).style('visibility', 'visible');
+  d3.select('#mirror-title').text(el.getAttribute('data-id'));
+  makeChartBtm(data)
 }
 socket.onmessage = function(e){
   var data = JSON.parse(JSON.parse(e.data));
@@ -580,6 +583,7 @@ socket.onmessage = function(e){
       {data: 'score', title: 'Score'},
       {data: 'strain', title: 'Strain',
         render: function(data, type) {
+          console.log(data);
           return '<span style="color:steelblue;font-weight:400;cursor:pointer;" data-id="'+data+'" onclick="sp(this);">'
             + data + '</span>';
         }
@@ -630,8 +634,8 @@ socket.onmessage = function(e){
   //~ $('#col-left').addClass('col-6');
   document.getElementById('spectra-viz').style.display = 'block';
   var margin = {top: 10, right: 30, bottom: 30, left: 60},
-    width = 660 - margin.left - margin.right,
-    height = 600 - margin.top - margin.bottom;
+    width = 860 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
   var svg = d3.select('#spectra-viz')
     .append('svg')
       .attr('width', width + margin.left + margin.right)
@@ -682,7 +686,12 @@ socket.onmessage = function(e){
     .attr('x', 0)
     .attr('y', 4)
     .attr('id', 'mirror-title')
-  // reshape
+  mirror.x = x;
+  mirror.y = y;
+  mirror.yTop = yTop;
+  mirror.height = height;
+  mirror.x_peaks = {};
+  // reshape original
   var p1 = data.original.peak_mass.split(',');
   var p2 = data.original.peak_intensity.split(',');
   var px = [];
@@ -696,6 +705,11 @@ socket.onmessage = function(e){
     .attr('y', function(d) { return (height/2) - yTop(d.y); }) // rather than middle (height/2)
     .attr('height', function(d) { return yTop(d.y); })
     .attr('width', 0.5);
+  // mirror original x, for matching
+  for (var i in p1) {
+    var x = Math.round(parseFloat(p1[i]) * 100) / 100; // Keeps two digits
+    mirror.x_peaks[x] = true; 
+  }
   //~ svg.append("path")
     //~ .datum(px)
     //~ .attr("fill", "none")
@@ -708,39 +722,10 @@ socket.onmessage = function(e){
   //~ var s = d3.map(data.result, function(d) {
     //~ return({})
   //~ });
-  data.result.forEach(function(dx) {
-    allStrains.push(dx.strain);
-    // e.g. 100 peaks per sample
-    var p1 = dx.peak_mass.split(',');
-    var p2 = dx.peak_intensity.split(',');
-    var px = [];
-    //~ px.strain = dx.strain;
-    //~ console.log(dx.strain);
-    for (var i in p1) {
-      px.push({x: p1[i], y: p2[i]});
-    }
-    svg.append('g')
-      .attr('id', 'rect-strain-' + dx.strain.trim())
-      .style('visibility', 'hidden')
-      .selectAll('rect').data(px).enter()
-      .append('rect')
-      .attr('fill', function(d) { return '#000000'; })
-      .attr('x', function(d) { return x(d.x); })
-      .attr('y', function(d) { return (height/2); }) // rather than bottom
-      .attr('height', function(d) { return yTop(d.y); })
-      .attr('width', 0.5);
+  svg.append('g').attr('id', 'mirror-btm');
       
-    //~ svg.append("path")
-      //~ .datum(px)
-      //~ .attr("fill", "none")
-      //~ .attr("stroke", "steelblue")
-      //~ .attr("stroke-width", 1)
-      //~ .attr('id', function(d) {return 'path-strain-' + d.strain;})
-      //~ .style('visibility', 'hidden')
-      //~ .attr("d", d3.line()
-        //~ .x(function(d) { return x(d.x) })
-        //~ .y(function(d) { return y(d.y) })
-      //~ )
+  data.result.forEach(function(dx) {
+    allStrains[dx.strain.trim().replace(/\s/g, '')] = dx;
   });
       
   // circles (matching)
@@ -776,6 +761,42 @@ socket.onclose = function(e){
   console.log(e);
 }
 
+function makeChartBtm(dx) {
+  var g = d3.select('#mirror-btm');
+  g.selectAll('*').remove();
+  
+  var color = function(x) {
+    x = Math.round(parseFloat(x) * 100) / 100;
+    return (mirror.x_peaks[x]) ? '#0000ff' : '#000000';
+  }
+  //allStrains.push(dx.strain.trim().replace(/\s/g, ''));
+  // e.g. 100 peaks per sample
+  var p1 = dx.peak_mass.split(',');
+  var p2 = dx.peak_intensity.split(',');
+  var px = [];
+  for (var i in p1) {
+    px.push({x: p1[i], y: p2[i]});
+  }
+  g.selectAll('rect').data(px).enter()
+    .append('rect')
+    .attr('fill', function(d) { return color(d.x); })
+    .attr('x', function(d) { return mirror.x(d.x); })
+    .attr('y', function(d) { return (mirror.height/2); }) // rather than bottom
+    .attr('height', function(d) { return mirror.yTop(d.y); })
+    .attr('width', 0.5);
+    
+  //~ svg.append("path")
+    //~ .datum(px)
+    //~ .attr("fill", "none")
+    //~ .attr("stroke", "steelblue")
+    //~ .attr("stroke-width", 1)
+    //~ .attr('id', function(d) {return 'path-strain-' + d.strain;})
+    //~ .style('visibility', 'hidden')
+    //~ .attr("d", d3.line()
+      //~ .x(function(d) { return x(d.x) })
+      //~ .y(function(d) { return y(d.y) })
+    //~ )
+}
 function makeChart(el, dataXY) {
     
     // Data parsing
