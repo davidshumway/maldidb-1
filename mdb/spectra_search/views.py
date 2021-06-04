@@ -196,8 +196,7 @@ def process_file(request, file, form, owner):
 
     obj = CollapsedCosineScore.objects.create(
       spectra = n1,
-      library = form.cleaned_data['library'], # lib unneces
-      sary in ccs model
+      library = form.cleaned_data['library'], # lib unnecessary in ccs model
       scores = ','.join(map(str, list(o.values()))),
       spectra_ids = ','.join(map(str, o.keys())))
     
