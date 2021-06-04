@@ -634,12 +634,15 @@ socket.onmessage = function(e){
   //~ $('#col-left').addClass('col-6');
   document.getElementById('spectra-viz').style.display = 'block';
   var margin = {top: 10, right: 30, bottom: 30, left: 60},
-    width = 860 - margin.left - margin.right,
+    width = 1000 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
   var svg = d3.select('#spectra-viz')
     .append('svg')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
+    .attr('width', width + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom)
+    .call(d3.zoom().on('zoom', function (event, d) {
+       svg.attr('transform', event.transform)
+    }))
     .append('g')
       .attr('transform',
         'translate(' + margin.left + ',' + margin.top + ')');
@@ -707,7 +710,7 @@ socket.onmessage = function(e){
     .attr('width', 0.5);
   // mirror original x, for matching
   for (var i in p1) {
-    var x = Math.round(parseFloat(p1[i]) * 100) / 100; // Keeps two digits
+    var x = Math.round(parseFloat(p1[i]));// / 1; // zero digit
     mirror.x_peaks[x] = true; 
   }
   //~ svg.append("path")
@@ -766,7 +769,7 @@ function makeChartBtm(dx) {
   g.selectAll('*').remove();
   
   var color = function(x) {
-    x = Math.round(parseFloat(x) * 100) / 100;
+    x = Math.round(parseFloat(x));// / 1; // zero digit
     return (mirror.x_peaks[x]) ? '#0000ff' : '#000000';
   }
   //allStrains.push(dx.strain.trim().replace(/\s/g, ''));
