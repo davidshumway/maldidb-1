@@ -64,11 +64,12 @@ print.data.frame <- function (
 #* Todo: library=, lab=, strain=, user=, ...
 #* @param req Built-in
 #* @param ids List of IDs from Spectra table
-#* @return Returns first row from cosine similarity matrix
+#* @return -----------Returns first row from cosine similarity matrix
+#* @return Returns first cos. similarity matrix row, and binnedPeaks
 #* @post /cosine
 function(req, ids) {
   ids <- as.numeric(ids)
-  if (length(ids) < 2) {#----
+  if (length(ids) < 2) {
     stop('less than two comparison ids given!')
   }
   
@@ -81,11 +82,16 @@ function(req, ids) {
   binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
   featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
   # manual inspection...
+  print(toString(head(binnedPeaks, 2)))
+#~   print(toString(binnedPeaks))
   #print(toString(featureMatrix[1,]))
   #print(toString(featureMatrix[2,]))
   #print(coop::cosine(featureMatrix[1,], featureMatrix[2,]))
   d <- coop::cosine(t(featureMatrix))
   d <- round(d, 3)
+  
+  return(list('similarity' = d[1,], 'binnedPeaks' = capture.output(binnedPeaks)))
+  
   return(d[1,])
   
   emptyProtein <- unlist(
@@ -114,6 +120,8 @@ function(req, ids) {
   d <- as.matrix(d)
   d <- round(d, 3)
   d <- d[1,]
+  
+  
   return(d)
   
   ## not used
@@ -238,7 +246,7 @@ function(req, ids) {
 #~   jsonlite::toJSON(a)
 }
 
-# Helper function to retrive list of IDs from Django's DB
+# Helper function to retrieve list of IDs from Django's DB
 dbSpectra <- function(ids) {
 #~   if (class(ids) != 'integer') {
 #~     stop('dbSpectra: not integer!') # stop throws 500
@@ -249,9 +257,6 @@ dbSpectra <- function(ids) {
   
   c <- connect()
   s <- paste(unlist(ids), collapse = ',')
-#~   s <- paste0('SELECT peak_mass, peak_intensity, peak_snr
-#~     FROM spectra_spectra
-#~     WHERE id IN (', s, ')')
   s <- paste0('SELECT peak_mass, peak_intensity, peak_snr, id
     FROM spectra_collapsedspectra
     WHERE id IN (', s, ')')
@@ -375,9 +380,7 @@ collapseStrainsInLibrary <- function(lid, sid, type, owner) {
   t <- MALDIquant::filterPeaks(t, minFrequency = 70 / 100)
   t <- MALDIquant::mergeMassPeaks(t, method = 'mean')
   
-  # save to Django's DB
-  # --curl
-  #  "Content-Type: application/json" 
+  # Save to Django's DB
   h <- new_handle()
   x <- paste0(
     '{',

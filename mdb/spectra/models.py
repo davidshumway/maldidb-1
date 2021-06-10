@@ -234,8 +234,23 @@ class AbstractCosineScore(models.Model):
   class Meta:
     abstract = True
 
+class BinnedPeaks(models.Model):
+  '''
+  Binned peaks version of a spectra when matched against set of spectra.
+  '''
+  peak_mass = models.TextField(blank = True)
+  peak_intensity = models.TextField(blank = True)
+  peak_snr = models.TextField(blank = True)
+  spectra = models.ForeignKey(
+    'CollapsedSpectra',
+    # ~ related_name = 'spectra',
+    on_delete = models.CASCADE)
+  
 # ~ class CollapsedCosineScore(AbstractCosineScore):
 class CollapsedCosineScore(models.Model):
+  '''
+  Todo: Needs to save binned peaks representation of spectra
+  '''
   spectra = models.ForeignKey(
     'CollapsedSpectra',
     # ~ related_name = 'spectra',
@@ -245,6 +260,7 @@ class CollapsedCosineScore(models.Model):
     on_delete = models.CASCADE)
   scores = models.TextField()
   spectra_ids = models.TextField()
+  binned_peaks = models.ManyToManyField('BinnedPeaks')
   
 # ~ class CollapsedCosineScore(AbstractCosineScore):
   # ~ spectra1 = models.ForeignKey(

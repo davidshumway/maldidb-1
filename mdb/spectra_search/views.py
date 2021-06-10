@@ -133,10 +133,10 @@ def process_file(request, file, form, owner):
   )
   
   # TODO
-  #  if multiple spectra, await user response
-  #  if single spectra, continue
+  #  If multiple spectra, await user response
+  #  If single spectra, continue
   
-  # if more than one protein spectra, then collapse
+  # Collapse if there is a protein spectra
   if info['spectra']['protein'] > 0: ##### > 1
     data = {
       'id': form.cleaned_data['library'].id,
@@ -146,33 +146,36 @@ def process_file(request, file, form, owner):
       'http://plumber:8000/collapseLibrary',
       params = data
     )
-    # In the case of a collapsed spectra which had mass > 6000 but
-    # when collapsed lost those peaks, it is necessary to 
-    # retrieve the CollapsedSpectra using the spectra_content
-    # attribute.
-    n1 = CollapsedSpectra.objects.filter( # unknown spectra
-      library_id__exact = form.cleaned_data['library'].id,
-      spectra_content__exact = 'PR'
-      #max_mass__gt = 6000
-    ).first()
-    n2 = CollapsedSpectra.objects.filter(
-      library__exact = form.cleaned_data['search_library'].id,
-      max_mass__gt = 6000
-    ).values('id')
-    data = {
-      'ids': [n1.id] + [s['id'] for s in list(n2)]
-    }
-    r = requests.post(
-      'http://plumber:8000/cosine',
-      params = data
-    )
     
+  # In the case of a collapsed spectra which had mass > 6000 but
+  # when collapsed lost those peaks, it is necessary to 
+  # retrieve the CollapsedSpectra using the spectra_content
+  # attribute.
+  n1 = CollapsedSpectra.objects.filter( # unknown spectra
+    library_id__exact = form.cleaned_data['library'].id,
+    spectra_content__exact = 'PR'
+  ).first()
+  n2 = CollapsedSpectra.objects.filter(
+    library__exact = form.cleaned_data['search_library'].id,
+    spectra_content__exact = 'PR'
+    #max_mass__gt = 6000
+  ).values('id')
+  data = {
+    'ids': [n1.id] + [s['id'] for s in list(n2)]
+  }
+  r = requests.post(
+    'http://plumber:8000/cosine',
+    params = data
+  )
+  
+  print('bp', r.json()['binnedPeaks'][1][0])
+  
 # ~ # test
 # ~ from spectra.models import *
 # ~ import requests
 # ~ n2 = CollapsedSpectra.objects.filter(
-  # ~ library__title__exact = 'R01 Data',
-  # ~ max_mass__gt = 6000
+# ~ library__title__exact = 'R01 Data',
+# ~ max_mass__gt = 6000
 # ~ ).values('id')
 # ~ data = {'ids': [2] + [s['id'] for s in list(n2)]}
 # ~ r = requests.post('http://plumber:8000/cosine', params = data)
@@ -181,57 +184,60 @@ def process_file(request, file, form, owner):
 # ~ k = [str(s['id']) for s in list(n2)] # one less
 # ~ v = r.json()[1:] # one more, remove first
 # ~ o = OrderedDict(
-  # ~ sorted(dict(zip(k, v)).items(),
-    # ~ key = lambda x: (x[1], x[0]), reverse = True)
+# ~ sorted(dict(zip(k, v)).items(),
+  # ~ key = lambda x: (x[1], x[0]), reverse = True)
 # ~ )
 
-    # create a dictionary and sort by its values
-    from collections import OrderedDict
-    k = [str(s['id']) for s in list(n2)] # one less
-    v = r.json()[1:] # one more, remove first
-    o = OrderedDict(
-      sorted(dict(zip(k, v)).items(),
-        key = lambda x: (x[1], x[0]), reverse = True)
-    )
+  # create a dictionary and sort by its values
+  from collections import OrderedDict
+  k = [str(s['id']) for s in list(n2)] # one less
+  v = r.json()['similarity'][1:] # one more remove first???
+  o = OrderedDict(
+    sorted(dict(zip(k, v)).items(),
+      key = lambda x: (x[1], x[0]), reverse = True)
+  )
 
-    obj = CollapsedCosineScore.objects.create(
-      spectra = n1,
-      library = form.cleaned_data['library'], # lib unnecessary in ccs model
-      scores = ','.join(map(str, list(o.values()))),
-      spectra_ids = ','.join(map(str, o.keys())))
-    
-    if obj:
-      l = {
-        'result': [],
-        'original': {
-          'peak_mass': n1.peak_mass,
-          'peak_intensity': n1.peak_intensity,
-        }
+  obj = CollapsedCosineScore.objects.create(
+    spectra = n1,
+    library = form.cleaned_data['library'], # lib unnecessary in ccs model
+    scores = ','.join(map(str, list(o.values()))),
+    spectra_ids = ','.join(map(str, o.keys())))
+  
+  if obj:
+    l = {
+      'result': [],
+      'original': {
+        'peak_mass': n1.peak_mass,
+        'peak_intensity': n1.peak_intensity,
       }
-      
-      from django.db.models import Case, When
-      preserved = Case(*[When(pk = pk, then = pos) for pos, pk in enumerate(o)])
-      q = CollapsedSpectra.objects.filter(id__in = o.keys()).order_by(preserved)
-      rowcount = 1
-      for cs in q:
-        l['result'].append({
-          'score': o[str(cs.id)],
-          'strain': cs.strain_id.strain_id,
-          'kingdom': cs.strain_id.cKingdom,
-          'phylum': cs.strain_id.cPhylum,
-          'class': cs.strain_id.cClass,
-          'order': cs.strain_id.cOrder,
-          # ~ 'family': cs.strain_id.cFamily,
-          'genus': cs.strain_id.cGenus,
-          'species': cs.strain_id.cSpecies,
-          'rowcount': rowcount,
-          'peak_mass': cs.peak_mass,
-          'peak_intensity': cs.peak_intensity,
-        })
-        rowcount += 1
-      ws.send(json.dumps(l))
-  else:
-    pass
+    }
+    
+    # Add binned peaks representation for each spectra
+    
+    
+    from django.db.models import Case, When
+    preserved = Case(*[When(pk = pk, then = pos) for pos, pk in enumerate(o)])
+    q = CollapsedSpectra.objects.filter(id__in = o.keys()).order_by(preserved)
+    rowcount = 1
+    for cs in q:
+      l['result'].append({
+        'score': o[str(cs.id)],
+        'strain': cs.strain_id.strain_id,
+        'kingdom': cs.strain_id.cKingdom,
+        'phylum': cs.strain_id.cPhylum,
+        'class': cs.strain_id.cClass,
+        'order': cs.strain_id.cOrder,
+        # ~ 'family': cs.strain_id.cFamily,
+        'genus': cs.strain_id.cGenus,
+        'species': cs.strain_id.cSpecies,
+        'rowcount': rowcount,
+        'peak_mass': cs.peak_mass,
+        'peak_intensity': cs.peak_intensity,
+      })
+      rowcount += 1
+    ws.send(json.dumps(l))
+  # ~ else:
+    # ~ pass
     # ~ r = requests.post(
       # ~ 'http://plumber:8000/cosine',
       # ~ params = data
