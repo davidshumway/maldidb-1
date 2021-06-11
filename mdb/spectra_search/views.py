@@ -158,8 +158,7 @@ def process_file(request, file, form, owner):
   n2 = CollapsedSpectra.objects.filter(
     library__exact = form.cleaned_data['search_library'].id,
     spectra_content__exact = 'PR'
-    #max_mass__gt = 6000
-  ).values('id')
+  ).order_by('id').values('id')#, 'strain_id')
   data = {
     'ids': [n1.id] + [s['id'] for s in list(n2)]
   }
@@ -168,7 +167,27 @@ def process_file(request, file, form, owner):
     params = data
   )
   
-  print('bp', r.json()['binnedPeaks'][1][0])
+  print('bp', r.json()['binnedPeaks'])
+  # ~ print('bp', r.json()['binnedPeaks']['intensity.233'])
+  # ~ print('bp', r.json()['binnedPeaks']['intensity.233'][0])
+  # ~ print('bp', r.json()['colnames'])
+  tmp = r.json()['binnedPeaks']
+  binned_peaks = {}
+  # ~ count = 0
+  for v in tmp: # Dictionary of binned peaks
+    binned_peaks[str(v['csId'][0])] = {
+      'mass': v['mass'],
+      'intensity': v['intensity'],
+      'snr': v['snr'],
+    }
+    # ~ else:
+      # ~ c = str(count)
+      # ~ binned_peaks[v['csId.' + c][0]] = {
+        # ~ 'mass': v['mass.' + c],
+        # ~ 'intensity': v['intensity.' + c],
+        # ~ 'snr': v['snr.' + c],
+      # ~ }
+    # ~ count += 1
   
 # ~ # test
 # ~ from spectra.models import *
@@ -188,7 +207,7 @@ def process_file(request, file, form, owner):
   # ~ key = lambda x: (x[1], x[0]), reverse = True)
 # ~ )
 
-  # create a dictionary and sort by its values
+  # Dictionary sorted by its values
   from collections import OrderedDict
   k = [str(s['id']) for s in list(n2)] # one less
   v = r.json()['similarity'][1:] # one more remove first???
@@ -209,6 +228,9 @@ def process_file(request, file, form, owner):
       'original': {
         'peak_mass': n1.peak_mass,
         'peak_intensity': n1.peak_intensity,
+        'binned_mass': binned_peaks[str(n1.id)]['mass'],
+        'binned_intensity': binned_peaks[str(n1.id)]['intensity'],
+        'binned_snr': binned_peaks[str(n1.id)]['snr'],
       }
     }
     
@@ -233,6 +255,9 @@ def process_file(request, file, form, owner):
         'rowcount': rowcount,
         'peak_mass': cs.peak_mass,
         'peak_intensity': cs.peak_intensity,
+        'binned_mass': binned_peaks[str(cs.id)]['mass'],
+        'binned_intensity': binned_peaks[str(cs.id)]['intensity'],
+        'binned_snr': binned_peaks[str(cs.id)]['snr'],
       })
       rowcount += 1
     ws.send(json.dumps(l))

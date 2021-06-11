@@ -81,18 +81,38 @@ function(req, ids) {
 
   binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
   featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
-  # manual inspection...
-  print(toString(head(binnedPeaks, 2)))
+  
+  b <- list()
+#~   allSpectra = list()
+#~   allPeaks = list()
+  for(i in 1:length(binnedPeaks)) {
+    s <- binnedPeaks[[i]]
+    b <- append(b, list(list(
+      'mass' = MALDIquant::mass(s),
+      'intensity' = MALDIquant::intensity(s),
+      'snr' = MALDIquant::snr(s),
+      'csId' = ids[[i]]
+    )))
+  }
+#~   print(mass(binnedPeaks[[1]]))
 #~   print(toString(binnedPeaks))
+#~   print(colnames(featureMatrix))
+#~   print(capture.output(featureMatrix))
   #print(toString(featureMatrix[1,]))
   #print(toString(featureMatrix[2,]))
   #print(coop::cosine(featureMatrix[1,], featureMatrix[2,]))
   d <- coop::cosine(t(featureMatrix))
   d <- round(d, 3)
   
-  return(list('similarity' = d[1,], 'binnedPeaks' = capture.output(binnedPeaks)))
+  return(list(
+    'similarity' = d[1,],
+    'binnedPeaks' = b
+#~     'binnedPeaks' = capture.output(toString(binnedPeaks))
+#~     'featureMatrix' = featureMatrix,
+#~     'colnames' = colnames(featureMatrix)
+  ))
   
-  return(d[1,])
+  #return(d[1,])
   
   emptyProtein <- unlist(
     lapply(allPeaks, MALDIquant::isEmpty)
@@ -269,8 +289,14 @@ dbSpectra <- function(ids) {
   allSpectra = list()
   allPeaks = list()
   
+  # q&d initial solution: require monotonically increasing ids
+  id <- 0
+  
   for(i in 1:nrow(q)) {
     row <- q[i,]
+    if (row$id < id) {
+      stop('results not monotonic')
+    }
     allPeaks <- append(allPeaks,
       MALDIquant::createMassPeaks(
         mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
