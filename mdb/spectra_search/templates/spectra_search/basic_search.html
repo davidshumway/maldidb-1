@@ -11,12 +11,15 @@
 {% load bootstrap4 %}
 {% load static %}
 
-<link rel="stylesheet" type="text/css" href="{% static 'css/datatables.min.css' %}"/>
+<link rel="stylesheet" type="text/css"
+  href="{% static 'css/datatables.min.css' %}"/>
  
-<script type="text/javascript" src="{% static 'js/datatables.min.js' %}"></script>
-
-<script type="text/javascript" src="{% static 'js/d3.6.7.0.min.js' %}"></script>
-
+<script type="text/javascript" src="{% static 'js/datatables.min.js' %}">
+  </script>
+<script type="text/javascript" src="{% static 'js/d3.6.7.0.min.js' %}">
+  </script>
+<script type="text/javascript" src="{% static 'js/dropzone.5.7.0.js' %}">
+  </script>
 <script type="text/javascript">
 function show_filter(e) {
   document.getElementById('filters').style.display='block';
@@ -26,182 +29,186 @@ function show_filter(e) {
 </script>
 
 <!-- After file upload form, get-form-div is placed inside this form. -->
-<form action="{% url 'spectra_search:basic_search' %}" class="" method="GET" style="" id="search-form">
+<form action="{% url 'spectra_search:basic_search' %}" class=""
+  method="GET" style="" id="search-form">
 </form>
 
-<div id="" class="container" style="width:100%;max-width:inherit;"><!--max-width: 1600px !important !important;-->
+<div id="" class="container" style="width:100%;max-width:inherit;">
+
   <!-- begin row -->
   <div class="row">
   <!-- begin col left -->
   <div class="col-6" id="col-left">
-  <!-- start accordion -->
-<!--
-  <div id="accordion">
--->
-  <!-- search type -->
-<!--
-  <div class="card">
-    <div class="card-body">
--->
       
-          <div class="card" style="">
-            <!--Height: All tabs same height to keep card body height from always changing upon tab selection.
-            height:450px !important;-->
-            <div class="card-header">
-              <ul class="nav nav-tabs card-header-tabs" id="nav-search-source">
-                <li class="nav-item">
-                  <a class="nav-link active" href="#" id="nss-1">Upload file of unknown isolate</a>
-                </li>
-                <li class="nav-item" id="result" style="display: none;">
-                  <a class="nav-link" href="#" id="nss-2">Result</a>
-                </li>
+    <div class="card" style="">
+      <!--Height: All tabs same height to keep card body height
+        from always changing upon tab selection.
+        height:450px !important;-->
+      <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" id="nav-search-source">
+          <li class="nav-item">
+            <a class="nav-link active" href="#" id="nss-1"
+              >Upload file of unknown isolate</a>
+          </li>
+          <li class="nav-item" id="result" style="display: none;">
+            <a class="nav-link" href="#" id="nss-2">Result</a>
+          </li>
 <!--Turn off these options for now
-                <li class="nav-item">
-                  <a class="nav-link" href="#" id="nss-2">Previously uploaded files</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="#" id="nss-3">Library spectra</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="#" id="nss-4">Manual spectra entry</a>
-                </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="nss-2">Previously uploaded files</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="nss-3">Library spectra</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="nss-4">Manual spectra entry</a>
+          </li>
 -->
-              </ul>
-            </div>
-            <div class="card-body" id="nss-card-1" style="">
-              
-              <!-- File upload form -->
-              <form action="{% url 'spectra_search:ajax_upload' %}" class="" method="POST" style="" id="upload_form">
-                {% csrf_token %}
-                
-                <div class="custom-file">
-                  <input type="file" class="custom-file-input" id="customFile" name="file">
-                  <label class="custom-file-label" for="customFile">Choose file</label>
-                </div>
-                <div class="alert alert-danger toggle-display" id="file-error">
-                  </div>
-                
-                <p class="card-text">
-                  <a href="#" id="upload-more-opts" onclick="return false;">Show more options</a>
-                </p>
-                
-                <!-- Begin more options -->
-                <div id="div-upload-opts" style="display:none;">
-                  <div class="form-check">
-                    {% with f=upload_form.save_to_library %}
-                      {{ f }}
-                      <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
-                    {% endwith %}
-                  </div>
-                  
-                  <div class="w-75">
-                    <div class="form-group">
-                      {% with f=upload_form.lab %}
-                      {{ f }}
-                      {% endwith %}
-                    </div>
-                    <div class="form-group">
-                      {% with f=upload_form.library %}
-                      {{ f }}
-                      {% endwith %}
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    {% with f=upload_form.preprocess %}
-                      {{ f }}
-                      <label class="form-check-label" for="{{ f.auto_id }}">{{ f.label }}</label>
-                    {% endwith %}
-                  </div>
-                  <div class="form-group">
-                    {% with f=upload_form.search_library %}
-                      {{ f }}
-                    {% endwith %}
-                  </div>
+        </ul>
+      </div>
+      <div class="card-body" id="nss-card-1" style="">
+        
+        <!-- File upload form -->
+        <form action="{% url 'spectra_search:ajax_upload' %}"
+          class="" method="POST" style=""
+          id="upload_form">
+          {% csrf_token %}
+          
+          <div class="" id="file-selector"><!--bs/custom-file-->
+            <input type="file" class=""
+              id="customFile" name="file" multiple
+              onchange="javascript:updateFileList(this);"
+              onload="javascript:updateFileList(this);"
+              style="display:none;"><!--bs/custom-file-input-->
+            <label class="" for="customFile"
+              style="border:1px dashed;background-color:#eee;padding:20px;width:100%;text-align:center;"
+              >Choose file(s)</label>
+            <!--bs/custom-file-label-->
 <!--
-                  <div class="form-group">
-                    {% with f=upload_form.cKingdom %}
-                      {{ f }}
-                    {% endwith %}
-                  </div>
-                  <div class="form-group">
-                    {% with f=upload_form.cPhylum %}
-                      {{ f }}
-                    {% endwith %}
-                  </div>
-                  <div class="form-group">
-                    {% with f=upload_form.cClass %}
-                      {{ f }}
-                    {% endwith %}
-                  </div>
-                  <div class="form-group">
-                    {% with f=upload_form.cOrder %}
-                      {{ f }}
-                    {% endwith %}
-                  </div>
-                  <div class="form-group">
-                    {% with f=upload_form.cGenus %}
-                      {{ f }}
-                    {% endwith %}
-                  </div>
-                  <div class="form-group">
-                    {% with f=upload_form.cSpecies %}
-                      {{ f }}
-                    {% endwith %}
-                  </div>
-                  
-
-
-                  {{ metadata_form.media }}
+            <button onclick="javascript:updateFileList()"></button>
 -->
-
-                  
-                </div>
-                <!-- End more options -->
-                
-                <div class="text-center">
-                  <button type="submit" class="btn btn-default"
-                  onclick="this.disabled = true;">Upload</button>
-                </div>
-              </form>
-              <!-- End file upload form -->
-            </div>
-            <!-- end card body 1 -->
-
-            <div class="card-body" id="nss-card-2" style="display:none;">
-              <table id="data-table"></table>
-            </div>
-
+          </div>
+          <table class="card-text" id="file-listing">
+          </table>
+          <div class="alert alert-danger toggle-display" id="file-error">
           </div>
           
+          <p class="card-text">
+            <a href="#" id="upload-more-opts" onclick="return false;"
+              >Show more options</a>
+          </p>
           
+          <!-- Begin more options -->
+          <div id="div-upload-opts" style="display:none;">
+            <div class="form-group">
+              {% with f=upload_form.search_library %}
+                {{ f }}
+              {% endwith %}
+            </div>
+            
+            <div class="form-check">
+              {% with f=upload_form.save_to_library %}
+                {{ f }}
+                <label class="form-check-label" for="{{ f.auto_id }}"
+                  >{{ f.label }}</label>
+              {% endwith %}
+            </div>
+            
+            <div class="w-75">
+              Select uploads location:
+              
+              <div class="form-group">
+                <input type="radio" name="library_save_type" value="RANDOM" checked />
+                Use a randomly assigned library
+              </div>
 <!--
-    </div>
-  </div>
+              <div class="form-group">
+                with f=upload_form.lab
+                f
+                endwith
+              </div>
+-->                 
+              <div class="form-group">
+                <input type="radio" name="library_save_type" value="NEW" />
+                Create new library:
+                {% with f=upload_form.library_create_new %}
+                {{ f }}
+                {% endwith %}
+                <div class="alert alert-danger toggle-display" id="new-library-error">
+                </div>
+              </div>
+              <div class="form-group">
+                <input type="radio" name="library_save_type" value="EXISTING" />
+                Save to existing library:
+                {% with f=upload_form.library_select %}
+                {{ f }}
+                {% endwith %}
+              </div>
+            </div>
+            <div class="form-group">
+              {% with f=upload_form.preprocess %}
+                {{ f }}
+                <label class="form-check-label" for="{{ f.auto_id }}"
+                  >{{ f.label }}</label>
+              {% endwith %}
+            </div>
+<!--
+            <div class="form-group">
+              {% with f=upload_form.cKingdom %}
+                {{ f }}
+              {% endwith %}
+            </div>
+            <div class="form-group">
+              {% with f=upload_form.cPhylum %}
+                {{ f }}
+              {% endwith %}
+            </div>
+            <div class="form-group">
+              {% with f=upload_form.cClass %}
+                {{ f }}
+              {% endwith %}
+            </div>
+            <div class="form-group">
+              {% with f=upload_form.cOrder %}
+                {{ f }}
+              {% endwith %}
+            </div>
+            <div class="form-group">
+              {% with f=upload_form.cGenus %}
+                {{ f }}
+              {% endwith %}
+            </div>
+            <div class="form-group">
+              {% with f=upload_form.cSpecies %}
+                {{ f }}
+              {% endwith %}
+            </div>
+            
+
+
+            {{ metadata_form.media }}
 -->
 
-  <!-- -->
-<!--
-  <div class="card">
-    <div class="card-header" id="headingTwo">
-      <h5 class="mb-0">
-        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-          Search filters
-        </button>
-      </h5>
+            
+          </div>
+          <!-- End more options -->
+          
+          <div class="text-center">
+            <button type="submit" class="btn btn-default"
+              id="upload-button">Upload</button>
+          </div>
+        </form>
+        <!-- End file upload form -->
+      </div>
+      <!-- end card body 1 -->
+
+      <div class="card-body" id="nss-card-2" style="display:none;">
+        <table id="data-table"></table>
+      </div>
     </div>
-    <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
-      
-    </div>
-  </div>
--->
-  
-<!--
-  </div>
--->
-  <!-- end accordion -->
-  
   </div>
   <!-- end col left -->
+  
   <div class="col-0" id="col-right">
   </div>
     
@@ -225,7 +232,8 @@ function show_filter(e) {
 
 <!-- if search results, minimize search form -->
 <div class="row">
-  <input type="button" class="btn btn-primary" id="search_toggle" style="display: none; width: 180px;" value="Edit Search" />
+  <input type="button" class="btn btn-primary" id="search_toggle"
+    style="display: none; width: 180px;" value="Edit Search" />
 </div>
 {% if form.show_tbl %}  
   {% render_table table %}
@@ -234,22 +242,60 @@ function show_filter(e) {
 </div>
 
 <script type="text/javascript">
-//~ function toggleCutoff(e) {
-  //~ var x1 = document.getElementById('id_spectrum_cutoff_low');
-  //~ var x2 = document.getElementById('id_spectrum_cutoff_high');
-  //~ if (this.id == 'id_spectrum_cutoff_3') {
-    //~ if (x1.disabled) {
-      //~ x1.disabled = false;
-      //~ x2.disabled = false;
-    //~ } else {
-      //~ x1.disabled = true;
-      //~ x2.disabled = true;
-    //~ }
-  //~ } else {
-    //~ x1.disabled = true;
-    //~ x2.disabled = true;
-  //~ }  
-//~ }
+
+function updateFileList(input) {
+  // file-listing
+  //~ console.log(input);
+  //~ console.log(input.files);
+  if (!input)
+    input = document.getElementById('customFile');
+  $('#file-selector').css('display', 'none');
+  for (var i in input.files) {
+    input.files[i].upload = i;
+    input.files[i].preprocess = i;
+  }
+  var t = $('#file-listing').DataTable({
+    data: input.files,
+    columns: [
+      {data: 'name', title: 'Name'},
+      {data: 'size', title: 'Size',
+        render: function(data, type) {
+          if (data < 1024)
+            return data + ' bytes'
+          else if (data < 1024*1000)
+            return Math.round(data/1024) + 'KB'
+          else if (data < 1024*1000000)
+            return Math.round(data/(1024*1000)) + 'MB'
+          else if (data < 1024*1000000000)
+            return Math.round(data/(1024*1000000)) + 'GB'
+          else 
+            return data + ' bytes'
+          //~ console.log(data);
+          //~ return '<span style="color:steelblue;font-weight:400;cursor:pointer;" data-id="'+data+'" onclick="sp(this);">'
+            //~ + data + '</span>';
+        }
+      },
+      {data: 'upload', title: 'Upload status',
+        render: function(data, type) {
+          return '<span id="filetable-upload' + data + '"></span>';
+        }
+      },
+      {data: 'preprocess', title: 'Preprocess status',
+        render: function(data, type) {
+          return '<span id="filetable-preprocess' + data + '"></span>';
+        }
+      },
+      //~ {data: 'phylum', title: 'Phylum'},
+      //~ {data: 'class', title: 'Class'},
+      //~ {data: 'order', title: 'Order'},
+      //~ {data: 'genus', title: 'Genus'},
+      //~ {data: 'species', title: 'Species'},
+    ]
+  });
+  //~ t.order([0, 'desc']) // reorder in correct direction
+    //~ .draw();
+  t.draw();
+}
 function toggleSearchTypeOpts(e) {
   var s = $('#div-searchtype-opts');
   if (s.css('display') == 'none') {
@@ -283,14 +329,35 @@ function toggleUploadOpts(e) {
   return false;
 }
 function toggleSaveToLibrary(e) {
-  var lb = $('#id_lab_name');
-  var li = $('#id_library');
   if (this.checked) {
-    li[0].disabled = false;
-    lb[0].disabled = false;
+    var s = document.getElementsByName('library_save_type');
+    var found = false;
+    for (var i=0; i<s.length; i++) {
+      if (s[i].checked) found = true;
+    }
+    if (!found) {
+      s[0].checked = true; // default selection
+      $('#id_library_select')[0].disabled = true;
+      $('#id_library_create_new')[0].disabled = true;
+    }else if (s[1].checked) {
+      $('#id_library_select')[0].disabled = true;
+      $('#id_library_create_new')[0].disabled = false;
+    } else if (s[2].checked) {
+      $('#id_library_select')[0].disabled = false;
+      $('#id_library_create_new')[0].disabled = true;
+    }
+    document.getElementsByName('library_save_type')[0].disabled = false;
+    document.getElementsByName('library_save_type')[1].disabled = false;
+    document.getElementsByName('library_save_type')[2].disabled = false;
   } else {
-    li[0].disabled = true;
-    lb[0].disabled = true;
+    document.getElementsByName('library_save_type')[0].disabled = true;
+    document.getElementsByName('library_save_type')[1].disabled = true;
+    document.getElementsByName('library_save_type')[2].disabled = true;
+    document.getElementsByName('library_save_type')[0].checked = false;
+    document.getElementsByName('library_save_type')[1].checked = false;
+    document.getElementsByName('library_save_type')[2].checked = false;
+    $('#id_library_select')[0].disabled = true;
+    $('#id_library_create_new')[0].disabled = true;
   }
 }
 function toggleSearchForm() {
@@ -356,26 +423,41 @@ window.addEventListener('DOMContentLoaded', (event) => {
   // upload
   $('#upload_form').submit(upload);
   
+  // library type
+  var x = document.getElementsByName('library_save_type');
+  for (var i=0; i<x.length; i++) {
+    x[i].onclick = function() {
+      if (this.value == 'RANDOM') {
+        $('#id_library_select')[0].disabled = true;
+        $('#id_library_create_new')[0].disabled = true;
+      } else if (this.value == 'NEW') {
+        $('#id_library_select')[0].disabled = true;
+        $('#id_library_create_new')[0].disabled = false;
+      } else {
+        $('#id_library_select')[0].disabled = false;
+        $('#id_library_create_new')[0].disabled = true;
+      }
+    }
+  }
+  
   // progress
   //~ $('#upload_form').uploadprogress({redirect_url: null}); //{redirect_url: '/'}
   
   // file selector (via w3 schools) and initial value on page reload
-  $(".custom-file-input").on("change", function() {
-    var f = $(this).val().split("\\").pop();
-    $(this).siblings(".custom-file-label").addClass("selected").html(f);
-  });
-  if ($(".custom-file-input").val() != '') {
-    var n = $(".custom-file-input");
-    var f = n.val().split("\\").pop();
-    n.siblings(".custom-file-label").addClass("selected").html(f);
-  }
+  //~ $(".custom-file-input").on("change", function() {
+    //~ var f = $(this).val().split("\\").pop();
+    //~ $(this).siblings(".custom-file-label").addClass("selected").html(f);
+  //~ });
+  //~ if ($(".custom-file-input").val() != '') {
+    //~ var n = $(".custom-file-input");
+    //~ var f = n.val().split("\\").pop();
+    //~ n.siblings(".custom-file-label").addClass("selected").html(f);
+  //~ }
   
   //
   $('#add-form').click(function() {
       var index = $('#id_inline_test_models-TOTAL_FORMS').val()
-      //~ console.log('index', index);
       var newTable = $('#id_inline_test_models-__prefix__-DELETE').parents('table').clone()
-      //~ console.log('nt', newTable);
       newTable.find(':input').each(function() {
           for (attr of ['name', 'id'])
               $(this).attr(
@@ -392,28 +474,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
   
 });
 
-//const myDiv = document.getElementById('poll_data')
-//~ var socket = new WebSocket('ws://127.0.0.1:8000/ws/pollData');
-//~ var socket = new WebSocket('ws://127.0.0.1/ws/pollData');
-
-//~ var socket = new WebSocket('ws://localhost/ws/pollData');
-
-//~ var socket = new WebSocket('ws://localhost/ws/pollData'); // works locally?
-//~ var socket = new WebSocket('ws://0.0.0.0/ws/pollData'); // works locally
-
-//~ var socket = new WebSocket('ws://0.0.0.0/ws/pollData', 'echo-protocol');
-//~ var socket = new WebSocket('ws://0.0.0.0:8000/ws/pollData');
-//~ var socket = new WebSocket('ws://django:8000/ws/pollData');
-//~ var socket = new WebSocket('ws://django/ws/pollData', 'echo-protocol');
-//~ var socket = new WebSocket('ws://localhost:8000/ws/pollData');
-//~ var socket = new WebSocket('ws://localhost:8000/ws/pollData', 'echo-protocol');
-//~ var socket = new WebSocket('ws://localhost/ws/pollData', 'echo-protocol');
-
-//~ var socket = new WebSocket('ws://<ip>/ws/pollData'); // works remotely
-var socket = new WebSocket('ws://' + location.host + '/ws/pollData'); // works remotely
-//~ var tooltip = d3.select("body").append("div")
-  //~ .attr("class", "tooltip-donut")
-  //~ .style("opacity", 0);
+// works locally & remotely
+var socket = new WebSocket('ws://' + location.host + '/ws/pollData');
      
 socket.onopen = function(e){
   console.log(e);
@@ -572,6 +634,17 @@ function sp(el) {
 }
 socket.onmessage = function(e){
   var data = JSON.parse(JSON.parse(e.data));
+  console.log(data);
+  
+  if (data.message == 'completed preprocessing') {
+    var c = data.data.count;
+    $('#filetable-preprocess' + c).text('done');
+    // Check if all are done...
+    // If all are done, then do collapseLibrary
+  }
+  
+  return;
+  
   $('#result').toggle();
   $('#nss-1').removeClass('active');
   $('#nss-2').addClass('active');
@@ -622,8 +695,6 @@ socket.onmessage = function(e){
   s.data = data;
   drawHisto();
   s.onchange = drawHisto;
-  
-  //~ return;
   
   // d3 line graph
   // e.g. https://www.d3-graph-gallery.com/graph/line_basic.html
@@ -695,8 +766,10 @@ socket.onmessage = function(e){
   mirror.height = height;
   mirror.x_peaks = {};
   // reshape original
-  var p1 = data.original.peak_mass.split(',');
-  var p2 = data.original.peak_intensity.split(',');
+  //~ var p1 = data.original.peak_mass.split(',');
+  //~ var p2 = data.original.peak_intensity.split(',');
+  var p1 = data.original.binned_mass;//.split(',');
+  var p2 = data.original.binned_intensity;//.split(',');
   var px = [];
   for (var i in p1) {
     px.push({x: p1[i], y: p2[i]});
@@ -707,58 +780,18 @@ socket.onmessage = function(e){
     .attr('x', function(d) { return x(d.x); })
     .attr('y', function(d) { return (height/2) - yTop(d.y); }) // rather than middle (height/2)
     .attr('height', function(d) { return yTop(d.y); })
-    .attr('width', 0.5);
+    .attr('width', 0.2);
   // mirror original x, for matching
   for (var i in p1) {
-    var x = Math.round(parseFloat(p1[i]));// / 1; // zero digit
-    mirror.x_peaks[x] = true; 
+    //~ var x = Math.round(parseFloat(p1[i]));// / 1; // zero digit
+    //~ mirror.x_peaks[x] = true; 
+    mirror.x_peaks[p1[i]] = true; // e.g. 100.2
   }
-  //~ svg.append("path")
-    //~ .datum(px)
-    //~ .attr("fill", "none")
-    //~ .attr("stroke", "steelblue")
-    //~ .attr("stroke-width", 1.5)
-    //~ .attr("d", d3.line()
-      //~ .x(function(d) { return x(d.x) })
-      //~ .y(function(d) { return y(d.y) })
-    //~ )
-  //~ var s = d3.map(data.result, function(d) {
-    //~ return({})
-  //~ });
   svg.append('g').attr('id', 'mirror-btm');
       
   data.result.forEach(function(dx) {
     allStrains[dx.strain.trim().replace(/\s/g, '')] = dx;
   });
-      
-  // circles (matching)
-  // i is index
-  //~ svg.append('g')
-    //~ .selectAll("dot")
-    //~ .data(rslt_long_matched)
-    //~ .enter()
-    //~ .append("circle")
-      //~ .attr("cx", function (d, i) { return x(d.x); } ) 
-      //~ .attr("cy", function (d, i) { return y(d.y); } )
-      //~ .attr("r", 1.25)
-      //~ .style("fill", "#00cc00")
-      //~ .on('mouseover', function (event, d) {
-        //~ tooltip.html(d.strain)
-          //~ .style("left", (event.pageX) + "px")             
-          //~ .style("top", (event.pageY - 28) + "px");
-        //~ tooltip.transition()
-          //~ .duration(200)
-          //~ .style("opacity", 0.9);
-      //~ });
-  //~ svg.append('g')
-    //~ .selectAll("dot")
-    //~ .data(rslt_long_unmatched)
-    //~ .enter()
-    //~ .append("circle")
-      //~ .attr("cx", function (d, i) { return x(d.x); } ) 
-      //~ .attr("cy", function (d, i) { return y(d.y); } )
-      //~ .attr("r", 1.0)
-      //~ .style("fill", "#ff0000")
 }
 socket.onclose = function(e){
   console.log(e);
@@ -769,13 +802,16 @@ function makeChartBtm(dx) {
   g.selectAll('*').remove();
   
   var color = function(x) {
-    x = Math.round(parseFloat(x));// / 1; // zero digit
+    //~ x = Math.round(parseFloat(x));// / 1; // zero digit
+    //~ return (mirror.x_peaks[x]) ? '#0000ff' : '#000000';
     return (mirror.x_peaks[x]) ? '#0000ff' : '#000000';
   }
   //allStrains.push(dx.strain.trim().replace(/\s/g, ''));
   // e.g. 100 peaks per sample
-  var p1 = dx.peak_mass.split(',');
-  var p2 = dx.peak_intensity.split(',');
+  //~ var p1 = dx.peak_mass.split(',');
+  //~ var p2 = dx.peak_intensity.split(',');
+  var p1 = dx.binned_mass;//.split(',');
+  var p2 = dx.binned_intensity;//.split(',');
   var px = [];
   for (var i in p1) {
     px.push({x: p1[i], y: p2[i]});
@@ -786,7 +822,7 @@ function makeChartBtm(dx) {
     .attr('x', function(d) { return mirror.x(d.x); })
     .attr('y', function(d) { return (mirror.height/2); }) // rather than bottom
     .attr('height', function(d) { return mirror.yTop(d.y); })
-    .attr('width', 0.5);
+    .attr('width', 0.2);
     
   //~ svg.append("path")
     //~ .datum(px)
@@ -919,45 +955,145 @@ function makeChart(el, dataXY) {
   
 // upload form
 function upload(event) {
-  //~ console.log(new FormData(this));
-  //~ console.log(new FormData(this).getAll());
-  //~ console.log(new FormData(this).values());
+  $('#upload-button')[0].disabled = true;
+  
+  console.log(new FormData(this));
+  console.log(new FormData(this).values());
+  console.log($('#customFile')[0].files);
+  console.log($('#customFile')[0].files[0]);
+  
+  // first create library or validate existing library
+  // then loop through files and add them individually.
+  ajaxLibary(this);
+  
+  event.preventDefault();
+}
+function ajaxLibary(form) {
+  console.log(form);
+  console.log(new FormData(form));
+  $.ajax({
+    xhr: function() {
+     var xhr = new window.XMLHttpRequest();
+     return xhr;
+    },
+    
+    dataType: 'JSON',
+    data: new FormData(form),
+    url: "{% url 'spectra_search:ajax_upload_library' %}",
+    type: 'POST',
+    processData: false,
+    contentType: false,
+    // on success
+    success: function(response) {
+      console.log(response);
+      //~ var r = JSON.parse(response.responseJSON);
+      var library = response.data.library;
+      
+      // Loop through upload files and start each one
+      //~ $.each($('#customFile')[0].files, function() {
+        
+      //~ }
+      for (var i=0; i<$('#customFile')[0].files.length; i++) {
+        var f = new FormData(form);
+        f.set('file', $('#customFile')[0].files[i]);
+        f.set('tmp_library', library);
+        //~ f.set('library_select', library);
+        //~ f.set('library_save_type', 'EXISTING');
+        f.set('upload_count', i);
+        uploadHelper(f);
+      }
+      
+      //~ t.modal('hide');
+      
+      //~ if (response.status == 'preprocessing') {
+        //~ t.title.text('Preprocessing');
+        //~ t.progress.text('0%');
+      //~ }
+      
+      // Fails when file uploaded second time
+      
+      //~ if (response.is_taken == true) {
+          //~ $('#id_username').removeClass('is-valid').addClass('is-invalid');
+          //~ $('#id_username').after('<div class="invalid-feedback d-block" id="usernameError">This username is not available!</div>')
+      //~ } else {
+          //~ $('#id_username').removeClass('is-invalid').addClass('is-valid');
+          //~ $('#usernameError').remove();
+
+      //~ }
+    },
+    // on error
+    error: function(response) {
+      console.log(response);
+      var r = JSON.parse(response.responseJSON.errors);
+      console.log(r);
+      //~ t.modal('hide');
+      //~ $('#upload-button')[0].disabled = false;
+      //~ try {
+        //~ var r = JSON.parse(response.responseJSON.errors);
+        //~ console.log(r);
+        //~ if (r.file) { // array of messages
+          //~ $('#customFile').removeClass('is-valid').addClass('is-invalid');
+          //~ $('#file-error').removeClass('toggle-display').text(
+            //~ r.file.join('<br>')
+          //~ );
+          //~ var msgs = [];
+          //~ r.file.forEach(e => msgs.push(e.message));
+          //~ $('#file-error').text(msgs.join('<br>'));
+        //~ } else if (r.__all__.length > 0) {
+          //~ for (var i in r.__all__) {
+            //~ if (r.__all__[i].message == 'Library title already exists!') {
+              //~ $('#id_library_create_new').removeClass('is-valid').addClass('is-invalid');
+              //~ $('#new-library-error').removeClass('toggle-display')
+                //~ .text('Library title already exists!')
+            //~ }
+          //~ }
+        //~ }
+      //~ } catch(e) {
+        //~ console.log(e);
+      //~ }
+      
+    }
+  });
+}
+
+function uploadHelper(formData) {
+  //~ return;
   
   // Modal tempalte adapted from
   // https://github.com/jakobadam/bootstrap-uploadprogress
-  var template = '<div class="modal fade" id="file-progress-modal">\
-  <div class="modal-dialog">\
-    <div class="modal-content">\
-      <div class="modal-header">\
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">\
-        <span aria-hidden="true">&times;</span></button>\
-        <h4 class="modal-title">Uploading</h4>\
-      </div>\
-      <div class="modal-body">\
-        <div class="modal-message"></div>\
-        <div class="progress">\
-          <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0"\
-               aria-valuemax="100" style="width: 0%;min-width: 2em;">\
-            0%\
-          </div>\
-        </div>\
-      </div>\
-      <div class="modal-footer" style="display:none">\
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>\
-      </div>\
-    </div>\
-  </div>\
-</div>';
+  //~ var template = '<div class="modal fade" id="file-progress-modal">\
+  //~ <div class="modal-dialog">\
+    //~ <div class="modal-content">\
+      //~ <div class="modal-header">\
+        //~ <button type="button" class="close" data-dismiss="modal" aria-label="Close">\
+        //~ <span aria-hidden="true">&times;</span></button>\
+        //~ <h4 class="modal-title">Uploading</h4>\
+      //~ </div>\
+      //~ <div class="modal-body">\
+        //~ <div class="modal-message"></div>\
+        //~ <div class="progress">\
+          //~ <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0"\
+               //~ aria-valuemax="100" style="width: 0%;min-width: 2em;">\
+            //~ 0%\
+          //~ </div>\
+        //~ </div>\
+      //~ </div>\
+      //~ <div class="modal-footer" style="display:none">\
+        //~ <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>\
+      //~ </div>\
+    //~ </div>\
+  //~ </div>\
+//~ </div>';
 
-  var t = $(template);
-  t.modal({
-    backdrop: 'static',
-    keyboard: false
-  });
-  t.message = t.find('.modal-message');
-  t.title = t.find('.modal-title');
-            //this.$modal_footer = this.$modal.find('.modal-footer');
-  t.progress = t.find('.progress-bar');
+  //~ var t = $(template);
+  //~ t.modal({
+    //~ backdrop: 'static',
+    //~ keyboard: false
+  //~ });
+  //~ t.message = t.find('.modal-message');
+  //~ t.title = t.find('.modal-title');
+    //~ //this.$modal_footer = this.$modal.find('.modal-footer');
+  //~ t.progress = t.find('.progress-bar');
 
   $.ajax({
     xhr: function() {
@@ -967,24 +1103,25 @@ function upload(event) {
       xhr.upload.addEventListener('progress', function(evt){
         if (evt.lengthComputable) {
           var percent = Math.round(100 * evt.loaded / evt.total);
-          t.progress.attr('aria-valuenow', percent);
-          t.progress.text(percent + '%');
-          t.progress.css('width', percent + '%');
+          //~ t.progress.attr('aria-valuenow', percent);
+          //~ t.progress.text(percent + '%');
+          //~ t.progress.css('width', percent + '%');
         }
-     }, false);
-     
-     // Download
-     xhr.addEventListener('progress', function(evt){
-       if (evt.lengthComputable) {
-         var percentComplete = evt.loaded / evt.total;
-       }
-     }, false);
-     
-     return xhr;
+      }, false);
+
+      // Download
+      //~ xhr.addEventListener('progress', function(evt){
+        //~ if (evt.lengthComputable) {
+          //~ var percentComplete = evt.loaded / evt.total;
+        //~ }
+      //~ }, false);
+
+      return xhr;
     },
     
     dataType: 'JSON',
-    data: new FormData(this),
+    data: formData,
+    sequentialUploads: true,
     url: "{% url 'spectra_search:ajax_upload' %}",
     type: 'POST',
     processData: false,
@@ -992,11 +1129,11 @@ function upload(event) {
     // on success
     success: function(response) {
       console.log(response);
-      t.modal('hide');
+      //~ t.modal('hide');
       
       if (response.status == 'preprocessing') {
-        t.title.text('Preprocessing');
-        t.progress.text('0%');
+        //~ t.title.text('Preprocessing');
+        //~ t.progress.text('0%');
       }
       
       // Fails when file uploaded second time
@@ -1013,10 +1150,12 @@ function upload(event) {
     // on error
     error: function(response) {
       console.log(response);
+      //~ t.modal('hide');
+      $('#upload-button')[0].disabled = false;
       try {
         var r = JSON.parse(response.responseJSON.errors);
         console.log(r);
-        if (r && r.file) { // array of messages
+        if (r.file) { // array of messages
           $('#customFile').removeClass('is-valid').addClass('is-invalid');
           $('#file-error').removeClass('toggle-display').text(
             r.file.join('<br>')
@@ -1024,6 +1163,14 @@ function upload(event) {
           var msgs = [];
           r.file.forEach(e => msgs.push(e.message));
           $('#file-error').text(msgs.join('<br>'));
+        } else if (r.__all__.length > 0) {
+          for (var i in r.__all__) {
+            if (r.__all__[i].message == 'Library title already exists!') {
+              $('#id_library_create_new').removeClass('is-valid').addClass('is-invalid');
+              $('#new-library-error').removeClass('toggle-display')
+                .text('Library title already exists!')
+            }
+          }
         }
       } catch(e) {
         console.log(e);

@@ -103,38 +103,41 @@ class MetadataAutocomplete(autocomplete.Select2QuerySetView):
 #-----------------------------------------------------------------------
 
 @start_new_thread
-def process_file(request, file, form, owner):
-  '''Run R methods to preprocess spectra file
+def process_file(request, file, form, owner, upload_count):
+  '''Runs R methods to process a spectra file
   
-  Add Spectra and update UserFile
+  Todo: Include user feedback
   '''
   ws = websocket.WebSocket()
   ws.connect('ws://localhost:8000/ws/pollData')
-  # ~ ws.connect('ws://0.0.0.0:8000/ws/pollData')
-  # ~ ws.send('{"message": "test from django"}')
-  # ~ return
+  # ~ ws.send('{"message": ""}')
   
   print(f'preprocess file{file}')
   f1 = file.replace('uploads/', 'uploads/sync/')
   current_loc = '/home/app/web/media/' + file
   new_loc = '/' + file.replace('uploads/', 'uploads/sync/')
   os.system('cp ' + current_loc + ' ' + new_loc)
-  #shutil.copyfile(current_loc, new_loc)
   data = {'file': f1}
   print(f'send{data}')
   r = requests.get('http://plumber:8000/preprocess', params = data)
 
-  # If no library selected, create a new library for the user.
-  # If user is anonymous, create a new anonymous library.
-  # Add sqlite new spectra to db
+  # Adds sqlite spectra to db
   info = idbac_sqlite_insert(request, form,
     '/uploads/sync/' + str(r.json()[0]) + '.sqlite',
     user_task = False
   )
   
-  # TODO
-  #  If multiple spectra, await user response
-  #  If single spectra, continue
+  # Communicates completion back to upload
+  # ~ ws.send('{"test":1}')
+  ws.send(json.dumps({
+    'message': 'completed preprocessing',
+    'data': {
+      'count': upload_count
+    }
+  }))
+  return
+  
+  
   
   # Collapse if there is a protein spectra
   if info['spectra']['protein'] > 0: ##### > 1
@@ -167,7 +170,7 @@ def process_file(request, file, form, owner):
     params = data
   )
   
-  print('bp', r.json()['binnedPeaks'])
+  # ~ print('bp', r.json()['binnedPeaks'])
   # ~ print('bp', r.json()['binnedPeaks']['intensity.233'])
   # ~ print('bp', r.json()['binnedPeaks']['intensity.233'][0])
   # ~ print('bp', r.json()['colnames'])
@@ -234,9 +237,6 @@ def process_file(request, file, form, owner):
       }
     }
     
-    # Add binned peaks representation for each spectra
-    
-    
     from django.db.models import Case, When
     preserved = Case(*[When(pk = pk, then = pos) for pos, pk in enumerate(o)])
     q = CollapsedSpectra.objects.filter(id__in = o.keys()).order_by(preserved)
@@ -272,6 +272,28 @@ def process_file(request, file, form, owner):
 def upload_status(request):
 	pass 
   
+def ajax_upload_library(request):
+  #pass
+  # ~ print(request)
+  if request.method == 'POST':
+    form = SpectraLibraryForm(data = request.POST, files = request.FILES,
+      request = request)
+    if form.is_valid():
+      # ~ form.request = request # pass request to save() method
+      # ~ form.save()
+      # ~ print(form)
+      print(form.cleaned_data)
+      return JsonResponse({
+          'status': 'success', 
+          'data': {'library': form.cleaned_data['library'].title}
+        }, 
+        status=200)
+    else:
+      e = form.errors.as_json()
+      return JsonResponse({'errors': e}, status=400)
+  else:
+    return JsonResponse({'errors': 'Empty request.'}, status=400)
+    
 def ajax_upload(request):
   '''
   Preprocessing (optional) - Once uploaded, spawn new thread to preprocess.
@@ -282,42 +304,59 @@ def ajax_upload(request):
    
   Todo: Anonymous session to access anon. upload.
   '''
+  print(f'request.POST{request.POST}')
+  print(f'request.POST.get("library"){request.POST.get("library")}')
   if request.method == 'POST':
-    # ~ post = request.POST.copy()
-    # ~ post['cKingdom'] = 1
-    # ~ form = SpectraUploadForm(data = post, files = request.FILES)
-    form = SpectraUploadForm(data = request.POST, files = request.FILES)
+    form = SpectraUploadForm(data = request.POST, files = request.FILES,
+      request = request#,
+      # ~ library = Library.objects.filter(title__exact = request.POST.get('library'),
+        # ~ created_by__exact = request.user)
+    )
     if form.is_valid():
       form.request = request # pass request to save() method
-      form.save()
+      form.save() # Django saves the file
       owner = request.user.id if request.user.is_authenticated else None
       lab, created = LabGroup.objects.get_or_create(
         lab_name = 'FileUploads' # initializes file uploads group
       )
       form.cleaned_data['lab'] = lab
-      
-      if form.cleaned_data['preprocess'] == True:
-        file = str(form.instance.file)
-        filename = file.replace('uploads/', '')
-        form.cleaned_data['privacy_level'] = ['PR']
-        if form.cleaned_data['library'] == None:
-          if request.user.is_authenticated:
-            l = Library.objects.create(created_by = request.user,
-              title = filename, privacy_level = 'PR', lab = lab)
-          else: # anonymous/ todo: later accessible via anon. session
-            l = Library.objects.create(title = filename,
-              privacy_level = 'PR', lab = lab)
-          form.cleaned_data['library'] = l
-        process_file(request, file, form, owner)
-        return JsonResponse(
-          {'status': 'preprocessing'},
-          # ~ {'status': 'preprocessing', 'task': t.id},
-          status=200)
-      return JsonResponse({'status': 'ready'}, status=200)
+      form.cleaned_data['library'] = Library.objects.filter(
+        title__exact = request.POST.get('tmp_library'),
+        created_by__exact = request.user).first()
+        
+      # ~ if form.cleaned_data['preprocess'] == True:
+      file = str(form.instance.file)
+      # ~ filename = file.replace('uploads/', '')
+      form.cleaned_data['privacy_level'] = ['PR']
+      process_file(request, file, form, owner,
+        form.cleaned_data['upload_count'])
+      return JsonResponse({'status': 'preprocessing'}, status=200)
     else:
-      print('invalid form')
       e = form.errors.as_json()
       return JsonResponse({'errors': e}, status=400)
+        
+    
+    # ~ if form.is_valid():
+      # ~ form.request = request # pass request to save() method
+      # ~ form.save()
+      
+      #print(f'form.cleaned_data {form.cleaned_data}')
+      # ~ return JsonResponse({'status': form.cleaned_data}, status=200)
+      
+      # ~ count = 0
+      # ~ for field in request.FILES.keys():
+        # ~ for file in request.FILES.getlist(field):
+          #save_uploaded_file_to_media_root(formfile)
+          
+      # ~ return JsonResponse(
+        # ~ {'status': 'preprocessing'},
+        # ~ {'status': 'preprocessing', 'task': t.id},
+        # ~ status=200)
+      # ~ return JsonResponse({'status': 'ready'}, status=200)
+    # ~ else:
+      # ~ print('invalid form')
+      # ~ e = form.errors.as_json()
+      # ~ return JsonResponse({'errors': e}, status=400)
   return JsonResponse({'errors': 'Empty request.'}, status=400)
   
 class SpectraFilter(django_filters.FilterSet):
@@ -386,7 +425,7 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     context['metadata_form'] = SpectraCollectionsForm()
     
     # upload form
-    context['upload_form'] = SpectraUploadForm()
+    context['upload_form'] = SpectraLibraryForm(request = self.request)
     u = self.request.user
     q = Library.objects.none()
     if u.is_authenticated is False:

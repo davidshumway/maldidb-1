@@ -295,7 +295,7 @@ dbSpectra <- function(ids) {
   for(i in 1:nrow(q)) {
     row <- q[i,]
     if (row$id < id) {
-      stop('results not monotonic')
+      stop('results non-monotonic')
     }
     allPeaks <- append(allPeaks,
       MALDIquant::createMassPeaks(

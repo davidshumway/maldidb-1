@@ -10,6 +10,7 @@ app_name = 'spectra_search'
 urlpatterns = [
   # basic / advanced search
   path('', views.FilteredSpectraSearchListView.as_view(), name='basic_search'),
+  path('ajax_upload_library/', views.ajax_upload_library, name='ajax_upload_library'),
   path('ajax_upload/', views.ajax_upload, name='ajax_upload'),
   # Search result
   path('spectra/', views.FilteredSpectraListView.as_view(), name='spectra_results'),

@@ -6,6 +6,7 @@ from dal import autocomplete
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 User = get_user_model()
+from django.utils.crypto import get_random_string # for random library
 
 class SpectraCollectionsForm(forms.ModelForm):
   '''
@@ -58,38 +59,39 @@ class SpectraCollectionsForm(forms.ModelForm):
       # ~ 'cClass': autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete'),
     # ~ }
   
-class SpectraUploadForm(forms.ModelForm):
+class SpectraLibraryForm(forms.Form):
+  '''Processes the library portion of upload form.
+  
+  Stores upload files to pass to upload form.
+  '''
   file = forms.FileField(
-    label = 'Upload a file',
-    required = True
+    label = 'Upload one or more files',
+    required = True,
+    widget = forms.ClearableFileInput(attrs={'multiple': True})
   )
-  
-  # Options
-  
-  # Save spectra to lab->library?
-  # otherwise, save to user's (temporary spectra) library
-  save_to_library = forms.BooleanField(
-    required = False,
-    label = 'Save upload to preexisting library? (optional)',
-    widget = forms.CheckboxInput(
-      attrs = {
-        'class': 'form-check-input'}
-    )
-  )
+  # ~ save_to_library = forms.BooleanField(
+    # ~ required = True,
+    # ~ label = 'Save upload(s) to a library? (optional)',
+    # ~ widget = forms.CheckboxInput(
+      # ~ attrs = {
+        # ~ 'class': 'form-check-input'}
+    # ~ ),
+    # ~ initial = True,
+  # ~ )
   # If yes... todo: filter by user's membership and/or public libs
-  lab = forms.ModelChoiceField(
-    queryset = LabGroup.objects.all(),
-    to_field_name = 'lab_name',
-    required = False,
-    widget = forms.Select(
-      attrs = {
-        'class': 'custom-select'}
-    ),
-    disabled = True,
-    empty_label = 'Select a lab'
-  )
-  library = forms.ModelChoiceField(
-    queryset = Library.objects.all(),
+  # ~ lab = forms.ModelChoiceField(
+    # ~ queryset = LabGroup.objects.all(),
+    # ~ to_field_name = 'lab_name',
+    # ~ required = False,
+    # ~ widget = forms.Select(
+      # ~ attrs = {
+        # ~ 'class': 'custom-select'}
+    # ~ ),
+    # ~ disabled = True,
+    # ~ empty_label = 'Select a lab'
+  # ~ )
+  library_select = forms.ModelChoiceField(
+    queryset = Library.objects.none(),
     to_field_name = 'title',
     required = False,
     widget = forms.Select(
@@ -99,21 +101,17 @@ class SpectraUploadForm(forms.ModelForm):
     disabled = True,
     empty_label = 'Select a library'
   )
-  forms.MultipleChoiceField(choices = [
-      ('PB', 'Public'),
-      ('PR', 'Private'),
-    ],
-    initial = 'PR'
+  library_create_new = forms.CharField(disabled = True,
+    required = False,
+    help_text = 'Enter a name for the new library')
+  library_save_type = forms.CharField(label = '',
+    widget = forms.RadioSelect(choices = [
+      ('RANDOM', 'Random'),
+      ('NEW', 'New'),
+      ('EXISTING', 'Existing'),
+    ])
   )
-  # ~ privacy_level = forms.ChoiceField(
-    # ~ choices = [
-      # ~ ('PUBLIC', 'Public'),
-      # ~ ('PRIVATE', 'Private')
-    # ~ ],
-    # ~ required = True,
-    # ~ initial = 'PRIVATE',
-    # ~ label = 'Privacy:')
-    
+   
   preprocess = forms.BooleanField(
     required = True,
     initial = True,
@@ -128,28 +126,8 @@ class SpectraUploadForm(forms.ModelForm):
         'class': 'custom-select'}
     ),
     disabled = False,
-    #initial = Library.objects.filter(title__exact = 'R01 Data'),
     empty_label = 'Search library'
   )
-  
-  # ~ def __init__(self, *args, **kwargs):
-    # ~ '''
-    # ~ Set access control for search library
-    # ~ '''
-    # ~ super().__init__(*args, **kwargs)
-    # super(SpectraUploadForm, self).__init__(*args, **kwargs)
-    # ~ u = self.request.user
-    # ~ q = None
-    # ~ if u.is_authenticated is False:
-      # ~ q = Library.objects.filter(privacy_level__exact = 'PB')
-    # ~ else:
-      # ~ user_labs = LabGroup.objects \
-        # ~ .filter(Q(owners__in = [u]) | Q(members__in = [u]))
-      # ~ Library.objects.filter( \
-        # ~ Q(lab__in = user_labs) | Q(privacy_level__exact = 'PB') | \
-        # ~ Q(created_by__exact = u)
-      # ~ ).order_by('-id')
-    # ~ self.fields['search_library'].queryset = q
   
   cKingdom = forms.ModelMultipleChoiceField(
     queryset = Metadata.objects.all(),
@@ -181,6 +159,122 @@ class SpectraUploadForm(forms.ModelForm):
     label = 'Species', required = False,
     widget = autocomplete.ModelSelect2Multiple(
       url = 'spectra_search:metadata_autocomplete_species', forward=['cKingdom','cPhylum','cClass','cOrder','cGenus']))
+      
+  # ~ class Meta:
+    # ~ model = UserFile
+    # ~ exclude = ('id', 'owner', 'upload_date', 'extension')
+    #custom-select
+    # ~ widgets = {
+      # ~ 'lab': forms.Select(
+        # ~ attrs = {'class': 'custom-select'}
+      # ~ ),
+    # ~ }
+  
+  def __init__(self, *args, **kwargs):
+    request = kwargs.pop('request')
+    self.user = request.user
+    super(SpectraLibraryForm, self).__init__(*args, **kwargs)
+    user = self.user
+    if request.user.is_authenticated:
+      user_labs = LabGroup.objects \
+        .filter(Q(owners__in = [user]) | Q(members__in = [user]))
+      q = Library.objects.filter( \
+        Q(lab__in = user_labs) | \
+        Q(created_by__exact = user)
+      ).order_by('-id')
+      self.fields['library_select'].queryset = q
+    
+    #if ticket:
+    #self.fields['state'] = State.GetTicketStateField(ticket.Type)
+    #self.fields['cKingdom'] = Library.
+    # ~ print(f'args{args}')
+    # ~ print(f'kwargs{kwargs}')
+    # ~ print(f'kwargs{self}')
+    # ~ print(f'kwargs{self.request}')
+    # ~ u = self.request.user
+    # ~ q = None
+    # ~ if u.is_authenticated is False:
+      # ~ q = Library.objects.filter(privacy_level__exact = 'PB')
+    # ~ else:
+      # ~ user_labs = LabGroup.objects \
+        # ~ .filter(Q(owners__in = [u]) | Q(members__in = [u]))
+      # ~ Library.objects.filter( \
+        # ~ Q(lab__in = user_labs) | Q(privacy_level__exact = 'PB') | \
+        # ~ Q(created_by__exact = u)
+      # ~ ).order_by('-id')
+    # ~ self.fields['search_library'].queryset = q
+    
+  def clean(self):
+    '''
+    Adds "library" key
+    '''
+    d = super().clean()
+    # ~ cleaned_data['cKingdom'] = Metadata.objects.none()
+    # ~ d['cKingdom'] = Metadata.objects.filter(cKingdom__exact = 'Bacteria')
+    # ~ d['cClass'] = Metadata.objects.filter(cClass__exact = 'Gammaproteobacteria')
+    
+    
+    # validate upload library
+    # ~ if d.get('save_to_library') == True:
+    if d.get('library_save_type') == 'RANDOM':
+      title = get_random_string(8)
+      x = False
+      c = 100
+      while x is False and c > 0:
+        c -= 1 # safe check
+        n = Library.objects.filter(
+          created_by = self.user,
+          title = title
+        )
+        if len(n) == 0:
+          x = True
+          new_lib = Library.objects.create(
+            created_by = self.user,
+            title = title
+          )
+          d['library'] = new_lib
+    elif d.get('library_save_type') == 'NEW':
+      n = Library.objects.filter(
+        created_by = self.user,
+        title = d.get('library_create_new')
+      )
+      if len(n) != 0:
+        raise forms.ValidationError(
+          'Library title already exists!'
+        )
+      else:
+        new_lib = Library.objects.create(
+          created_by = self.user,
+          title = d.get('library_create_new')
+        )
+        d['library'] = new_lib
+    elif d.get('library_save_type') == 'EXISTING':
+      d['library'] = Library.objects.filter(
+        created_by = self.user,
+        title = d.get('library')
+      )
+    return d
+  
+class SpectraUploadForm(forms.ModelForm):
+  file = forms.FileField(
+    label = 'Upload one or more files',
+    required = True,
+    widget = forms.ClearableFileInput(attrs={'multiple': True})
+  )
+  
+  upload_count = forms.IntegerField()
+    
+  # ~ library = forms.ModelChoiceField(
+    # ~ queryset = Library.objects.none(),
+    # ~ to_field_name = 'title',
+    # ~ required = True#,
+    # ~ widget = forms.Select(
+      # ~ attrs = {
+        # ~ 'class': 'custom-select'}
+    # ~ ),
+    # ~ disabled = True,
+    # ~ empty_label = 'Select a library'
+  # ~ )
   
   class Meta:
     model = UserFile
@@ -188,8 +282,7 @@ class SpectraUploadForm(forms.ModelForm):
     #custom-select
     widgets = {
       'lab': forms.Select(
-        attrs = {
-          'class': 'custom-select'}
+        attrs = {'class': 'custom-select'}
       ),
     }
   
@@ -200,29 +293,108 @@ class SpectraUploadForm(forms.ModelForm):
     instance.save(commit)
     return instance
   
-  # ~ def __init__(self, *args, **kwargs):
-    # ~ super(SpectraUploadForm, self).__init__(*args, **kwargs)
-    # ~ #if ticket:
-    # ~ #self.fields['state'] = State.GetTicketStateField(ticket.Type)
-    # ~ #self.fields['cKingdom'] = Library.
-    # ~ print(f'args{args}')
-    # ~ print(f'kwargs{kwargs}')
+  def __init__(self, *args, **kwargs):
+    request = kwargs.pop('request')
+    self.user = request.user
+    # ~ l = False
+    # ~ if 'library' in kwargs:
+      # ~ l = kwargs.pop('library')
+    super(SpectraUploadForm, self).__init__(*args, **kwargs)
+    user = self.user
+    # ~ if l:
+      # ~ self.fields['library'] = l
+    # ~ if user.is_authenticated is False:
+      # ~ q = Library.objects.filter(privacy_level__exact = 'PB')
+    # ~ else:
+      # ~ user_labs = LabGroup.objects \
+        # ~ .filter(Q(owners__in = [user]) | Q(members__in = [user]))
+      # ~ Library.objects.filter( \
+        # ~ Q(lab__in = user_labs) | Q(privacy_level__exact = 'PB') | \
+        # ~ Q(created_by__exact = user)
+      # ~ ).order_by('-id')
+    # ~ self.fields['search_library'].queryset = q
+    # ~ if request.user.is_authenticated:
+      # ~ user_labs = LabGroup.objects \
+        # ~ .filter(Q(owners__in = [user]) | Q(members__in = [user]))
+      # ~ q = Library.objects.filter( \
+        # ~ Q(lab__in = user_labs) | \
+        # ~ Q(created_by__exact = user)
+      # ~ ).order_by('-id')
+      # ~ self.fields['library_select'].queryset = q
+      # ~ q = Library.objects.filter(privacy_level__exact = 'PB')
+    # ~ else:
+      # ~ user_labs = LabGroup.objects \
+        # ~ .filter(Q(owners__in = [user]) | Q(members__in = [user]))
+      # ~ Library.objects.filter( \
+        # ~ Q(lab__in = user_labs) | Q(privacy_level__exact = 'PB') | \
+        # ~ Q(created_by__exact = user)
+      # ~ ).order_by('-id')
+    # ~ self.fields['search_library'].queryset = q
+    
   # ~ def clean_cKingdom(self):
     # ~ data = self.cleaned_data['cKingdom']
     # ~ return Metadata.objects.none()
     
-  def clean(self):
-    '''
-    '''
-    d = super().clean()
+  # ~ def clean(self):
+    # ~ '''
+    # ~ Adds "library" key
+    # ~ '''
+    # ~ d = super().clean()
+    # ~ if d.get('library'):
+    # ~ n = Library.objects.filter(
+      # ~ created_by = self.user,
+      # ~ title = d.get('library')
+    # ~ )
+    # ~ if len(n) != 1:
+      # ~ raise forms.ValidationError(
+        # ~ 'Library does not exist!'
+      # ~ )
+    # ~ d['library'] = n
+    # ~ return d
+      
     # ~ cleaned_data['cKingdom'] = Metadata.objects.none()
     # ~ d['cKingdom'] = Metadata.objects.filter(cKingdom__exact = 'Bacteria')
     # ~ d['cClass'] = Metadata.objects.filter(cClass__exact = 'Gammaproteobacteria')
     
-    # Lab/library present and valid
-    s1 = (
-      d.get('save_to_library') == True and (d.get('lab') == '' or d.get('library') == '')
-    )
+    # validate upload library
+    # ~ if d.get('save_to_library') == True:
+    # ~ if d.get('library_save_type') == 'RANDOM':
+      # ~ title = get_random_string(8)
+      # ~ x = False
+      # ~ c = 100
+      # ~ while x is False and c > 0:
+        # ~ c -= 1 # safe check
+        # ~ n = Library.objects.filter(
+          # ~ created_by = self.user,
+          # ~ title = title
+        # ~ )
+        # ~ if len(n) == 0:
+          # ~ x = True
+          # ~ new_lib = Library.objects.create(
+            # ~ created_by = self.user,
+            # ~ title = title
+          # ~ )
+          # ~ d['library'] = new_lib
+    # ~ elif d.get('library_save_type') == 'NEW':
+      # ~ n = Library.objects.filter(
+        # ~ created_by = self.user,
+        # ~ title = d.get('library_create_new')
+      # ~ )
+      # ~ if len(n) != 0:
+        # ~ raise forms.ValidationError(
+          # ~ 'Library title already exists!'
+        # ~ )
+      # ~ else:
+        # ~ new_lib = Library.objects.create(
+          # ~ created_by = self.user,
+          # ~ title = d.get('library_create_new')
+        # ~ )
+        # ~ d['library'] = new_lib
+    # ~ return d
+    # Lab/library present and valid    
+    # ~ s1 = (
+      # ~ d.get('save_to_library') == True and (d.get('lab') == '' or d.get('library') == '')
+    # ~ )
     #  ll_err = False
     #  if data.get('save_to_library') == True:
       #  try:
@@ -237,14 +409,14 @@ class SpectraUploadForm(forms.ModelForm):
         #  ll_err = forms.ValidationError(
           #  'Library not found!'
         #  )
-    if s1:
-      raise forms.ValidationError(
-        'Lab and library are required if "Save to Library" is selected'
-      )
+    # ~ if s1:
+      # ~ raise forms.ValidationError(
+        # ~ 'Lab and library are required if "Save to Library" is selected'
+      # ~ )
     #  elif ll_err:
       #  raise ll_err
-    else:
-      return d
+    # ~ else:
+      # ~ return d
       
 class SpectraSearchForm(forms.ModelForm):
   '''Replicated, Collapsed, all

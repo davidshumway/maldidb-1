@@ -73,6 +73,8 @@ services:
       - static:/home/app/web/static/:z
       #~ - static:/static/:z
       - shared:/uploads/:z
+    environment:
+      PYTHONUNBUFFERED: 1 # better printing
   nginx:
     container_name: nginx
     image: nginx #####:mainline-alpine
