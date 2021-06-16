@@ -67,6 +67,13 @@ function show_filter(e) {
         </ul>
       </div>
       <div class="card-body" id="nss-card-1" style="">
+        <!-- status -->
+        <div id="preprocess-upload-status" style="display:none;"
+          class="alert alert-info">
+          <b>Status</b><br />
+          <span id="stat-title">Task: Uploading and preprocessing</span><br />
+          <span id="stat-complete"></span>
+        </div>
         
         <!-- File upload form -->
         <form action="{% url 'spectra_search:ajax_upload' %}"
@@ -245,8 +252,6 @@ function show_filter(e) {
 
 function updateFileList(input) {
   // file-listing
-  //~ console.log(input);
-  //~ console.log(input.files);
   if (!input)
     input = document.getElementById('customFile');
   $('#file-selector').css('display', 'none');
@@ -282,7 +287,7 @@ function updateFileList(input) {
       },
       {data: 'preprocess', title: 'Preprocess status',
         render: function(data, type) {
-          return '<span id="filetable-preprocess' + data + '"></span>';
+          return '<div id="filetable-preprocess' + data + '" style="text-align:center;width:100%;"></div>';
         }
       },
       //~ {data: 'phylum', title: 'Phylum'},
@@ -624,6 +629,13 @@ var mirror = {
   svg: null
 }
 var allStrains = {};
+var preprocessed = {
+  count: 0,
+  total: 0,
+  items: {},
+  library: null,
+  ip: null
+}
 function sp(el) {
   //makeChartBtm
   var id = el.getAttribute('data-id').trim().replace(/\s/g, '');
@@ -633,14 +645,37 @@ function sp(el) {
   makeChartBtm(data)
 }
 socket.onmessage = function(e){
-  var data = JSON.parse(JSON.parse(e.data));
+  console.log(e);
+  var data = JSON.parse(e.data).data;
   console.log(data);
+  console.log(data.ip);
+  
+  try {
+    if (data.ip) {
+      preprocessed.ip = data.ip;
+    }
+  } catch (e) {
+    console.log(e);
+  }
+  //~ var data = JSON.parse(JSON.parse(e.data));
+  //~ console.log(data);
   
   if (data.message == 'completed preprocessing') {
     var c = data.data.count;
+    preprocessed.items[c] = true;
+    preprocessed.count++;
     $('#filetable-preprocess' + c).text('done');
+    //~ $('#stat-complete').text(preprocessed.count)
+    $('#stat-complete').text(
+      preprocessed.count + '/' + preprocessed.total + ' completed');
     // Check if all are done...
     // If all are done, then do collapseLibrary
+    if (preprocessed.count == preprocessed.total) {
+      $('#stat-title').text('Collapsing library entries');
+      $('#stat-complete').text('');
+      // socket send
+      socket.send(JSON.stringify({collapseLibrary: preprocessed.library}));
+    }
   }
   
   return;
@@ -962,6 +997,11 @@ function upload(event) {
   console.log($('#customFile')[0].files);
   console.log($('#customFile')[0].files[0]);
   
+  // Shows overall status
+  preprocessed.total = $('#customFile')[0].files.length;
+  $('#stat-complete').text('0/' + preprocessed.total + ' completed');
+  $('#preprocess-upload-status').css('display', 'block');
+  
   // first create library or validate existing library
   // then loop through files and add them individually.
   ajaxLibary(this);
@@ -971,6 +1011,9 @@ function upload(event) {
 function ajaxLibary(form) {
   console.log(form);
   console.log(new FormData(form));
+  console.log(new FormData(form).get('library_create_new'));
+  console.log(new FormData(form).get('library_create_new'));
+  
   $.ajax({
     xhr: function() {
      var xhr = new window.XMLHttpRequest();
@@ -988,18 +1031,21 @@ function ajaxLibary(form) {
       console.log(response);
       //~ var r = JSON.parse(response.responseJSON);
       var library = response.data.library;
+      preprocessed.library = library;
       
       // Loop through upload files and start each one
       //~ $.each($('#customFile')[0].files, function() {
         
       //~ }
       for (var i=0; i<$('#customFile')[0].files.length; i++) {
+        preprocessed.items[i] = false;
         var f = new FormData(form);
         f.set('file', $('#customFile')[0].files[i]);
         f.set('tmp_library', library);
-        //~ f.set('library_select', library);
+        //~ f.set('library_select', form.get('library_select'));
         //~ f.set('library_save_type', 'EXISTING');
         f.set('upload_count', i);
+        f.set('ip', preprocessed.ip);
         uploadHelper(f);
       }
       
@@ -1026,6 +1072,19 @@ function ajaxLibary(form) {
       console.log(response);
       var r = JSON.parse(response.responseJSON.errors);
       console.log(r);
+      try {
+        if (r.__all__.length > 0) {
+          for (var i in r.__all__) {
+            if (r.__all__[i].message == 'Library title already exists!') {
+              $('#id_library_create_new').removeClass('is-valid').addClass('is-invalid');
+              $('#new-library-error').removeClass('toggle-display')
+                .text('Library title already exists!')
+            }
+          }
+        }
+      } catch(e) {
+        
+      }
       //~ t.modal('hide');
       //~ $('#upload-button')[0].disabled = false;
       //~ try {
@@ -1084,8 +1143,14 @@ function uploadHelper(formData) {
     //~ </div>\
   //~ </div>\
 //~ </div>';
-
-  //~ var t = $(template);
+  
+  var template = '\
+    <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0"\
+         aria-valuemax="100" style="width: 0%;min-width: 2em;">\
+      0%\
+    </div>';
+          
+  var t = $(template);
   //~ t.modal({
     //~ backdrop: 'static',
     //~ keyboard: false
@@ -1093,19 +1158,22 @@ function uploadHelper(formData) {
   //~ t.message = t.find('.modal-message');
   //~ t.title = t.find('.modal-title');
     //~ //this.$modal_footer = this.$modal.find('.modal-footer');
-  //~ t.progress = t.find('.progress-bar');
-
+  var n = $('#filetable-upload' + formData.get('upload_count'));
+  $('#filetable-upload' + formData.get('upload_count')).append(t);
+  t.progress = n.find('.progress-bar');
+  
   $.ajax({
     xhr: function() {
       var xhr = new window.XMLHttpRequest();
 
-      // Upload
+      // Upload, filetable-upload{i}
       xhr.upload.addEventListener('progress', function(evt){
         if (evt.lengthComputable) {
-          var percent = Math.round(100 * evt.loaded / evt.total);
-          //~ t.progress.attr('aria-valuenow', percent);
-          //~ t.progress.text(percent + '%');
-          //~ t.progress.css('width', percent + '%');
+          var pct = Math.round(100 * evt.loaded / evt.total);
+          // filetable-upload
+          t.progress.attr('aria-valuenow', pct);
+          t.progress.text(pct + '%');
+          t.progress.css('width', pct + '%');
         }
       }, false);
 

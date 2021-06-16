@@ -1,8 +1,9 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
-
 from channels.generic.websocket import WebsocketConsumer
-
 import json
+import requests
+from chat.models import Library
+from mdb.utils import *
 
 # example: https://www.etemkeskin.com/index.php/2021/02/08/
 # real-time-application-development-using-websocket-in-django/
@@ -25,15 +26,25 @@ import json
     # ~ )
 
 class DashConsumer(AsyncJsonWebsocketConsumer):
-  print('==================0')
+
   async def connect(self):
     print('==================1')
+    
+    #print(f'self.scope{self.scope}')
+    ip = self.scope['client'][0] + ':' + str(self.scope['client'][1])
+    print(f'ip{ip}')
+    #self.pusher = await self.get_pusher(ip)
+    #print(self.pusher)
+    
     self.groupname = 'dashboard'
     await self.channel_layer.group_add(
       self.groupname,
       self.channel_name,
     )
     await self.accept()
+    
+    # ~ await self.send(text_data = json.dumps({"testing from py": True}))
+    await self.send_json({'data': {'ip': ip}})
 
   async def disconnect(self, close_code):
     print('==================2')
@@ -43,11 +54,14 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     )
 
   async def receive(self, text_data):
+    '''
+    Can be used to send from Python back to JS.
+    '''
     print('==================3')
     # ~ #datapoint = json.loads(text_data)
     # ~ #val = datapoint['value']
     val = text_data
-
+    
     await self.channel_layer.group_send(
       self.groupname,
       {
@@ -56,11 +70,36 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
       }
     )
     print ('>>>>', text_data)
-
+    
+    try:
+      val = json.loads(val)
+      print(f'val{val}')
+      print(f'val["collapseLibrary"]{val["collapseLibrary"]}')
+      if val['collapseLibrary'] != '':
+        collapse_lib(self, val['collapseLibrary'])
+    except Exception as e:    
+      print(e)
+      pass
+      
   async def deprocessing(self, event):
     print('==================4')
-    valOther = event['value']
-    valOther = f'VALUE: {valOther}'
     # send for frontend
     await self.send(text_data = json.dumps(event['value']))
-    # ~ await self.send(text_data = json.dumps({'value2': valOther}))
+
+@start_new_thread
+def collapse_lib(self, title):
+  # ~ print(f'self{self}')
+  l = Library.objects.filter(title__exact = title,
+    created_by = self.scope['user']).first()
+  print(f'l{l}')
+  if l:
+    data = {
+      'id': l.id,
+      'owner': self.scope['user'].id
+    }
+    print(f'data{data}')
+    r = requests.get(
+      'http://plumber:8000/collapseLibrary',
+      params = data
+    )
+    print(f'r{r}')

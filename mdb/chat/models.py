@@ -170,7 +170,9 @@ class LabGroup(models.Model):
   members = models.ManyToManyField(settings.AUTH_USER_MODEL,
     blank = True,
     related_name = 'lab_members')
-  
+  user_default_lab = models.BooleanField( # dedicated lab for every user
+    blank = True,
+    default = False)
     #models.ForeignKey(
     #settings.AUTH_USER_MODEL,
     #on_delete = models.CASCADE)

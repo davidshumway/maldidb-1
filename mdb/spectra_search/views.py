@@ -2,6 +2,7 @@ from django.shortcuts import render
 from mdb.utils import *
 from chat.models import *
 from spectra.models import *
+from accounts.models import *
 from .forms import *
 from .tables import *
 from .serializers import *
@@ -103,13 +104,14 @@ class MetadataAutocomplete(autocomplete.Select2QuerySetView):
 #-----------------------------------------------------------------------
 
 @start_new_thread
-def process_file(request, file, form, owner, upload_count):
+def process_file(request, file, form, owner, upload_count, ip):
   '''Runs R methods to process a spectra file
   
   Todo: Include user feedback
   '''
   ws = websocket.WebSocket()
   ws.connect('ws://localhost:8000/ws/pollData')
+  # ~ ws.connect('ws://' + ip)
   # ~ ws.send('{"message": ""}')
   
   print(f'preprocess file{file}')
@@ -274,15 +276,13 @@ def upload_status(request):
   
 def ajax_upload_library(request):
   #pass
-  # ~ print(request)
+  # ~ print(f'request.POST{request.POST}')
   if request.method == 'POST':
     form = SpectraLibraryForm(data = request.POST, files = request.FILES,
       request = request)
     if form.is_valid():
       # ~ form.request = request # pass request to save() method
       # ~ form.save()
-      # ~ print(form)
-      print(form.cleaned_data)
       return JsonResponse({
           'status': 'success', 
           'data': {'library': form.cleaned_data['library'].title}
@@ -305,7 +305,6 @@ def ajax_upload(request):
   Todo: Anonymous session to access anon. upload.
   '''
   print(f'request.POST{request.POST}')
-  print(f'request.POST.get("library"){request.POST.get("library")}')
   if request.method == 'POST':
     form = SpectraUploadForm(data = request.POST, files = request.FILES,
       request = request#,
@@ -329,7 +328,7 @@ def ajax_upload(request):
       # ~ filename = file.replace('uploads/', '')
       form.cleaned_data['privacy_level'] = ['PR']
       process_file(request, file, form, owner,
-        form.cleaned_data['upload_count'])
+        form.cleaned_data['upload_count'], form.cleaned_data['ip'])
       return JsonResponse({'status': 'preprocessing'}, status=200)
     else:
       e = form.errors.as_json()
@@ -431,14 +430,19 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     if u.is_authenticated is False:
       q = Library.objects.filter(privacy_level__exact = 'PB')
     else:
-      user_labs = LabGroup.objects \
-        .filter(Q(owners__in = [u]) | Q(members__in = [u]))
-      q = Library.objects \
-        .filter(~Q(lab__lab_name__exact = 'FileUploads')) \
-        .filter(\
-          Q(lab__in = user_labs) | Q(privacy_level__exact = 'PB') | \
-          Q(created_by__exact = u)
-        ).order_by('-id')
+      # This filters for only libraries accessible to the user
+      # based on user access controls
+      # ~ user_labs = LabGroup.objects \
+        # ~ .filter(Q(owners__in = [u]) | Q(members__in = [u]))
+      # ~ q = Library.objects \
+        # ~ .filter(~Q(lab__lab_name__exact = 'FileUploads')) \
+        # ~ .filter(\
+          # ~ Q(lab__in = user_labs) | Q(privacy_level__exact = 'PB') | \
+          # ~ Q(created_by__exact = u)
+        # ~ ).order_by('-id')
+      alice, created = User.objects.get_or_create(username = 'alice')
+      q = Library.objects.filter(title__exact = 'R01 Data',
+        created_by__exact = alice)
     context['upload_form'].fields['search_library'].queryset = q
     
     f = SpectraFilter(self.request.GET, queryset = self.queryset)

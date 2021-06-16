@@ -98,10 +98,9 @@ class SpectraLibraryForm(forms.Form):
       attrs = {
         'class': 'custom-select'}
     ),
-    disabled = True,
     empty_label = 'Select a library'
   )
-  library_create_new = forms.CharField(disabled = True,
+  library_create_new = forms.CharField(
     required = False,
     help_text = 'Enter a name for the new library')
   library_save_type = forms.CharField(label = '',
@@ -111,7 +110,7 @@ class SpectraLibraryForm(forms.Form):
       ('EXISTING', 'Existing'),
     ])
   )
-   
+  
   preprocess = forms.BooleanField(
     required = True,
     initial = True,
@@ -212,7 +211,12 @@ class SpectraLibraryForm(forms.Form):
     # ~ cleaned_data['cKingdom'] = Metadata.objects.none()
     # ~ d['cKingdom'] = Metadata.objects.filter(cKingdom__exact = 'Bacteria')
     # ~ d['cClass'] = Metadata.objects.filter(cClass__exact = 'Gammaproteobacteria')
+    # ~ print(f'clean{d}')
     
+    # user's lab
+    user_lab, created = LabGroup.objects.get_or_create(
+      user_default_lab = True,
+      owners__in = [self.user])
     
     # validate upload library
     # ~ if d.get('save_to_library') == True:
@@ -230,7 +234,8 @@ class SpectraLibraryForm(forms.Form):
           x = True
           new_lib = Library.objects.create(
             created_by = self.user,
-            title = title
+            title = title,
+            lab = user_lab
           )
           d['library'] = new_lib
     elif d.get('library_save_type') == 'NEW':
@@ -245,14 +250,16 @@ class SpectraLibraryForm(forms.Form):
       else:
         new_lib = Library.objects.create(
           created_by = self.user,
-          title = d.get('library_create_new')
+          title = d.get('library_create_new'),
+          lab = user_lab
         )
         d['library'] = new_lib
     elif d.get('library_save_type') == 'EXISTING':
-      d['library'] = Library.objects.filter(
-        created_by = self.user,
-        title = d.get('library')
-      )
+      d['library'] = d['library_select']
+      # ~ d['library'] = Library.objects.filter(
+        # ~ created_by = self.user,
+        # ~ title = d.get('library')
+      # ~ )
     return d
   
 class SpectraUploadForm(forms.ModelForm):
@@ -263,7 +270,10 @@ class SpectraUploadForm(forms.ModelForm):
   )
   
   upload_count = forms.IntegerField()
-    
+  
+  # For use with websockets 
+  ip = forms.CharField(label = '', required = False)
+   
   # ~ library = forms.ModelChoiceField(
     # ~ queryset = Library.objects.none(),
     # ~ to_field_name = 'title',
