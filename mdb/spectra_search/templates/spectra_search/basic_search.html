@@ -339,8 +339,8 @@ function toggleSearchTypeOpts(e) {
   return false;
 }
 function toggleNavSearch(e) {
-  //~ $('#nav-search-source a').removeClass('active');
-  $('.nav-link').removeClass('active');
+  $('#nav-search-source a').removeClass('active');
+  //~ $('.nav-link').removeClass('active');
   $(this).addClass('active');
   
   //~ $('#nss-card-1').addClass('toggle-display');
@@ -442,14 +442,14 @@ window.addEventListener('DOMContentLoaded', (event) => {
   st.click(toggleSearchForm);
   
   // toggle nav search
-  $('.nav-link').click(toggleNavSearch);
+  //~ $('.nav-link').click(toggleNavSearch);
   
   // toggle search options
   $('#toggle-search-opts').click(toggleAddlFields);
   
   // toggle search options
   // turn off for now
-  //~ $('#nav-search-source a').click(toggleNavSearch);
+  $('#nav-search-source a').click(toggleNavSearch);
   
   // search type opts
   $('#searchtype-more-opts').click(toggleSearchTypeOpts);
