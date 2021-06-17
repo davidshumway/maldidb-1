@@ -130,13 +130,21 @@ def process_file(request, file, form, owner, upload_count, ip):
   )
   
   # Communicates completion back to upload
-  # ~ ws.send('{"test":1}')
+  # ~ ws.send('{"data":1}')
   ws.send(json.dumps({
-    'message': 'completed preprocessing',
+    'type': 'completed preprocessing',
     'data': {
-      'count': upload_count
+      'count': upload_count,
+      'client': ip,
     }
   }))
+  ws.close()
+  # ~ ws.send(json.dumps({
+    # ~ 'message': 'completed preprocessing',
+    # ~ 'data': {
+      # ~ 'count': upload_count
+    # ~ }
+  # ~ }))
   return
   
   
@@ -172,27 +180,14 @@ def process_file(request, file, form, owner, upload_count, ip):
     params = data
   )
   
-  # ~ print('bp', r.json()['binnedPeaks'])
-  # ~ print('bp', r.json()['binnedPeaks']['intensity.233'])
-  # ~ print('bp', r.json()['binnedPeaks']['intensity.233'][0])
-  # ~ print('bp', r.json()['colnames'])
   tmp = r.json()['binnedPeaks']
   binned_peaks = {}
-  # ~ count = 0
   for v in tmp: # Dictionary of binned peaks
     binned_peaks[str(v['csId'][0])] = {
       'mass': v['mass'],
       'intensity': v['intensity'],
       'snr': v['snr'],
     }
-    # ~ else:
-      # ~ c = str(count)
-      # ~ binned_peaks[v['csId.' + c][0]] = {
-        # ~ 'mass': v['mass.' + c],
-        # ~ 'intensity': v['intensity.' + c],
-        # ~ 'snr': v['snr.' + c],
-      # ~ }
-    # ~ count += 1
   
 # ~ # test
 # ~ from spectra.models import *
@@ -275,8 +270,6 @@ def upload_status(request):
 	pass 
   
 def ajax_upload_library(request):
-  #pass
-  # ~ print(f'request.POST{request.POST}')
   if request.method == 'POST':
     form = SpectraLibraryForm(data = request.POST, files = request.FILES,
       request = request)
@@ -285,7 +278,10 @@ def ajax_upload_library(request):
       # ~ form.save()
       return JsonResponse({
           'status': 'success', 
-          'data': {'library': form.cleaned_data['library'].title}
+          'data': {
+            'library': form.cleaned_data['library'].title,
+            'search_library': form.cleaned_data['search_library'].id
+          }
         }, 
         status=200)
     else:
@@ -422,6 +418,9 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     
     # metadata form
     context['metadata_form'] = SpectraCollectionsForm()
+    
+    # search library form
+    # ~ context['spectra_search_type_form'] = SpectraSearchTypeForm(request = self.request)
     
     # upload form
     context['upload_form'] = SpectraLibraryForm(request = self.request)

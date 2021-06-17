@@ -125,7 +125,7 @@ class SpectraLibraryForm(forms.Form):
         'class': 'custom-select'}
     ),
     disabled = False,
-    empty_label = 'Search library'
+    empty_label = 'Select a library to search against'
   )
   
   cKingdom = forms.ModelMultipleChoiceField(
@@ -183,26 +183,6 @@ class SpectraLibraryForm(forms.Form):
       ).order_by('-id')
       self.fields['library_select'].queryset = q
     
-    #if ticket:
-    #self.fields['state'] = State.GetTicketStateField(ticket.Type)
-    #self.fields['cKingdom'] = Library.
-    # ~ print(f'args{args}')
-    # ~ print(f'kwargs{kwargs}')
-    # ~ print(f'kwargs{self}')
-    # ~ print(f'kwargs{self.request}')
-    # ~ u = self.request.user
-    # ~ q = None
-    # ~ if u.is_authenticated is False:
-      # ~ q = Library.objects.filter(privacy_level__exact = 'PB')
-    # ~ else:
-      # ~ user_labs = LabGroup.objects \
-        # ~ .filter(Q(owners__in = [u]) | Q(members__in = [u]))
-      # ~ Library.objects.filter( \
-        # ~ Q(lab__in = user_labs) | Q(privacy_level__exact = 'PB') | \
-        # ~ Q(created_by__exact = u)
-      # ~ ).order_by('-id')
-    # ~ self.fields['search_library'].queryset = q
-    
   def clean(self):
     '''
     Adds "library" key
@@ -256,11 +236,20 @@ class SpectraLibraryForm(forms.Form):
         d['library'] = new_lib
     elif d.get('library_save_type') == 'EXISTING':
       d['library'] = d['library_select']
-      # ~ d['library'] = Library.objects.filter(
-        # ~ created_by = self.user,
-        # ~ title = d.get('library')
-      # ~ )
     return d
+  
+# ~ class SpectraSearchTypeForm(forms.Form):
+  # ~ search_library = forms.ModelChoiceField(
+    # ~ queryset = Library.objects.all(),
+    # ~ to_field_name = 'title',
+    # ~ required = True,
+    # ~ widget = forms.Select(
+      # ~ attrs = {
+        # ~ 'class': 'custom-select'}
+    # ~ ),
+    # ~ disabled = False,
+    # ~ empty_label = 'Select a library to search against'
+  # ~ )
   
 class SpectraUploadForm(forms.ModelForm):
   file = forms.FileField(

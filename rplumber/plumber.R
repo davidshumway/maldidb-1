@@ -57,6 +57,21 @@ print.data.frame <- function (
   )
 }
 
+#* Cosine2
+#* Cosine of library of unknowns (1-n) versus existing library (e.g. R01)
+#* @post /cosine2
+function(req, ids) {
+  # 1: library 1
+  # 2: library 2
+  ids <- as.numeric(ids)
+  if (length(ids) < 2) {
+    stop('less than two comparison ids given!')
+  }
+  s1 <- dbLibrarySpectra(ids[[1]])
+  s2 <- dbLibrarySpectra(ids[[2]])
+  
+}
+
 #* Cosine: Get cosine scores for a set of db spectra
 #* Ids must correlate to at least 2 rows
 #*     https://github.com/strejcem/MALDIvs16S/../R/MALDIbacteria.Rsimilarity
@@ -64,8 +79,7 @@ print.data.frame <- function (
 #* Todo: library=, lab=, strain=, user=, ...
 #* @param req Built-in
 #* @param ids List of IDs from Spectra table
-#* @return -----------Returns first row from cosine similarity matrix
-#* @return Returns first cos. similarity matrix row, and binnedPeaks
+#* @return Returns first cos. similarity matrix row, and binnedPeaks data
 #* @post /cosine
 function(req, ids) {
   ids <- as.numeric(ids)
@@ -83,8 +97,6 @@ function(req, ids) {
   featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
   
   b <- list()
-#~   allSpectra = list()
-#~   allPeaks = list()
   for(i in 1:length(binnedPeaks)) {
     s <- binnedPeaks[[i]]
     b <- append(b, list(list(
@@ -94,22 +106,12 @@ function(req, ids) {
       'csId' = ids[[i]]
     )))
   }
-#~   print(mass(binnedPeaks[[1]]))
-#~   print(toString(binnedPeaks))
-#~   print(colnames(featureMatrix))
-#~   print(capture.output(featureMatrix))
-  #print(toString(featureMatrix[1,]))
-  #print(toString(featureMatrix[2,]))
-  #print(coop::cosine(featureMatrix[1,], featureMatrix[2,]))
   d <- coop::cosine(t(featureMatrix))
   d <- round(d, 3)
   
   return(list(
     'similarity' = d[1,],
     'binnedPeaks' = b
-#~     'binnedPeaks' = capture.output(toString(binnedPeaks))
-#~     'featureMatrix' = featureMatrix,
-#~     'colnames' = colnames(featureMatrix)
   ))
   
   #return(d[1,])
@@ -266,15 +268,49 @@ function(req, ids) {
 #~   jsonlite::toJSON(a)
 }
 
+# Helper function to retrieve all spectra from a library
+dbLibrarySpectra <- function(id) {
+  c <- connect()
+  id <- as.numeric(id)
+  s <- paste0('SELECT peak_mass, peak_intensity, peak_snr, id
+    FROM spectra_collapsedspectra
+    WHERE id=', id)
+  q <- dbGetQuery(c$con, s)
+  if (nrow(q) < 1) {
+    disconnect(c$drv, c$con)
+    stop('database returned less than one row (library)!')
+  }
+    
+  allSpectra = list()
+  allPeaks = list()
+  
+  # q&d initial solution: require monotonically increasing ids
+  ix <- 0
+  
+  for(i in 1:nrow(q)) {
+    row <- q[i,]
+    if (row$id < ix) {
+      stop('results non-monotonic')
+    }
+    allPeaks <- append(allPeaks,
+      MALDIquant::createMassPeaks(
+        mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
+        intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]),
+        snr = as.numeric(strsplit(row$peak_snr, ",")[[1]]))
+    )
+    allSpectra <- append(allSpectra,
+      MALDIquant::createMassSpectrum(
+        mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
+        intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]))
+    )
+  }
+  disconnect(c$drv, c$con)
+   
+  list('peaks' = allPeaks, 'spectra' = allSpectra)
+}
+
 # Helper function to retrieve list of IDs from Django's DB
 dbSpectra <- function(ids) {
-#~   if (class(ids) != 'integer') {
-#~     stop('dbSpectra: not integer!') # stop throws 500
-#~   }
-#~   if (length(ids) < 1) {
-#~     stop('less than one comparison id given!')
-#~   }
-  
   c <- connect()
   s <- paste(unlist(ids), collapse = ',')
   s <- paste0('SELECT peak_mass, peak_intensity, peak_snr, id

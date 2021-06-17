@@ -48,12 +48,17 @@ function show_filter(e) {
         <ul class="nav nav-tabs card-header-tabs" id="nav-search-source">
           <li class="nav-item">
             <a class="nav-link active" href="#" id="nss-1"
-              >Upload file of unknown isolate</a>
+              >Upload unknown isolate(s)</a>
           </li>
-          <li class="nav-item" id="result" style="display: none;">
-            <a class="nav-link" href="#" id="nss-2">Result</a>
+          <li class="nav-item">
+            <a class="nav-link" id="nss-2" href="#"
+              style="display:none;">Search results</a>
           </li>
-<!--Turn off these options for now
+          <li class="nav-item">
+            <a class="nav-link" id="nss-3" href="#"
+              style="display:none;">Result</a>
+          </li>
+<!--Off for now
           <li class="nav-item">
             <a class="nav-link" href="#" id="nss-2">Previously uploaded files</a>
           </li>
@@ -108,6 +113,7 @@ function show_filter(e) {
           <!-- Begin more options -->
           <div id="div-upload-opts" style="display:none;">
             <div class="form-group">
+              Select a library to search against:
               {% with f=upload_form.search_library %}
                 {{ f }}
               {% endwith %}
@@ -210,8 +216,31 @@ function show_filter(e) {
       <!-- end card body 1 -->
 
       <div class="card-body" id="nss-card-2" style="display:none;">
+        <div id="cosine-status" style=""
+          class="alert alert-info">
+          <b>Status</b><br />
+          <span id="stat2-title">Task: Calculating cosine similarity measure...</span><br />
+          <span id="stat2-complete"></span>
+        </div>
+<!--
+        <form action="{ url 'spectra_search:'%}"
+          class="" method="POST" style=""
+          id="spectra_search_type_form">
+          { csrf_token }
+          Select a library to search against:
+          { with f=spectra_search_type_form.search_library }
+            { f }
+          { endwith }
+        </form>
+-->
+        <table class="card-text" id="file-listing2">
+        </table>
+      </div>
+      
+      <div class="card-body" id="nss-card-3" style="display:none;">
         <table id="data-table"></table>
       </div>
+      
     </div>
   </div>
   <!-- end col left -->
@@ -266,18 +295,15 @@ function updateFileList(input) {
       {data: 'size', title: 'Size',
         render: function(data, type) {
           if (data < 1024)
-            return data + ' bytes'
+            return data + ' bytes';
           else if (data < 1024*1000)
-            return Math.round(data/1024) + 'KB'
+            return Math.round(data/1024) + 'KB';
           else if (data < 1024*1000000)
-            return Math.round(data/(1024*1000)) + 'MB'
+            return Math.round(data/(1024*1000)) + 'MB';
           else if (data < 1024*1000000000)
-            return Math.round(data/(1024*1000000)) + 'GB'
+            return Math.round(data/(1024*1000000)) + 'GB';
           else 
-            return data + ' bytes'
-          //~ console.log(data);
-          //~ return '<span style="color:steelblue;font-weight:400;cursor:pointer;" data-id="'+data+'" onclick="sp(this);">'
-            //~ + data + '</span>';
+            return data + ' bytes';
         }
       },
       {data: 'upload', title: 'Upload status',
@@ -313,13 +339,27 @@ function toggleSearchTypeOpts(e) {
   return false;
 }
 function toggleNavSearch(e) {
-  $('#nav-search-source a').removeClass('active');
+  //~ $('#nav-search-source a').removeClass('active');
+  $('.nav-link').removeClass('active');
   $(this).addClass('active');
-  for (var i=1; i<=4; i++) {
-    $('#nss-card-'+i).addClass('toggle-display');
-  }
-  var n = $(this).attr('id').split('-')[1];
-  $('#nss-card-'+n).removeClass('toggle-display');
+  
+  //~ $('#nss-card-1').addClass('toggle-display');
+  //~ $('#nss-card-2').addClass('toggle-display');
+  //~ $('#nss-card-3').addClass('toggle-display');
+  $('#nss-card-1').css('display', 'none');
+  $('#nss-card-2').css('display', 'none');
+  $('#nss-card-3').css('display', 'none');
+  
+  //~ for (var i=1; i<=3; i++) {
+    //~ $('#nss-card-'+i).addClass('toggle-display');
+  //~ }
+  
+  var n = $(this).attr('id').split('-')[1]; // e.g. "nss-1"
+  $('#nss-card-' + n).css('display', 'block');
+  //~ $('#nss-card-' + n).removeClass('toggle-display');
+  
+  e.preventDefault();
+  e.stopPropagation();
   return false;
 }
 function toggleUploadOpts(e) {
@@ -388,14 +428,6 @@ function toggleAddlFields() {
 }
 //~ $(document).ready(function(){
 window.addEventListener('DOMContentLoaded', (event) => {
-  //~ var y = document.getElementsByName('spectrum_cutoff');
-  //~ for (var i=0; i<y.length; i++) {
-    //~ y[i].onclick = toggleCutoff;
-  //~ }
-  //~ var x1 = $('#id_spectrum_cutoff_low');
-  //~ var x2 = $('#id_spectrum_cutoff_high');
-  //~ x1.attr({'placeholder': 'Min. M/Z', 'max': '999999'});
-  //~ x2.attr({'placeholder': 'Max. M/Z', 'max': '999999'});
   
   var show_tbl = {{ form.show_tbl|lower }};
   var st = $('#search_toggle');
@@ -408,6 +440,9 @@ window.addEventListener('DOMContentLoaded', (event) => {
     si.css('display', 'block');
   }
   st.click(toggleSearchForm);
+  
+  // toggle nav search
+  $('.nav-link').click(toggleNavSearch);
   
   // toggle search options
   $('#toggle-search-opts').click(toggleAddlFields);
@@ -445,36 +480,22 @@ window.addEventListener('DOMContentLoaded', (event) => {
     }
   }
   
-  // progress
-  //~ $('#upload_form').uploadprogress({redirect_url: null}); //{redirect_url: '/'}
-  
-  // file selector (via w3 schools) and initial value on page reload
-  //~ $(".custom-file-input").on("change", function() {
-    //~ var f = $(this).val().split("\\").pop();
-    //~ $(this).siblings(".custom-file-label").addClass("selected").html(f);
-  //~ });
-  //~ if ($(".custom-file-input").val() != '') {
-    //~ var n = $(".custom-file-input");
-    //~ var f = n.val().split("\\").pop();
-    //~ n.siblings(".custom-file-label").addClass("selected").html(f);
-  //~ }
-  
   //
   $('#add-form').click(function() {
-      var index = $('#id_inline_test_models-TOTAL_FORMS').val()
-      var newTable = $('#id_inline_test_models-__prefix__-DELETE').parents('table').clone()
-      newTable.find(':input').each(function() {
-          for (attr of ['name', 'id'])
-              $(this).attr(
-                  attr,
-                  $(this).attr(attr).replace('__prefix__', index)
-              )
-      })
-      newTable.insertBefore($(this))
-      $('#id_inline_test_models-TOTAL_FORMS').val(
-          parseInt($('#id_inline_test_models-TOTAL_FORMS').val()) + 1
-      )
-      newTable.slideDown()
+    var index = $('#id_inline_test_models-TOTAL_FORMS').val()
+    var newTable = $('#id_inline_test_models-__prefix__-DELETE').parents('table').clone()
+    newTable.find(':input').each(function() {
+      for (attr of ['name', 'id'])
+        $(this).attr(
+          attr,
+          $(this).attr(attr).replace('__prefix__', index)
+        )
+    })
+    newTable.insertBefore($(this))
+    $('#id_inline_test_models-TOTAL_FORMS').val(
+      parseInt($('#id_inline_test_models-TOTAL_FORMS').val()) + 1
+    )
+    newTable.slideDown()
   })
   
 });
@@ -498,6 +519,8 @@ function drawHisto() {
     document.getElementById('svg-histo').parentNode
       .removeChild(document.getElementById('svg-histo'))
   }
+  
+  d3.select('#svg-histo').selectAll('*').remove();
   var svg = d3.select('#col-right')
     .append('svg')
       .attr('id', 'svg-histo')
@@ -510,13 +533,13 @@ function drawHisto() {
   // 101 elements to include 0 (0.0) and 100 (1.0)
   var groups = Array.from({length: 101}, (x, i) => String(i / 100))
   // Histogram
-  for (var i in data.result) {
-    data.result[i].histScore = Math.round(
-        data.result[i].score*100
+  for (var i in data.scores) {
+    data.scores[i].histScore = Math.round(
+        data.scores[i].score*100
       ) / 100;
   }
   // Unique selected grouping (species/genus/...)
-  var subgroups = d3.map(data.result, function(d) {
+  var subgroups = d3.map(data.scores, function(d) {
     return(d[selected])
     //~ return(d.species)
   });
@@ -526,9 +549,9 @@ function drawHisto() {
   var max_num = 0;
   var bins = {};
   var regroupedData = [];
-  for (var i in data.result) {
-    var h = data.result[i].histScore; 
-    var s = data.result[i][selected]; // selected: "species", "genus", ...
+  for (var i in data.scores) {
+    var h = data.scores[i].histScore; 
+    var s = data.scores[i][selected]; // selected: "species", "genus", ...
     try {
       if (bins[h])
         bins[h] += 1;
@@ -634,7 +657,11 @@ var preprocessed = {
   total: 0,
   items: {},
   library: null,
-  ip: null
+  ip: null,
+  search_library: null,
+  cosine_count: 0,
+  cosine_total: 0,
+  collapsed_data: {}
 }
 function sp(el) {
   //makeChartBtm
@@ -644,11 +671,11 @@ function sp(el) {
   d3.select('#mirror-title').text(el.getAttribute('data-id'));
   makeChartBtm(data)
 }
-socket.onmessage = function(e){
+socket.onmessage = function(e) {
   console.log(e);
   var data = JSON.parse(e.data).data;
   console.log(data);
-  console.log(data.ip);
+  //~ console.log(data.ip);
   
   try {
     if (data.ip) {
@@ -661,7 +688,7 @@ socket.onmessage = function(e){
   //~ console.log(data);
   
   if (data.message == 'completed preprocessing') {
-    var c = data.data.count;
+    var c = data.count;
     preprocessed.items[c] = true;
     preprocessed.count++;
     $('#filetable-preprocess' + c).text('done');
@@ -674,24 +701,121 @@ socket.onmessage = function(e){
       $('#stat-title').text('Collapsing library entries');
       $('#stat-complete').text('');
       // socket send
-      socket.send(JSON.stringify({collapseLibrary: preprocessed.library}));
+      socket.send(JSON.stringify({
+        collapseLibrary: preprocessed.library,
+        searchLibrary: preprocessed.search_library
+      }));
     }
+    
+  } else if (data.message == 'completed collapsing') {
+    // show next tab: search type
+    // choose 
+    //$nss-card-2
+    $('#nss-1').removeClass('active');
+    $('#nss-2').addClass('active');
+    $('#nss-2').css('display', 'block');
+    
+    $('#nss-card-1').css('display', 'none');
+    $('#nss-card-2').css('display', 'block');
+    
+    var t = $('#file-listing2').DataTable({
+      data: data.data.results,
+      columns: [
+        {data: 'id', title: 'ID'},
+        {data: 'strain_id', title: 'Strain ID'},
+        {data: 'strain_id__strain_id', title: 'Strain Name'},
+        {data: 'id', title: 'Top scores (Strain, Genus / Species)',
+          render: function(data, type) {
+            // e.g. top-scores-8373
+            return '<table id="top-scores-'+data+'" style=""></table>'; //width: 500px;white-space: pre-line;
+          }
+        },
+        {data: 'id', title: '',
+          render: function(data, type) {
+            return '<a href="#" onclick="javascript:singleScore(' + data + ')">Explore more</a>';
+          }
+        }
+      ]
+    });
+    t.draw();
+    // Update total count
+    preprocessed.cosine_total = data.data.results.length;
+    $('#stat2-complete').text(
+      '0 / ' + preprocessed.cosine_total + ' completed'
+    );
+    
+  } else if (data.message == 'completed cosine') {
+    // Shows an individual collapsed spectra cosine similarity result
+    
+    preprocessed.cosine_count++;
+    $('#stat2-complete').text(
+      preprocessed.cosine_count + ' / ' + preprocessed.cosine_total +
+      ' completed'
+    );
+    if (preprocessed.cosine_count == preprocessed.cosine_total) {
+      $('#cosine-status').css('display', 'none');
+    }
+    
+    // Stores by collapsed spectra id
+    preprocessed.collapsed_data[data.data.spectra1] = 
+      data.data.result;
+    //~ console.log(preprocessed.collapsed_data);
+    //~ for (var i in data.data.results) {
+      //~ var x = data.data.results[i];
+      //~ preprocessed.collapsed_data[x.id] = data.data.results[i];
+    //~ }
+    
+    var x = data.data.result.scores;
+    var output = [];
+    for (var i=0; i<4; i++) {
+      output.push(x[i]);
+    }
+    
+    var t = $('#top-scores-'+data.data.spectra1).DataTable({
+      data: output,
+      paging: false,
+      searching: false,
+      ordering: false,
+      info: false,
+      columns: [
+        {data: 'score', title: ''},
+        {data: 'strain', title: ''},
+        {data: 'genus', title: ''},
+        {data: 'species', title: ''},
+      ]
+    });
+    t.order([0, 'desc']) // reorders in correct direction
+      .draw();
   }
   
   return;
+}
+socket.onclose = function(e){
+  console.log(e);
+}
+
+function singleScore(id) {
+  var data = preprocessed.collapsed_data[id];
   
-  $('#result').toggle();
   $('#nss-1').removeClass('active');
-  $('#nss-2').addClass('active');
+  $('#nss-2').removeClass('active');
+  $('#nss-3').addClass('active');
+  $('#nss-3').css('display', 'block');
+  
   $('#nss-card-1').css('display', 'none');
-  $('#nss-card-2').css('display', 'block');
+  $('#nss-card-2').css('display', 'none');
+  $('#nss-card-3').css('display', 'block');
+  
+  //~ $('#data-table').text(''); // clear if any
+  
   var t = $('#data-table').DataTable({
-    data: data.result,
+    data: data.scores,
+    destroy: true, // https://datatables.net/manual/tech-notes/3
+    //~ data: result,
     columns: [
       {data: 'score', title: 'Score'},
       {data: 'strain', title: 'Strain',
         render: function(data, type) {
-          console.log(data);
           return '<span style="color:steelblue;font-weight:400;cursor:pointer;" data-id="'+data+'" onclick="sp(this);">'
             + data + '</span>';
         }
@@ -716,16 +840,18 @@ socket.onmessage = function(e){
   $('#col-right').removeClass('col-0');
   $('#col-left').addClass('col-8');
   $('#col-right').addClass('col-4');
-  var selector = d3.select('#col-right')
-    .append('select')
-    .attr('id', 'select-histo')
-    .selectAll('option')
-    .data(['Kingdom', 'Phylum', 'Class', 'Order', 'Genus', 'Species'])
-    .enter()
-    .append('option')
-    .attr('value', function (d) { return d; })
-    .text(function (d) { return d;});
-  
+  if (!$('#select-histo').length) {
+    d3.select('#col-right')
+      .append('select')
+      .attr('id', 'select-histo')
+      .selectAll('option')
+      .data(['Kingdom', 'Phylum', 'Class', 'Order', 'Genus', 'Species'])
+      .enter()
+      .append('option')
+      .attr('value', function (d) { return d; })
+      .text(function (d) { return d;});
+  }  
+
   var s = document.getElementById('select-histo');
   s.data = data;
   drawHisto();
@@ -742,6 +868,8 @@ socket.onmessage = function(e){
   var margin = {top: 10, right: 30, bottom: 30, left: 60},
     width = 1000 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
+  
+  d3.select('#spectra-viz').selectAll('*').remove();
   var svg = d3.select('#spectra-viz')
     .append('svg')
     .attr('width', width + margin.left + margin.right)
@@ -824,12 +952,9 @@ socket.onmessage = function(e){
   }
   svg.append('g').attr('id', 'mirror-btm');
       
-  data.result.forEach(function(dx) {
+  data.scores.forEach(function(dx) {
     allStrains[dx.strain.trim().replace(/\s/g, '')] = dx;
   });
-}
-socket.onclose = function(e){
-  console.log(e);
 }
 
 function makeChartBtm(dx) {
@@ -991,6 +1116,7 @@ function makeChart(el, dataXY) {
 // upload form
 function upload(event) {
   $('#upload-button')[0].disabled = true;
+  var form = new FormData(this);
   
   console.log(new FormData(this));
   console.log(new FormData(this).values());
@@ -1002,6 +1128,8 @@ function upload(event) {
   $('#stat-complete').text('0/' + preprocessed.total + ' completed');
   $('#preprocess-upload-status').css('display', 'block');
   
+  preprocessed.search_library = form.get('search_library');
+  
   // first create library or validate existing library
   // then loop through files and add them individually.
   ajaxLibary(this);
@@ -1009,10 +1137,10 @@ function upload(event) {
   event.preventDefault();
 }
 function ajaxLibary(form) {
-  console.log(form);
-  console.log(new FormData(form));
-  console.log(new FormData(form).get('library_create_new'));
-  console.log(new FormData(form).get('library_create_new'));
+  //~ console.log(form);
+  //~ console.log(new FormData(form));
+  //~ console.log(new FormData(form).get('library_create_new'));
+  //~ console.log(new FormData(form).get('library_create_new'));
   
   $.ajax({
     xhr: function() {
@@ -1032,6 +1160,7 @@ function ajaxLibary(form) {
       //~ var r = JSON.parse(response.responseJSON);
       var library = response.data.library;
       preprocessed.library = library;
+      preprocessed.search_library = response.data.search_library;
       
       // Loop through upload files and start each one
       //~ $.each($('#customFile')[0].files, function() {
@@ -1042,30 +1171,11 @@ function ajaxLibary(form) {
         var f = new FormData(form);
         f.set('file', $('#customFile')[0].files[i]);
         f.set('tmp_library', library);
-        //~ f.set('library_select', form.get('library_select'));
-        //~ f.set('library_save_type', 'EXISTING');
         f.set('upload_count', i);
         f.set('ip', preprocessed.ip);
+        //~ f.set('search_library', f.get());
         uploadHelper(f);
       }
-      
-      //~ t.modal('hide');
-      
-      //~ if (response.status == 'preprocessing') {
-        //~ t.title.text('Preprocessing');
-        //~ t.progress.text('0%');
-      //~ }
-      
-      // Fails when file uploaded second time
-      
-      //~ if (response.is_taken == true) {
-          //~ $('#id_username').removeClass('is-valid').addClass('is-invalid');
-          //~ $('#id_username').after('<div class="invalid-feedback d-block" id="usernameError">This username is not available!</div>')
-      //~ } else {
-          //~ $('#id_username').removeClass('is-invalid').addClass('is-valid');
-          //~ $('#usernameError').remove();
-
-      //~ }
     },
     // on error
     error: function(response) {
@@ -1085,32 +1195,6 @@ function ajaxLibary(form) {
       } catch(e) {
         
       }
-      //~ t.modal('hide');
-      //~ $('#upload-button')[0].disabled = false;
-      //~ try {
-        //~ var r = JSON.parse(response.responseJSON.errors);
-        //~ console.log(r);
-        //~ if (r.file) { // array of messages
-          //~ $('#customFile').removeClass('is-valid').addClass('is-invalid');
-          //~ $('#file-error').removeClass('toggle-display').text(
-            //~ r.file.join('<br>')
-          //~ );
-          //~ var msgs = [];
-          //~ r.file.forEach(e => msgs.push(e.message));
-          //~ $('#file-error').text(msgs.join('<br>'));
-        //~ } else if (r.__all__.length > 0) {
-          //~ for (var i in r.__all__) {
-            //~ if (r.__all__[i].message == 'Library title already exists!') {
-              //~ $('#id_library_create_new').removeClass('is-valid').addClass('is-invalid');
-              //~ $('#new-library-error').removeClass('toggle-display')
-                //~ .text('Library title already exists!')
-            //~ }
-          //~ }
-        //~ }
-      //~ } catch(e) {
-        //~ console.log(e);
-      //~ }
-      
     }
   });
 }
@@ -1203,18 +1287,8 @@ function uploadHelper(formData) {
         //~ t.title.text('Preprocessing');
         //~ t.progress.text('0%');
       }
-      
-      // Fails when file uploaded second time
-      
-      //~ if (response.is_taken == true) {
-          //~ $('#id_username').removeClass('is-valid').addClass('is-invalid');
-          //~ $('#id_username').after('<div class="invalid-feedback d-block" id="usernameError">This username is not available!</div>')
-      //~ } else {
-          //~ $('#id_username').removeClass('is-invalid').addClass('is-valid');
-          //~ $('#usernameError').remove();
-
-      //~ }
     },
+    
     // on error
     error: function(response) {
       console.log(response);
