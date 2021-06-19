@@ -70,9 +70,8 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     '''
     '''
     print('==================3')
-    # ~ print ('>>>>', text_data)
     
-    # tell client preprocessing is complete
+    # tells client preprocessing is complete
     try:
       val = json.loads(text_data)
       # ~ print(f'val{val}')
@@ -99,7 +98,7 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
       print(e)
       pass
     
-    # tell client collapse completed
+    # tells client collapse completed
     try:
       val = json.loads(text_data)
       # ~ print(f'val{val}')
@@ -115,10 +114,10 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
       print(e)
       pass
       
-    # tell client collapse completed
+    # tells client cosine completed
     try:
       val = json.loads(text_data)
-      print(f'val{val}')
+      # ~ print(f'val{val}')
       if val['type'] == 'completed cosine':
         d = json.dumps({
           'data': {
@@ -192,7 +191,7 @@ def cosine_scores(self, library, client, search_library):
   ws = websocket.WebSocket()
   ws.connect('ws://localhost:8000/ws/pollData')
   
-  sl = Library.objects.get(id = search_library)
+  search_library_obj = Library.objects.get(id = search_library)
   
   n1 = CollapsedSpectra.objects.filter( # unknown spectra
     library_id__exact = library,
@@ -201,7 +200,8 @@ def cosine_scores(self, library, client, search_library):
   n2 = CollapsedSpectra.objects.filter(
     library__exact = search_library,
     spectra_content__exact = 'PR'
-  ).order_by('id').values('id')
+  ).order_by('id').values('id', 'strain_id__strain_id',
+    'strain_id__cSpecies', 'strain_id__cGenus')
   
   for spectra1 in n1:
     data = {
@@ -219,7 +219,8 @@ def cosine_scores(self, library, client, search_library):
         'intensity': v['intensity'],
         'snr': v['snr'],
       }
-    # Dictionary sorted by its values
+    
+    # Creates a dictionary sorted by its values (similarity score)
     from collections import OrderedDict
     k = [str(s['id']) for s in list(n2)] # one less
     v = r.json()['similarity'][1:] # one more remove first???
@@ -227,16 +228,28 @@ def cosine_scores(self, library, client, search_library):
       sorted(dict(zip(k, v)).items(),
         key = lambda x: (x[1], x[0]), reverse = True)
     )
+    
+    strain_ids = ['Unknown sample'] +\
+      [str(s['strain_id__strain_id']) for s in list(n2)]
+    strain_id__cSpecies = ['Unknown sample'] +\
+      [str(s['strain_id__cSpecies']) if s['strain_id__cSpecies'] != '' else 'N/A' for s in list(n2)]
+    strain_id__cGenus = ['Unknown sample'] +\
+      [str(s['strain_id__cGenus']) if s['strain_id__cGenus'] != '' else 'N/A' for s in list(n2)]
 
     obj = CollapsedCosineScore.objects.create(
       spectra = spectra1,
-      library = sl, # lib unnecessary in ccs model
+      library = search_library_obj, # lib unnecessary in ccs model
       scores = ','.join(map(str, list(o.values()))),
       spectra_ids = ','.join(map(str, o.keys())))
     
     if obj:
       result = {
         'scores': [],
+        'strain_ids': strain_ids,
+        'strain_id__cSpecies': strain_id__cSpecies,
+        'strain_id__cGenus': strain_id__cGenus,
+        'dendro': r.json()['dendro'],
+        # ~ 'dendro2': r.json()['dendro2'],
         'original': {
           'peak_mass': spectra1.peak_mass,
           'peak_intensity': spectra1.peak_intensity,

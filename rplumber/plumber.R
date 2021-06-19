@@ -63,12 +63,12 @@ print.data.frame <- function (
 function(req, ids) {
   # 1: library 1
   # 2: library 2
-  ids <- as.numeric(ids)
-  if (length(ids) < 2) {
-    stop('less than two comparison ids given!')
-  }
-  s1 <- dbLibrarySpectra(ids[[1]])
-  s2 <- dbLibrarySpectra(ids[[2]])
+#~   ids <- as.numeric(ids)
+#~   if (length(ids) < 2) {
+#~     stop('less than two comparison ids given!')
+#~   }
+#~   s1 <- dbLibrarySpectra(ids[[1]])
+#~   s2 <- dbLibrarySpectra(ids[[2]])
   
 }
 
@@ -109,34 +109,57 @@ function(req, ids) {
   d <- coop::cosine(t(featureMatrix))
   d <- round(d, 3)
   
-  return(list(
-    'similarity' = d[1,],
-    'binnedPeaks' = b
-  ))
-  
-  #return(d[1,])
-  
+  allPeaks <- MALDIquant::trim(
+    allPeaks, c(2000, 20000)
+  )
   emptyProtein <- unlist(
     lapply(allPeaks, MALDIquant::isEmpty)
   )
+#~   print(head(emptyProtein, 1))
+#~   print(head(lapply(allPeaks[!emptyProtein], function(x) x@mass), 2))
+#~   print(head(lapply(allPeaks[!emptyProtein], function(x) x@intensity), 2))
   
-  # Sparse matrix to hold the peak probability data
-  # Columns are samples, rows are m/z/intensity probabilities 
-  # transform back to actual m/z can be accessed via rownames()
-
   proteinMatrix <- IDBacApp:::createFuzzyVector(
-    massStart = 1600,
+    massStart = 2000,
     massEnd = 20000,
     ppm = 1000,
     massList = lapply(allPeaks[!emptyProtein], function(x) x@mass),
     intensityList = lapply(allPeaks[!emptyProtein], function(x) x@intensity))
-    
-#~   x <- IDBacApp:::idbac_dendrogram_creator(
-#~     bootstraps = 0L,
-#~     distanceMethod = 'cosine',
-#~     clusteringMethod = 'average',
-#~     proteinMatrix
-#~   )
+  x <- IDBacApp:::idbac_dendrogram_creator(
+    bootstraps = 0L,
+    distanceMethod = 'cosine',
+    clusteringMethod = 'average',
+    proteinMatrix
+  )
+  
+  print(str(x['dendrogram']))
+
+  tree1 <- data.tree::as.Node(x['dendrogram']$dendrogram)
+
+  hc <- as.hclust(x['dendrogram']$dendrogram)
+              
+  cluster <- cbind(hc$merge, hc$height)
+  
+  # from list to json
+  # https://www.r-bloggers.com/2015/05/
+  #  convert-data-tree-to-and-from-list-json-networkd3-and-more/
+  return(list(
+    'similarity' = d[1,],
+    'binnedPeaks' = b,
+    'dendro' = toJSON(as.list(tree1, unname = TRUE)),
+    'dendro2' = toJSON(list(
+      merges=cluster,
+      seq=hc$labels,
+      order=hc$order,
+      maxHeight=max(hc$height)
+    ))
+  ))
+  
+  #return(d[1,])
+  
+  
+
+
   
   d <- stats::as.dist(1 - coop::cosine(proteinMatrix))
   d <- as.matrix(d)
@@ -147,7 +170,7 @@ function(req, ids) {
   return(d)
   
   ## not used
-  # visualizing the sparse matrix
+  # visualizes sparse matrix
   
   # 200k rows
   ordering <- sort(d, decreasing = F, index.return = T)

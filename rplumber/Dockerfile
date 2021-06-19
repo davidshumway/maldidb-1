@@ -11,3 +11,6 @@ RUN R -e "install.packages('remotes')"
 RUN R -e "remotes::install_github('chasemc/IDBacApp@prioritizer')"
 RUN apt-get install -y libpq-dev # requirement for RPostgreSQL
 RUN R -e "install.packages('RPostgreSQL')"
+
+# igraph
+RUN apt-get install -y libglpk-dev r-cran-igraph
