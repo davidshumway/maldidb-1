@@ -132,13 +132,13 @@ function(req, ids) {
     proteinMatrix
   )
   
-  print(str(x['dendrogram']))
+#~   print(str(x['dendrogram']))
 
   tree1 <- data.tree::as.Node(x['dendrogram']$dendrogram)
 
-  hc <- as.hclust(x['dendrogram']$dendrogram)
+#~   hc <- as.hclust(x['dendrogram']$dendrogram)
               
-  cluster <- cbind(hc$merge, hc$height)
+#~   cluster <- cbind(hc$merge, hc$height)
   
   # from list to json
   # https://www.r-bloggers.com/2015/05/
@@ -146,13 +146,13 @@ function(req, ids) {
   return(list(
     'similarity' = d[1,],
     'binnedPeaks' = b,
-    'dendro' = toJSON(as.list(tree1, unname = TRUE)),
-    'dendro2' = toJSON(list(
-      merges=cluster,
-      seq=hc$labels,
-      order=hc$order,
-      maxHeight=max(hc$height)
-    ))
+    'dendro' = toJSON(as.list(tree1, unname = TRUE))#,
+#~     'dendro2' = toJSON(list(
+#~       merges=cluster,
+#~       seq=hc$labels,
+#~       order=hc$order,
+#~       maxHeight=max(hc$height)
+#~     ))
   ))
   
   #return(d[1,])

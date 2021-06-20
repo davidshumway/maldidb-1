@@ -255,15 +255,23 @@ function show_filter(e) {
 <!-- end container -->
 
 <!-- spectra comparison -->
-<div class="container" style="width:100%;max-width:inherit;">
+<div class="container" style="width:100%;max-width:inherit;display:none;"
+  id="container-dendro">
 <div class="row">
   <div class="col-sm-6">
     <div class="card">
-    <div class="card-body" id="spectra-viz" style="display:none;">
+    <div class="card-body" id="spectra-viz" style="overflow:hidden;">
     </div></div></div>
   <div class="col-sm-6">
     <div class="card">
-    <div class="card-body" id="dendro-viz" style="display:none;">
+    <div class="card-header" id="dendro-viz-head">
+      <button style="border:1px solid #0a0a0a;cursor:pointer;"
+        id="dendro-viz-toggle">
+        <input type="checkbox" checked />
+        [ ]
+      </button>
+    </div>
+    <div class="card-body" id="dendro-viz" style="overflow:hidden;">
     </div></div></div>
 </div>
 </div>
@@ -466,6 +474,17 @@ window.addEventListener('DOMContentLoaded', (event) => {
   // upload
   $('#upload_form').submit(upload);
   
+  // toggles branch length on dendrogram
+  $('#dendro-viz-toggle').click(function(event) {
+    var input = $('#dendro-viz-toggle input')[0];
+    //~ console.log('ic1:',input.checked);
+    input.checked = (input.checked) ? false : true;
+    //~ console.log('ic2:',input.checked);
+    input.chart.update(input.checked);
+    event.preventDefault();
+    event.stopPropagation();
+  });
+  
   // library type
   var x = document.getElementsByName('library_save_type');
   for (var i=0; i<x.length; i++) {
@@ -509,11 +528,20 @@ var socket = new WebSocket('ws://' + location.host + '/ws/pollData');
 socket.onopen = function(e){
   console.log(e);
 }
-function drawHisto() {
-  
+function getSubgroups(data) {
+
+  // Selected taxonomy e.g. "kingdom"
   var s = document.getElementById('select-histo');
-  var selected = s.options[s.selectedIndex].value.toLowerCase();
-  var data = s.data;
+  var subgroups = d3.map(data.scores, function(d) {
+    return d[s.selected];
+    //~ return (d[selected])
+  });
+
+  return [...new Set(subgroups)]; // spread operator
+}
+function drawHisto() {
+  var data = document.getElementById('select-histo').data;
+  var selected = document.getElementById('select-histo').selected;
   
   var margin = {top: 10, right: 30, bottom: 40, left: 50},
     width = 460 - margin.left - margin.right,
@@ -541,12 +569,9 @@ function drawHisto() {
         data.scores[i].score*100
       ) / 100;
   }
+  
   // Unique selected grouping (species/genus/...)
-  var subgroups = d3.map(data.scores, function(d) {
-    return(d[selected])
-    //~ return(d.species)
-  });
-  subgroups = [...new Set(subgroups)]; // spread operator
+  var subgroups = getSubgroups(data);
   
   // max number per histogram
   var max_num = 0;
@@ -593,6 +618,7 @@ function drawHisto() {
     rg.push(regroupedData[i]);
   }
   regroupedData = rg;
+  
   var x = d3.scaleBand()
     .domain(groups)
     .range([0, width])
@@ -675,28 +701,39 @@ function sp(el) {
   makeChartBtm(data)
 }
 function dendro(data) {
-  //https://observablehq.com/d/549aadb082566173
+  // https://observablehq.com/d/549aadb082566173
+  
+  // Unique selected grouping (species/genus/...)
+  var subgroups = getSubgroups(data);
+  console.log('subgroups', subgroups);
+  
+  var selected = document.getElementById('select-histo').selected;
+  
+  //var s = data.scores[i][selected]
+  //var selected = document.getElementById('select-histo').selected;
+  
   var width = 954
   var outerRadius = 477
   var innerRadius = 307
   var legend = svg => {
     const g = svg
-      .selectAll("g")
-      .data(color.domain())
-      .join("g")
-      .attr("transform",
+      .selectAll('g')
+      .data(subgroups)
+      //~ .data(color.domain())
+      .join('g')
+      .attr('transform',
         (d, i) => `translate(${-outerRadius},${-outerRadius + i * 20})`
       );
 
-    g.append("rect")
-      .attr("width", 18)
-      .attr("height", 18)
-      .attr("fill", color);
+    g.append('rect')
+      .attr('width', 18)
+      .attr('height', 18)
+      .attr('fill', color);
 
-    g.append("text")
-      .attr("x", 24)
-      .attr("y", 9)
-      .attr("dy", "0.35em")
+    g.append('text')
+      .attr('x', 24)
+      .attr('y', 9)
+      .attr('dy', '0.35em')
       .text(d => d);
   }
   function linkStep(startAngle, startRadius, endAngle, endRadius) {
@@ -704,14 +741,14 @@ function dendro(data) {
     const s0 = Math.sin(startAngle);
     const c1 = Math.cos(endAngle = (endAngle - 90) / 180 * Math.PI);
     const s1 = Math.sin(endAngle);
-    return "M" + startRadius * c0 + "," + startRadius * s0 +
+    return 'M' + startRadius * c0 + ',' + startRadius * s0 +
       (
-        endAngle === startAngle ? "" :
-        "A" + startRadius + "," + startRadius + " 0 0 " + 
-        (endAngle > startAngle ? 1 : 0) + " " + startRadius * c1 + ","
+        endAngle === startAngle ? '' :
+        'A' + startRadius + ',' + startRadius + ' 0 0 ' + 
+        (endAngle > startAngle ? 1 : 0) + ' ' + startRadius * c1 + ','
         + startRadius * s1
       )
-      + "L" + endRadius * c1 + "," + endRadius * s1;
+      + 'L' + endRadius * c1 + ',' + endRadius * s1;
   }
   function linkExtensionConstant(d) {
     return linkStep(d.target.x, d.target.y, d.target.x, innerRadius);
@@ -725,10 +762,17 @@ function dendro(data) {
   function linkVariable(d) {
     return linkStep(d.source.x, d.source.radius, d.target.x, d.target.radius);
   }
+  // Gets the name using the index and selected taxonmy
+  function getName(idx) {
+    // idx: An index (e.g. 1-448) or "[ Unknown sample ]"
+    return (idx == '[ Unknown sample ]') ? '[ Unknown sample ]' :
+      data.ids[selected][parseInt(idx)];
+  }
+  
   // Set the color of each node by recursively inheriting.
   function setColor(d) {
-    var name = d.data.name;
-    d.color = color.domain().indexOf(name) >= 0 ? color(name) : d.parent ? d.parent.color : null;
+    var name = getName(d.data.name);
+    d.color = color.domain().indexOf(name) >= 0 ? color(name) : (d.parent ? d.parent.color : null);
     if (d.children) d.children.forEach(setColor);
   }
   // Set the radius of each node by recursively summing and scaling the distance from the root.
@@ -740,11 +784,15 @@ function dendro(data) {
   function maxLength(d) {
     return d.data.height + (d.children ? d3.max(d.children, maxLength) : 0);
   }
+  function setTx(d) {
+    d.tx = getName(d.data.name);
+    if (d.children) d.children.forEach(d => setTx(d));
+  }
   
   //~ var chart = function() {
-  function chart(data) {
+  function chart(chartData) {
     const root = d3.hierarchy(
-        data, d => d.branchset
+        chartData, d => d.branchset
       )
       //~ .sum(d => d.branchset ? 0 : 1)
       //~ .sort((a, b) => (a.value - b.value) || d3.ascending(a.data.height, b.data.height));
@@ -752,19 +800,24 @@ function dendro(data) {
     cluster(root);
     setRadius(root, root.data.height = 0, innerRadius / maxLength(root));
     setColor(root);
+    setTx(root);
     //~ console.log('root', root);
     
-    $('#dendro-viz').css('display', 'block');
+    //~ $('#dendro-viz').css('display', 'block');
+    //~ $('#dendro-viz').css('display', 'block');
     d3.select('#dendro-viz').selectAll('*').remove();
     const svg = d3.select('#dendro-viz').append('svg')
-      .attr("viewBox", [-outerRadius, -outerRadius, width, width])
-      .attr("font-family", "sans-serif")
-      .attr("font-size", 10);
+      .attr('viewBox', [-outerRadius, -outerRadius, width, width])
+      .attr('font-family', 'sans-serif')
+      .attr('font-size', 10)
+      .call(d3.zoom().on('zoom', function (event, d) {
+         svg.attr('transform', event.transform)
+      }));
     
-    svg.append("g")
+    svg.append('g')
       .call(legend);
     
-    svg.append("style").text(`
+    svg.append('style').text(`
       .link--active {
         stroke: #000 !important;
         stroke-width: 1.5px;
@@ -778,54 +831,67 @@ function dendro(data) {
     `);
     
     const linkExtension = svg
-      .append("g")
-        .attr("fill", "none")
-        .attr("stroke", "#000")
-        .attr("stroke-opacity", 0.25)
-      .selectAll("path")
+      .append('g')
+        .attr('fill', 'none')
+        .attr('stroke', '#000')
+        .attr('stroke-opacity', 0.25)
+      .selectAll('path')
       .data(root.links().filter(d => !d.target.children))
-      .join("path")
+      .join('path')
         .each(function(d) { d.target.linkExtensionNode = this; })
-        .attr("d", linkExtensionConstant);
+        .attr('d', linkExtensionConstant)//
+        .attr('stroke', d => d.target.color);
 
     const link = svg
-      .append("g")
-        .attr("fill", "none")
-        .attr("stroke", "#000")
-      .selectAll("path")
+      .append('g')
+        .attr('fill', 'none')
+        .attr('stroke', '#000')
+      .selectAll('path')
       .data(root.links())
-      .join("path")
+      .join('path')
         .each(function(d) { d.target.linkNode = this; })
-        .attr("d", linkConstant)
-        .attr("stroke", d => d.target.color);
+        .attr('d', linkConstant)
+        .attr('stroke', d => d.target.color);
 
-    svg.append("g")
-      .selectAll("text")
+    svg.append('g')
+      .selectAll('text')
       .data(root.leaves())
-      .join("text")
-        .attr("dy", ".31em")
-        .attr("transform", d => 
-          `rotate(${d.x - 90}) translate(${innerRadius + 4},0)${d.x < 180 ? "" : " rotate(180)"}`
+      .join('text')
+        .attr('dy', '.31em')
+        .attr('transform', d => 
+          `rotate(${d.x - 90}) translate(${innerRadius + 4},0)${d.x < 180 ? '' : ' rotate(180)'}`
         )
-        .attr("text-anchor", d => d.x < 180 ? "start" : "end")
-        .text(d => d.data.name.replace(/_/g, " "))
-        .on("mouseover", mouseovered(true))
-        .on("mouseout", mouseovered(false));
-
+        .attr('text-anchor', d => d.x < 180 ? 'start' : 'end')
+        .text(function(d) { return getName(d.data.name); })
+        .attr('txCategory', function(d) { return getName(d.data.name); })
+        .classed('cls-dendro-labels', true)
+        //~ .classed(getName(d.data.name), true)
+        //~ .classed(function(d) { return 'cls-' + getName(d.data.name); }, true)
+        //~ .text(d => d.data.name.replace(/_/g, ' '))
+        .on('mouseover', mouseovered(true))
+        .on('mouseout', mouseovered(false));
+    
+    //~ d3.selectAll('.cls-dendro-labels').
+    
     function update(checked) {
       const t = d3.transition().duration(750);
-      linkExtension.transition(t).attr("d",
+      linkExtension.transition(t).attr('d',
         checked ? linkExtensionVariable : linkExtensionConstant);
-      link.transition(t).attr("d",
+      link.transition(t).attr('d',
         checked ? linkVariable : linkConstant);
     }
 
     function mouseovered(active) {
       return function(event, d) {
-        d3.select(this).classed("label--active", active);
+        d3.select(this).classed('label--active', active);
         d3.select(d.linkExtensionNode)
-          .classed("link-extension--active", active).raise();
-        do d3.select(d.linkNode).classed("link--active", active).raise();
+          .classed('link-extension--active', active).raise();
+        
+        // updates all other categories that are same as this
+        var a = d3.select(this).attr('txCategory');
+        $("text[txCategory='" + a + "']").toggleClass('link--active', active);
+        
+        do d3.select(d.linkNode).classed('link--active', active).raise();
         while (d = d.parent);
       };
     }
@@ -833,19 +899,35 @@ function dendro(data) {
     return Object.assign(svg.node(), {update});
   }
   
+  var colorBand = d3.scaleBand().domain(subgroups).range([0, 1]);
+  var color = d3.scaleSequential(function(t) {
+    return d3.interpolateRainbow(t);
+  })
+  
+  ///.domain(subgroups)
+  
+  //~ color(colorBand('Bacilli'));
+  //~ []
+  
+  
   var color = d3.scaleOrdinal()
-    .domain(["Bacteria", "Eukaryota", "Archaea"])
+    .domain(subgroups)
     .range(d3.schemeCategory10)
+    
+  //~ var color = d3.scaleOrdinal()
+    //~ .domain(['Bacteria', 'Eukaryota', 'Archaea'])
+    //~ .range(d3.schemeCategory10)
     
   var cluster = d3.cluster()
     .size([360, innerRadius])
     .separation((a, b) => 1);
   
   //var update = chart.update(false); //showLength
-  var x = chart(data);
+  var x = chart(data.tree);
   //console.log(x);
   //document.body.appendChild(x);
   x.update(true);
+  $('#dendro-viz-toggle input')[0].chart = x;
 }
 socket.onmessage = function(e) {
   console.log(e);
@@ -973,6 +1055,13 @@ socket.onclose = function(e){
 function singleScore(id) {
   var data = preprocessed.collapsed_data[id];
   
+  // Unique selected grouping (species/genus/...)
+  //~ var x = d3.map(data.scores, function(d) {
+    //~ return d[selected];
+    //~ return (d[selected])
+  //~ });
+  //~ data.subgroups = [...new Set(x)]; // spread operator
+  
   $('#nss-1').removeClass('active');
   $('#nss-2').removeClass('active');
   $('#nss-3').addClass('active');
@@ -1007,8 +1096,6 @@ function singleScore(id) {
   t.order([0, 'desc']) // reorder in correct direction
     .draw();
   
-  //~ return;
-  
   // d3 stacked bar
   // https://www.d3-graph-gallery.com/graph/barplot_stacked_basicWide.html
   // set the dimensions and margins of the graph
@@ -1030,8 +1117,13 @@ function singleScore(id) {
 
   var s = document.getElementById('select-histo');
   s.data = data;
+  s.selected = s.options[s.selectedIndex].value.toLowerCase();
   drawHisto();
-  s.onchange = drawHisto;
+  s.onchange = function() {
+    this.selected = this.options[this.selectedIndex].value.toLowerCase();
+    drawHisto();
+    dendro(this.data);
+  }
   
   // d3 line graph
   // e.g. https://www.d3-graph-gallery.com/graph/line_basic.html
@@ -1040,7 +1132,8 @@ function singleScore(id) {
   //~ $('#col-left').removeClass('col-12');
   //~ $('#col-right').removeClass('col-0');
   //~ $('#col-left').addClass('col-6');
-  document.getElementById('spectra-viz').style.display = 'block';
+  //~ document.getElementById('spectra-viz').style.display = 'block';
+  document.getElementById('container-dendro').style.display = 'block';
   var margin = {top: 10, right: 30, bottom: 30, left: 60},
     width = 1000 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
@@ -1160,21 +1253,12 @@ function singleScore(id) {
       leaf.branchset.push(parseTree(node['2']));
       for (var i in node) {
         if (i.indexOf('peaks') === 0) { // 1 leaf, 1 branch
-          var x = pidx[ /peaks(\d+)/.exec(i)[1] ];
-          //~ leaf.name = x;
-          
+          var x = /peaks(\d+)/.exec(i);
+          //~ x = (x) ? pidx[x[1]] : '[ Unknown sample ]'; // unknown node is "peaks"
+          x = (x) ? x[1] : '[ Unknown sample ]'; // unknown node is "peaks"
           leaf.branchset.push({
             name: x,
-            //~ height: 0,
             height: node[i].plotHeight[0],
-            //~ height: node.plotHeight[0],
-            //~ branchset: []
-            //~ branchset: [{
-              //~ name: x,
-              //~ height: node.plotHeight[0],
-              //~ height: 0,
-              //~ branchset: []
-            //~ }]
           });
           
           break;
@@ -1184,44 +1268,33 @@ function singleScore(id) {
       for (var i in node) {
         if (i.indexOf('peaks') === 0) {
           var x = /peaks(\d+)/.exec(i);
-          x = (x) ? pidx[x[1]] : '[ Unknown sample ]'; // root node
+          //~ x = (x) ? pidx[x[1]] : '[ Unknown sample ]'; // unknown node is "peaks"
+          x = (x) ? x[1] : '[ Unknown sample ]'; // unknown node is "peaks"
           leaf.branchset.push({
             name: x,
-            //~ height: 0,
-            //~ height: node.plotHeight[0],
             height: node[i].plotHeight[0],
-            //~ branchset: []
-            //~ branchset: [{
-              //~ name: x,
-              //~ height: 0,
-              //~ height: node[i].plotHeight[0],
-              //~ height: node.plotHeight[0],
-              //~ branchset: []
-            //~ }]
           });
-          
         }
       }
     }
     return leaf;
   }
-  var strain_ids = data.strain_ids;
-  var species = data.strain_id__cSpecies;
-  var genus = data.strain_id__cGenus;
-  var pidx = {};
-  for (var i in species) { // i=0
-    pidx[String(i)] = species[i];
-  }
-  //~ console.log('pidx', pidx);
-  var v = parseTree(x);
+  //~ /////// data.ids[ ... ];
+  //~ var strain_ids = data.strain_ids;
+  //~ var species = data.strain_id__cSpecies;
+  //~ var genus = data.strain_id__cGenus;
+  //~ var pidx = {};
+  //~ for (var i in species) { // i=0
+    //~ pidx[String(i)] = genus[i];
+  //~ }
+  data.tree = parseTree(x);
   //~ var v = {
     //~ branchset: [v],
     //~ name: '---',
     //~ height: 0
   //~ }
-  console.log(v);
-  //~ console.log(JSON.stringify(v));
-  dendro(v);
+  console.log(data.tree);
+  dendro(data);
 }
 
 function makeChartBtm(dx) {

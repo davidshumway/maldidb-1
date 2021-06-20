@@ -201,7 +201,8 @@ def cosine_scores(self, library, client, search_library):
     library__exact = search_library,
     spectra_content__exact = 'PR'
   ).order_by('id').values('id', 'strain_id__strain_id',
-    'strain_id__cSpecies', 'strain_id__cGenus')
+    'strain_id__cSpecies', 'strain_id__cGenus', 'strain_id__cOrder',
+    'strain_id__cClass', 'strain_id__cPhylum', 'strain_id__cKingdom')
   
   for spectra1 in n1:
     data = {
@@ -229,12 +230,12 @@ def cosine_scores(self, library, client, search_library):
         key = lambda x: (x[1], x[0]), reverse = True)
     )
     
-    strain_ids = ['Unknown sample'] +\
-      [str(s['strain_id__strain_id']) for s in list(n2)]
-    strain_id__cSpecies = ['Unknown sample'] +\
-      [str(s['strain_id__cSpecies']) if s['strain_id__cSpecies'] != '' else 'N/A' for s in list(n2)]
-    strain_id__cGenus = ['Unknown sample'] +\
-      [str(s['strain_id__cGenus']) if s['strain_id__cGenus'] != '' else 'N/A' for s in list(n2)]
+    # ~ strain_ids = ['Unknown sample'] +\
+      # ~ [str(s['strain_id__strain_id']) for s in list(n2)]
+    # ~ strain_id__cSpecies = ['Unknown sample'] +\
+      # ~ [str(s['strain_id__cSpecies']) if s['strain_id__cSpecies'] != '' else 'N/A' for s in list(n2)]
+    # ~ strain_id__cGenus = ['Unknown sample'] +\
+      # ~ [str(s['strain_id__cGenus']) if s['strain_id__cGenus'] != '' else 'N/A' for s in list(n2)]
 
     obj = CollapsedCosineScore.objects.create(
       spectra = spectra1,
@@ -243,11 +244,21 @@ def cosine_scores(self, library, client, search_library):
       spectra_ids = ','.join(map(str, o.keys())))
     
     if obj:
+      u = ['Unknown sample']
       result = {
         'scores': [],
-        'strain_ids': strain_ids,
-        'strain_id__cSpecies': strain_id__cSpecies,
-        'strain_id__cGenus': strain_id__cGenus,
+        'ids': {
+          'strain': u + [str(s['strain_id__strain_id']) for s in list(n2)],
+          'kingdom': u + [str(s['strain_id__cKingdom']) if s['strain_id__cKingdom'] != '' else 'N/A' for s in list(n2)],
+          'phylum': u + [str(s['strain_id__cPhylum']) if s['strain_id__cPhylum'] != '' else 'N/A' for s in list(n2)],
+          'class': u + [str(s['strain_id__cClass']) if s['strain_id__cClass'] != '' else 'N/A' for s in list(n2)],
+          'order': u + [str(s['strain_id__cOrder']) if s['strain_id__cOrder'] != '' else 'N/A' for s in list(n2)],
+          'genus': u + [str(s['strain_id__cGenus']) if s['strain_id__cGenus'] != '' else 'N/A' for s in list(n2)],
+          'species': u + [str(s['strain_id__cSpecies']) if s['strain_id__cSpecies'] != '' else 'N/A' for s in list(n2)]
+        },
+        # ~ 'strain_ids': strain_ids,
+        # ~ 'strain_id__cSpecies': strain_id__cSpecies,
+        # ~ 'strain_id__cGenus': strain_id__cGenus,
         'dendro': r.json()['dendro'],
         # ~ 'dendro2': r.json()['dendro2'],
         'original': {
