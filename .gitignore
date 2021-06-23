@@ -15,6 +15,7 @@ media/posts/**
 project.env
 .goutputstream*
 /mdb/static/
+*.dmp
 # ignore any files in /mdb/r01data/
 r01data/**
 

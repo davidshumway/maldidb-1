@@ -38,6 +38,7 @@ INSTALLED_APPS = [
   'jquery',
   'django_extensions',
   'rest_framework',
+  'ncbitaxonomy',
   #'ajaxuploader',
 ]
 
