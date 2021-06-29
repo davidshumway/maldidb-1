@@ -21,6 +21,8 @@ class TxNode(models.Model):
     'TxNode',
     on_delete = models.CASCADE,
     null=True, blank=True)
+  # temp. placeholder matching FK parent
+  parentid = models.IntegerField(blank=False, null=False)
   
   class Meta:
     unique_together = (('name', 'txid'),)

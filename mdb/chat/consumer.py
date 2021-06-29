@@ -53,10 +53,6 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     )
     await self.accept()
     
-    # ~ await self.send(text_data = json.dumps({"testing from py": True}))
-    # ~ await self.send_json({'data': {'ip': ip}})
-    
-    
     await self.send_json({'data': {'ip': self.client_id}})
 
   async def disconnect(self, close_code):
@@ -117,7 +113,6 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     # tells client cosine completed
     try:
       val = json.loads(text_data)
-      # ~ print(f'val{val}')
       if val['type'] == 'completed cosine':
         d = json.dumps({
           'data': {
@@ -134,12 +129,116 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     except Exception as e:    
       print(e)
       pass
-      
+    
+    # align
+    try:
+      val = json.loads(text_data)
+      if val['align'] != '':
+        align(self, val['align'], self.client_id)
+    except Exception as e:    
+      print(e)
+      pass
     
   async def deprocessing(self, event):
     print('==================4')
     # ~ await self.send(text_data = json.dumps(event['value']))
 
+@start_new_thread
+def align(self, msg, client):
+  '''
+  '''
+  # reads nodes
+  txrank = {}
+  f0 = open('/home/app/web/r01data/nodes.dmp', 'r')
+  for line in f0.readlines():
+    n = line.split('|') 
+    txrank[n[0].strip()] =  {
+      'parent': n[1].strip(),
+      'txtype': n[2].strip(),
+      'division': n[4].strip(),
+      'name': '' # add later
+    }
+  
+  # reads names
+  f = open('/home/app/web/r01data/names.dmp', 'r')
+  
+  # updates name in txrank
+  for line in f.readlines():
+    if skipline(line):
+      continue
+    n = line.split('|')
+    if txrank[n[0].strip()]['division'] != '0': # division code 0 = Bacteria
+      continue
+    node = txrank[n[0].strip()]
+    node['name'] = n[1].strip()
+  
+  # ~ count = 0
+  # ~ txnodes = []
+  # ~ allnodes = {}
+  # ~ created_nodes = []
+  from chat.models import Metadata
+  m = Metadata.objects.filter(library__id__exact = msg['library'])
+  print(f'm{m}')
+  
+  mdict = {'NRRL ' + s.strain_id: s for s in list(m)}
+  
+  r01 = ['NRRL ' + s.strain_id for s in list(m)]
+  print(f'r01{r01}')
+  r01_ = {k: {} for k in r01}
+  print(f'r01_{r01_}')
+  #'NRRL ' + s.strain_id for s in m]
+  f = open('/home/app/web/r01data/names.dmp', 'r')
+  for line in f.readlines():
+    if skipline(line):
+      continue
+    n = line.split('|')
+    if txrank[n[0].strip()]['division'] != '0': # division code 0 = Bacteria
+      continue
+    name = n[1].strip()
+    node = txrank[n[0].strip()]
+    
+    if name in r01: #1 "NRRL B-65307"
+      r01_[name] = {
+        'line': line
+      }
+      #mdict[name]
+      # test
+      p = txrank[n[0].strip()]['parent']
+      print(f'type is {node["txtype"]}')
+      while p and p != '1':
+        print(f'parent of {n[1].strip()} is {p}, name {txrank[p]["name"]}, type {txrank[p]["txtype"]}')
+        try:
+          p = txrank[p]['parent']
+        except:
+          p = False
+      
+  print(f'r01_{r01_}')
+
+def skipline(line):
+  if '\tauthority\t' in line:
+    return True
+  if '\tin-part\t' in line:
+    return True
+  if '\tincludes\t' in line:
+    return True
+  if '\tsynonym\t' in line:
+    return True
+  if '\tacronym\t' in line:
+    return True
+  if '\tblast name\t' in line:
+    return True
+  if '\tgenbank common name\t' in line:
+    return True
+  if '\tgenbank synonym\t' in line:
+    return True
+  if '\tgenbank acronym\t' in line:
+    return True
+  if '\tcommon name\t' in line:
+    return True
+  if '\tequivalent name\t' in line:
+    return True
+  return False
+  
 @start_new_thread
 def collapse_lib(self, title, client, search_library):
   '''
@@ -307,10 +406,3 @@ def cosine_scores(self, library, client, search_library):
   ws.close()
   
   
-  # ~ data = {
-    # ~ 'ids': [l.id, search_library]
-  # ~ }
-  # ~ r = requests.post(
-    # ~ 'http://plumber:8000/cosine2',
-    # ~ params = data
-  # ~ )

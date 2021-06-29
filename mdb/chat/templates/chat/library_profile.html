@@ -46,6 +46,9 @@
 			Metadata:
 			<a href="{% url 'chat:metadata_results' %}?library={{library.id}}" class="card-link">
 				{{ metadata|length }}</a>
+      {% if request.user in lab.owners.all %}
+        <button onclick="javascript:align();">Align metadata with NCBI</button>
+      {% endif %}
 		</div>
 	</div>
 <!--
@@ -58,4 +61,30 @@
 		</div>
 	{% endif %}
 </div>
+
+{% if request.user in lab.owners.all %}
+<script type="text/javascript">
+var socket = new WebSocket('ws://' + location.host + '/ws/pollData');
+socket.onopen = function(e){
+  //console.log(e);
+}
+socket.onmessage = function(e) {
+  console.log(e);
+  var data = JSON.parse(e.data).data;
+  console.log(data);
+  // exact matches versus non-matches
+}
+socket.onclose = function(e){
+  //console.log(e);
+}
+function align() {
+  socket.send(JSON.stringify({
+    align: {
+      library: {{ library.id }}
+    }
+  }));
+}
+</script>
+{% endif %}
+
 {% endblock %}
