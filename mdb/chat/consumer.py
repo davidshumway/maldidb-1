@@ -118,11 +118,6 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
           'data': {
             'message': 'completed cosine',
             'data': val['data']
-            # ~ {
-              # ~ 'client': client,
-              # ~ 'result': result,
-              # ~ 'spectra1': spectra1.id
-            # ~ }
           }
         })
         await clients[val['data']['client']].send(text_data = d)
@@ -138,6 +133,20 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     except Exception as e:    
       print(e)
       pass
+    # completed
+    try:
+      val = json.loads(text_data)
+      if val['type'] == 'completed align':
+        d = json.dumps({
+          'data': {
+            'message': 'completed align',
+            'data': val['data']
+          }
+        })
+        await clients[val['data']['client']].send(text_data = d)
+    except Exception as e:    
+      print(e)
+      pass
     
   async def deprocessing(self, event):
     print('==================4')
@@ -147,6 +156,80 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
 def align(self, msg, client):
   '''
   '''
+  from chat.models import Metadata
+  from ncbitaxonomy.models import TxNode
+  m = Metadata.objects.filter(library__id__exact = msg['library'])
+  
+  # return a list of objects
+  rslt = []
+  
+  for md in m:
+    j = TxNode.objects.filter(name__exact = 'NRRL ' + md.strain_id)
+    if len(j) > 0:
+      j = j.first()
+      rslt.append({
+        'id': md.id,
+        'strain_id': md.strain_id,
+        'txtype': j.txtype,
+        'parent': j.parentid,
+        'exact': j.name + '|type: ' + j.txtype + '|parentid: ' + str(j.parentid),
+        'partial_type': '',
+        'partial': '',
+      })
+    else:
+      j2 = TxNode.objects.filter(name__contains =  ' ' + md.strain_id) # f001
+      if len(j2) > 0:
+        i = 0
+        strout = []
+        while i < 2:
+          try:
+            strout.append(j2[i].name)
+          except:
+            pass
+          i += 1
+        rslt.append({
+          'id': md.id,
+          'strain_id': md.strain_id,
+          'txtype': '',
+          'parent': '',
+          'exact': '',
+          'partial_type': 'space + exact (" strain_id")',
+          'partial': '|'.join(strout),
+        })
+      else:
+        j3 = TxNode.objects.filter(name__contains = md.strain_id)
+        if len(j3) > 0:
+          i = 0
+          strout = []
+          while i < 2:
+            try:
+              strout.append(j3[i].name)
+            except:
+              pass
+            i += 1
+          rslt.append({
+            'id': md.id,
+            'strain_id': md.strain_id,
+            'txtype': '',
+            'parent': '',
+            'exact': '',
+            'partial_type': 'exact ("strain_id")',
+            'partial': '|'.join(strout),
+          })
+  
+  ws = websocket.WebSocket()
+  ws.connect('ws://localhost:8000/ws/pollData')
+  ws.send(json.dumps({
+    'type': 'completed align',
+    'data': {
+      'client': client,
+      'result': rslt
+    }
+  }))
+  ws.close()
+  
+  return #rslt
+  
   # reads nodes
   txrank = {}
   f0 = open('/home/app/web/r01data/nodes.dmp', 'r')

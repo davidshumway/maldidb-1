@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load render_table from django_tables2 %}
-
+{% load static %}
 
 {% block title %}
 	Library Details: {{ library.title }}
@@ -8,11 +8,17 @@
 
 {% block content %}
 
+<link rel="stylesheet" type="text/css"
+  href="{% static 'css/datatables.min.css' %}"/>
+ 
+<script type="text/javascript" src="{% static 'js/datatables.min.js' %}">
+  </script>
 
+<div class="row">
 
-
-
+<div class="col-sm-3">
 <div class="card">
+  <div class="card-header">Library details</div>
 	<div class="card-body">
 		<div class="card-title">
 			Title: {{ library.title }}
@@ -46,11 +52,7 @@
 			Metadata:
 			<a href="{% url 'chat:metadata_results' %}?library={{library.id}}" class="card-link">
 				{{ metadata|length }}</a>
-      {% if request.user in lab.owners.all %}
-        <button onclick="javascript:align();">Align metadata with NCBI</button>
-      {% endif %}
 		</div>
-	</div>
 <!--
 	only lab owners can add/update/remove libraries
 -->
@@ -60,9 +62,21 @@
 				Edit Library Details</a>
 		</div>
 	{% endif %}
+  </div>
+</div>
 </div>
 
 {% if request.user in lab.owners.all %}
+<div class="col-sm-9">
+<div class="card">
+  <div class="card-header">Library options</div>
+	<div class="card-body">
+    <button onclick="javascript:align();">Align metadata with NCBI</button>
+    <table id="align"></table>
+  </div>
+</div>
+</div>
+
 <script type="text/javascript">
 var socket = new WebSocket('ws://' + location.host + '/ws/pollData');
 socket.onopen = function(e){
@@ -72,7 +86,30 @@ socket.onmessage = function(e) {
   console.log(e);
   var data = JSON.parse(e.data).data;
   console.log(data);
+  
   // exact matches versus non-matches
+  if (data.data) {
+    var t = $('#align').DataTable({
+      data: data.data.result,
+      columns: [
+        {data: 'id', title: 'ID'},
+        {data: 'strain_id', title: 'Strain ID'},
+        //~ {data: 'strain_id__strain_id', title: 'Strain Name'},
+        {data: 'exact', title: 'Exact match',
+          render: function(data, type) {
+            return data.split('|').join('<br>');
+          }
+        },
+        {data: 'partial_type', title: 'Partial search'},//,
+        {data: 'partial', title: 'Partial result',
+          render: function(data, type) {
+            return data.split('|').join('<br>');
+          }
+        }
+      ]
+    });
+    t.draw();
+  }
 }
 socket.onclose = function(e){
   //console.log(e);
@@ -86,5 +123,8 @@ function align() {
 }
 </script>
 {% endif %}
+
+<!--End row-->
+</div>
 
 {% endblock %}

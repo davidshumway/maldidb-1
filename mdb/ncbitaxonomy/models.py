@@ -15,14 +15,16 @@ class TxNode(models.Model):
     default = 's',
   )
   
-  # txtype and parent are from second file, added on second pass
+  # txtype and parent are from second file
   txtype = models.TextField(blank=True, null=True)
-  parent = models.ForeignKey(
-    'TxNode',
-    on_delete = models.CASCADE,
-    null=True, blank=True)
-  # temp. placeholder matching FK parent
   parentid = models.IntegerField(blank=False, null=False)
+  
+  # ~ parent = models.ForeignKey(
+    # ~ 'TxNode',
+    # ~ on_delete = models.CASCADE,
+    # ~ null=True, blank=True)
+  # ~ # all parents as json field {p1:, p1-rank:, ..., pn:, pn-rank:}
+  # ~ parents = models.TextField(blank=False, null=False)
   
   class Meta:
     unique_together = (('name', 'txid'),)
