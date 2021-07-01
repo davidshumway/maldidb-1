@@ -168,6 +168,7 @@ def align(self, msg, client):
     tmp = {
       'id': md.id,
       'strain_id': md.strain_id,
+      'name': '',
       'txtype': '',
       'parent': '',
       'exact': 'No exact match',
@@ -176,9 +177,12 @@ def align(self, msg, client):
     }
     if len(j) > 0:
       j = j.first()
+      name = str(TxNode.objects.get(txid = j.txid, nodetype = "s").name)
+      pname = str(TxNode.objects.get(txid = j.parentid).name)
+      tmp['name'] = j.name
       tmp['txtype'] = j.txtype
       tmp['parent'] = j.parentid
-      tmp['exact'] = j.name + '|type: ' + j.txtype + '|parentid: ' + str(j.parentid)
+      tmp['exact'] = f'{j.name} ({name})|type: {j.txtype}|parent: {pname}'
     else:
       j2 = TxNode.objects.filter(name__contains =  ' ' + md.strain_id) # f001
       if len(j2) > 0:
