@@ -21,6 +21,12 @@
 <script type="text/javascript" src="{% static 'js/dropzone.5.7.0.js' %}">
   </script>
 <script type="text/javascript">
+// global variable for spectra_search.js
+var formURLs = {
+  library: "{% url 'spectra_search:ajax_upload_library' %}",
+  files: "{% url 'spectra_search:ajax_upload' %}"
+}
+  
 function show_filter(e) {
   document.getElementById('filters').style.display='block';
   e.preventDefault();

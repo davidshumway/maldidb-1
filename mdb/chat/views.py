@@ -134,14 +134,14 @@ def add_xml(request):
 @login_required
 def add_lib(request):
   if request.method == 'POST':
-    form = AddLibraryForm(request.POST, request.FILES)
+    form = AddLibraryForm(request.POST, request.FILES, request = request)
     if form.is_valid():
       entry = form.save(commit = False)
       entry.created_by_id = request.user.id
       entry.save()
       return redirect('chat:home')
   else:
-    form = AddLibraryForm()
+    form = AddLibraryForm(request = request)
   return render(request, 'chat/add_lib.html', {'form': form})
 
 @login_required

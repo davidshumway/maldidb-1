@@ -28,11 +28,11 @@ class AbstractSpectra(models.Model):
     blank = True,
     null = True)
   
-  lab = models.ForeignKey(
-    'chat.LabGroup',
-    on_delete = models.CASCADE,
-    blank = True,
-    null = True)
+  # ~ lab = models.ForeignKey(
+    # ~ 'chat.LabGroup',
+    # ~ on_delete = models.CASCADE,
+    # ~ blank = True,
+    # ~ null = True)
   
   # Averaged m/z and intensity values in case of collapse spectra
   # ~ peak_matrix = models.TextField(blank = True)
@@ -69,8 +69,11 @@ class AbstractSpectra(models.Model):
     # ~ spectrum_intensity_hash
   # ~ )
   
-  class Meta:                                                                 
-    abstract = True                                                         
+  class Meta:
+    abstract = True
+    unique_together= (
+      ('spectrum_mass_hash', 'spectrum_intensity_hash', 'library'),)
+    # ~ unique_together= (('xml_hash', 'library'),)
   
   def get_absolute_url(self):
     return reverse('spectra:view_spectra', args = (self.id,))

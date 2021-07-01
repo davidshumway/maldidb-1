@@ -61,21 +61,13 @@ print.data.frame <- function (
 #* Cosine of library of unknowns (1-n) versus existing library (e.g. R01)
 #* @post /cosine2
 function(req, ids) {
-  # 1: library 1
-  # 2: library 2
-#~   ids <- as.numeric(ids)
-#~   if (length(ids) < 2) {
-#~     stop('less than two comparison ids given!')
-#~   }
-#~   s1 <- dbLibrarySpectra(ids[[1]])
-#~   s2 <- dbLibrarySpectra(ids[[2]])
-  
 }
 
 #* Cosine: Get cosine scores for a set of db spectra
 #* Ids must correlate to at least 2 rows
 #*     https://github.com/strejcem/MALDIvs16S/../R/MALDIbacteria.Rsimilarity
 #*     coop::cosine(t(featureMatrix))
+#* Initial cut-offs of 3k and 15k.
 #* Todo: library=, lab=, strain=, user=, ...
 #* @param req Built-in
 #* @param ids List of IDs from Spectra table
@@ -110,18 +102,15 @@ function(req, ids) {
   d <- round(d, 3)
   
   allPeaks <- MALDIquant::trim(
-    allPeaks, c(2000, 20000)
+    allPeaks, c(3000, 15000)
   )
   emptyProtein <- unlist(
     lapply(allPeaks, MALDIquant::isEmpty)
   )
-#~   print(head(emptyProtein, 1))
-#~   print(head(lapply(allPeaks[!emptyProtein], function(x) x@mass), 2))
-#~   print(head(lapply(allPeaks[!emptyProtein], function(x) x@intensity), 2))
   
   proteinMatrix <- IDBacApp:::createFuzzyVector(
-    massStart = 2000,
-    massEnd = 20000,
+    massStart = 3000,
+    massEnd = 15000,
     ppm = 1000,
     massList = lapply(allPeaks[!emptyProtein], function(x) x@mass),
     intensityList = lapply(allPeaks[!emptyProtein], function(x) x@intensity))
@@ -131,14 +120,8 @@ function(req, ids) {
     clusteringMethod = 'average',
     proteinMatrix
   )
-  
-#~   print(str(x['dendrogram']))
 
   tree1 <- data.tree::as.Node(x['dendrogram']$dendrogram)
-
-#~   hc <- as.hclust(x['dendrogram']$dendrogram)
-              
-#~   cluster <- cbind(hc$merge, hc$height)
   
   # from list to json
   # https://www.r-bloggers.com/2015/05/
@@ -156,10 +139,6 @@ function(req, ids) {
   ))
   
   #return(d[1,])
-  
-  
-
-
   
   d <- stats::as.dist(1 - coop::cosine(proteinMatrix))
   d <- as.matrix(d)
@@ -249,31 +228,6 @@ function(req, ids) {
   )
   dev.off()
   
-#~   g <- redim_matrix(as.matrix(x), target_height = 1000, target_width = ncol(x)) 
-#~   png(file = 'scatterplot4.png')
-#~   image(
-#~     t(g),
-#~     axes = F,
-#~     col = colorRampPalette(c("white", "darkorange", "black"))(30),
-#~     breaks = c(seq(0, 3, length.out = 30), 1), #, 100)
-#~     main = "Reduced matrix",
-#~     useRaster = TRUE
-#~   )
-#~   dev.off()
-  
-#~   g <- redim_matrix(as.matrix(x), target_height = 1000, target_width = ncol(x)) 
-#~   png(file = 'scatterplot5.png')
-#~   Heatmap(
-#~     g[nrow(g):1, ],
-#~     col = circlize::colorRamp2(c(0, 1.5, 3), c("white", "darkorange", "black")),
-#~     cluster_rows = FALSE, cluster_columns = FALSE,
-#~     show_heatmap_legend = FALSE,
-#~     use_raster = TRUE,
-#~     raster_resize = TRUE, raster_device = "png",
-#~     column_title = "With rasterisation"
-#~   )
-#~   dev.off()
-
   return(d)
   
 
@@ -429,7 +383,8 @@ collapseStrainsInLibrary <- function(lid, sid, type, owner) {
   )
   q <- dbGetQuery(c$con, s)
   if (nrow(q) < 1) {
-    # no spectra matching library and strain
+    print(paste0('collapseStrainsInLibrary: no strain IDs in library - ',
+      as.numeric(lid), '|', as.numeric(sid)))
     disconnect(c$drv, c$con)
     return()
   } else if (nrow(q) < 2) {
@@ -469,6 +424,9 @@ collapseStrainsInLibrary <- function(lid, sid, type, owner) {
   h <- new_handle()
   x <- paste0(
     '{',
+      '"spectrum_mass_hash":"', IDBacApp:::hashR(mqSerial(MALDIquant::mass(t))), '",',
+      '"spectrum_intensity_hash":"', IDBacApp:::hashR(mqSerial(MALDIquant::mass(t))), '",',
+      '"peak_mass":', mqSerial(MALDIquant::mass(t)), ',',
       '"peak_mass":', mqSerial(MALDIquant::mass(t)), ',',
       '"peak_intensity":', mqSerial(MALDIquant::intensity(t)), ',',
       '"peak_snr":', mqSerial(MALDIquant::snr(t)), ',',
@@ -491,7 +449,10 @@ collapseStrainsInLibrary <- function(lid, sid, type, owner) {
   handle_setopt(h, copypostfields = x)
   req <- curl_fetch_memory('http://django:8000/spectra/cs/', handle = h)
   if (req$status_code >= 300) {
-    stop('status code:', req$status_code)
+    #stop('status code:', req$status_code)
+    # In one case, this occurs when trying to insert a non-unique 
+    # (spectrum_mass_hash, spectrum_intensity_hash, library) into the db.
+    # In this case, it fails without warning.
   }
 }
 #* @param l: List to serialize
@@ -504,22 +465,25 @@ mqSerial <- function(l) {
 #* @return File path of resulting sqlite file
 #* @get /preprocess
 preprocess <- function(file) {
-  mzFilePaths <- list(file.path(paste0("/app/", file)))
-  sIDs <- base::basename(tools::file_path_sans_ext(mzFilePaths))
-  print('sIDs')
-  print(sIDs)
-  f <- sanitize(sub('uploads/sync/', '', file))
+  library(stringr)
+  mzFilePaths <- list(file.path(paste0('/app/', file)))
+  sID <- base::basename(tools::file_path_sans_ext(mzFilePaths))
+  # replace the Django portion of filename ("_[\w\d]+$")
+  sID <- str_replace(sID, '_[a-zA-Z0-9]+$', '')
+  print('sID')
+  print(sID)
+  f <- sanitize(sub('uploads/sync', '', file))
   print('f')
   print(f)
   IDBacApp:::idbac_create(
     fileName = f,
-    filePath = './uploads/sync/')
+    filePath = './uploads/sync')
   idbacPool <- IDBacApp:::idbac_connect(
     fileName = f,
     filePath = './uploads/sync/')[[1]]
   IDBacApp:::spectraProcessingFunction(
-    rawDataFilePath = file.path(paste0("/app/", file)),
-    sampleID = sIDs,
+    rawDataFilePath = file.path(paste0('/app/', file)),
+    sampleID = sID,
     pool = idbacPool, 
     acquisitionInfo = NULL,
   )

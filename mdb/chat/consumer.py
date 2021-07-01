@@ -158,24 +158,27 @@ def align(self, msg, client):
   '''
   from chat.models import Metadata
   from ncbitaxonomy.models import TxNode
-  m = Metadata.objects.filter(library__id__exact = msg['library'])
+  m = Metadata.objects.filter(library__id = msg['library'])
   
   # return a list of objects
   rslt = []
   
   for md in m:
     j = TxNode.objects.filter(name__exact = 'NRRL ' + md.strain_id)
+    tmp = {
+      'id': md.id,
+      'strain_id': md.strain_id,
+      'txtype': '',
+      'parent': '',
+      'exact': 'No exact match',
+      'partial_type': 'N/A',
+      'partial': 'N/A',
+    }
     if len(j) > 0:
       j = j.first()
-      rslt.append({
-        'id': md.id,
-        'strain_id': md.strain_id,
-        'txtype': j.txtype,
-        'parent': j.parentid,
-        'exact': j.name + '|type: ' + j.txtype + '|parentid: ' + str(j.parentid),
-        'partial_type': '',
-        'partial': '',
-      })
+      tmp['txtype'] = j.txtype
+      tmp['parent'] = j.parentid
+      tmp['exact'] = j.name + '|type: ' + j.txtype + '|parentid: ' + str(j.parentid)
     else:
       j2 = TxNode.objects.filter(name__contains =  ' ' + md.strain_id) # f001
       if len(j2) > 0:
@@ -187,15 +190,8 @@ def align(self, msg, client):
           except:
             pass
           i += 1
-        rslt.append({
-          'id': md.id,
-          'strain_id': md.strain_id,
-          'txtype': '',
-          'parent': '',
-          'exact': '',
-          'partial_type': 'space + exact (" strain_id")',
-          'partial': '|'.join(strout),
-        })
+        tmp['partial_type'] = 'space + name (" strain_id")'
+        tmp['partial'] = '|'.join(strout)
       else:
         j3 = TxNode.objects.filter(name__contains = md.strain_id)
         if len(j3) > 0:
@@ -207,16 +203,12 @@ def align(self, msg, client):
             except:
               pass
             i += 1
-          rslt.append({
-            'id': md.id,
-            'strain_id': md.strain_id,
-            'txtype': '',
-            'parent': '',
-            'exact': '',
-            'partial_type': 'exact ("strain_id")',
-            'partial': '|'.join(strout),
-          })
-  
+          tmp['partial_type'] = 'name only ("strain_id")'
+          tmp['partial'] = '|'.join(strout)
+        else:
+          tmp['partial_type'] = 'No partial match'
+    rslt.append(tmp)
+    
   ws = websocket.WebSocket()
   ws.connect('ws://localhost:8000/ws/pollData')
   ws.send(json.dumps({
@@ -230,73 +222,6 @@ def align(self, msg, client):
   
   return #rslt
   
-  # reads nodes
-  txrank = {}
-  f0 = open('/home/app/web/r01data/nodes.dmp', 'r')
-  for line in f0.readlines():
-    n = line.split('|') 
-    txrank[n[0].strip()] =  {
-      'parent': n[1].strip(),
-      'txtype': n[2].strip(),
-      'division': n[4].strip(),
-      'name': '' # add later
-    }
-  
-  # reads names
-  f = open('/home/app/web/r01data/names.dmp', 'r')
-  
-  # updates name in txrank
-  for line in f.readlines():
-    if skipline(line):
-      continue
-    n = line.split('|')
-    if txrank[n[0].strip()]['division'] != '0': # division code 0 = Bacteria
-      continue
-    node = txrank[n[0].strip()]
-    node['name'] = n[1].strip()
-  
-  # ~ count = 0
-  # ~ txnodes = []
-  # ~ allnodes = {}
-  # ~ created_nodes = []
-  from chat.models import Metadata
-  m = Metadata.objects.filter(library__id__exact = msg['library'])
-  print(f'm{m}')
-  
-  mdict = {'NRRL ' + s.strain_id: s for s in list(m)}
-  
-  r01 = ['NRRL ' + s.strain_id for s in list(m)]
-  print(f'r01{r01}')
-  r01_ = {k: {} for k in r01}
-  print(f'r01_{r01_}')
-  #'NRRL ' + s.strain_id for s in m]
-  f = open('/home/app/web/r01data/names.dmp', 'r')
-  for line in f.readlines():
-    if skipline(line):
-      continue
-    n = line.split('|')
-    if txrank[n[0].strip()]['division'] != '0': # division code 0 = Bacteria
-      continue
-    name = n[1].strip()
-    node = txrank[n[0].strip()]
-    
-    if name in r01: #1 "NRRL B-65307"
-      r01_[name] = {
-        'line': line
-      }
-      #mdict[name]
-      # test
-      p = txrank[n[0].strip()]['parent']
-      print(f'type is {node["txtype"]}')
-      while p and p != '1':
-        print(f'parent of {n[1].strip()} is {p}, name {txrank[p]["name"]}, type {txrank[p]["txtype"]}')
-        try:
-          p = txrank[p]['parent']
-        except:
-          p = False
-      
-  print(f'r01_{r01_}')
-
 def skipline(line):
   if '\tauthority\t' in line:
     return True
@@ -385,6 +310,10 @@ def cosine_scores(self, library, client, search_library):
   ).order_by('id').values('id', 'strain_id__strain_id',
     'strain_id__cSpecies', 'strain_id__cGenus', 'strain_id__cOrder',
     'strain_id__cClass', 'strain_id__cPhylum', 'strain_id__cKingdom')
+  
+  if len(n2) == 0:
+    print('No collapsed spectra in search library!')
+    return
   
   for spectra1 in n1:
     data = {

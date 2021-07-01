@@ -11,7 +11,6 @@
 ## Docker install with docker-compose
 ```bash
  git clone https://github.com/idbac/maldidb
- cd ./mdb/
  # Use project.env.template to create project.env
  cp project.env.template project.env
 ```
@@ -26,7 +25,11 @@ Edit project.env to include the following:
     DATABASE_PORT=5432
     SECRET_KEY=<any key>
 
-Add R01 data files, if present, to the `./r01data` folder.
+Add R01 data files, if present, to a new folder in `./mdb` titled `r01data`:
+
+```bash
+ mkdir ./mdb/r01data
+```
 
 Finally, build and run the project:
 

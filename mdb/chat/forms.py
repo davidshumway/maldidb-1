@@ -3,6 +3,7 @@ from .models import *
 from spectra.models import *
 from django.contrib.auth import get_user_model
 User = get_user_model()
+from django.db.models import Q
 
 class LibraryCollapseForm2(forms.Form):
   '''
@@ -126,6 +127,22 @@ class AddLabGroupForm(forms.ModelForm):
     exclude = ('created_by',)
 
 class AddLibraryForm(forms.ModelForm):
+  
+  def __init__(self, *args, **kwargs):
+    request = kwargs.pop('request')
+    self.user = request.user
+    super(AddLibraryForm, self).__init__(*args, **kwargs)
+    user = self.user
+    if request.user.is_authenticated:
+      user_labs = LabGroup.objects \
+        .filter(Q(owners__in = [user]) | Q(members__in = [user]))
+      # ~ q = Library.objects.filter( \
+        # ~ Q(lab__in = user_labs) | \
+        # ~ Q(created_by__exact = user)
+      # ~ ).order_by('-id')
+      # ~ self.fields['library_select'].queryset = q
+      self.fields['lab'].queryset = user_labs
+      
   class Meta:
     model = Library
     exclude = ('created_by',)
@@ -146,7 +163,7 @@ class MetadataForm(forms.ModelForm):
   """
   Form for handling addition of metadata
   """
-                            
+  
   class Meta:
     model = Metadata
     # ~ exclude = ('created_by',)
@@ -171,6 +188,15 @@ class MetadataForm(forms.ModelForm):
         attrs={'rows': 1, 'cols': 40, 'placeholder': ''}
       ),
     }
+  
+  def clean(self):
+    cleaned_data = super().clean()
+
+    # if this Item already exists
+    ###if self.instance:
+       #### add the old quantity to the new quantity
+       ####cleaned_data['quantity'] += self.instance.quantity
+    return cleaned_data
 
 class LocaleForm(forms.ModelForm):
   class Meta:

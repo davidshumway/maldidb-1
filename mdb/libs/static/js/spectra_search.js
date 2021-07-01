@@ -149,17 +149,17 @@ function toggleAddlFields() {
 //~ $(document).ready(function(){
 window.addEventListener('DOMContentLoaded', (event) => {
   
-  var show_tbl = {{ form.show_tbl|lower }};
-  var st = $('#search_toggle');
-  var si = $('#search_initial');
-  if (show_tbl) {
-    st.css('display', 'block');
-    si.css('display', 'none');
-  } else {
-    st.css('display', 'none');
-    si.css('display', 'block');
-  }
-  st.click(toggleSearchForm);
+  //~ var show_tbl = {{ form.show_tbl|lower }};
+  //~ var st = $('#search_toggle');
+  //~ var si = $('#search_initial');
+  //~ if (show_tbl) {
+    //~ st.css('display', 'block');
+    //~ si.css('display', 'none');
+  //~ } else {
+    //~ st.css('display', 'none');
+    //~ si.css('display', 'block');
+  //~ }
+  //~ st.click(toggleSearchForm);
   
   // toggle nav search
   //~ $('.nav-link').click(toggleNavSearch);
@@ -1181,15 +1181,11 @@ function upload(event) {
   
   // first create library or validate existing library
   // then loop through files and add them individually.
-  ajaxLibary(this);
+  ajaxLibrary(this);
   
   event.preventDefault();
 }
-function ajaxLibary(form) {
-  //~ console.log(form);
-  //~ console.log(new FormData(form));
-  //~ console.log(new FormData(form).get('library_create_new'));
-  //~ console.log(new FormData(form).get('library_create_new'));
+function ajaxLibrary(form) {
   
   $.ajax({
     xhr: function() {
@@ -1199,7 +1195,7 @@ function ajaxLibary(form) {
     
     dataType: 'JSON',
     data: new FormData(form),
-    url: "{% url 'spectra_search:ajax_upload_library' %}",
+    url: formURLs.library,
     type: 'POST',
     processData: false,
     contentType: false,
@@ -1323,7 +1319,7 @@ function uploadHelper(formData) {
     dataType: 'JSON',
     data: formData,
     sequentialUploads: true,
-    url: "{% url 'spectra_search:ajax_upload' %}",
+    url: formURLs.files,
     type: 'POST',
     processData: false,
     contentType: false,

@@ -106,6 +106,9 @@ def _insert(request, tmpForm, uploadFile, user_task):
 
 def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
   '''
+  Unique: Library + Metadata.strain_id, Library + XML.xml_hash
+  Version 1: Overwrites unique entries. TODO: User feedback.
+  
   :return: Optionally returns an info object detailing results
   '''
   idbac_version = '1.0.0'
@@ -165,9 +168,20 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
       'dna_16s': row[18],
       'created_by': request.user.id,
       'library': tmpForm.cleaned_data['library'].id,
-      'lab': tmpForm.cleaned_data['lab'].id,
+      # ~ 'lab': tmpForm.cleaned_data['lab'].id,
     }
-    form = MetadataForm(data)
+    m1 = False
+    try:
+      m1 = Metadata.objects.get(strain_id__exact = row[0],
+        library = tmpForm.cleaned_data['library']
+      )
+      form = MetadataForm(data, instance = m1)
+    except Metadata.DoesNotExist:
+      form = MetadataForm(data)
+    except Metadata.MultipleObjectsReturned: # should not occur
+      raise ValueError('unique constraint failed on metadata!')
+    except:
+      pass
     
     if form.is_valid():
       entry = form.save(commit = False)
@@ -195,9 +209,22 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
       'instrument_metafile': row[7],
       'created_by': request.user.id,
       'library': tmpForm.cleaned_data['library'].id,
-      'lab': tmpForm.cleaned_data['lab'].id,
+      # ~ 'lab': tmpForm.cleaned_data['lab'].id,
     }
-    form = XmlForm(data)
+    m1 = False
+    try:
+      m1 = XML.objects.get(xml_hash__exact = row[0],
+        library = tmpForm.cleaned_data['library']
+      )
+      form = XmlForm(data, instance = m1)
+    except XML.DoesNotExist:
+      form = XmlForm(data)
+    except XML.MultipleObjectsReturned: # should not occur
+      raise ValueError('unique constraint failed on xml!')
+    except:
+      pass
+      
+    # ~ form = XmlForm(data)
     if form.is_valid():
       entry = form.save(commit = False)
       entry.save()
@@ -207,17 +234,18 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
       raise ValueError('xxxxx')
   
   # Locale
-  rows = cursor.execute("SELECT * FROM locale").fetchall()
-  for row in rows:
-    data = {
-      'locale': row[0],
-    }
-    form = LocaleForm(data)
-    if form.is_valid():
-      entry = form.save(commit = False)
-      entry.save()
-    else:
-        raise ValueError('xxxxx')
+  # Works. Skip for now.
+  # ~ rows = cursor.execute("SELECT * FROM locale").fetchall()
+  # ~ for row in rows:
+    # ~ data = {
+      # ~ 'locale': row[0],
+    # ~ }
+    # ~ form = LocaleForm(data)
+    # ~ if form.is_valid():
+      # ~ entry = form.save(commit = False)
+      # ~ entry.save()
+    # ~ else:
+        # ~ raise ValueError('xxxxx')
     
   # Spectra
   # row[5] spectrumIntensity ?
@@ -242,7 +270,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
     data = {
       'created_by': request.user.id,
       'library': tmpForm.cleaned_data['library'].id,
-      'lab': tmpForm.cleaned_data['lab'].id,
+      # ~ 'lab': tmpForm.cleaned_data['lab'].id,
       'privacy_level': tmpForm.cleaned_data['privacy_level'][0],
       
       'spectrum_mass_hash': row[0],
@@ -272,7 +300,23 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
         ))
       continue
     
-    form = SpectraForm(data)
+    m1 = False
+    try:
+      m1 = Spectra.objects.get(spectrum_mass_hash = row[0],
+        spectrum_intensity_hash = row[1],
+        library = tmpForm.cleaned_data['library']
+      )
+      form = SpectraForm(data, instance = m1)
+      print('spectra exists! overwriting')
+    except Spectra.DoesNotExist:
+      form = SpectraForm(data)
+      print('new spectra!')
+    except Spectra.MultipleObjectsReturned: # should not occur
+      raise ValueError('unique constraint failed on spectra!')
+    except:
+      pass
+      
+    # ~ form = SpectraForm(data)
     if form.is_valid():
       entry = form.save(commit = False)
       entry.save()

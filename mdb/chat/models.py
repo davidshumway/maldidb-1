@@ -232,18 +232,21 @@ class Metadata(models.Model):
     blank = True,
     null = True)
   
-  lab = models.ForeignKey(
-    'LabGroup',
-    on_delete = models.CASCADE,
-    blank = True,
-    null = True)
+  # ~ lab = models.ForeignKey( # unnecessary
+    # ~ 'LabGroup',
+    # ~ on_delete = models.CASCADE,
+    # ~ blank = True,
+    # ~ null = True)
     
   library = models.ForeignKey(
     'Library',
     on_delete = models.CASCADE,
     blank = True,
     null = True)
-    
+  
+  class Meta:
+    unique_together= (('strain_id', 'library'),)
+            
   def get_fields(self):
     return [(field.verbose_name, field.value_to_string(self)) for field in Metadata._meta.fields]
   
@@ -277,12 +280,20 @@ class XML(models.Model):
     blank = True,
     null = True)
   
-  lab = models.ForeignKey(
-    'LabGroup',
+  # ~ lab = models.ForeignKey(
+    # ~ 'LabGroup',
+    # ~ on_delete = models.CASCADE,
+    # ~ blank = True,
+    # ~ null = True)
+  library = models.ForeignKey(
+    'Library',
     on_delete = models.CASCADE,
     blank = True,
     null = True)
   
+  class Meta:
+    unique_together= (('xml_hash', 'library'),)
+    
   def get_fields(self):
     return [(field.verbose_name, field.value_to_string(self)) for field in XML._meta.fields]
   
