@@ -181,6 +181,9 @@ class MetadataForm(forms.ModelForm):
       'cOrder': forms.Textarea(
         attrs={'rows': 1, 'cols': 40, 'placeholder': ''}
       ),
+      'cFamily': forms.Textarea(
+        attrs={'rows': 1, 'cols': 40, 'placeholder': ''}
+      ),
       'cGenus': forms.Textarea(
         attrs={'rows': 1, 'cols': 40, 'placeholder': ''}
       ),

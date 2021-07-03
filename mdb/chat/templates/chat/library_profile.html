@@ -67,39 +67,150 @@
 </div>
 
 {% if request.user in lab.owners.all %}
-<div class="col-sm-9">
+<div class="col-sm-9"><!-- accordion-style -->
+  
 <div class="card">
   <div class="card-header">Library options</div>
-	<div class="card-body">
-    <button onclick="javascript:align();">Align metadata with NCBI</button>
-    <table id="align" class="table-bordered table-responsive table-condensed"></table> <!-- cell-border compact stripe-->
-  </div>
-</div>
+  <div class="card-body">
+    <div class="row">
+    <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+      <button class="nav-link active" id="v-pills-home-tab"
+        data-toggle="pill" href="#v-pills-home" role="tab"
+        aria-controls="v-pills-home" aria-selected="true"
+        >NCBI<br/>taxonomy<br/>alignment<br/>(Search)</button>
+      <button class="nav-link" id="v-pills-another-tab"
+        data-toggle="pill" href="#v-pills-another" role="tab"
+        aria-controls="v-pills-another" aria-selected="false"
+        >NCBI<br/>taxonomy<br/>alignment<br/>(Manual entry)</button>
+    </div>
+    
+    <div class="tab-content ml-4" id="v-pills-tabContent">
+      <div class="tab-pane fade show active" id="v-pills-home"
+        role="tabpanel" aria-labelledby="v-pills-home-tab">
+        
+        <!-- Begin -->
+        <label for="align-prefix"
+          >(Optional) Enter a prefix for the strain ID, e.g. "NRRL":</label>
+        <input type="text" placeholder="" size=20 id="align-prefix" />
+        
+        <div>
+        <button type="button" class="btn btn-primary"
+          onclick="javascript:align(this);" id="align-load"
+          >Load alignments</button>
+        
+        <button type="button" class="btn btn-primary" id="align-import"
+            style="display:none;"
+            >Import NCBI taxonomy IDs for exact matches</button>
+        </div>
+        
+        <br />
+        <div class="alert alert-info" role="alert" id="align-alert"
+          style="display:none;"></div>
+          
+        <br />
+        <div id="align" style="display:none">
+          <table id="align1"
+            class="table table-bordered table-responsive table-condensed"
+            style="display:none">
+            <caption style="caption-side: top">Exact matches</caption></caption>
+            </table><!-- cell-border compact stripe-->
+          
+          <br />
+          <table id="align2"
+            class="table table-bordered table-responsive table-condensed"
+            style="display:none">
+            <caption style="caption-side: top">Partial matches</caption></table>
+        </div>
+        <!-- End -->
+        
+      </div>
+      <div class="tab-pane fade" id="v-pills-another"
+        role="tabpanel" aria-labelledby="v-pills-another-tab">
+        <div>Paste corresponding metadata separated by a newline character. For example:
+          <pre>B-10
+          B-11
+          B-12</pre></div>
+          
+        <label for="">Strain IDs:</label>
+        <textarea></textarea>
+        
+        <label for="">Genus:</label>
+        <textarea></textarea>
+        
+        <label for="">Species:</label>
+        <textarea></textarea>
+        </div>
+    </div>
+    
+  </div></div><!--/card-body-->
+</div><!--/card-->
 </div>
 
 <script type="text/javascript">
+var alignments = null; // To be set later
+
+function alignImport() {
+  $('#align-load')[0].disabled = true;
+  $('#align-prefix')[0].disabled = true;
+  $('#align-import')[0].disabled = true;
+  $('#align-alert').text('Saving alignment...');
+  socket.send(JSON.stringify({
+    type: 'save align',
+    library: {{ library.id }},
+    alignments: alignments
+  }));
+}
+
 var socket = new WebSocket('ws://' + location.host + '/ws/pollData');
 socket.onopen = function(e){
   //console.log(e);
 }
 socket.onmessage = function(e) {
+  $('#align-load')[0].disabled = false;
+  $('#align-prefix')[0].disabled = false;
+  
   console.log(e);
   var data = JSON.parse(e.data).data;
   console.log(data);
   
   // exact matches versus non-matches
-  if (data.data) {
-    var t = $('#align').DataTable({
-      data: data.data.result,
+  if (data.message == 'completed align') {
+    $('#align-alert')
+      .text('Showing only Metadata entries where the NCBI taxonomic ID is empty');
+    $('#align1').css('display', '');
+    $('#align2').css('display', '');
+    $('#align-import').css('display', '');
+    $('#align').css('display', '');
+    
+    if (data.data.result1.length > 0) {
+      $('#align-import').on('click', alignImport);
+      $('#align-import')[0].disabled = false;
+      alignments = data.data.result1;
+    } else {
+      $('#align-import')[0].disabled = true;
+    }
+    
+    var t = $('#align1').DataTable({
+      data: data.data.result1,
+      destroy: true, // https://datatables.net/manual/tech-notes/3
       columns: [
         {data: 'id', title: 'ID'},
         {data: 'strain_id', title: 'Strain ID'},
         //~ {data: 'strain_id__strain_id', title: 'Strain Name'},
-        {data: 'exact', title: 'Exact match',
-          render: function(data, type) {
-            return data.split('|').join('<br>');
-          }
-        },
+        {data: 'exact_name', title: 'Name'},
+        {data: 'exact_sciname', title: 'Scientific name'},
+        {data: 'exact_txid', title: 'NCBI taxonomic ID'},
+        {data: 'exact_txtype', title: 'Taxonomic rank'},
+        {data: 'exact_parentname', title: 'Parent name'}
+      ]
+    });
+    t.draw();
+    var t = $('#align2').DataTable({
+      data: data.data.result2,
+      destroy: true, // https://datatables.net/manual/tech-notes/3
+      columns: [
+        {data: 'id', title: 'ID'},
+        {data: 'strain_id', title: 'Strain ID'},
         {data: 'partial_type', title: 'Partial search'},//,
         {data: 'partial', title: 'Partial result',
           render: function(data, type) {
@@ -110,15 +221,27 @@ socket.onmessage = function(e) {
     });
     t.draw();
   }
+  // 
+  else if (data.message == 'completed save align') {
+    $('#align-alert').text('Alignment updated!');
+  }
 }
 socket.onclose = function(e){
   //console.log(e);
 }
-function align() {
+function align(btn) {
+  //~ btn.onclick = function() {}; // Disable
+  btn.disabled = true;
+  $('#align-prefix')[0].disabled = true;
+  $('#align').css('display', 'none');
+  $('#align-alert').css('display', '');
+  $('#align-alert').text('Loading alignment...');
+  $('#align-import').css('display', 'none');
+  $('#align-prefix')[0].value = $('#align-prefix')[0].value.trim();
   socket.send(JSON.stringify({
-    align: {
-      library: {{ library.id }}
-    }
+    type: 'align',
+    library: {{ library.id }},
+    prefix: $('#align-prefix')[0].value
   }));
 }
 </script>

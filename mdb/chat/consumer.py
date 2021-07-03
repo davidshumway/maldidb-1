@@ -8,29 +8,15 @@ import uuid
 from spectra.models import *
 import websocket
 
+from chat.models import Metadata
+from ncbitaxonomy.models import TxNode
+  
 # example: https://www.etemkeskin.com/index.php/2021/02/08/
 # real-time-application-development-using-websocket-in-django/
-# ~ class DashConsumer(WebsocketConsumer):
-  # ~ def connect(self):
-    # ~ print('==================2')
-    # ~ self.accept()
 
-  # ~ def disconnect(self, close_code):
-    # ~ print('==================1')
-    # ~ pass
-
-  # ~ def receive(self, text_data):
-    # ~ print('==================0')
-    # ~ text_data_json = json.loads(text_data)
-    # ~ message = text_data_json['message']
-    # ~ self.send(text_data = json.dumps({
-        # ~ 'message': message
-      # ~ })
-    # ~ )
 clients = {}
 
 class DashConsumer(AsyncJsonWebsocketConsumer):
-  # ~ users = {}
   
   async def connect(self):
     print('==================1')
@@ -125,15 +111,15 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
       print(e)
       pass
     
-    # align
+    # client asks for alignment
     try:
       val = json.loads(text_data)
-      if val['align'] != '':
-        align(self, val['align'], self.client_id)
+      if val['type'] == 'align':
+        align(self, val, self.client_id)
     except Exception as e:    
       print(e)
       pass
-    # completed
+    # send alignment data
     try:
       val = json.loads(text_data)
       if val['type'] == 'completed align':
@@ -147,71 +133,175 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     except Exception as e:    
       print(e)
       pass
+    # client saves alignment
+    try:
+      val = json.loads(text_data)
+      if val['type'] == 'save align':
+        save_align(self, val, self.client_id)
+    except Exception as e:
+      print(e)
+      pass
+    # send save alignment success
+    try:
+      val = json.loads(text_data)
+      if val['type'] == 'completed save align':
+        d = json.dumps({
+          'data': {
+            'message': 'completed save align',
+            'data': val['data']
+          }
+        })
+        await clients[val['data']['client']].send(text_data = d)
+    except Exception as e:    
+      print(e)
+      pass
     
   async def deprocessing(self, event):
     print('==================4')
     # ~ await self.send(text_data = json.dumps(event['value']))
 
+def get_parents(txid):
+  '''
+  :return rslt: List of objects where each object is {name, rank}
+  '''
+  print(f'txid{txid}')
+  n = TxNode.objects.filter(txid = txid)
+  if len(n) == 0:
+    return []
+  else:
+    return [n.first()] + get_parents(n.first().parentid) # if n.parentid else [])
+  # ~ print(f'node{n}')
+  # ~ return 
+  
+
+@start_new_thread
+def save_align(self, msg, client):
+  '''
+  :param msg['library']: Library containing metadata
+  :param msg['alignments']: Exact matches to update
+  '''
+  update_nodes = []
+  for alignment in msg['alignments']:
+    n = Metadata.objects.filter(id = alignment['id'],
+      library__id = msg['library']).first()
+    n.ncbi_taxid = alignment['exact_txid']
+    parents = get_parents(alignment['exact_parentid'])
+    for parent in parents:
+      #print(f'rank{parent.txtype}')
+      if parent.txtype == 'species':
+        n.cSpecies = parent.name
+      elif parent.txtype == 'genus':
+        n.cGenus = parent.name
+      elif parent.txtype == 'family':
+        n.cFamily = parent.name
+      elif parent.txtype == 'order':
+        n.cOrder = parent.name
+      elif parent.txtype == 'class':
+        n.cClass = parent.name
+      elif parent.txtype == 'phylum':
+        n.cPhylum = parent.name
+      elif parent.txtype == 'superkingdom':
+        n.cKingdom = parent.name
+      else:
+        print(f'unknown parent txtype: {parent.name} {parent.txtype}')
+      # ~ elif parent.txtype == '':
+        # ~ n.c = parent.name
+    update_nodes.append(n)
+    
+  Metadata.objects.bulk_update(update_nodes, 
+    ['ncbi_taxid', 'cSpecies', 'cGenus', 'cFamily', 'cOrder', 'cClass',
+    'cPhylum', 'cKingdom']
+  )
+  
+  ws = websocket.WebSocket()
+  ws.connect('ws://localhost:8000/ws/pollData')
+  ws.send(json.dumps({
+    'type': 'completed save align',
+    'data': {
+      'client': client
+    }
+  }))
+  ws.close()
+  
 @start_new_thread
 def align(self, msg, client):
   '''
+  Uses name__iexact for case insensitive search.
+  
+  Example NCBI irregularities (NRRL):
+    NRRL-ISP 5314
+    NRRL-B-24892
+    NRRL-B 24875
+    NRRL-792
+    NRRL- Y-27449
+    NRRL-ISP:5570
+    NRRL-ISP 5590 [[Streptomyces bambergiensis]]
+    Arthrobacter NRRL-B3728
+    Zygorhynchus sp. NRRL 3102
   '''
   from chat.models import Metadata
   from ncbitaxonomy.models import TxNode
   m = Metadata.objects.filter(library__id = msg['library'])
   
   # return a list of objects
-  rslt = []
+  rslt1 = []
+  rslt2 = []
   
   for md in m:
-    j = TxNode.objects.filter(name__exact = 'NRRL ' + md.strain_id)
+    j = TxNode.objects.filter(name__iexact = msg['prefix'].strip() + ' ' + md.strain_id)
     tmp = {
       'id': md.id,
       'strain_id': md.strain_id,
-      'name': '',
-      'txtype': '',
-      'parent': '',
-      'exact': 'No exact match',
+      'exact_name': '',
+      'exact_txid': '',
+      'exact_txtype': '',
+      'exact_parentname': '',
+      'exact_parentid': '',
       'partial_type': 'N/A',
       'partial': 'N/A',
     }
     if len(j) > 0:
       j = j.first()
       name = str(TxNode.objects.get(txid = j.txid, nodetype = "s").name)
-      pname = str(TxNode.objects.get(txid = j.parentid).name)
-      tmp['name'] = j.name
-      tmp['txtype'] = j.txtype
-      tmp['parent'] = j.parentid
-      tmp['exact'] = f'{j.name} ({name})|type: {j.txtype}|parent: {pname}'
+      parent = TxNode.objects.get(txid = j.parentid, nodetype = "s")
+      # ~ tmp['parent'] = j.parentid
+      tmp['exact_name'] = name
+      tmp['exact_sciname'] = j.name
+      tmp['exact_parentname'] = parent.name
+      tmp['exact_parentid'] = parent.txid
+      tmp['exact_txid'] = j.txid
+      tmp['exact_txtype'] = j.txtype
+      # ~ tmp['exact'] = f'{j.name} ({name})|type: {j.txtype}|parent: {pname}'
+      rslt1.append(tmp)
     else:
-      j2 = TxNode.objects.filter(name__contains =  ' ' + md.strain_id) # f001
+      j2 = TxNode.objects.filter(name__contains =  ' ' + md.strain_id)[0:3]
       if len(j2) > 0:
         i = 0
         strout = []
         while i < 2:
           try:
-            strout.append(j2[i].name)
+            strout.append(f'{j2[i].name} ({str(j2[i].txid)})')
           except:
             pass
           i += 1
-        tmp['partial_type'] = 'space + name (" strain_id")'
+        tmp['partial_type'] = 'space + name'
         tmp['partial'] = '|'.join(strout)
       else:
-        j3 = TxNode.objects.filter(name__contains = md.strain_id)
+        j3 = TxNode.objects.filter(name__contains = md.strain_id)[0:3]
         if len(j3) > 0:
           i = 0
           strout = []
           while i < 2:
             try:
-              strout.append(j3[i].name)
+              strout.append(f'{j3[i].name} ({str(j3[i].txid)})')
             except:
               pass
             i += 1
-          tmp['partial_type'] = 'name only ("strain_id")'
+          tmp['partial_type'] = 'name only'
           tmp['partial'] = '|'.join(strout)
         else:
           tmp['partial_type'] = 'No partial match'
-    rslt.append(tmp)
+      rslt2.append(tmp)
     
   ws = websocket.WebSocket()
   ws.connect('ws://localhost:8000/ws/pollData')
@@ -219,7 +309,8 @@ def align(self, msg, client):
     'type': 'completed align',
     'data': {
       'client': client,
-      'result': rslt
+      'result1': rslt1,
+      'result2': rslt2
     }
   }))
   ws.close()
@@ -312,8 +403,9 @@ def cosine_scores(self, library, client, search_library):
     library__exact = search_library,
     spectra_content__exact = 'PR'
   ).order_by('id').values('id', 'strain_id__strain_id',
-    'strain_id__cSpecies', 'strain_id__cGenus', 'strain_id__cOrder',
-    'strain_id__cClass', 'strain_id__cPhylum', 'strain_id__cKingdom')
+    'strain_id__cSpecies', 'strain_id__cGenus', 'strain_id__cFamily',
+    'strain_id__cOrder', 'strain_id__cClass', 'strain_id__cPhylum',
+    'strain_id__cKingdom')
   
   if len(n2) == 0:
     print('No collapsed spectra in search library!')
@@ -368,6 +460,7 @@ def cosine_scores(self, library, client, search_library):
           'phylum': u + [str(s['strain_id__cPhylum']) if s['strain_id__cPhylum'] != '' else 'N/A' for s in list(n2)],
           'class': u + [str(s['strain_id__cClass']) if s['strain_id__cClass'] != '' else 'N/A' for s in list(n2)],
           'order': u + [str(s['strain_id__cOrder']) if s['strain_id__cOrder'] != '' else 'N/A' for s in list(n2)],
+          'family': u + [str(s['strain_id__cFamily']) if s['strain_id__cFamily'] != '' else 'N/A' for s in list(n2)],
           'genus': u + [str(s['strain_id__cGenus']) if s['strain_id__cGenus'] != '' else 'N/A' for s in list(n2)],
           'species': u + [str(s['strain_id__cSpecies']) if s['strain_id__cSpecies'] != '' else 'N/A' for s in list(n2)]
         },
@@ -398,7 +491,7 @@ def cosine_scores(self, library, client, search_library):
           'phylum': cs.strain_id.cPhylum,
           'class': cs.strain_id.cClass,
           'order': cs.strain_id.cOrder,
-          # ~ 'family': cs.strain_id.cFamily,
+          'family': cs.strain_id.cFamily,
           'genus': cs.strain_id.cGenus,
           'species': cs.strain_id.cSpecies,
           'rowcount': rowcount,
