@@ -11,6 +11,7 @@ class TxNode(models.Model):
     choices = [
       ('s', 'scientific name'),
       ('t', 'type material'),
+      ('y', 'synonym'),
     ],
     default = 's',
   )

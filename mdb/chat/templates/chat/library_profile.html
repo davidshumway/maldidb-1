@@ -286,6 +286,9 @@ socket.onmessage = function(e) {
     $('#align4').css('display', '');
     $('#align-alert-manual').text('');
     $('#align-alert-manual').css('display', 'none');
+    $('#manual1').disabled = false;
+    $('#manual2').disabled = false;
+    $('#manual3').disabled = false;
     
     if (data.data.result1.length > 0) {
       $('#manual-align-import').on('click', alignImportManual);
@@ -355,6 +358,9 @@ function manualAlign(btn) {
   btn.disabled = true;
   $('#align-alert-manual').css('display', '');
   $('#align-alert-manual').text('Loading alignment...');
+  $('#manual1').disabled = true;
+  $('#manual2').disabled = true;
+  $('#manual3').disabled = true;
   socket.send(JSON.stringify({
     type: 'manual_align',
     library: {{ library.id }},

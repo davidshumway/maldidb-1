@@ -18,8 +18,8 @@ class NcbitaxonomyConfig(AppConfig):
       return True
     if '\tincludes\t' in line:
       return True
-    if '\tsynonym\t' in line:
-      return True
+    # ~ if '\tsynonym\t' in line:
+      # ~ return True
     if '\tacronym\t' in line:
       return True
     if '\tblast name\t' in line:
@@ -46,7 +46,7 @@ class NcbitaxonomyConfig(AppConfig):
     try:
       from .models import TxNode
       print('NCBI: checking NCBI...', len(TxNode.objects.all()[0:1]))
-      
+      # ~ return
       # reads nodes
       # 0=node's id, 1=parent's id, 2=node's rank
       # ~ txrank = {}
@@ -114,17 +114,18 @@ class NcbitaxonomyConfig(AppConfig):
             if txrank[n[0].strip()]['division'] != '0': # division code = Bacteria
               continue
             nodetype = n[3].strip()
-            if nodetype not in ['scientific name', 'type material']:
+            if nodetype not in ['scientific name', 'type material', 'synonym']:
               print('invalid nodetype:', nodetype)
               break
             # checks for key in allnodes (id + name = unique)
             if n[1].strip() + n[0].strip() not in allnodes:
               allnodes[n[1].strip() + n[0].strip()] = True
               tx = txrank[n[0].strip()]
+              nodetype = 'y' if nodetype == 'synonym' else nodetype[0]
               txnodes.append(TxNode(
                 name = n[1].strip(),
                 txid = n[0].strip(),
-                nodetype = nodetype[0],
+                nodetype = nodetype,
                 txtype = tx['txtype'],
                 parentid = tx['parent']
               ))
