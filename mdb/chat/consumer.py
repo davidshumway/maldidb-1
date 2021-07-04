@@ -258,13 +258,6 @@ def manual_align(self, msg, client):
   sIDs = [ s.strip() for s in msg['data']['strain_ids'].strip().split('\n') ]
   genus = [ s.strip() for s in msg['data']['genus'].strip().split('\n') ]
   species = [ s.strip() for s in msg['data']['species'].strip().split('\n') ]
-  # ~ items = {}
-  # ~ idx = 0
-  # ~ for sid in msg['data']['strain_ids'].split('\n'):
-    # ~ items[sid.strip()] = 
-      # ~ 'idx': count
-    # ~ })
-    # ~ idx += 1
   print(f'sids:{sIDs}')
   md = Metadata.objects.filter(library_id = msg['library'],
     strain_id__in = sIDs)
@@ -344,7 +337,7 @@ def get_parents(txid):
   :return rslt: List of objects where each object is {name, rank}
   '''
   print(f'txid{txid}')
-  n = TxNode.objects.filter(txid = txid)
+  n = TxNode.objects.filter(txid = txid, nodetype = 's')
   if len(n) == 0:
     return []
   else:
@@ -364,6 +357,7 @@ def save_align(self, msg, client):
     n = Metadata.objects.filter(id = alignment['id'],
       library__id = msg['library']).first()
     n.ncbi_taxid = alignment['exact_txid']
+    n.cSpecies = alignment['exact_sciname']
     parents = get_parents(alignment['exact_parentid'])
     for parent in parents:
       #print(f'rank{parent.txtype}')
@@ -402,11 +396,25 @@ def save_align(self, msg, client):
     }
   }))
   ws.close()
+
+def align_getpartial(node):
+  '''
+  Format closest matches in a readable format
+  '''
+  i = 0
+  strout = []
+  while i < 2:
+    try:
+      strout.append(f'{node[i].name} ({str(node[i].txid)})')
+    except:
+      pass
+    i += 1
+  return '|'.join(strout)
   
 @start_new_thread
 def align(self, msg, client):
   '''
-  Uses name__iexact for case insensitive search.
+  Using name__iexact for case insensitive search.
   
   Example NCBI irregularities (NRRL):
     NRRL-ISP 5314
@@ -421,7 +429,7 @@ def align(self, msg, client):
   '''
   from chat.models import Metadata
   from ncbitaxonomy.models import TxNode
-  m = Metadata.objects.filter(library__id = msg['library'])
+  m = Metadata.objects.filter(library__id = msg['library'], ncbi_taxid = '')
   
   # return a list of objects
   rslt1 = []
@@ -442,43 +450,25 @@ def align(self, msg, client):
     }
     if len(j) > 0:
       j = j.first()
-      name = str(TxNode.objects.get(txid = j.txid, nodetype = "s").name)
+      sciname = TxNode.objects.get(txid = j.txid, nodetype = "s").name
       parent = TxNode.objects.get(txid = j.parentid, nodetype = "s")
-      # ~ tmp['parent'] = j.parentid
-      tmp['exact_name'] = name
-      tmp['exact_sciname'] = j.name
+      tmp['exact_name'] = j.name
+      tmp['exact_sciname'] = sciname
       tmp['exact_parentname'] = parent.name
       tmp['exact_parentid'] = parent.txid
       tmp['exact_txid'] = j.txid
       tmp['exact_txtype'] = j.txtype
-      # ~ tmp['exact'] = f'{j.name} ({name})|type: {j.txtype}|parent: {pname}'
       rslt1.append(tmp)
     else:
       j2 = TxNode.objects.filter(name__contains =  ' ' + md.strain_id)[0:3]
       if len(j2) > 0:
-        i = 0
-        strout = []
-        while i < 2:
-          try:
-            strout.append(f'{j2[i].name} ({str(j2[i].txid)})')
-          except:
-            pass
-          i += 1
         tmp['partial_type'] = 'space + name'
-        tmp['partial'] = '|'.join(strout)
+        tmp['partial'] = align_getpartial(j2)
       else:
         j3 = TxNode.objects.filter(name__contains = md.strain_id)[0:3]
         if len(j3) > 0:
-          i = 0
-          strout = []
-          while i < 2:
-            try:
-              strout.append(f'{j3[i].name} ({str(j3[i].txid)})')
-            except:
-              pass
-            i += 1
           tmp['partial_type'] = 'name only'
-          tmp['partial'] = '|'.join(strout)
+          tmp['partial'] = align_getpartial(j3)
         else:
           tmp['partial_type'] = 'No partial match'
       rslt2.append(tmp)
