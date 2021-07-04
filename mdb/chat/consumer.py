@@ -155,11 +155,190 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     except Exception as e:    
       print(e)
       pass
-    
+    # client asks for manual alignment
+    try:
+      val = json.loads(text_data)
+      if val['type'] == 'manual_align':
+        manual_align(self, val, self.client_id)
+    except Exception as e:    
+      print(e)
+      pass
+    # send manual alignment success
+    try:
+      val = json.loads(text_data)
+      if val['type'] == 'completed manual align':
+        d = json.dumps({
+          'data': {
+            'message': 'completed manual align',
+            'data': val['data']
+          }
+        })
+        await clients[val['data']['client']].send(text_data = d)
+    except Exception as e:    
+      print(e)
+      pass
+    # client asks to save manual alignment
+    try:
+      val = json.loads(text_data)
+      if val['type'] == 'save manual align':
+        save_manual_align(self, val, self.client_id)
+    except Exception as e:    
+      print(e)
+      pass
+    # send save manual alignment success
+    try:
+      val = json.loads(text_data)
+      if val['type'] == 'completed save manual align':
+        d = json.dumps({
+          'data': {
+            'message': 'completed save manual align',
+            'data': val['data']
+          }
+        })
+        await clients[val['data']['client']].send(text_data = d)
+    except Exception as e:    
+      print(e)
+      pass
   async def deprocessing(self, event):
     print('==================4')
     # ~ await self.send(text_data = json.dumps(event['value']))
 
+@start_new_thread
+def save_manual_align(self, msg, client):
+  '''
+  :param msg['library']: Library containing metadata
+  :param msg['alignments']: Exact matches to update
+  '''
+  update_nodes = []
+  for alignment in msg['alignments']:
+    n = Metadata.objects.filter(id = alignment['id'])[0]
+    if alignment['txid2'] != '':#
+      n.ncbi_taxid = alignment['txid2'] # species
+      n.cSpecies = alignment['species']
+      n.cGenus = alignment['genus']
+    else:
+      n.ncbi_taxid = alignment['txid1'] # only genus provided
+      n.cGenus = alignment['genus']
+    
+    parents = get_parents(alignment['genus_parentid'])
+    for parent in parents:
+      if parent.txtype == 'family':
+        n.cFamily = parent.name
+      elif parent.txtype == 'order':
+        n.cOrder = parent.name
+      elif parent.txtype == 'class':
+        n.cClass = parent.name
+      elif parent.txtype == 'phylum':
+        n.cPhylum = parent.name
+      elif parent.txtype == 'superkingdom':
+        n.cKingdom = parent.name
+      else: # unknown parent txtype: Terrabacteria group clade ?
+        print(f'unknown parent txtype: {parent.name} {parent.txtype}')
+    update_nodes.append(n)
+    
+  Metadata.objects.bulk_update(update_nodes, 
+    ['ncbi_taxid', 'cSpecies', 'cGenus', 'cFamily', 'cOrder', 'cClass',
+    'cPhylum', 'cKingdom']
+  )
+  
+  # sends result back to client
+  ws = websocket.WebSocket()
+  ws.connect('ws://localhost:8000/ws/pollData')
+  ws.send(json.dumps({
+    'type': 'completed save manual align',
+    'data': {
+      'client': client
+    }
+  }))
+  ws.close()
+  
+@start_new_thread
+def manual_align(self, msg, client):
+  print(f'msg:{msg}')
+  sIDs = [ s.strip() for s in msg['data']['strain_ids'].strip().split('\n') ]
+  genus = [ s.strip() for s in msg['data']['genus'].strip().split('\n') ]
+  species = [ s.strip() for s in msg['data']['species'].strip().split('\n') ]
+  # ~ items = {}
+  # ~ idx = 0
+  # ~ for sid in msg['data']['strain_ids'].split('\n'):
+    # ~ items[sid.strip()] = 
+      # ~ 'idx': count
+    # ~ })
+    # ~ idx += 1
+  print(f'sids:{sIDs}')
+  md = Metadata.objects.filter(library_id = msg['library'],
+    strain_id__in = sIDs)
+  print(f'md:{md}')
+  
+  sID_dict = {}
+  idx = 0
+  for s in sIDs:
+    sID_dict[s] = idx
+    idx += 1
+  
+  result1 = []
+  result2 = []
+  for m in md:
+    if m.strain_id not in sID_dict:
+      continue
+    idx = sID_dict[m.strain_id]
+    g = genus[idx]
+    s = species[idx]
+    tmp = {
+      'id': m.id,
+      'sid': m.strain_id,
+      'genus': g,
+      'species': s,
+      'txid1': '',
+      'txid2': '',
+      'genus_parentid': '',
+    }
+    j1 = TxNode.objects.filter(name__iexact = g, txtype__exact = 'genus')\
+      .values('txid', 'parentid')
+    if len(j1) == 1:
+      tmp['txid1'] = j1[0]['txid']
+      tmp['genus_parentid'] = j1[0]['parentid']
+    if s == '': # only genus
+      if len(j1) == 0:
+        tmp['result'] = 'no match'
+        result2.append(tmp)
+      elif len(j1) > 1:
+        tmp['result'] = 'multiple results'
+        result2.append(tmp)
+      else:
+        tmp['result'] = 'exact match'
+        tmp['result_type'] = 'genus'
+        result1.append(tmp)
+    else: # genus + species
+      print(f'parentid__in = {[gx["txid"] for gx in list(j1)]}')
+      j2 = TxNode.objects.filter(name__iexact = s,
+        txtype__exact = 'species',
+        parentid__in = [gx['txid'] for gx in list(j1)])
+      if len(j2) == 0:
+        tmp['result'] = 'no species match'
+        result2.append(tmp)
+      elif len(j2) > 1:
+        tmp['result'] = 'multiple results'
+        result2.append(tmp)
+      else:
+        tmp['result'] = 'exact match'
+        tmp['result_type'] = 'species'
+        tmp['txid2'] = j2[0].txid
+        result1.append(tmp)
+  
+  # sends result back to client
+  ws = websocket.WebSocket()
+  ws.connect('ws://localhost:8000/ws/pollData')
+  ws.send(json.dumps({
+    'type': 'completed manual align',
+    'data': {
+      'client': client,
+      'result1': result1,
+      'result2': result2
+    }
+  }))
+  ws.close()
+  
 def get_parents(txid):
   '''
   :return rslt: List of objects where each object is {name, rank}
@@ -213,6 +392,7 @@ def save_align(self, msg, client):
     'cPhylum', 'cKingdom']
   )
   
+  # sends result back to client
   ws = websocket.WebSocket()
   ws.connect('ws://localhost:8000/ws/pollData')
   ws.send(json.dumps({

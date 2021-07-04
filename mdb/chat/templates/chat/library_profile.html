@@ -69,97 +69,150 @@
 {% if request.user in lab.owners.all %}
 <div class="col-sm-9"><!-- accordion-style -->
   
-<div class="card">
-  <div class="card-header">Library options</div>
-  <div class="card-body">
-    <div class="row">
-    <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-      <button class="nav-link active" id="v-pills-home-tab"
-        data-toggle="pill" href="#v-pills-home" role="tab"
-        aria-controls="v-pills-home" aria-selected="true"
-        >NCBI<br/>taxonomy<br/>alignment<br/>(Search)</button>
-      <button class="nav-link" id="v-pills-another-tab"
-        data-toggle="pill" href="#v-pills-another" role="tab"
-        aria-controls="v-pills-another" aria-selected="false"
-        >NCBI<br/>taxonomy<br/>alignment<br/>(Manual entry)</button>
-    </div>
-    
-    <div class="tab-content ml-4" id="v-pills-tabContent">
-      <div class="tab-pane fade show active" id="v-pills-home"
-        role="tabpanel" aria-labelledby="v-pills-home-tab">
-        
-        <!-- Begin -->
-        <label for="align-prefix"
-          >(Optional) Enter a prefix for the strain ID, e.g. "NRRL":</label>
-        <input type="text" placeholder="" size=20 id="align-prefix" />
-        
-        <div>
-        <button type="button" class="btn btn-primary"
-          onclick="javascript:align(this);" id="align-load"
-          >Load alignments</button>
-        
-        <button type="button" class="btn btn-primary" id="align-import"
-            style="display:none;"
-            >Import NCBI taxonomy IDs for exact matches</button>
+  <div class="card">
+    <div class="card-header">Library options</div>
+    <div class="card-body">
+      <div class="row">
+        <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+          <button class="nav-link active" id="v-pills-home-tab"
+            data-toggle="pill" href="#v-pills-home" role="tab"
+            aria-controls="v-pills-home" aria-selected="true"
+            >NCBI<br/>taxonomy<br/>alignment<br/>(Search)</button>
+          <button class="nav-link" id="v-pills-another-tab"
+            data-toggle="pill" href="#v-pills-another" role="tab"
+            aria-controls="v-pills-another" aria-selected="false"
+            >NCBI<br/>taxonomy<br/>alignment<br/>(Manual entry)</button>
         </div>
         
-        <br />
-        <div class="alert alert-info" role="alert" id="align-alert"
-          style="display:none;"></div>
-          
-        <br />
-        <div id="align" style="display:none">
-          <table id="align1"
-            class="table table-bordered table-responsive table-condensed"
-            style="display:none">
-            <caption style="caption-side: top">Exact matches</caption></caption>
-            </table><!-- cell-border compact stripe-->
-          
-          <br />
-          <table id="align2"
-            class="table table-bordered table-responsive table-condensed"
-            style="display:none">
-            <caption style="caption-side: top">Partial matches</caption></table>
-        </div>
-        <!-- End -->
-        
-      </div>
-      <div class="tab-pane fade" id="v-pills-another"
-        role="tabpanel" aria-labelledby="v-pills-another-tab">
-        <div>Paste corresponding metadata separated by a newline character. For example:
-          <pre>B-10
-          B-11
-          B-12</pre></div>
-          
-        <label for="">Strain IDs:</label>
-        <textarea></textarea>
-        
-        <label for="">Genus:</label>
-        <textarea></textarea>
-        
-        <label for="">Species:</label>
-        <textarea></textarea>
-        </div>
-    </div>
-    
-  </div></div><!--/card-body-->
-</div><!--/card-->
-</div>
+        <div class="tab-content ml-4 w-75" id="v-pills-tabContent">
+          <div class="tab-pane fade show active" id="v-pills-home"
+            role="tabpanel" aria-labelledby="v-pills-home-tab">
+            
+            <!-- Begin -->
+            <label for="align-prefix"
+              >(Optional) Enter a prefix for the strain ID, e.g. "NRRL":</label>
+            <input type="text" placeholder="" size=20 id="align-prefix" />
+            
+            <div>
+            <button type="button" class="btn btn-primary"
+              onclick="javascript:align(this);" id="align-load"
+              >Load alignments</button>
+            
+            <button type="button" class="btn btn-primary" id="align-import"
+                style="display:none;"
+                >Import NCBI taxonomy IDs for exact matches</button>
+            </div>
+            
+            <br />
+            <div class="alert alert-info" role="alert" id="align-alert"
+              style="display:none;"></div>
+              
+            <br />
+            <div id="align" style="display:none">
+              <table id="align1"
+                class="table table-bordered table-responsive table-condensed"
+                style="display:none; width:100%;">
+                <caption style="caption-side: top">Exact matches</caption></caption>
+                </table><!-- cell-border compact stripe-->
+              
+              <br />
+              <table id="align2"
+                class="table table-bordered table-responsive table-condensed"
+                style="display:none; width:100%;">
+                <caption style="caption-side: top">Partial matches</caption></table>
+            </div>
+            <!-- End -->
+            
+          </div>
+          <div class="tab-pane fade" id="v-pills-another"
+            role="tabpanel" aria-labelledby="v-pills-another-tab">
+            <p>
+              <a class="btn btn-primary" data-toggle="collapse"
+                href="#instructions" role="button"
+                aria-expanded="false" aria-controls="instructions"
+                id="toggleInstructions"
+                >Show instructions</a>
+            </p>
+            <div class="row">
+              <div class="col">
+                <div class="collapse multi-collapse" id="instructions">
+                  <div class="card card-body alert alert-info">
+                    <p>Enter metadata for one or more entries in the library
+                    based on entry strain ID.</p>
+                    <p></p>
+                    <p>Paste library strain IDs to be aligned separated by a newline
+                    character, for example:</p>
+              <pre>B-10
+B-11
+B-12
+B-14</pre>
+                    <p>Leave a blank space for unknown species data, for example:</p>
+              <pre>tendae
+erythrogriseus
+
+koyangensis</pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+    <script type="text/javascript">
+    $('#instructions').collapse({
+      toggle: false
+    });
+    $('#instructions').on('shown.bs.collapse', function () {
+      $('#toggleInstructions').text('Hide instructions');
+    });
+    $('#instructions').on('hidden.bs.collapse', function () {
+      $('#toggleInstructions').text('Show instructions');
+    });
+    </script>
+            
+            <div class="row">
+              <div class="col">
+                <label for="">Strain IDs:</label>
+                <textarea class="form-control" id="manual1"></textarea>
+              </div>
+              <div class="col">
+                <label for="">Genus:</label>
+                <textarea class="form-control" id="manual2"></textarea>
+              </div>
+              <div class="col">
+                <label for="">Species:</label>
+                <textarea class="form-control" id="manual3"></textarea>
+              </div>
+            </div>
+            
+            <br/>
+            <button class="btn btn-primary"
+              onclick="javascript:manualAlign(this);" id="manual-align-preview"
+              >Preview alignment</button>
+            <button type="button" class="btn btn-primary" id="manual-align-import"
+                style="display:none;"
+                >Import NCBI taxonomy IDs for exact matches</button>
+            
+            <br />
+            <div class="alert alert-info" role="alert" id="align-alert-manual"
+              style="display:none;"></div>
+              
+            <br/>
+            <table id="align3"
+                class="table table-bordered table-responsive table-condensed"
+                style="display:none; width:100%;">
+                <caption style="caption-side: top">Exact matches</caption></table>
+            <br/>
+            <table id="align4"
+                class="table table-bordered table-responsive table-condensed"
+                style="display:none; width:100%;">
+                <caption style="caption-side: top">Partial matches</caption></table>
+        </div><!--/tab-content-->
+      </div><!--/row-->
+    </div><!--/card-body-->
+  </div><!--/card-->
+</div><!--/col-->
 
 <script type="text/javascript">
 var alignments = null; // To be set later
-
-function alignImport() {
-  $('#align-load')[0].disabled = true;
-  $('#align-prefix')[0].disabled = true;
-  $('#align-import')[0].disabled = true;
-  $('#align-alert').text('Saving alignment...');
-  socket.send(JSON.stringify({
-    type: 'save align',
-    library: {{ library.id }},
-    alignments: alignments
-  }));
-}
+var alignments2 = null; // To be set later
 
 var socket = new WebSocket('ws://' + location.host + '/ws/pollData');
 socket.onopen = function(e){
@@ -225,9 +278,91 @@ socket.onmessage = function(e) {
   else if (data.message == 'completed save align') {
     $('#align-alert').text('Alignment updated!');
   }
+  //
+  else if (data.message == 'completed manual align') {
+    $('#manual-align-import').css('display', '');
+    $('#align3').css('display', '');
+    $('#align4').css('display', '');
+    $('#align-alert-manual').text('');
+    $('#align-alert-manual').css('display', 'none');
+    
+    if (data.data.result1.length > 0) {
+      $('#manual-align-import').on('click', alignImportManual);
+      $('#manual-align-import')[0].disabled = false;
+      alignments2 = data.data.result1;
+    } else {
+      $('#manual-align-import')[0].disabled = true;
+    }
+    
+    var t = $('#align3').DataTable({
+      data: data.data.result1,
+      destroy: true, // https://datatables.net/manual/tech-notes/3
+      columns: [
+        {data: 'sid', title: 'Strain ID'},
+        //~ {data: 'strain_id__strain_id', title: 'Strain Name'},
+        {data: 'genus', title: 'Input genus'},
+        {data: 'species', title: 'Input species'},
+        {data: 'txid1', title: 'NCBI genus ID'},
+        {data: 'txid2', title: 'NCBI species ID'}
+      ]
+    });
+    t.draw();
+    var t = $('#align4').DataTable({
+      data: data.data.result2,
+      destroy: true, // https://datatables.net/manual/tech-notes/3
+      columns: [
+        {data: 'sid', title: 'Strain ID'},
+        {data: 'genus', title: 'Input genus'},
+        {data: 'species', title: 'Input species'},
+        {data: 'result', title: 'Match issue'},
+        {data: 'txid1', title: 'NCBI genus ID'},
+        {data: 'txid2', title: 'NCBI species ID'}
+      ]
+    });
+    t.draw();
+  }
+  // 
+  else if (data.message == 'completed save manual align') {
+    $('#align-alert-manual').text('Alignment updated!');
+  }
 }
 socket.onclose = function(e){
   //console.log(e);
+}
+function alignImport() {
+  $('#align-load')[0].disabled = true;
+  $('#align-prefix')[0].disabled = true;
+  $('#align-import')[0].disabled = true;
+  $('#align-alert').text('Saving alignment...');
+  socket.send(JSON.stringify({
+    type: 'save align',
+    library: {{ library.id }},
+    alignments: alignments
+  }));
+}
+function alignImportManual() {
+  $('#manual-align-preview')[0].disabled = true;
+  $('#manual-align-import')[0].disabled = true;
+  $('#align-alert-manual').text('Saving alignment...');
+  socket.send(JSON.stringify({
+    type: 'save manual align',
+    library: {{ library.id }},
+    alignments: alignments2
+  }));
+}
+function manualAlign(btn) {
+  btn.disabled = true;
+  $('#align-alert-manual').css('display', '');
+  $('#align-alert-manual').text('Loading alignment...');
+  socket.send(JSON.stringify({
+    type: 'manual_align',
+    library: {{ library.id }},
+    data: {
+      strain_ids: $('#manual1')[0].value.trim(),
+      genus: $('#manual2')[0].value.trim(),
+      species: $('#manual3')[0].value.trim()
+    }
+  }));
 }
 function align(btn) {
   //~ btn.onclick = function() {}; // Disable
