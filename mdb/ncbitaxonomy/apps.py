@@ -13,6 +13,7 @@ class NcbitaxonomyConfig(AppConfig):
   
   txnodes = []
   allnodes = {}
+  sciname = {}
   
   def skipline(self, line):
     if '\tauthority\t' in line:
@@ -40,6 +41,25 @@ class NcbitaxonomyConfig(AppConfig):
     return False
   
   def set_parents(self, node):
+    '''
+    Sets taxonomic rankings of a node
+    '''
+    # sets node's ranking
+    if node.txtype == 'species':
+      node.cSpecies = node.name
+    elif node.txtype == 'genus':
+      node.cGenus = node.name
+    elif node.txtype == 'family':
+      node.cFamily = node.name
+    elif node.txtype == 'order':
+      node.cOrder = node.name
+    elif node.txtype == 'class':
+      node.cClass = node.name
+    elif node.txtype == 'phylum':
+      node.cPhylum = node.name
+    elif node.txtype == 'superkingdom':
+      node.cKingdom = node.name
+    # sets node's parents
     parents = self.get_parents(node)
     for parent in parents:
       if parent.txtype == 'species':
@@ -56,13 +76,14 @@ class NcbitaxonomyConfig(AppConfig):
         node.cPhylum = parent.name
       elif parent.txtype == 'superkingdom':
         node.cKingdom = parent.name
-    return node
+    # ~ return node
       # ~ else:
         # ~ print(f'unknown parent txtype: {parent.name} {parent.txtype}')
         
   def get_parents(self, node):
     try:
-      n = self.allnodes[node.name + str(node.parentid)]
+      n = self.sciname[str(node.parentid)]
+      # ~ n = self.allnodes[node.name + str(node.parentid)]
     except: # KeyError
       return []
     return [n] + self.get_parents(n) # if n.parentid else [])
@@ -111,7 +132,7 @@ class NcbitaxonomyConfig(AppConfig):
             if nodetype not in ['scientific name', 'type material', 'synonym']:
               print('invalid nodetype:', nodetype)
               break
-            # checks for key in allnodes (id + name = unique)
+            # checks for key in allnodes (name + txid = unique)
             if n[1].strip() + n[0].strip() not in self.allnodes:
               rank_ = txrank[n[0].strip()]
               nodetype = 'y' if nodetype == 'synonym' else nodetype[0]
@@ -124,12 +145,16 @@ class NcbitaxonomyConfig(AppConfig):
               )
               self.txnodes.append(tx_)
               self.allnodes[n[1].strip() + n[0].strip()] = tx_
+              # creates sciname dict
+              if nodetype == 's':
+                self.sciname[n[0].strip()] = tx_
 
           # updates all nodes to include taxonomic classification
           for n in self.txnodes:
-            n = self.set_parents(n)
+            self.set_parents(n)
           print(f'NCBI: inserting data into db...')
-          # ~ print(f'self.txnodes[0]{self.txnodes[0]} kingdom:{self.txnodes[0].cKingdom} species:{self.txnodes[0].cSpecies} name:{self.txnodes[0].name} txid:{self.txnodes[0].txid}')
+          # ~ print(f'self.txnodes[0]{self.txnodes[0]} kingdom:{self.txnodes[0].cKingdom} genus:{self.txnodes[0].cGenus} species:{self.txnodes[0].cSpecies} name:{self.txnodes[0].name} txid:{self.txnodes[0].txid}')
+          # ~ print(f'self.txnodes[1]{self.txnodes[1]} kingdom:{self.txnodes[1].cKingdom} genus:{self.txnodes[1].cGenus} species:{self.txnodes[1].cSpecies} name:{self.txnodes[1].name} txid:{self.txnodes[1].txid}')
           # ~ return
           
           created_nodes = []
