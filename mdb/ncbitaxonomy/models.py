@@ -1,4 +1,6 @@
 from django.db import models
+from django.contrib.postgres.search import SearchVectorField
+from django.contrib.postgres.indexes import GinIndex
 
 # Create your models here.
 class TxNode(models.Model):
@@ -39,8 +41,19 @@ class TxNode(models.Model):
   cSpecies = models.CharField(max_length = 255, blank = True)
   cSubspecies = models.CharField(max_length = 255, blank = True)
   
+  search_vector = SearchVectorField(null=True)
+  
   class Meta:
+    '''
+    To create the GIN, run:
+      from django.contrib.postgres.search import SearchVector
+      TxNode.objects.update(search_vector=SearchVector('name'))
+    This should take less than one minute.
+    '''
     unique_together = (('name', 'txid'),)
-    indexes = [ # index the name to speed up search
-      models.Index(fields = ['name'])
+    indexes = [
+      GinIndex(fields=['search_vector'])
     ]
+    # ~ indexes = [ # index the name to speed up search
+      # ~ models.Index(fields = ['name'])
+    # ~ ]

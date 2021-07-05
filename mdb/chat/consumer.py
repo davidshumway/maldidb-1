@@ -51,12 +51,11 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
   async def receive(self, text_data):
     '''
     '''
-    print('==================3')
+    # ~ print('==================3')
     
     # tells client preprocessing is complete
     try:
       val = json.loads(text_data)
-      # ~ print(f'val{val}')
       if val['type'] == 'completed preprocessing':
         # ~ print(f'sending to client:{clients[val["data"]["client"]]}')
         d = json.dumps({
@@ -73,13 +72,13 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     # client asks to collapse library
     try:
       val = json.loads(text_data)
-      if val['collapseLibrary'] != '':
+      if 'collapseLibrary' in val: # key in val
         collapse_lib(self, val['collapseLibrary'], self.client_id,
           val['searchLibrary'])
     except Exception as e:
       print(e)
       pass
-    
+      
     # tells client collapse completed
     try:
       val = json.loads(text_data)
@@ -213,6 +212,7 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     except Exception as e:    
       print(e)
       pass
+      
   async def deprocessing(self, event):
     print('==================4')
     # ~ await self.send(text_data = json.dumps(event['value']))
@@ -455,8 +455,6 @@ def align(self, msg, client):
       }
     }))
     idx += 1
-    
-    j = TxNode.objects.filter(name__iexact = msg['prefix'].strip() + ' ' + md.strain_id)
     tmp = {
       'id': md.id,
       'strain_id': md.strain_id,
@@ -468,6 +466,47 @@ def align(self, msg, client):
       'partial_type': 'N/A',
       'partial': 'N/A',
     }
+    
+    # ~ s = re.sub('[^a-zA-Z0-9]', ' ', md.strain_id)
+    s = (msg['prefix'].strip() + ' ' if msg['prefix'].strip() != '' else '')\
+      + md.strain_id
+    j = TxNode.objects.filter(
+      search_vector = s
+      # ~ search_vector = msg['prefix'].strip() + ' ' + tmpnm_
+      # ~ name__search = msg['prefix'].strip() + ' ' + tmpnm_
+    )[0:2]
+    if len(j) > 0:
+      if j[0].name.lower() == s.lower():
+        sciname = TxNode.objects.get(txid = j[0].txid, nodetype = "s").name
+        parent = TxNode.objects.get(txid = j[0].parentid, nodetype = "s")
+        tmp['exact_name'] = j[0].name
+        tmp['exact_sciname'] = sciname
+        tmp['exact_parentname'] = parent.name
+        tmp['exact_parentid'] = parent.txid
+        tmp['exact_txid'] = j[0].txid
+        tmp['exact_txtype'] = j[0].txtype
+        rslt1.append(tmp)
+      else:
+        tmp['partial_type'] = f'search ({s})'
+        tmp['partial'] = align_getpartial(j)
+        rslt2.append(tmp)
+    # ~ j2 = TxNode.objects.filter(name__contains =  ' ' + md.strain_id)[0:3]
+    # ~ if len(j2) > 0:
+      # ~ tmp['partial_type'] = 'space + name'
+      # ~ tmp['partial'] = align_getpartial(j2)
+    # ~ else:
+      # ~ j3 = TxNode.objects.filter(name__contains = md.strain_id)[0:3]
+      # ~ if len(j3) > 0:
+        # ~ tmp['partial_type'] = 'name only'
+        # ~ tmp['partial'] = align_getpartial(j3)
+      # ~ else:
+        # ~ tmp['partial_type'] = 'No partial match'
+    else: # No match
+      rslt2.append(tmp)
+    continue
+      
+    
+    j = TxNode.objects.filter(name__iexact = msg['prefix'].strip() + ' ' + md.strain_id)
     if len(j) > 0:
       j = j.first()
       sciname = TxNode.objects.get(txid = j.txid, nodetype = "s").name
@@ -479,7 +518,7 @@ def align(self, msg, client):
       tmp['exact_txid'] = j.txid
       tmp['exact_txtype'] = j.txtype
       rslt1.append(tmp)
-    # Partial probably unnecessary
+    
     else:
       tmpnm_ = re.sub('[^a-zA-Z0-9]', ' ', md.strain_id)
       j2 = TxNode.objects.filter(
