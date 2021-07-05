@@ -27,5 +27,14 @@ class TxNode(models.Model):
   # ~ # all parents as json field {p1:, p1-rank:, ..., pn:, pn-rank:}
   # ~ parents = models.TextField(blank=False, null=False)
   
+  cKingdom = models.CharField(max_length = 255, blank = True)
+  cPhylum = models.CharField(max_length = 255, blank = True)
+  cClass = models.CharField(max_length = 255, blank = True)
+  cOrder = models.CharField(max_length = 255, blank = True)
+  cFamily = models.CharField(max_length = 255, blank = True)
+  cGenus = models.CharField(max_length = 255, blank = True)
+  cSpecies = models.CharField(max_length = 255, blank = True)
+  cSubspecies = models.CharField(max_length = 255, blank = True)
+  
   class Meta:
     unique_together = (('name', 'txid'),)

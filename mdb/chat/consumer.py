@@ -220,20 +220,29 @@ def save_manual_align(self, msg, client):
       n.ncbi_taxid = alignment['txid1'] # only genus provided
       n.cGenus = alignment['genus']
     
-    parents = get_parents(alignment['genus_parentid'])
-    for parent in parents:
-      if parent.txtype == 'family':
-        n.cFamily = parent.name
-      elif parent.txtype == 'order':
-        n.cOrder = parent.name
-      elif parent.txtype == 'class':
-        n.cClass = parent.name
-      elif parent.txtype == 'phylum':
-        n.cPhylum = parent.name
-      elif parent.txtype == 'superkingdom':
-        n.cKingdom = parent.name
-      else: # unknown parent txtype: Terrabacteria group clade ?
-        print(f'unknown parent txtype: {parent.name} {parent.txtype}')
+    # gets the genus node
+    tx = TxNode.objects.filter(txid = alignment['txid1'], nodetype = 's')[0]
+    
+    n.cFamily = tx.cFamily
+    n.cOrder = tx.cOrder
+    n.cClass = tx.cClass
+    n.cPhylum = tx.cPhylum
+    n.cKingdom = tx.cKingdom
+    
+    # ~ parents = get_parents(alignment['genus_parentid'])
+    # ~ for parent in parents:
+      # ~ if parent.txtype == 'family':
+        # ~ n.cFamily = parent.name
+      # ~ elif parent.txtype == 'order':
+        # ~ n.cOrder = parent.name
+      # ~ elif parent.txtype == 'class':
+        # ~ n.cClass = parent.name
+      # ~ elif parent.txtype == 'phylum':
+        # ~ n.cPhylum = parent.name
+      # ~ elif parent.txtype == 'superkingdom':
+        # ~ n.cKingdom = parent.name
+      # ~ else: # unknown parent txtype: Terrabacteria group clade ?
+        # ~ print(f'unknown parent txtype: {parent.name} {parent.txtype}')
     update_nodes.append(n)
     
   Metadata.objects.bulk_update(update_nodes, 
@@ -254,14 +263,11 @@ def save_manual_align(self, msg, client):
   
 @start_new_thread
 def manual_align(self, msg, client):
-  print(f'msg:{msg}')
   sIDs = [ s.strip() for s in msg['data']['strain_ids'].strip().split('\n') ]
   genus = [ s.strip() for s in msg['data']['genus'].strip().split('\n') ]
   species = [ s.strip() for s in msg['data']['species'].strip().split('\n') ]
-  print(f'sids:{sIDs}')
   md = Metadata.objects.filter(library_id = msg['library'],
     strain_id__in = sIDs)
-  print(f'md:{md}')
   
   sID_dict = {}
   idx = 0
@@ -291,7 +297,7 @@ def manual_align(self, msg, client):
     if len(j1) == 1:
       tmp['txid1'] = j1[0]['txid']
       tmp['genus_parentid'] = j1[0]['parentid']
-    if s == '': # only genus
+    if s == '': # only genus provided
       if len(j1) == 0:
         tmp['result'] = 'no match'
         result2.append(tmp)
@@ -302,8 +308,8 @@ def manual_align(self, msg, client):
         tmp['result'] = 'exact match'
         tmp['result_type'] = 'genus'
         result1.append(tmp)
-    else: # genus + species
-      print(f'parentid__in = {[gx["txid"] for gx in list(j1)]}')
+    else: # genus + species provided
+      # ~ print(f'parentid__in = {[gx["txid"] for gx in list(j1)]}')
       j2 = TxNode.objects.filter(name__iexact = s,
         txtype__exact = 'species',
         parentid__in = [gx['txid'] for gx in list(j1)])
@@ -332,19 +338,16 @@ def manual_align(self, msg, client):
   }))
   ws.close()
   
-def get_parents(txid):
-  '''
-  :return rslt: List of objects where each object is {name, rank}
-  '''
-  print(f'txid{txid}')
-  n = TxNode.objects.filter(txid = txid, nodetype = 's')
-  if len(n) == 0:
-    return []
-  else:
-    return [n.first()] + get_parents(n.first().parentid) # if n.parentid else [])
-  # ~ print(f'node{n}')
-  # ~ return 
-  
+# ~ def get_parents(txid):
+  # ~ '''
+  # ~ :return rslt: List of objects where each object is {name, rank}
+  # ~ '''
+  # ~ print(f'txid{txid}')
+  # ~ n = TxNode.objects.filter(txid = txid, nodetype = 's')
+  # ~ if len(n) == 0:
+    # ~ return []
+  # ~ else:
+    # ~ return [n.first()] + get_parents(n.first().parentid) # if n.parentid else [])
 
 @start_new_thread
 def save_align(self, msg, client):
@@ -354,29 +357,39 @@ def save_align(self, msg, client):
   '''
   update_nodes = []
   for alignment in msg['alignments']:
-    n = Metadata.objects.filter(id = alignment['id'],
-      library__id = msg['library']).first()
+    n = Metadata.objects.filter(id = alignment['id'])[0]
     n.ncbi_taxid = alignment['exact_txid']
-    n.cSpecies = alignment['exact_sciname']
-    parents = get_parents(alignment['exact_parentid'])
-    for parent in parents:
-      #print(f'rank{parent.txtype}')
-      if parent.txtype == 'species':
-        n.cSpecies = parent.name
-      elif parent.txtype == 'genus':
-        n.cGenus = parent.name
-      elif parent.txtype == 'family':
-        n.cFamily = parent.name
-      elif parent.txtype == 'order':
-        n.cOrder = parent.name
-      elif parent.txtype == 'class':
-        n.cClass = parent.name
-      elif parent.txtype == 'phylum':
-        n.cPhylum = parent.name
-      elif parent.txtype == 'superkingdom':
-        n.cKingdom = parent.name
-      else:
-        print(f'unknown parent txtype: {parent.name} {parent.txtype}')
+    # ~ n.cSpecies = alignment['exact_sciname']
+    
+    tx = TxNode.objects.filter(txid = alignment['exact_txid'], txtype = 's')
+    
+    n.cSpecies = tx.cSpecies
+    n.cGenus = tx.cGenus
+    n.cFamily = tx.cFamily
+    n.cOrder = tx.cOrder
+    n.cClass = tx.cClass
+    n.cPhylum = tx.cPhylum
+    n.cKingdom = tx.cKingdom
+    
+    # ~ parents = get_parents(alignment['exact_parentid'])
+    # ~ for parent in parents:
+      # ~ #print(f'rank{parent.txtype}')
+      # ~ if parent.txtype == 'species':
+        # ~ n.cSpecies = parent.name
+      # ~ elif parent.txtype == 'genus':
+        # ~ n.cGenus = parent.name
+      # ~ elif parent.txtype == 'family':
+        # ~ n.cFamily = parent.name
+      # ~ elif parent.txtype == 'order':
+        # ~ n.cOrder = parent.name
+      # ~ elif parent.txtype == 'class':
+        # ~ n.cClass = parent.name
+      # ~ elif parent.txtype == 'phylum':
+        # ~ n.cPhylum = parent.name
+      # ~ elif parent.txtype == 'superkingdom':
+        # ~ n.cKingdom = parent.name
+      # ~ else:
+        # ~ print(f'unknown parent txtype: {parent.name} {parent.txtype}')
       # ~ elif parent.txtype == '':
         # ~ n.c = parent.name
     update_nodes.append(n)
@@ -459,19 +472,20 @@ def align(self, msg, client):
       tmp['exact_txid'] = j.txid
       tmp['exact_txtype'] = j.txtype
       rslt1.append(tmp)
-    else:
-      j2 = TxNode.objects.filter(name__contains =  ' ' + md.strain_id)[0:3]
-      if len(j2) > 0:
-        tmp['partial_type'] = 'space + name'
-        tmp['partial'] = align_getpartial(j2)
-      else:
-        j3 = TxNode.objects.filter(name__contains = md.strain_id)[0:3]
-        if len(j3) > 0:
-          tmp['partial_type'] = 'name only'
-          tmp['partial'] = align_getpartial(j3)
-        else:
-          tmp['partial_type'] = 'No partial match'
-      rslt2.append(tmp)
+    # Partial probably unnecessary
+    # ~ else:
+      # ~ j2 = TxNode.objects.filter(name__contains =  ' ' + md.strain_id)[0:3]
+      # ~ if len(j2) > 0:
+        # ~ tmp['partial_type'] = 'space + name'
+        # ~ tmp['partial'] = align_getpartial(j2)
+      # ~ else:
+        # ~ j3 = TxNode.objects.filter(name__contains = md.strain_id)[0:3]
+        # ~ if len(j3) > 0:
+          # ~ tmp['partial_type'] = 'name only'
+          # ~ tmp['partial'] = align_getpartial(j3)
+        # ~ else:
+          # ~ tmp['partial_type'] = 'No partial match'
+      # ~ rslt2.append(tmp)
     
   ws = websocket.WebSocket()
   ws.connect('ws://localhost:8000/ws/pollData')

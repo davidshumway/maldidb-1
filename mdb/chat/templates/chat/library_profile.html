@@ -286,9 +286,10 @@ socket.onmessage = function(e) {
     $('#align4').css('display', '');
     $('#align-alert-manual').text('');
     $('#align-alert-manual').css('display', 'none');
-    $('#manual1').disabled = false;
-    $('#manual2').disabled = false;
-    $('#manual3').disabled = false;
+    $('#manual-align-preview').disabled = false;
+    $('#manual1')[0].disabled = false;
+    $('#manual2')[0].disabled = false;
+    $('#manual3')[0].disabled = false;
     
     if (data.data.result1.length > 0) {
       $('#manual-align-import').on('click', alignImportManual);
@@ -327,7 +328,13 @@ socket.onmessage = function(e) {
   }
   // 
   else if (data.message == 'completed save manual align') {
+    $('#align-alert-manual').css('display', '');
     $('#align-alert-manual').text('Alignment updated!');
+    $('#manual-align-preview')[0].disabled = false;
+    $('#manual-align-import')[0].disabled = false;
+    $('#manual1')[0].disabled = false;
+    $('#manual2')[0].disabled = false;
+    $('#manual3')[0].disabled = false;
   }
 }
 socket.onclose = function(e){
@@ -337,6 +344,9 @@ function alignImport() {
   $('#align-load')[0].disabled = true;
   $('#align-prefix')[0].disabled = true;
   $('#align-import')[0].disabled = true;
+  $('#manual1')[0].disabled = true;
+  $('#manual2')[0].disabled = true;
+  $('#manual3')[0].disabled = true;
   $('#align-alert').text('Saving alignment...');
   socket.send(JSON.stringify({
     type: 'save align',
@@ -347,6 +357,10 @@ function alignImport() {
 function alignImportManual() {
   $('#manual-align-preview')[0].disabled = true;
   $('#manual-align-import')[0].disabled = true;
+  $('#manual1')[0].disabled = true;
+  $('#manual2')[0].disabled = true;
+  $('#manual3')[0].disabled = true;
+  $('#align-alert-manual').css('display', '');
   $('#align-alert-manual').text('Saving alignment...');
   socket.send(JSON.stringify({
     type: 'save manual align',
@@ -356,11 +370,11 @@ function alignImportManual() {
 }
 function manualAlign(btn) {
   btn.disabled = true;
+  $('#manual1')[0].disabled = true;
+  $('#manual2')[0].disabled = true;
+  $('#manual3')[0].disabled = true;
   $('#align-alert-manual').css('display', '');
   $('#align-alert-manual').text('Loading alignment...');
-  $('#manual1').disabled = true;
-  $('#manual2').disabled = true;
-  $('#manual3').disabled = true;
   socket.send(JSON.stringify({
     type: 'manual_align',
     library: {{ library.id }},

@@ -11,6 +11,9 @@ class NcbitaxonomyConfig(AppConfig):
   name = 'ncbitaxonomy'
   #verbose_name = "..."
   
+  txnodes = []
+  allnodes = {}
+  
   def skipline(self, line):
     if '\tauthority\t' in line:
       return True
@@ -35,7 +38,35 @@ class NcbitaxonomyConfig(AppConfig):
     if '\tequivalent name\t' in line:
       return True
     return False
-      
+  
+  def set_parents(self, node):
+    parents = self.get_parents(node)
+    for parent in parents:
+      if parent.txtype == 'species':
+        node.cSpecies = parent.name
+      elif parent.txtype == 'genus':
+        node.cGenus = parent.name
+      elif parent.txtype == 'family':
+        node.cFamily = parent.name
+      elif parent.txtype == 'order':
+        node.cOrder = parent.name
+      elif parent.txtype == 'class':
+        node.cClass = parent.name
+      elif parent.txtype == 'phylum':
+        node.cPhylum = parent.name
+      elif parent.txtype == 'superkingdom':
+        node.cKingdom = parent.name
+    return node
+      # ~ else:
+        # ~ print(f'unknown parent txtype: {parent.name} {parent.txtype}')
+        
+  def get_parents(self, node):
+    try:
+      n = self.allnodes[node.name + str(node.parentid)]
+    except: # KeyError
+      return []
+    return [n] + self.get_parents(n) # if n.parentid else [])
+    
   def ready(self):
     '''Checks for and installs ncbi.
     
@@ -47,70 +78,33 @@ class NcbitaxonomyConfig(AppConfig):
       from .models import TxNode
       print('NCBI: checking NCBI...', len(TxNode.objects.all()[0:1]))
       # ~ return
-      # reads nodes
-      # 0=node's id, 1=parent's id, 2=node's rank
-      # ~ txrank = {}
-      # ~ f0 = open('/home/app/web/r01data/nodes.dmp', 'r')
-      # ~ for line in f0.readlines():
-        # ~ n = line.split('|') 
-        # ~ txrank[n[0].strip()] =  {
-          # ~ 'parent': n[1].strip(),
-          # ~ 'txtype': n[2].strip(),
-          # ~ 'division': n[4].strip()
-        # ~ }
-      
-      # ~ # reads names
-      # ~ f = open('/home/app/web/r01data/names.dmp', 'r')
-      # ~ count = 0
-      # ~ txnodes = []
-      # ~ allnodes = {}
-      # ~ created_nodes = []
-      # ~ from chat.models import Metadata
-      # ~ m = Metadata.objects.filter(library__title__exact = 'R01 Data') \
-        # ~ .values('strain_id')
-      # ~ print(f'm{m}')
-      # ~ r01 = ['NRRL ' + s['strain_id'] for s in list(m)]
-      # ~ print(f'r01{r01}')
-      # ~ r01_ = {k: {} for k in r01}
-      # ~ print(f'r01_{r01_}')
-      # ~ #'NRRL ' + s.strain_id for s in m]
-      # ~ for line in f.readlines():
-        # ~ if self.skipline(line):
-          # ~ continue
-        # ~ n = line.split('|')
-        # ~ if txrank[n[0].strip()]['division'] != '0': # division code 0 = Bacteria
-          # ~ continue
-        # ~ if n[1].strip() in r01: #1 "NRRL B-65307"
-          # ~ r01_[n[1].strip()] = {
-            # ~ 'line': line
-          # ~ }
-      # ~ print(f'r01_{r01_}')
-      # ~ return
-      #TxNode.objects.all().delete()
       
       if len(TxNode.objects.all()[0:1]) < 1:
         print('NCBI: not imported, attempting to install')
         try:
+          
+          # creates ranking dict
           txrank = {}
           f0 = open('/home/app/web/r01data/nodes.dmp', 'r')
           # 0=node's id, 1=parent's id, 2=node's rank
           for line in f0.readlines():
             n = line.split('|') 
             txrank[n[0].strip()] =  {
-              'parent': n[1].strip(),
+              'parentid': n[1].strip(),
               'txtype': n[2].strip(),
               'division': n[4].strip()
             }
           
+          # bulk creates taxonomy nodes
           f = open('/home/app/web/r01data/names.dmp', 'r')
           count = 0
-          txnodes = []
-          allnodes = {}
-          created_nodes = []
+          self.txnodes = []
+          self.allnodes = {}
           for line in f.readlines():
             if self.skipline(line):
               continue
             n = line.split('|')
+            # 0=txid, 1=name, 2=, 3=type
             if txrank[n[0].strip()]['division'] != '0': # division code = Bacteria
               continue
             nodetype = n[3].strip()
@@ -118,23 +112,31 @@ class NcbitaxonomyConfig(AppConfig):
               print('invalid nodetype:', nodetype)
               break
             # checks for key in allnodes (id + name = unique)
-            if n[1].strip() + n[0].strip() not in allnodes:
-              allnodes[n[1].strip() + n[0].strip()] = True
-              tx = txrank[n[0].strip()]
+            if n[1].strip() + n[0].strip() not in self.allnodes:
+              rank_ = txrank[n[0].strip()]
               nodetype = 'y' if nodetype == 'synonym' else nodetype[0]
-              txnodes.append(TxNode(
+              tx_ = TxNode(
                 name = n[1].strip(),
                 txid = n[0].strip(),
                 nodetype = nodetype,
-                txtype = tx['txtype'],
-                parentid = tx['parent']
-              ))
-            #count += 1
-            #if count % 200000 == 0:
+                txtype = rank_['txtype'],
+                parentid = rank_['parentid']
+              )
+              self.txnodes.append(tx_)
+              self.allnodes[n[1].strip() + n[0].strip()] = tx_
+
+          # updates all nodes to include taxonomic classification
+          for n in self.txnodes:
+            n = self.set_parents(n)
+          print(f'NCBI: inserting data into db...')
+          # ~ print(f'self.txnodes[0]{self.txnodes[0]} kingdom:{self.txnodes[0].cKingdom} species:{self.txnodes[0].cSpecies} name:{self.txnodes[0].name} txid:{self.txnodes[0].txid}')
+          # ~ return
+          
+          created_nodes = []
           try:
             # Bulk create: "returns created objects as a list, in
             # the same order as provided"
-            created_nodes = TxNode.objects.bulk_create(txnodes)
+            created_nodes = TxNode.objects.bulk_create(self.txnodes)
           except:
             pass # e.g. duplicate unique
           print(f'NCBI: total nodes = {len(TxNode.objects.all())}')
@@ -150,7 +152,7 @@ class NcbitaxonomyConfig(AppConfig):
               # ~ if txrank[node.txid]:
                 # ~ node.parent = nodes[node.parentid]
             # ~ except:
-              # ~ print(f'found a node w/o parent? {node}')
+              # ~ print(f'node w/o parent? name:{node.name} txid:{node.txid} txtype:{node.txtype} parentid:{node.parentid}')
           # ~ TxNode.objects.bulk_update(created_nodes, ['parent'])
             
         except FileNotFoundError:
