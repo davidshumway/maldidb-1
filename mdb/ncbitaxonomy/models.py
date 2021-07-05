@@ -47,6 +47,7 @@ class TxNode(models.Model):
     '''
     To create the GIN, run:
       from django.contrib.postgres.search import SearchVector
+      from ncbitaxonomy.models import TxNode
       TxNode.objects.update(search_vector=SearchVector('name'))
     This should take less than one minute.
     '''

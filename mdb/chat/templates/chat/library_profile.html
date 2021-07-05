@@ -265,8 +265,8 @@ socket.onmessage = function(e) {
       columns: [
         {data: 'id', title: 'ID'},
         {data: 'strain_id', title: 'Strain ID'},
-        {data: 'partial_type', title: 'Partial search'},//,
-        {data: 'partial', title: 'Partial result',
+        {data: 'partial_type', title: 'Search'},//,
+        {data: 'partial', title: 'Result',
           render: function(data, type) {
             return data.split('|').join('<br>');
           }

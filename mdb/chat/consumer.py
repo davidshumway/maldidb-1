@@ -420,7 +420,6 @@ def align_getpartial(nodes):
 @start_new_thread
 def align(self, msg, client):
   '''
-  Using name__iexact for case insensitive search.
   
   Example NCBI irregularities (NRRL):
     NRRL-ISP 5314
@@ -467,14 +466,9 @@ def align(self, msg, client):
       'partial': 'N/A',
     }
     
-    # ~ s = re.sub('[^a-zA-Z0-9]', ' ', md.strain_id)
     s = (msg['prefix'].strip() + ' ' if msg['prefix'].strip() != '' else '')\
       + md.strain_id
-    j = TxNode.objects.filter(
-      search_vector = s
-      # ~ search_vector = msg['prefix'].strip() + ' ' + tmpnm_
-      # ~ name__search = msg['prefix'].strip() + ' ' + tmpnm_
-    )[0:2]
+    j = TxNode.objects.filter(search_vector = s)[0:2]
     if len(j) > 0:
       if j[0].name.lower() == s.lower():
         sciname = TxNode.objects.get(txid = j[0].txid, nodetype = "s").name
@@ -487,58 +481,45 @@ def align(self, msg, client):
         tmp['exact_txtype'] = j[0].txtype
         rslt1.append(tmp)
       else:
-        tmp['partial_type'] = f'search ({s})'
+        tmp['partial_type'] = f'{s}'
         tmp['partial'] = align_getpartial(j)
         rslt2.append(tmp)
-    # ~ j2 = TxNode.objects.filter(name__contains =  ' ' + md.strain_id)[0:3]
-    # ~ if len(j2) > 0:
-      # ~ tmp['partial_type'] = 'space + name'
-      # ~ tmp['partial'] = align_getpartial(j2)
-    # ~ else:
-      # ~ j3 = TxNode.objects.filter(name__contains = md.strain_id)[0:3]
-      # ~ if len(j3) > 0:
-        # ~ tmp['partial_type'] = 'name only'
-        # ~ tmp['partial'] = align_getpartial(j3)
-      # ~ else:
-        # ~ tmp['partial_type'] = 'No partial match'
-    else: # No match
+    else: # tries one more (plain text) search
+      s2 = re.sub('[^a-zA-Z0-9]', ' ', md.strain_id)
+      s2 = (msg['prefix'].strip() + ' ' if msg['prefix'].strip() != '' else '')\
+        + s2
+      if s2 != s:
+        j = TxNode.objects.filter(search_vector = s2)[0:2]
+        if len(j) > 0:
+          tmp['partial_type'] = f'{s2} (plain text match)'
+          tmp['partial'] = align_getpartial(j)
+      # in any case, appends result as partial match
       rslt2.append(tmp)
     continue
-      
     
-    j = TxNode.objects.filter(name__iexact = msg['prefix'].strip() + ' ' + md.strain_id)
-    if len(j) > 0:
-      j = j.first()
-      sciname = TxNode.objects.get(txid = j.txid, nodetype = "s").name
-      parent = TxNode.objects.get(txid = j.parentid, nodetype = "s")
-      tmp['exact_name'] = j.name
-      tmp['exact_sciname'] = sciname
-      tmp['exact_parentname'] = parent.name
-      tmp['exact_parentid'] = parent.txid
-      tmp['exact_txid'] = j.txid
-      tmp['exact_txtype'] = j.txtype
-      rslt1.append(tmp)
+    # iexact (not used)
+    # ~ j = TxNode.objects.filter(name__iexact = msg['prefix'].strip() + ' ' + md.strain_id)
+    # ~ if len(j) > 0:
+      # ~ j = j.first()
+      # ~ sciname = TxNode.objects.get(txid = j.txid, nodetype = "s").name
+      # ~ parent = TxNode.objects.get(txid = j.parentid, nodetype = "s")
+      # ~ tmp['exact_name'] = j.name
+      # ~ tmp['exact_sciname'] = sciname
+      # ~ tmp['exact_parentname'] = parent.name
+      # ~ tmp['exact_parentid'] = parent.txid
+      # ~ tmp['exact_txid'] = j.txid
+      # ~ tmp['exact_txtype'] = j.txtype
+      # ~ rslt1.append(tmp)
     
-    else:
-      tmpnm_ = re.sub('[^a-zA-Z0-9]', ' ', md.strain_id)
-      j2 = TxNode.objects.filter(
-        name__search = msg['prefix'].strip() + ' ' + tmpnm_
-      )[0:2]
-      if len(j2) > 0:
-        tmp['partial_type'] = f'search ({tmpnm_})'
-        tmp['partial'] = align_getpartial(j2)
-      # ~ j2 = TxNode.objects.filter(name__contains =  ' ' + md.strain_id)[0:3]
+    # ~ else:
+      # ~ tmpnm_ = re.sub('[^a-zA-Z0-9]', ' ', md.strain_id)
+      # ~ j2 = TxNode.objects.filter(
+        # ~ name__search = msg['prefix'].strip() + ' ' + tmpnm_
+      # ~ )[0:2]
       # ~ if len(j2) > 0:
-        # ~ tmp['partial_type'] = 'space + name'
+        # ~ tmp['partial_type'] = f'search ({tmpnm_})'
         # ~ tmp['partial'] = align_getpartial(j2)
-      # ~ else:
-        # ~ j3 = TxNode.objects.filter(name__contains = md.strain_id)[0:3]
-        # ~ if len(j3) > 0:
-          # ~ tmp['partial_type'] = 'name only'
-          # ~ tmp['partial'] = align_getpartial(j3)
-        # ~ else:
-          # ~ tmp['partial_type'] = 'No partial match'
-      rslt2.append(tmp)
+      # ~ rslt2.append(tmp)
   
   ws.send(json.dumps({
     'type': 'completed align',
