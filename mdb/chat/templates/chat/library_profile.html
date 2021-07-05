@@ -276,6 +276,10 @@ socket.onmessage = function(e) {
     t.draw();
   }
   // 
+  else if (data.message == 'align status') {
+    $('#align-alert').text(data.data.status);
+  }
+  // 
   else if (data.message == 'completed save align') {
     $('#align-alert').text('Alignment updated!');
   }

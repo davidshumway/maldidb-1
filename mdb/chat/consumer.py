@@ -119,6 +119,20 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     except Exception as e:    
       print(e)
       pass
+    # send align status update
+    try:
+      val = json.loads(text_data)
+      if val['type'] == 'align status':
+        d = json.dumps({
+          'data': {
+            'message': 'align status',
+            'data': val['data']
+          }
+        })
+        await clients[val['data']['client']].send(text_data = d)
+    except Exception as e:    
+      print(e)
+      pass
     # send alignment data
     try:
       val = json.loads(text_data)
@@ -422,13 +436,26 @@ def align(self, msg, client):
   '''
   from chat.models import Metadata
   from ncbitaxonomy.models import TxNode
+  import re
   m = Metadata.objects.filter(library__id = msg['library'], ncbi_taxid = '')
-  
-  # return a list of objects
   rslt1 = []
   rslt2 = []
   
+  ws = websocket.WebSocket()
+  ws.connect('ws://localhost:8000/ws/pollData')
+  
+  idx = 1
   for md in m:
+    # ~ if idx % 10 == 0:
+    ws.send(json.dumps({
+      'type': 'align status',
+      'data': {
+        'client': client,
+        'status': f'Searching {idx} of {len(m)}'
+      }
+    }))
+    idx += 1
+    
     j = TxNode.objects.filter(name__iexact = msg['prefix'].strip() + ' ' + md.strain_id)
     tmp = {
       'id': md.id,
@@ -454,9 +481,12 @@ def align(self, msg, client):
       rslt1.append(tmp)
     # Partial probably unnecessary
     else:
-      j2 = TxNode.objects.filter(name__search = msg['prefix'].strip() + md.strain_id)[0:2]
+      tmpnm_ = re.sub('[^a-zA-Z0-9]', ' ', md.strain_id)
+      j2 = TxNode.objects.filter(
+        name__search = msg['prefix'].strip() + ' ' + tmpnm_
+      )[0:2]
       if len(j2) > 0:
-        tmp['partial_type'] = 'search'
+        tmp['partial_type'] = f'search ({tmpnm_})'
         tmp['partial'] = align_getpartial(j2)
       # ~ j2 = TxNode.objects.filter(name__contains =  ' ' + md.strain_id)[0:3]
       # ~ if len(j2) > 0:
@@ -470,9 +500,7 @@ def align(self, msg, client):
         # ~ else:
           # ~ tmp['partial_type'] = 'No partial match'
       rslt2.append(tmp)
-    
-  ws = websocket.WebSocket()
-  ws.connect('ws://localhost:8000/ws/pollData')
+  
   ws.send(json.dumps({
     'type': 'completed align',
     'data': {
