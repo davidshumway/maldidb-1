@@ -39,6 +39,8 @@ INSTALLED_APPS = [
   'django_extensions',
   'rest_framework',
   'ncbitaxonomy',
+  'django.contrib.postgres' # To use the search lookup, 'django.contrib.postgres'
+                            # must be in your INSTALLED_APPS.
   #'ajaxuploader',
 ]
 

@@ -12,6 +12,9 @@ class TxNode(models.Model):
       ('s', 'scientific name'),
       ('t', 'type material'),
       ('y', 'synonym'),
+      # ~ ('z', 'z'), # this is a type for entries created manually
+        # e.g., for "NRRL B-2249 [[Streptomyces griseus subsp. alpha]]"
+        # entering a "synonym" of "NRRL B-2249"
     ],
     default = 's',
   )
@@ -38,3 +41,6 @@ class TxNode(models.Model):
   
   class Meta:
     unique_together = (('name', 'txid'),)
+    indexes = [ # index the name to speed up search
+      models.Index(fields = ['name'])
+    ]

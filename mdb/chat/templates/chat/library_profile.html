@@ -331,7 +331,7 @@ socket.onmessage = function(e) {
     $('#align-alert-manual').css('display', '');
     $('#align-alert-manual').text('Alignment updated!');
     $('#manual-align-preview')[0].disabled = false;
-    $('#manual-align-import')[0].disabled = false;
+    //~ $('#manual-align-import')[0].disabled = false;
     $('#manual1')[0].disabled = false;
     $('#manual2')[0].disabled = false;
     $('#manual3')[0].disabled = false;
@@ -344,9 +344,6 @@ function alignImport() {
   $('#align-load')[0].disabled = true;
   $('#align-prefix')[0].disabled = true;
   $('#align-import')[0].disabled = true;
-  $('#manual1')[0].disabled = true;
-  $('#manual2')[0].disabled = true;
-  $('#manual3')[0].disabled = true;
   $('#align-alert').text('Saving alignment...');
   socket.send(JSON.stringify({
     type: 'save align',

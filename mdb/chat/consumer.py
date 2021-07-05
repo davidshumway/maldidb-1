@@ -267,7 +267,7 @@ def manual_align(self, msg, client):
   genus = [ s.strip() for s in msg['data']['genus'].strip().split('\n') ]
   species = [ s.strip() for s in msg['data']['species'].strip().split('\n') ]
   md = Metadata.objects.filter(library_id = msg['library'],
-    strain_id__in = sIDs)
+    strain_id__in = sIDs, ncbi_taxid = '')
   
   sID_dict = {}
   idx = 0
@@ -361,7 +361,7 @@ def save_align(self, msg, client):
     n.ncbi_taxid = alignment['exact_txid']
     # ~ n.cSpecies = alignment['exact_sciname']
     
-    tx = TxNode.objects.filter(txid = alignment['exact_txid'], txtype = 's')
+    tx = TxNode.objects.filter(txid = alignment['exact_txid'], nodetype = 's')[0]
     
     n.cSpecies = tx.cSpecies
     n.cGenus = tx.cGenus
@@ -371,27 +371,6 @@ def save_align(self, msg, client):
     n.cPhylum = tx.cPhylum
     n.cKingdom = tx.cKingdom
     
-    # ~ parents = get_parents(alignment['exact_parentid'])
-    # ~ for parent in parents:
-      # ~ #print(f'rank{parent.txtype}')
-      # ~ if parent.txtype == 'species':
-        # ~ n.cSpecies = parent.name
-      # ~ elif parent.txtype == 'genus':
-        # ~ n.cGenus = parent.name
-      # ~ elif parent.txtype == 'family':
-        # ~ n.cFamily = parent.name
-      # ~ elif parent.txtype == 'order':
-        # ~ n.cOrder = parent.name
-      # ~ elif parent.txtype == 'class':
-        # ~ n.cClass = parent.name
-      # ~ elif parent.txtype == 'phylum':
-        # ~ n.cPhylum = parent.name
-      # ~ elif parent.txtype == 'superkingdom':
-        # ~ n.cKingdom = parent.name
-      # ~ else:
-        # ~ print(f'unknown parent txtype: {parent.name} {parent.txtype}')
-      # ~ elif parent.txtype == '':
-        # ~ n.c = parent.name
     update_nodes.append(n)
     
   Metadata.objects.bulk_update(update_nodes, 
@@ -410,7 +389,7 @@ def save_align(self, msg, client):
   }))
   ws.close()
 
-def align_getpartial(node):
+def align_getpartial(nodes):
   '''
   Format closest matches in a readable format
   '''
@@ -418,7 +397,7 @@ def align_getpartial(node):
   strout = []
   while i < 2:
     try:
-      strout.append(f'{node[i].name} ({str(node[i].txid)})')
+      strout.append(f'{nodes[i].name} ({str(nodes[i].txid)})')
     except:
       pass
     i += 1
@@ -439,6 +418,7 @@ def align(self, msg, client):
     NRRL-ISP 5590 [[Streptomyces bambergiensis]]
     Arthrobacter NRRL-B3728
     Zygorhynchus sp. NRRL 3102
+    NRRL B-2258 [[Streptomyces phaeoviridis]]
   '''
   from chat.models import Metadata
   from ncbitaxonomy.models import TxNode
@@ -473,7 +453,11 @@ def align(self, msg, client):
       tmp['exact_txtype'] = j.txtype
       rslt1.append(tmp)
     # Partial probably unnecessary
-    # ~ else:
+    else:
+      j2 = TxNode.objects.filter(name__search = msg['prefix'].strip() + md.strain_id)[0:2]
+      if len(j2) > 0:
+        tmp['partial_type'] = 'search'
+        tmp['partial'] = align_getpartial(j2)
       # ~ j2 = TxNode.objects.filter(name__contains =  ' ' + md.strain_id)[0:3]
       # ~ if len(j2) > 0:
         # ~ tmp['partial_type'] = 'space + name'
@@ -485,7 +469,7 @@ def align(self, msg, client):
           # ~ tmp['partial'] = align_getpartial(j3)
         # ~ else:
           # ~ tmp['partial_type'] = 'No partial match'
-      # ~ rslt2.append(tmp)
+      rslt2.append(tmp)
     
   ws = websocket.WebSocket()
   ws.connect('ws://localhost:8000/ws/pollData')
