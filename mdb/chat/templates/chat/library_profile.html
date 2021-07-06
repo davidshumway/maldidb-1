@@ -230,11 +230,18 @@ Streptomyces koyangensis</pre>
 </div>
 
 {% if request.user in lab.owners.all %}
-
+<style type="text/css">
+#align2, #align4 {
+  cursor: pointer;
+}
+</style>
 <script type="text/javascript">
 var alignments = null; // To be set later
 var alignments2 = null; // To be set later
-
+var tableDom = 
+  '<"row"<"col-sm-12 col-md-4"B><"col-sm-12 col-md-4"l><"col-sm-12 col-md-4"f>>' +
+  '<"row"<"col-sm-12"tr>>' +
+  '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>';
 var socket = new WebSocket('ws://' + location.host + '/ws/pollData');
 socket.onopen = function(e){
   //console.log(e);
@@ -282,11 +289,37 @@ socket.onmessage = function(e) {
     var t = $('#align2').DataTable({
       data: data.data.result2,
       destroy: true, // https://datatables.net/manual/tech-notes/3
+      dom: tableDom,
+      buttons: [
+        'selectAll',
+        'selectNone'
+      ],
+      language: {
+        buttons: {
+          selectAll: "Select all items",
+          selectNone: "Select none"
+        }
+      },
+      columnDefs: [{
+        orderable: false,
+        className: 'select-checkbox',
+        targets:   0
+      }],
+      select: {
+        style:    'multi+shift',
+        //~ selector: 'td:first-child',
+        toggleable: true
+      },
       columns: [
+        {data: 'id', title: ' ',
+          render: function(data, type) {
+            return '';
+          }
+        },
         {data: 'id', title: 'ID'},
         {data: 'strain_id', title: 'Strain ID'},
         {data: 'partial_type', title: 'Search'},//,
-        {data: 'partial', title: 'Result',
+        {data: 'partial', title: 'Result (includes up to two results)',
           render: function(data, type) {
             return data.split('|').join('<br>');
           }
