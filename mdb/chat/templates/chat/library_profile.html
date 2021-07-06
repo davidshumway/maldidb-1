@@ -14,202 +14,222 @@
 <script type="text/javascript" src="{% static 'js/datatables.min.js' %}">
   </script>
 
-<div class="row">
 
-<div class="col-sm-3">
-<div class="card">
-  <div class="card-header">Library details</div>
-	<div class="card-body">
-		<div class="card-title">
-			Title: {{ library.title }}
-		</div>
-		<div class="card-title">
-			Description: {{ library.description }}
-		</div>
-		<div class="card-title">
-			Privacy Setting: {{ library.privacy_level }}
-		</div>
-		<div class="card-title">
-			Quality: {{ library.quality_rating }}
-		</div>
-		<div class="card-title">
-			Created by: {{ library.created_by }}
-		</div>
-		<div class="card-title">
-			Lab: {{ library.lab }}
-		</div>
-		<div class="card-title"><!--TODO: href-->
-			Spectra:
-			<a href="{% url 'spectra_search:spectra_results' %}?library={{library.id}}" class="card-link">
-				{{ spectra|length }}</a>
-		</div>
-		<div class="card-title"><!--TODO: href-->
-			Collapsed spectra:
-			<a href="{% url 'spectra_search:spectra_results2' %}?library={{library.id}}" class="card-link">
-				{{ collapsed_spectra|length }}</a>
-		</div>
-		<div class="card-title"><!--TODO: href-->
-			Metadata:
-			<a href="{% url 'chat:metadata_results' %}?library={{library.id}}" class="card-link">
-				{{ metadata|length }}</a>
-		</div>
-<!--
-	only lab owners can add/update/remove libraries
--->
-	{% if request.user in lab.owners.all %}
-		<div class="card-body">
-			<a href="{% url 'chat:edit_libprofile' library.id %}" class="card-link btn btn-danger">
-				Edit Library Details</a>
-		</div>
-	{% endif %}
-  </div>
-</div>
-</div>
+<ul class="nav nav-tabs" id="myTab" role="tablist">
+  <li class="nav-item">
+    <a class="nav-link active" id="navdetail-tab" data-toggle="tab"
+      href="#navdetail" role="tab" aria-controls="navdetail" aria-selected="true"
+      >Library details</a>
+  </li>
+  {% if request.user in lab.owners.all %}
+  <li class="nav-item">
+    <a class="nav-link" id="navsearch-tab" data-toggle="tab"
+      href="#navsearch" role="tab" aria-controls="navsearch" aria-selected="false"
+      >NCBI taxonomy search</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" id="navmodify-tab" data-toggle="tab"
+      href="#navmodify" role="tab" aria-controls="navmodify" aria-selected="false"
+      >NCBI taxonomy bulk modify</a>
+  </li>
+  {% endif %}
+</ul>
 
-{% if request.user in lab.owners.all %}
-<div class="col-sm-9"><!-- accordion-style -->
+<div class="tab-content" id="">
+  <div class="tab-pane fade show active" id="navdetail" role="tabpanel" aria-labelledby="navdetail-tab">
+    <div class="row">
+    <div class="card m-3">
+      <div class="card-body">
+        <div class="card-title">
+          Title: {{ library.title }}
+        </div>
+        <div class="card-title">
+          Description: {{ library.description }}
+        </div>
+        <div class="card-title">
+          Privacy Setting: {{ library.privacy_level }}
+        </div>
+        <div class="card-title">
+          Quality: {{ library.quality_rating }}
+        </div>
+        <div class="card-title">
+          Created by: {{ library.created_by }}
+        </div>
+        <div class="card-title">
+          Lab: {{ library.lab }}
+        </div>
+        <div class="card-title"><!--TODO: href-->
+          Spectra:
+          <a href="{% url 'spectra_search:spectra_results' %}?library={{library.id}}" class="card-link">
+            {{ spectra|length }}</a>
+        </div>
+        <div class="card-title"><!--TODO: href-->
+          Collapsed spectra:
+          <a href="{% url 'spectra_search:spectra_results2' %}?library={{library.id}}" class="card-link">
+            {{ collapsed_spectra|length }}</a>
+        </div>
+        <div class="card-title"><!--TODO: href-->
+          Metadata:
+          <a href="{% url 'chat:metadata_results' %}?library={{library.id}}" class="card-link">
+            {{ metadata|length }}</a>
+        </div>
+        {% if request.user in lab.owners.all %}
+        <div class="card-body">
+          <a href="{% url 'chat:edit_libprofile' library.id %}" class="card-link btn btn-danger">
+            Edit Library Details</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    </div>
+    
+  </div><!--/navdetail-->
   
-  <div class="card">
-    <div class="card-header">Library options</div>
-    <div class="card-body">
-      <div class="row">
-        <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-          <button class="nav-link active" id="v-pills-home-tab"
-            data-toggle="pill" href="#v-pills-home" role="tab"
-            aria-controls="v-pills-home" aria-selected="true"
-            >NCBI<br/>taxonomy<br/>alignment<br/>(Search)</button>
-          <button class="nav-link" id="v-pills-another-tab"
-            data-toggle="pill" href="#v-pills-another" role="tab"
-            aria-controls="v-pills-another" aria-selected="false"
-            >NCBI<br/>taxonomy<br/>alignment<br/>(Manual entry)</button>
+  <!--/Begin navsearch-->
+  <div class="tab-pane fade" id="navsearch" role="tabpanel" aria-labelledby="navsearch-tab">
+
+    <!-- Begin -->
+    <div class="row">
+    <div class="card m-3 mx-auto">
+      <div class="card-body">
+            
+        <label for="align-prefix"
+          >(Optional) Enter a prefix for the strain ID, e.g. "NRRL":</label>
+        <input type="text" placeholder="" size=20 id="align-prefix" />
+        
+        <div>
+        <button type="button" class="btn btn-primary"
+          onclick="javascript:align(this);" id="align-load"
+          >Load alignments</button>
+        
+        <button type="button" class="btn btn-primary" id="align-import"
+            style="display:none;"
+            >Import NCBI taxonomy IDs for exact matches</button>
         </div>
         
-        <div class="tab-content ml-4 w-75" id="v-pills-tabContent">
-          <div class="tab-pane fade show active" id="v-pills-home"
-            role="tabpanel" aria-labelledby="v-pills-home-tab">
-            
-            <!-- Begin -->
-            <label for="align-prefix"
-              >(Optional) Enter a prefix for the strain ID, e.g. "NRRL":</label>
-            <input type="text" placeholder="" size=20 id="align-prefix" />
-            
-            <div>
-            <button type="button" class="btn btn-primary"
-              onclick="javascript:align(this);" id="align-load"
-              >Load alignments</button>
-            
-            <button type="button" class="btn btn-primary" id="align-import"
-                style="display:none;"
-                >Import NCBI taxonomy IDs for exact matches</button>
-            </div>
-            
-            <br />
-            <div class="alert alert-info" role="alert" id="align-alert"
-              style="display:none;"></div>
-              
-            <br />
-            <div id="align" style="display:none">
-              <table id="align1"
-                class="table table-bordered table-responsive table-condensed"
-                style="display:none; width:100%;">
-                <caption style="caption-side: top">Exact matches</caption></caption>
-                </table><!-- cell-border compact stripe-->
-              
-              <br />
-              <table id="align2"
-                class="table table-bordered table-responsive table-condensed"
-                style="display:none; width:100%;">
-                <caption style="caption-side: top">Partial matches</caption></table>
-            </div>
-            <!-- End -->
-            
-          </div>
-          <div class="tab-pane fade" id="v-pills-another"
-            role="tabpanel" aria-labelledby="v-pills-another-tab">
-            <p>
-              <a class="btn btn-primary" data-toggle="collapse"
-                href="#instructions" role="button"
-                aria-expanded="false" aria-controls="instructions"
-                id="toggleInstructions"
-                >Show instructions</a>
-            </p>
-            <div class="row">
-              <div class="col">
-                <div class="collapse multi-collapse" id="instructions">
-                  <div class="card card-body alert alert-info">
-                    <p>Enter metadata for one or more entries in the library
-                    based on entry strain ID.</p>
-                    <p></p>
-                    <p>Paste library strain IDs to be aligned separated 
-                    by a newline character, for example:</p>
-              <pre>B-10
+        <br />
+        <div class="alert alert-info" role="alert" id="align-alert"
+          style="display:none;"></div>
+          
+        <br />
+        <div id="align" style="display:none">
+          <table id="align1"
+            class="table table-bordered table-responsive table-condensed"
+            style="display:none; width:100%;">
+            <caption style="caption-side: top">Exact matches</caption></caption>
+            </table><!-- cell-border compact stripe-->
+          
+          <br />
+          <table id="align2"
+            class="table table-bordered table-responsive table-condensed"
+            style="display:none; width:100%;">
+            <caption style="caption-side: top">Partial matches</caption></table>
+        </div>
+    </div></div></div>
+    <!-- End -->
+  </div><!--/navsearch-->
+  
+  <!--/Begin navmodify-->
+  <div class="tab-pane fade" id="navmodify" role="tabpanel" aria-labelledby="navmodify-tab">
+    
+    <div class="row">
+    <div class="card m-3 mx-auto">
+      <div class="card-body">
+        <p>
+          <a class="btn btn-primary" data-toggle="collapse"
+            href="#instructions" role="button"
+            aria-expanded="false" aria-controls="instructions"
+            id="toggleInstructions"
+            >Show instructions</a>
+        </p>
+        <div class="row">
+          <div class="col">
+            <div class="collapse multi-collapse" id="instructions">
+              <div class="card card-body alert alert-info">
+                <p>Enter metadata for one or more entries in the library
+                based on entry strain ID.</p>
+                <p></p>
+                <p>Paste library strain IDs to be aligned separated 
+                by a newline character, for example:</p>
+                
+                <pre>B-10
 B-11
 B-12
 B-14</pre>
-                    <p>Leave a blank space for unknown species data, for
-                    example:</p>
-              <pre>Streptomyces tendae
+                <p>Leave a blank space for unknown species data, for
+                example:</p>
+                
+                <pre>Streptomyces tendae
 Streptomyces erythrogriseus
 
 Streptomyces koyangensis</pre>
-                  </div>
-                </div>
+
               </div>
             </div>
-    <script type="text/javascript">
-    $('#instructions').collapse({
-      toggle: false
-    });
-    $('#instructions').on('shown.bs.collapse', function () {
-      $('#toggleInstructions').text('Hide instructions');
-    });
-    $('#instructions').on('hidden.bs.collapse', function () {
-      $('#toggleInstructions').text('Show instructions');
-    });
-    </script>
-            
-            <div class="row">
-              <div class="col">
-                <label for="">Strain IDs:</label>
-                <textarea class="form-control" id="manual1"></textarea>
-              </div>
-              <div class="col">
-                <label for="">Genus:</label>
-                <textarea class="form-control" id="manual2"></textarea>
-              </div>
-              <div class="col">
-                <label for="">Species:</label>
-                <textarea class="form-control" id="manual3"></textarea>
-              </div>
-            </div>
-            
-            <br/>
-            <button class="btn btn-primary"
-              onclick="javascript:manualAlign(this);" id="manual-align-preview"
-              >Preview alignment</button>
-            <button type="button" class="btn btn-primary" id="manual-align-import"
-                style="display:none;"
-                >Import NCBI taxonomy IDs for exact matches</button>
-            
-            <br />
-            <div class="alert alert-info" role="alert" id="align-alert-manual"
-              style="display:none;"></div>
-              
-            <br/>
-            <table id="align3"
-                class="table table-bordered table-responsive table-condensed"
-                style="display:none; width:100%;">
-                <caption style="caption-side: top">Exact matches</caption></table>
-            <br/>
-            <table id="align4"
-                class="table table-bordered table-responsive table-condensed"
-                style="display:none; width:100%;">
-                <caption style="caption-side: top">Partial matches</caption></table>
-        </div><!--/tab-content-->
-      </div><!--/row-->
-    </div><!--/card-body-->
-  </div><!--/card-->
-</div><!--/col-->
+          </div>
+        </div>
+  <script type="text/javascript">
+  $('#instructions').collapse({
+  toggle: false
+  });
+  $('#instructions').on('shown.bs.collapse', function () {
+  $('#toggleInstructions').text('Hide instructions');
+  });
+  $('#instructions').on('hidden.bs.collapse', function () {
+  $('#toggleInstructions').text('Show instructions');
+  });
+  </script>
+        
+        <div class="row">
+          <div class="col">
+            <label for="">Strain IDs:</label>
+            <textarea class="form-control" id="manual1"></textarea>
+          </div>
+          <div class="col">
+            <label for="">Genus:</label>
+            <textarea class="form-control" id="manual2"></textarea>
+          </div>
+          <div class="col">
+            <label for="">Species:</label>
+            <textarea class="form-control" id="manual3"></textarea>
+          </div>
+        </div>
+        
+        <br/>
+        <button class="btn btn-primary"
+          onclick="javascript:manualAlign(this);" id="manual-align-preview"
+          >Preview alignment</button>
+        <button type="button" class="btn btn-primary" id="manual-align-import"
+            style="display:none;"
+            >Import NCBI taxonomy IDs for exact matches</button>
+        
+        <br />
+        <div class="alert alert-info" role="alert" id="align-alert-manual"
+          style="display:none;"></div>
+          
+        <br/>
+        <table id="align3"
+            class="table table-bordered table-responsive table-condensed"
+            style="display:none; width:100%;">
+            <caption style="caption-side: top">Exact matches</caption></table>
+        <br/>
+        <table id="align4"
+            class="table table-bordered table-responsive table-condensed"
+            style="display:none; width:100%;">
+            <caption style="caption-side: top">Partial matches</caption></table>
+      </div></div></div>
+      <!-- End -->
+  </div><!--/navmodify-->
+</div><!--/tab-content-->
+
+
+<div class="row">
+
+<div class="col-sm-12">
+  
+</div>
+
+{% if request.user in lab.owners.all %}
 
 <script type="text/javascript">
 var alignments = null; // To be set later
