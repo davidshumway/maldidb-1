@@ -308,10 +308,10 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
         library = tmpForm.cleaned_data['library']
       )
       form = SpectraForm(data, instance = m1)
-      print('spectra exists! overwriting')
+      # spectra exists - overwriting
     except Spectra.DoesNotExist:
       form = SpectraForm(data)
-      print('new spectra!')
+      # new spectra
     except Spectra.MultipleObjectsReturned: # should not occur
       raise ValueError('unique constraint failed on spectra!')
     except:

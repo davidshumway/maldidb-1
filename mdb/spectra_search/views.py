@@ -12,6 +12,7 @@ from django_filters.views import FilterView
 from django_tables2.views import SingleTableMixin
 from django_tables2 import SingleTableView
 import django_tables2 as tables
+from django.contrib.auth.decorators import login_required
 # R
 from chat.rfn import SpectraScores
 # Distance measurement
@@ -262,7 +263,8 @@ def process_file(request, file, form, owner, upload_count, ip):
   
 def upload_status(request):
 	pass 
-  
+
+@login_required
 def ajax_upload_library(request):
   if request.method == 'POST':
     form = SpectraLibraryForm(data = request.POST, files = request.FILES,
@@ -283,7 +285,8 @@ def ajax_upload_library(request):
       return JsonResponse({'errors': e}, status=400)
   else:
     return JsonResponse({'errors': 'Empty request.'}, status=400)
-    
+
+@login_required
 def ajax_upload(request):
   '''
   Preprocessing (optional) - Once uploaded, spawn new thread to preprocess.

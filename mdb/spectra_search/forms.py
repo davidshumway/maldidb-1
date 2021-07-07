@@ -195,8 +195,12 @@ class SpectraLibraryForm(forms.Form):
     
     # user's lab
     user_lab, created = LabGroup.objects.get_or_create(
+      lab_name = self.user.username + '\'s default lab',
       user_default_lab = True,
       owners__in = [self.user])
+    if created:
+      user_lab.owners.add(self.user)
+      user_lab.save()
     
     # validate upload library
     # ~ if d.get('save_to_library') == True:

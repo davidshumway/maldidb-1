@@ -84,8 +84,14 @@ function(req, ids) {
   s2 <- dbSpectra(ids[2:length(ids)])
   allPeaks <- do.call(c, c(s1['peaks'], s2['peaks']))
   allSpectra <- do.call(c, c(s1['spectra'], s2['spectra']))
-
+  
+  allPeaks <- MALDIquant::trim(allPeaks, c(3000, 15000))
+  allSpectra <- MALDIquant::trim(allSpectra, c(3000, 15000))
+  
   binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
+  
+  #binnedPeaks <- trim(binnedPeaks, c(3000,15000))
+  
   featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
   
   b <- list()
@@ -101,9 +107,9 @@ function(req, ids) {
   d <- coop::cosine(t(featureMatrix))
   d <- round(d, 3)
   
-  allPeaks <- MALDIquant::trim(
-    allPeaks, c(3000, 15000)
-  )
+#~   allPeaks <- MALDIquant::trim(
+#~     allPeaks, c(3000, 15000)
+#~   )
   emptyProtein <- unlist(
     lapply(allPeaks, MALDIquant::isEmpty)
   )
@@ -363,10 +369,10 @@ collapseStrainsInLibrary <- function(lid, sid, type, owner) {
   lid <- as.numeric(lid)
   sid <- as.numeric(sid)
   if (owner == F) {
-    print('owner is anon.')
+#~     print('owner is anon.')
     owner <- ''
   } else {
-    print('owner is not anon.')
+#~     print('owner is not anon.')
     owner <- paste0('"created_by":"', as.numeric(owner), '",')
   }
   if (type == 'PR')

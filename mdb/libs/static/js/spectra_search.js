@@ -36,15 +36,8 @@ function updateFileList(input) {
           return '<div id="filetable-preprocess' + data + '" style="text-align:center;width:100%;"></div>';
         }
       },
-      //~ {data: 'phylum', title: 'Phylum'},
-      //~ {data: 'class', title: 'Class'},
-      //~ {data: 'order', title: 'Order'},
-      //~ {data: 'genus', title: 'Genus'},
-      //~ {data: 'species', title: 'Species'},
     ]
   });
-  //~ t.order([0, 'desc']) // reorder in correct direction
-    //~ .draw();
   t.draw();
 }
 function toggleSearchTypeOpts(e) {
@@ -148,21 +141,6 @@ function toggleAddlFields() {
 }
 //~ $(document).ready(function(){
 window.addEventListener('DOMContentLoaded', (event) => {
-  
-  //~ var show_tbl = {{ form.show_tbl|lower }};
-  //~ var st = $('#search_toggle');
-  //~ var si = $('#search_initial');
-  //~ if (show_tbl) {
-    //~ st.css('display', 'block');
-    //~ si.css('display', 'none');
-  //~ } else {
-    //~ st.css('display', 'none');
-    //~ si.css('display', 'block');
-  //~ }
-  //~ st.click(toggleSearchForm);
-  
-  // toggle nav search
-  //~ $('.nav-link').click(toggleNavSearch);
   
   // toggle search options
   $('#toggle-search-opts').click(toggleAddlFields);
@@ -798,6 +776,7 @@ function singleScore(id) {
       {data: 'phylum', title: 'Phylum'},
       {data: 'class', title: 'Class'},
       {data: 'order', title: 'Order'},
+      {data: 'family', title: 'Family'},
       {data: 'genus', title: 'Genus'},
       {data: 'species', title: 'Species'},
     ]
@@ -817,7 +796,7 @@ function singleScore(id) {
       .append('select')
       .attr('id', 'select-histo')
       .selectAll('option')
-      .data(['Kingdom', 'Phylum', 'Class', 'Order', 'Genus', 'Species'])
+      .data(['Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus', 'Species'])
       .enter()
       .append('option')
       .attr('value', function (d) { return d; })
@@ -1362,7 +1341,6 @@ function uploadHelper(formData) {
       } catch(e) {
         console.log(e);
       }
-      
     }
   });
   return false;
