@@ -36,20 +36,6 @@ def save_manual_align(self, msg, client):
     n.cPhylum = tx.cPhylum
     n.cKingdom = tx.cKingdom
     
-    # ~ parents = get_parents(alignment['genus_parentid'])
-    # ~ for parent in parents:
-      # ~ if parent.txtype == 'family':
-        # ~ n.cFamily = parent.name
-      # ~ elif parent.txtype == 'order':
-        # ~ n.cOrder = parent.name
-      # ~ elif parent.txtype == 'class':
-        # ~ n.cClass = parent.name
-      # ~ elif parent.txtype == 'phylum':
-        # ~ n.cPhylum = parent.name
-      # ~ elif parent.txtype == 'superkingdom':
-        # ~ n.cKingdom = parent.name
-      # ~ else: # unknown parent txtype: Terrabacteria group clade ?
-        # ~ print(f'unknown parent txtype: {parent.name} {parent.txtype}')
     update_nodes.append(n)
     
   Metadata.objects.bulk_update(update_nodes, 
@@ -76,18 +62,18 @@ def manual_align(self, msg, client):
   md = Metadata.objects.filter(library_id = msg['library'],
     strain_id__in = sIDs, ncbi_taxid = '')
   
-  sID_dict = {}
+  sID_idx = {}
   idx = 0
   for s in sIDs:
-    sID_dict[s] = idx
+    sID_idx[s] = idx
     idx += 1
   
   result1 = []
   result2 = []
   for m in md:
-    if m.strain_id not in sID_dict:
+    if m.strain_id not in sID_idx:
       continue
-    idx = sID_dict[m.strain_id]
+    idx = sID_idx[m.strain_id]
     g = genus[idx]
     s = species[idx]
     tmp = {
@@ -98,40 +84,41 @@ def manual_align(self, msg, client):
       'txid1': '',
       'txid2': '',
       'genus_parentid': '',
+      'result': '',
+      'partial_ids': False,
     }
-    j1 = TxNode.objects.filter(name__iexact = g, txtype__exact = 'genus')\
-      .values('txid', 'parentid')
-    if len(j1) == 1:
+    j1 = TxNode.objects.filter(search_vector = g, txtype__exact = 'genus')\
+      .values('name', 'txid', 'parentid')[0:2]
+    if len(j1) > 0 and j1[0]['name'].lower() == g.lower():
       tmp['txid1'] = j1[0]['txid']
       tmp['genus_parentid'] = j1[0]['parentid']
-    if s == '': # only genus provided
-      if len(j1) == 0:
-        tmp['result'] = 'no match'
-        result2.append(tmp)
-      elif len(j1) > 1:
-        tmp['result'] = 'multiple results'
-        result2.append(tmp)
+      if s != '':
+        j2 = TxNode.objects.filter(search_vector = s,
+          txtype__exact = 'species',
+          cGenus__exact = g)[0:20]
+        if len(j2) == 0: # no species+genus match, how about non-genus match?
+          tmp['result'] = 'no species+genus match'
+          result2.append(tmp)
+        elif len(j2) > 0 and j2[0].name.lower() == s.lower():
+          tmp['txid2'] = j2[0].txid
+          result1.append(tmp)
+        else: # (len(j2) > 0)
+          tmp['result'] = 'non-exact species match'
+          tmp['txid2'] = align_getpartial(j2) # get all for closest txid
+          tmp['partial_ids'] = {x.txid: True for x in j2}
+          #print(f"tmp: {tmp}")
+          #print(f"pids: {tmp['partial_ids']}")
+          result2.append(tmp)
       else:
-        tmp['result'] = 'exact match'
-        tmp['result_type'] = 'genus'
         result1.append(tmp)
-    else: # genus + species provided
-      # ~ print(f'parentid__in = {[gx["txid"] for gx in list(j1)]}')
-      j2 = TxNode.objects.filter(name__iexact = s,
-        txtype__exact = 'species',
-        parentid__in = [gx['txid'] for gx in list(j1)])
-      if len(j2) == 0:
-        tmp['result'] = 'no species match'
-        result2.append(tmp)
-      elif len(j2) > 1:
-        tmp['result'] = 'multiple results'
-        result2.append(tmp)
-      else:
-        tmp['result'] = 'exact match'
-        tmp['result_type'] = 'species'
-        tmp['txid2'] = j2[0].txid
-        result1.append(tmp)
-  
+    elif len(j1) == 0: # requires at least exact genus match to continue
+      tmp['result'] = 'no genus match'
+      result2.append(tmp)
+    else: # multiple genus
+      tmp['result'] = 'non-exact genus match'
+      tmp['txid1'] = align_getpartial(j1)
+      result2.append(tmp)
+
   # sends result back to client
   ws = websocket.WebSocket()
   ws.connect('ws://localhost:8000/ws/pollData')
@@ -144,17 +131,6 @@ def manual_align(self, msg, client):
     }
   }))
   ws.close()
-  
-# ~ def get_parents(txid):
-  # ~ '''
-  # ~ :return rslt: List of objects where each object is {name, rank}
-  # ~ '''
-  # ~ print(f'txid{txid}')
-  # ~ n = TxNode.objects.filter(txid = txid, nodetype = 's')
-  # ~ if len(n) == 0:
-    # ~ return []
-  # ~ else:
-    # ~ return [n.first()] + get_parents(n.first().parentid) # if n.parentid else [])
 
 @start_new_thread
 def save_align(self, msg, client):
@@ -180,7 +156,7 @@ def save_align(self, msg, client):
     
     update_nodes.append(n)
     
-  Metadata.objects.bulk_update(update_nodes, 
+  Metadata.objects.bulk_update(update_nodes,
     ['ncbi_taxid', 'cSpecies', 'cGenus', 'cFamily', 'cOrder', 'cClass',
     'cPhylum', 'cKingdom']
   )
@@ -200,14 +176,13 @@ def align_getpartial(nodes):
   '''
   Format closest matches in a readable format
   '''
-  i = 0
   strout = []
-  while i < 2:
+  #while i < 4:
+  for n in nodes:
     try:
-      strout.append(f'{nodes[i].name} ({str(nodes[i].txid)})')
+      strout.append(f'{n.name} ({str(n.txid)}, {n.cGenus})')
     except:
       pass
-    i += 1
   return '|'.join(strout)
   
 @start_new_thread
@@ -247,6 +222,7 @@ def align(self, msg, client):
       }
     }))
     idx += 1
+#    partial_ids = {}
     tmp = {
       'id': md.id,
       'strain_id': md.strain_id,
@@ -257,6 +233,7 @@ def align(self, msg, client):
       'exact_parentid': '',
       'partial_type': 'N/A',
       'partial': 'N/A',
+      'partial_ids': False,
     }
     
     s = (msg['prefix'].strip() + ' ' if msg['prefix'].strip() != '' else '')\
@@ -276,16 +253,20 @@ def align(self, msg, client):
       else:
         tmp['partial_type'] = f'{s}'
         tmp['partial'] = align_getpartial(j)
+        tmp['partial_ids'] = {x.txid: True for x in j}
         rslt2.append(tmp)
     else: # tries one more (plain text) search
       s2 = re.sub('[^a-zA-Z0-9]', ' ', md.strain_id)
       s2 = (msg['prefix'].strip() + ' ' if msg['prefix'].strip() != '' else '')\
         + s2
-      if s2 != s:
+      if s2.lower() != s.lower():
         j = TxNode.objects.filter(search_vector = s2)[0:2]
         if len(j) > 0:
           tmp['partial_type'] = f'{s2} (plain text match)'
           tmp['partial'] = align_getpartial(j)
+  #        tmp['partial_ids'] = [x.txid for x in j]
+          tmp['partial_ids'] = {x.txid: True for x in j}
+
       # in any case, appends result as partial match
       rslt2.append(tmp)
     continue

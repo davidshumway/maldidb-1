@@ -204,7 +204,7 @@ Streptomyces koyangensis</pre>
             >Import NCBI taxonomy IDs for exact matches</button>
         
         <br />
-        <div class="alert alert-info" role="alert" id="align-alert-manual"
+        <div class="alert alert-info mt-2" role="alert" id="align-alert-manual"
           style="display:none;"></div>
           
         <br/>
@@ -239,9 +239,14 @@ Streptomyces koyangensis</pre>
 var alignments = null; // To be set later
 var alignments2 = null; // To be set later
 var tableDom = 
-  '<"row"<"col-sm-12 col-md-4"B><"col-sm-12 col-md-4"l><"col-sm-12 col-md-4"f>>' +
+  '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-3"l><"col-sm-12 col-md-3"f>>' +
   '<"row"<"col-sm-12"tr>>' +
   '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>';
+function noevent(e) {
+  e.stopPropagation();
+  e.preventDefault();
+  return false;
+}
 var socket = new WebSocket('ws://' + location.host + '/ws/pollData');
 socket.onopen = function(e){
   //console.log(e);
@@ -286,17 +291,37 @@ socket.onmessage = function(e) {
       ]
     });
     t.draw();
-    var t = $('#align2').DataTable({
+    var t2 = $('#align2').DataTable({
       data: data.data.result2,
       destroy: true, // https://datatables.net/manual/tech-notes/3
       dom: tableDom,
       buttons: [
         'selectAll',
-        'selectNone'
+        'selectNone',
+        {
+          text: 'Add selected Metadata',
+          action: function (e, dt, button, config) {
+            // for each selected row, get the database ID plus the selected option value
+            var x = dt.rows({selected: true}).data().toArray();
+            var y = dt.rows({selected: true}).nodes();
+            var save = [];
+            for (var i in x) {
+              var s = y[i].getElementsByTagName('select');
+              if (s.length == 0) continue; // no option
+              save.push({
+                exact_txid: s[0].options[s[0].selectedIndex].value,
+                id: x[i].id
+              })
+            }
+            saveAlignSelected(save);
+            // removes selected
+            dt.rows({selected: true}).remove().draw();
+          }
+        }
       ],
       language: {
         buttons: {
-          selectAll: "Select all items",
+          selectAll: "Select all",
           selectNone: "Select none"
         }
       },
@@ -306,14 +331,24 @@ socket.onmessage = function(e) {
         targets:   0
       }],
       select: {
-        style:    'multi+shift',
-        //~ selector: 'td:first-child',
+        style: 'multi+shift',
         toggleable: true
       },
       columns: [
         {data: 'id', title: ' ',
           render: function(data, type) {
             return '';
+          }
+        },
+        {data: 'partial_ids', title: 'Update ID',
+          render: function(data, type) {
+            if (!data || data.length == 0) return '';
+            var d = [];
+            for (var i in data) {
+              d.push('<option value="' + i + '">' + i + '</option>');
+            }
+            return '<select onclick="javascript: noevent(event);">' +
+              d.join() + '</select>';
           }
         },
         {data: 'id', title: 'ID'},
@@ -343,7 +378,7 @@ socket.onmessage = function(e) {
     $('#align4').css('display', '');
     $('#align-alert-manual').text('');
     $('#align-alert-manual').css('display', 'none');
-    $('#manual-align-preview').disabled = false;
+    $('#manual-align-preview')[0].disabled = false;
     $('#manual1')[0].disabled = false;
     $('#manual2')[0].disabled = false;
     $('#manual3')[0].disabled = false;
@@ -372,13 +407,76 @@ socket.onmessage = function(e) {
     var t = $('#align4').DataTable({
       data: data.data.result2,
       destroy: true, // https://datatables.net/manual/tech-notes/3
+      dom: tableDom,
+      buttons: [
+        'selectAll',
+        'selectNone',
+        {
+          text: 'Add selected Metadata',
+          action: function (e, dt, button, config) {
+            // for each selected row, get the database ID plus the selected option value
+            var x = dt.rows({selected: true}).data().toArray();
+            var y = dt.rows({selected: true}).nodes();
+            var save = [];
+            for (var i in x) {
+              var s = y[i].getElementsByTagName('select');
+              if (s.length == 0) continue; // no option
+              save.push({
+                exact_txid: s[0].options[s[0].selectedIndex].value,
+                id: x[i].id
+              })
+            }
+            saveAlignSelected(save);
+            // removes selected
+            dt.rows({selected: true}).remove().draw();
+          }
+        }
+      ],
+      language: {
+        buttons: {
+          selectAll: "Select all",
+          selectNone: "Select none"
+        }
+      },
+      columnDefs: [{
+        orderable: false,
+        className: 'select-checkbox',
+        targets:   0
+      }],
+      select: {
+        style: 'multi+shift',
+        toggleable: true
+      },
+
       columns: [
+        {data: 'id', title: ' ',
+          render: function(data, type) {
+            return '';
+          }
+        },
+        {data: 'partial_ids', title: 'Update ID',
+          render: function(data, type) {
+            if (!data || data.length == 0) return '';
+            var d = [];
+            for (var i in data) {
+              d.push('<option value="' + i + '">' + i + '</option>');
+            }
+            return '<select onclick="javascript: noevent(event);">' +
+              d.join() + '</select>';
+          }
+        },
+
+        {data: 'id', title: 'ID'},
         {data: 'sid', title: 'Strain ID'},
         {data: 'genus', title: 'Input genus'},
         {data: 'species', title: 'Input species'},
         {data: 'result', title: 'Match issue'},
         {data: 'txid1', title: 'NCBI genus ID'},
-        {data: 'txid2', title: 'NCBI species ID'}
+        {data: 'txid2', title: 'NCBI species',
+          render: function(data, type) {
+            return data.split('|').join('<br>');
+          }
+        }
       ]
     });
     t.draw();
@@ -396,6 +494,13 @@ socket.onmessage = function(e) {
 }
 socket.onclose = function(e){
   //console.log(e);
+}
+function saveAlignSelected(rows) {
+  socket.send(JSON.stringify({
+    type: 'save align',
+    library: {{ library.id }},
+    alignments: rows
+  }));
 }
 function alignImport() {
   $('#align-load')[0].disabled = true;
