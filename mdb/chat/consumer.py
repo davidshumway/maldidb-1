@@ -49,7 +49,6 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     try:
       val = json.loads(text_data)
       if val['type'] == 'completed preprocessing':
-        # ~ print(f'sending to client:{clients[val["data"]["client"]]}')
         d = json.dumps({
           'data': {
             'message': 'completed preprocessing',
@@ -279,11 +278,14 @@ def cosine_scores(self, library, client, search_library):
   if len(n2) == 0:
     print('No collapsed spectra in search library!')
     return
+  print(f'n2{n2}')
   
+  # Performs cosine score for every unknown spectra
   for spectra1 in n1:
     data = {
       'ids': [spectra1.id] + [s['id'] for s in list(n2)]
     }
+    print(f'data{data}')
     r = requests.post(
       'http://plumber:8000/cosine',
       params = data
@@ -296,6 +298,7 @@ def cosine_scores(self, library, client, search_library):
         'intensity': v['intensity'],
         'snr': v['snr'],
       }
+    print(f'r.json()["similarity"]:{r.json()["similarity"]}')
     
     # Creates a dictionary sorted by its values (similarity score)
     from collections import OrderedDict
@@ -319,66 +322,69 @@ def cosine_scores(self, library, client, search_library):
       scores = ','.join(map(str, list(o.values()))),
       spectra_ids = ','.join(map(str, o.keys())))
     
-    if obj:
-      u = ['Unknown sample']
-      result = {
-        'scores': [],
-        'ids': {
-          'strain': u + [str(s['strain_id__strain_id']) for s in list(n2)],
-          'kingdom': u + [str(s['strain_id__cKingdom']) if s['strain_id__cKingdom'] != '' else 'N/A' for s in list(n2)],
-          'phylum': u + [str(s['strain_id__cPhylum']) if s['strain_id__cPhylum'] != '' else 'N/A' for s in list(n2)],
-          'class': u + [str(s['strain_id__cClass']) if s['strain_id__cClass'] != '' else 'N/A' for s in list(n2)],
-          'order': u + [str(s['strain_id__cOrder']) if s['strain_id__cOrder'] != '' else 'N/A' for s in list(n2)],
-          'family': u + [str(s['strain_id__cFamily']) if s['strain_id__cFamily'] != '' else 'N/A' for s in list(n2)],
-          'genus': u + [str(s['strain_id__cGenus']) if s['strain_id__cGenus'] != '' else 'N/A' for s in list(n2)],
-          'species': u + [str(s['strain_id__cSpecies']) if s['strain_id__cSpecies'] != '' else 'N/A' for s in list(n2)]
-        },
-        # ~ 'strain_ids': strain_ids,
-        # ~ 'strain_id__cSpecies': strain_id__cSpecies,
-        # ~ 'strain_id__cGenus': strain_id__cGenus,
-        'dendro': r.json()['dendro'],
-        # ~ 'dendro2': r.json()['dendro2'],
-        'original': {
-          'peak_mass': spectra1.peak_mass,
-          'peak_intensity': spectra1.peak_intensity,
-          'binned_mass': binned_peaks[str(spectra1.id)]['mass'],
-          'binned_intensity': binned_peaks[str(spectra1.id)]['intensity'],
-          'binned_snr': binned_peaks[str(spectra1.id)]['snr'],
-        }
-      }
+    if obj is False:
+      ws.close()
+      return #??
       
-      from django.db.models import Case, When
-      preserved = Case(*[When(pk = pk, then = pos) for pos, pk in enumerate(o)])
-      q = CollapsedSpectra.objects.filter(id__in = o.keys()).order_by(preserved)
-      rowcount = 1
-      for cs in q:
-        result['scores'].append({
-          'score': o[str(cs.id)],
-          'id': cs.id,
-          'strain': cs.strain_id.strain_id,
-          'kingdom': cs.strain_id.cKingdom,
-          'phylum': cs.strain_id.cPhylum,
-          'class': cs.strain_id.cClass,
-          'order': cs.strain_id.cOrder,
-          'family': cs.strain_id.cFamily,
-          'genus': cs.strain_id.cGenus,
-          'species': cs.strain_id.cSpecies,
-          'rowcount': rowcount,
-          'peak_mass': cs.peak_mass,
-          'peak_intensity': cs.peak_intensity,
-          'binned_mass': binned_peaks[str(cs.id)]['mass'],
-          'binned_intensity': binned_peaks[str(cs.id)]['intensity'],
-          'binned_snr': binned_peaks[str(cs.id)]['snr'],
-        })
-        rowcount += 1
-      ws.send(json.dumps({
-        'type': 'completed cosine',
-        'data': {
-          'client': client,
-          'result': result,
-          'spectra1': spectra1.id
-        }
-      }))
+    u = ['Unknown sample']
+    result = {
+      'scores': [],
+      'ids': {
+        'strain': u + [str(s['strain_id__strain_id']) for s in list(n2)],
+        'kingdom': u + [str(s['strain_id__cKingdom']) if s['strain_id__cKingdom'] != '' else 'N/A' for s in list(n2)],
+        'phylum': u + [str(s['strain_id__cPhylum']) if s['strain_id__cPhylum'] != '' else 'N/A' for s in list(n2)],
+        'class': u + [str(s['strain_id__cClass']) if s['strain_id__cClass'] != '' else 'N/A' for s in list(n2)],
+        'order': u + [str(s['strain_id__cOrder']) if s['strain_id__cOrder'] != '' else 'N/A' for s in list(n2)],
+        'family': u + [str(s['strain_id__cFamily']) if s['strain_id__cFamily'] != '' else 'N/A' for s in list(n2)],
+        'genus': u + [str(s['strain_id__cGenus']) if s['strain_id__cGenus'] != '' else 'N/A' for s in list(n2)],
+        'species': u + [str(s['strain_id__cSpecies']) if s['strain_id__cSpecies'] != '' else 'N/A' for s in list(n2)]
+      },
+      # ~ 'strain_ids': strain_ids,
+      # ~ 'strain_id__cSpecies': strain_id__cSpecies,
+      # ~ 'strain_id__cGenus': strain_id__cGenus,
+      'dendro': r.json()['dendro'],
+      # ~ 'dendro2': r.json()['dendro2'],
+      'original': {
+        'peak_mass': spectra1.peak_mass,
+        'peak_intensity': spectra1.peak_intensity,
+        'binned_mass': binned_peaks[str(spectra1.id)]['mass'],
+        'binned_intensity': binned_peaks[str(spectra1.id)]['intensity'],
+        'binned_snr': binned_peaks[str(spectra1.id)]['snr'],
+      }
+    }
+    
+    from django.db.models import Case, When
+    preserved = Case(*[When(pk = pk, then = pos) for pos, pk in enumerate(o)])
+    q = CollapsedSpectra.objects.filter(id__in = o.keys()).order_by(preserved)
+    rowcount = 1
+    for cs in q:
+      result['scores'].append({
+        'score': o[str(cs.id)],
+        'id': cs.id,
+        'strain': cs.strain_id.strain_id,
+        'kingdom': cs.strain_id.cKingdom,
+        'phylum': cs.strain_id.cPhylum,
+        'class': cs.strain_id.cClass,
+        'order': cs.strain_id.cOrder,
+        'family': cs.strain_id.cFamily,
+        'genus': cs.strain_id.cGenus,
+        'species': cs.strain_id.cSpecies,
+        'rowcount': rowcount,
+        'peak_mass': cs.peak_mass,
+        'peak_intensity': cs.peak_intensity,
+        'binned_mass': binned_peaks[str(cs.id)]['mass'],
+        'binned_intensity': binned_peaks[str(cs.id)]['intensity'],
+        'binned_snr': binned_peaks[str(cs.id)]['snr'],
+      })
+      rowcount += 1
+    ws.send(json.dumps({
+      'type': 'completed cosine',
+      'data': {
+        'client': client,
+        'result': result,
+        'spectra1': spectra1.id
+      }
+    }))
       
   # closes socket
   ws.close()

@@ -91,7 +91,7 @@ class SpectraLibraryForm(forms.Form):
     # ~ empty_label = 'Select a lab'
   # ~ )
   library_select = forms.ModelChoiceField(
-    queryset = Library.objects.none(),
+    queryset = Library.objects.all(),#.none(),
     to_field_name = 'title',
     required = False,
     widget = forms.Select(
@@ -100,6 +100,7 @@ class SpectraLibraryForm(forms.Form):
     ),
     empty_label = 'Select a library'
   )
+  
   library_create_new = forms.CharField(
     required = False,
     help_text = 'Enter a name for the new library')
@@ -114,7 +115,8 @@ class SpectraLibraryForm(forms.Form):
   preprocess = forms.BooleanField(
     required = True,
     initial = True,
-    label = 'Perform spectra preprocessing?')
+    label = 'Perform spectra preprocessing?',
+    disabled = True)
 
   search_library = forms.ModelChoiceField(
     queryset = Library.objects.all(),
@@ -125,7 +127,45 @@ class SpectraLibraryForm(forms.Form):
         'class': 'custom-select'}
     ),
     disabled = False,
-    empty_label = 'Select a library to search against'
+    # ~ empty_label = 'Select a library to search against'
+  )
+  search_library_own = forms.ModelChoiceField(
+    queryset = Library.objects.all(),
+    to_field_name = 'title',
+    required = False,
+    widget = forms.Select(
+      attrs = {
+        'class': 'custom-select'}
+    ),
+    # ~ empty_label = 'Own library'
+  )
+  search_library_lab = forms.ModelChoiceField( # where user is a member or owner
+    queryset = Library.objects.all(),
+    to_field_name = 'title',
+    required = False,
+    widget = forms.Select(
+      attrs = {
+        'class': 'custom-select'}
+    ),
+    # ~ empty_label = 'Lab library'
+  )
+  search_library_public = forms.ModelChoiceField(
+    queryset = Library.objects.all(),
+    to_field_name = 'title',
+    required = False,
+    widget = forms.Select(
+      attrs = {
+        'class': 'custom-select'}
+    ),
+    # ~ empty_label = 'Public library'
+  )
+  library_search_type = forms.CharField(label = '',
+    widget = forms.RadioSelect(choices = [
+      ('r01', 'R01 datasets'),
+      ('own', 'Own datasets'),
+      ('lab', 'Lab datasets'),
+      ('pub', 'Public datasets'),
+    ])
   )
   
   cKingdom = forms.ModelMultipleChoiceField(
@@ -137,27 +177,32 @@ class SpectraLibraryForm(forms.Form):
     queryset = Metadata.objects.all(),
     label = 'Phylum', required = False,
     widget = autocomplete.ModelSelect2Multiple(
-      url = 'spectra_search:metadata_autocomplete_phylum', forward=('cKingdom',)))
+      url = 'spectra_search:metadata_autocomplete_phylum',
+      forward=('cKingdom',)))
   cClass = forms.ModelMultipleChoiceField(
     queryset = Metadata.objects.all(),
     label = 'Class', required = False,
     widget = autocomplete.ModelSelect2Multiple(
-      url = 'spectra_search:metadata_autocomplete_class', forward=['cKingdom','cPhylum']))
+      url = 'spectra_search:metadata_autocomplete_class',
+      forward=['cKingdom','cPhylum']))
   cOrder = forms.ModelMultipleChoiceField(
     queryset = Metadata.objects.all(),
     label = 'Order', required = False,
     widget = autocomplete.ModelSelect2Multiple(
-      url = 'spectra_search:metadata_autocomplete_order', forward=['cKingdom','cPhylum','cClass']))
+      url = 'spectra_search:metadata_autocomplete_order',
+      forward=['cKingdom','cPhylum','cClass']))
   cGenus = forms.ModelMultipleChoiceField(
     queryset = Metadata.objects.all(),
     label = 'Genus', required = False,
     widget = autocomplete.ModelSelect2Multiple(
-      url = 'spectra_search:metadata_autocomplete_genus', forward=['cKingdom','cPhylum','cClass','cOrder']))
+      url = 'spectra_search:metadata_autocomplete_genus',
+      forward=['cKingdom','cPhylum','cClass','cOrder']))
   cSpecies = forms.ModelMultipleChoiceField(
     queryset = Metadata.objects.all(),
     label = 'Species', required = False,
     widget = autocomplete.ModelSelect2Multiple(
-      url = 'spectra_search:metadata_autocomplete_species', forward=['cKingdom','cPhylum','cClass','cOrder','cGenus']))
+      url = 'spectra_search:metadata_autocomplete_species',
+      forward=['cKingdom','cPhylum','cClass','cOrder','cGenus']))
       
   # ~ class Meta:
     # ~ model = UserFile
@@ -173,15 +218,15 @@ class SpectraLibraryForm(forms.Form):
     request = kwargs.pop('request')
     self.user = request.user
     super(SpectraLibraryForm, self).__init__(*args, **kwargs)
-    user = self.user
-    if request.user.is_authenticated:
-      user_labs = LabGroup.objects \
-        .filter(Q(owners__in = [user]) | Q(members__in = [user]))
-      q = Library.objects.filter( \
-        Q(lab__in = user_labs) | \
-        Q(created_by__exact = user)
-      ).order_by('-id')
-      self.fields['library_select'].queryset = q
+    # ~ user = self.user
+    # ~ if request.user.is_authenticated:
+      # ~ user_labs = LabGroup.objects \
+        # ~ .filter(Q(owners__in = [user]) | Q(members__in = [user]))
+      # ~ q = Library.objects.filter( \
+        # ~ Q(lab__in = user_labs) | \
+        # ~ Q(created_by__exact = user)
+      # ~ ).order_by('-id')
+      # ~ self.fields['library_select'].queryset = q
     
   def clean(self):
     '''
@@ -191,7 +236,7 @@ class SpectraLibraryForm(forms.Form):
     # ~ cleaned_data['cKingdom'] = Metadata.objects.none()
     # ~ d['cKingdom'] = Metadata.objects.filter(cKingdom__exact = 'Bacteria')
     # ~ d['cClass'] = Metadata.objects.filter(cClass__exact = 'Gammaproteobacteria')
-    # ~ print(f'clean{d}')
+    print(f'clean{d}')
     
     # user's lab
     user_lab, created = LabGroup.objects.get_or_create(
@@ -201,6 +246,31 @@ class SpectraLibraryForm(forms.Form):
     if created:
       user_lab.owners.add(self.user)
       user_lab.save()
+    
+    # validate search library
+    if d.get('library_search_type') == 'r01':
+      pass
+      # ~ d['search_library_own'] = Library.objects.none()
+      # ~ d['search_library_lab'] = Library.objects.none()
+      # ~ d['search_library_public'] = Library.objects.none()
+    elif d.get('library_search_type') == 'own':
+      d['search_library'] = d['search_library_own']
+      # ~ d['search_library_own'] = Library.objects.none()
+      # ~ d['search_library_lab'] = Library.objects.none()
+      # ~ d['search_library_public'] = Library.objects.none()
+    elif d.get('library_search_type') == 'lab':
+      d['search_library'] = d['search_library_lab']
+      # ~ d['search_library_own'] = Library.objects.none()
+      # ~ d['search_library_lab'] = Library.objects.none()
+      # ~ d['search_library_public'] = Library.objects.none()
+    elif d.get('library_search_type') == 'pub':
+      d['search_library'] = d['search_library_public']
+      # ~ d['search_library_own'] = Library.objects.none()
+      # ~ d['search_library_lab'] = Library.objects.none()
+      # ~ d['search_library_public'] = Library.objects.none()
+      
+    print(f'cleaned{d}')
+    
     
     # validate upload library
     # ~ if d.get('save_to_library') == True:

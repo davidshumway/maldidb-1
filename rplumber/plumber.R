@@ -458,7 +458,7 @@ collapseStrainsInLibrary <- function(lid, sid, type, owner) {
     #stop('status code:', req$status_code)
     # In one case, this occurs when trying to insert a non-unique 
     # (spectrum_mass_hash, spectrum_intensity_hash, library) into the db.
-    # In this case, it fails without warning.
+    # In this case it fails without warning.
   }
 }
 #* @param l: List to serialize

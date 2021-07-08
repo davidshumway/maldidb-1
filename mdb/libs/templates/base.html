@@ -74,9 +74,11 @@
 	  </a>
 	  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
 	    <!--<a class="dropdown-item" href=" url 'spectra_search:spectra_results' ">Spectrum - All</a>-->
-	    <a class="dropdown-item" href="{% url 'spectra_search:spectra_results' %}">Spectrum - All</a>
+	    <a class="dropdown-item" href="{% url 'spectra_search:spectra_results' %}">Spectra - All</a>
+<!--
 	    <a class="dropdown-item" href="{% url 'chat:home' %}">Spectrum - Replicates</a>
-	    <a class="dropdown-item" href="{% url 'chat:home' %}">Spectrum - Collapsed</a>
+-->
+	    <a class="dropdown-item" href="{% url 'spectra_search:spectra_results2' %}">Spectra - Collapsed</a>
 	    <a class="dropdown-item" href="{% url 'chat:libraries_results' %}">Libraries</a>
 	    <a class="dropdown-item" href="{% url 'chat:metadata_results' %}">Metadata</a>
 	    <a class="dropdown-item" href="{% url 'chat:labgroups_results' %}">Lab Groups</a>

@@ -118,13 +118,80 @@ function show_filter(e) {
           
           <!-- Begin more options -->
           <div id="div-upload-opts" style="display:none;">
-            <div class="form-group">
-              Select a library to search against:
-              {% with f=upload_form.search_library %}
-                {{ f }}
-              {% endwith %}
+            <div class="form-group row">
+<!--
+              <legend class=" col-sm-2 pt-0"
+                >Radios</legend>
+-->
+              <div class="col-form-label col-sm-2">
+                Library type
+              </div>
+              <div class="col-sm-10">
+                <div class="form-check">
+                  <input class="form-check-input lst_" type="radio"
+                    name="library_search_type" id="gridRadios1"
+                    value="r01" data-ltype="" checked>
+                  <label class="form-check-label" for="gridRadios1">
+                    R01 datasets
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input lst_" type="radio"
+                    name="library_search_type" id="gridRadios2"
+                    value="own" data-ltype="-own">
+                  <label class="form-check-label" for="gridRadios2">
+                    My datasets
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input lst_" type="radio"
+                    name="library_search_type" id="gridRadios3"
+                    value="lab" data-ltype="-lab">
+                  <label class="form-check-label" for="gridRadios3">
+                    Lab datasets (member/owner)
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input lst_" type="radio"
+                    name="library_search_type" id="gridRadios4"
+                    value="pub" data-ltype="-public">
+                  <label class="form-check-label" for="gridRadios4">
+                    All public datasets
+                  </label>
+                </div>
+              </div>
             </div>
             
+            <div class="form-group row">
+              <label for="" class="col-sm-2 col-form-label">Library</label>
+              <div class="col-sm-10">
+<!--
+                <input type="email" class="form-control" id="inputEmail3" placeholder="Email">
+-->
+                <div id="search-library" class="sl_" >
+                  {% with f=upload_form.search_library %}
+                    {{ f }}
+                  {% endwith %}
+                </div>
+                <div id="search-library-own" class="sl_" style="display:none;">
+                  {% with f=upload_form.search_library_own %}
+                    {{ f }}
+                  {% endwith %}
+                </div>
+                <div id="search-library-lab" class="sl_" style="display:none;">
+                  {% with f=upload_form.search_library_lab %}
+                    {{ f }}
+                  {% endwith %}
+                </div>
+                <div id="search-library-public" class="sl_" style="display:none;">
+                  {% with f=upload_form.search_library_public %}
+                    {{ f }}
+                  {% endwith %}
+                </div>
+              </div>
+            </div>
+            
+<!--
             <div class="form-check">
               {% with f=upload_form.save_to_library %}
                 {{ f }}
@@ -132,37 +199,59 @@ function show_filter(e) {
                   >{{ f.label }}</label>
               {% endwith %}
             </div>
+-->
             
-            <div class="w-75">
-              Select uploads location:
-              
-              <div class="form-group">
-                <input type="radio" name="library_save_type" value="RANDOM" checked />
-                Use a randomly assigned library
-              </div>
-<!--
-              <div class="form-group">
-                with f=upload_form.lab
-                f
-                endwith
-              </div>
--->                 
-              <div class="form-group">
-                <input type="radio" name="library_save_type" value="NEW" />
-                Create new library:
-                {% with f=upload_form.library_create_new %}
-                {{ f }}
-                {% endwith %}
-                <div class="alert alert-danger toggle-display" id="new-library-error">
+            <div class="form-group row">
+              <div class="col-sm-2 col-form-label"
+                >Upload location</div>
+              <div class="col-sm-10">
+                
+                <div class="form-check mb-3">
+                  <input type="radio" name="library_save_type"
+                    value="RANDOM" id="library_save_type1" checked />
+                  <label class="form-check-label" for="library_save_type1">
+                    Use randomly assigned library
+                  </label>
                 </div>
+                
+                <div class="form-check">
+                  <div class="form-group row">
+                    <div class="col-sm-4">
+                      <input type="radio" name="library_save_type"
+                        value="NEW" id="library_save_type2" />
+                      <label class="form-check-label" for="library_save_type2">
+                        Create new library
+                      </label>
+                    </div>
+                    <div class="col-sm-8">
+                      {% with f=upload_form.library_create_new %}
+                      {{ f }}
+                      {% endwith %}
+                      <div class="alert alert-danger toggle-display" id="new-library-error">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+               
+                <div class="form-check">
+                  <div class="form-group row">
+                    <div class="col-sm-4">
+                      <input type="radio" name="library_save_type"
+                        value="EXISTING" id="library_save_type3" />
+                      <label class="form-check-label" for="library_save_type3">
+                        Save to existing library
+                      </label>
+                    </div>
+                    <div class="col-sm-8">
+                      {% with f=upload_form.library_select %}
+                      {{ f }}
+                      {% endwith %}
+                    </div>
+                  </div>
+                </div>
+                
               </div>
-              <div class="form-group">
-                <input type="radio" name="library_save_type" value="EXISTING" />
-                Save to existing library:
-                {% with f=upload_form.library_select %}
-                {{ f }}
-                {% endwith %}
-              </div>
+              
             </div>
             <div class="form-group">
               {% with f=upload_form.preprocess %}

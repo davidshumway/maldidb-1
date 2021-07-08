@@ -107,8 +107,6 @@ class MetadataAutocomplete(autocomplete.Select2QuerySetView):
 @start_new_thread
 def process_file(request, file, form, owner, upload_count, ip):
   '''Runs R methods to process a spectra file
-  
-  Todo: Include user feedback
   '''
   ws = websocket.WebSocket()
   ws.connect('ws://localhost:8000/ws/pollData')
@@ -141,125 +139,6 @@ def process_file(request, file, form, owner, upload_count, ip):
   
   ws.close()
   return
-
-
-  
-  # Collapse if there is a protein spectra
-  if info['spectra']['protein'] > 0: ##### > 1
-    data = {
-      'id': form.cleaned_data['library'].id,
-      'owner': owner
-    }
-    r = requests.get(
-      'http://plumber:8000/collapseLibrary',
-      params = data
-    )
-    
-  # In the case of a collapsed spectra which had mass > 6000 but
-  # when collapsed lost those peaks, it is necessary to 
-  # retrieve the CollapsedSpectra using the spectra_content
-  # attribute.
-  n1 = CollapsedSpectra.objects.filter( # unknown spectra
-    library_id__exact = form.cleaned_data['library'].id,
-    spectra_content__exact = 'PR'
-  ).first()
-  n2 = CollapsedSpectra.objects.filter(
-    library__exact = form.cleaned_data['search_library'].id,
-    spectra_content__exact = 'PR'
-  ).order_by('id').values('id')#, 'strain_id')
-  data = {
-    'ids': [n1.id] + [s['id'] for s in list(n2)]
-  }
-  r = requests.post(
-    'http://plumber:8000/cosine',
-    params = data
-  )
-  
-  tmp = r.json()['binnedPeaks']
-  binned_peaks = {}
-  for v in tmp: # Dictionary of binned peaks
-    binned_peaks[str(v['csId'][0])] = {
-      'mass': v['mass'],
-      'intensity': v['intensity'],
-      'snr': v['snr'],
-    }
-  
-# ~ # test
-# ~ from spectra.models import *
-# ~ import requests
-# ~ n2 = CollapsedSpectra.objects.filter(
-# ~ library__title__exact = 'R01 Data',
-# ~ max_mass__gt = 6000
-# ~ ).values('id')
-# ~ data = {'ids': [2] + [s['id'] for s in list(n2)]}
-# ~ r = requests.post('http://plumber:8000/cosine', params = data)
-# ~ # create a dictionary and sort by its values
-# ~ from collections import OrderedDict
-# ~ k = [str(s['id']) for s in list(n2)] # one less
-# ~ v = r.json()[1:] # one more, remove first
-# ~ o = OrderedDict(
-# ~ sorted(dict(zip(k, v)).items(),
-  # ~ key = lambda x: (x[1], x[0]), reverse = True)
-# ~ )
-
-  # Dictionary sorted by its values
-  from collections import OrderedDict
-  k = [str(s['id']) for s in list(n2)] # one less
-  v = r.json()['similarity'][1:] # one more remove first???
-  o = OrderedDict(
-    sorted(dict(zip(k, v)).items(),
-      key = lambda x: (x[1], x[0]), reverse = True)
-  )
-
-  obj = CollapsedCosineScore.objects.create(
-    spectra = n1,
-    library = form.cleaned_data['library'], # lib unnecessary in ccs model
-    scores = ','.join(map(str, list(o.values()))),
-    spectra_ids = ','.join(map(str, o.keys())))
-  
-  if obj:
-    l = {
-      'result': [],
-      'original': {
-        'peak_mass': n1.peak_mass,
-        'peak_intensity': n1.peak_intensity,
-        'binned_mass': binned_peaks[str(n1.id)]['mass'],
-        'binned_intensity': binned_peaks[str(n1.id)]['intensity'],
-        'binned_snr': binned_peaks[str(n1.id)]['snr'],
-      }
-    }
-    
-    from django.db.models import Case, When
-    preserved = Case(*[When(pk = pk, then = pos) for pos, pk in enumerate(o)])
-    q = CollapsedSpectra.objects.filter(id__in = o.keys()).order_by(preserved)
-    rowcount = 1
-    for cs in q:
-      l['result'].append({
-        'score': o[str(cs.id)],
-        'strain': cs.strain_id.strain_id,
-        'kingdom': cs.strain_id.cKingdom,
-        'phylum': cs.strain_id.cPhylum,
-        'class': cs.strain_id.cClass,
-        'order': cs.strain_id.cOrder,
-        # ~ 'family': cs.strain_id.cFamily,
-        'genus': cs.strain_id.cGenus,
-        'species': cs.strain_id.cSpecies,
-        'rowcount': rowcount,
-        'peak_mass': cs.peak_mass,
-        'peak_intensity': cs.peak_intensity,
-        'binned_mass': binned_peaks[str(cs.id)]['mass'],
-        'binned_intensity': binned_peaks[str(cs.id)]['intensity'],
-        'binned_snr': binned_peaks[str(cs.id)]['snr'],
-      })
-      rowcount += 1
-    ws.send(json.dumps(l))
-  # ~ else:
-    # ~ pass
-    # ~ r = requests.post(
-      # ~ 'http://plumber:8000/cosine',
-      # ~ params = data
-    # ~ )
-  #scoring
   
 def upload_status(request):
 	pass 
@@ -422,24 +301,27 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     # upload form
     context['upload_form'] = SpectraLibraryForm(request = self.request)
     u = self.request.user
-    q = Library.objects.none()
-    if u.is_authenticated is False:
-      q = Library.objects.filter(privacy_level__exact = 'PB')
-    else:
-      # This filters for only libraries accessible to the user
-      # based on user access controls
-      # ~ user_labs = LabGroup.objects \
-        # ~ .filter(Q(owners__in = [u]) | Q(members__in = [u]))
-      # ~ q = Library.objects \
-        # ~ .filter(~Q(lab__lab_name__exact = 'FileUploads')) \
-        # ~ .filter(\
-          # ~ Q(lab__in = user_labs) | Q(privacy_level__exact = 'PB') | \
-          # ~ Q(created_by__exact = u)
-        # ~ ).order_by('-id')
-      alice, created = User.objects.get_or_create(username = 'alice')
-      q = Library.objects.filter(title__exact = 'R01 Data',
-        created_by__exact = alice)
+    
+    # r01
+    alice, created = User.objects.get_or_create(username = 'alice')
+    q = Library.objects.filter(title__exact = 'R01 Data',
+      created_by__exact = alice)
     context['upload_form'].fields['search_library'].queryset = q
+    # own libraries (library_select shares this qs)
+    q = Library.objects.filter(created_by__exact = u)
+    context['upload_form'].fields['search_library_own'].queryset = q
+    context['upload_form'].fields['library_select'].queryset = q
+    # own labs
+    user_labs = LabGroup.objects.filter(
+      Q(owners__in = [u]) | Q(members__in = [u])
+    )
+    q = Library.objects.filter(
+      Q(lab__in = user_labs)
+    ).order_by('-id')
+    context['upload_form'].fields['search_library_lab'].queryset = q
+    # public
+    q = Library.objects.filter(privacy_level__exact = 'PB').order_by('-id')
+    context['upload_form'].fields['search_library_public'].queryset = q
     
     f = SpectraFilter(self.request.GET, queryset = self.queryset)
     context['filter'] = f

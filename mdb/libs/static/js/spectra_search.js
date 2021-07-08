@@ -141,6 +141,32 @@ function toggleAddlFields() {
 }
 //~ $(document).ready(function(){
 window.addEventListener('DOMContentLoaded', (event) => {
+  // Adds search library select
+  $('.lst_').click(function() {
+    var s = $('#search-library' + this.dataset.ltype);
+    $('.sl_').css('display', 'none');
+    $('.sl_').css('display', 'none');
+    s.css('display', '');
+  });
+  
+  // Page reload: resets fields
+  //$('#upload_form')[0].library_search_type.value // 'r01'
+  $('#upload_form')[0].library_search_type[0].checked = true;
+  try {
+    $('#upload_form')[0].search_library.selectedIndex = 1;
+  } catch(e) {}
+  try {
+    $('#upload_form')[0].search_library_own.selectedIndex = 1;
+  } catch(e) {}
+  try {
+    $('#upload_form')[0].search_library_lab.selectedIndex = 1;
+  } catch(e) {}
+  try {
+    $('#upload_form')[0].search_library_public.selectedIndex = 1;
+  } catch(e) {}
+  $('#id_library_create_new')[0].disabled = true;
+  $('#id_library_select')[0].disabled = true;
+  
   
   // toggle search options
   $('#toggle-search-opts').click(toggleAddlFields);
@@ -589,13 +615,7 @@ function dendro(data) {
   var colorBand = d3.scaleBand().domain(subgroups).range([0, 1]);
   var color = d3.scaleSequential(function(t) {
     return d3.interpolateRainbow(t);
-  })
-  
-  ///.domain(subgroups)
-  
-  //~ color(colorBand('Bacilli'));
-  //~ []
-  
+  });
   
   var color = d3.scaleOrdinal()
     .domain(subgroups)
@@ -611,8 +631,6 @@ function dendro(data) {
   
   //var update = chart.update(false); //showLength
   var x = chart(data.tree);
-  //console.log(x);
-  //document.body.appendChild(x);
   x.update(true);
   $('#dendro-viz-toggle input')[0].chart = x;
 }
@@ -634,14 +652,13 @@ socket.onmessage = function(e) {
   
   if (data.message == 'completed preprocessing') {
     var c = data.count;
-    preprocessed.items[c] = true;
+    //preprocessed.items[c] = true;
     preprocessed.count++;
     $('#filetable-preprocess' + c).text('done');
     //~ $('#stat-complete').text(preprocessed.count)
     $('#stat-complete').text(
       preprocessed.count + '/' + preprocessed.total + ' completed');
-    // Check if all are done...
-    // If all are done, then do collapseLibrary
+    // Collapses library if all are preprocessed
     if (preprocessed.count == preprocessed.total) {
       $('#stat-title').text('Collapsing library entries');
       $('#stat-complete').text('');
@@ -666,10 +683,10 @@ socket.onmessage = function(e) {
     var t = $('#file-listing2').DataTable({
       data: data.data.results,
       columns: [
-        {data: 'id', title: 'ID'},
+        {data: 'id', title: 'Spectra ID'},
         {data: 'strain_id', title: 'Strain ID'},
         {data: 'strain_id__strain_id', title: 'Strain Name'},
-        {data: 'id', title: 'Top scores (Strain, Genus / Species)',
+        {data: 'id', title: 'Top scores (Strain Name, Genus / Species)',
           render: function(data, type) {
             // e.g. top-scores-8373
             return '<table id="top-scores-'+data+'" style=""></table>'; //width: 500px;white-space: pre-line;
@@ -712,10 +729,13 @@ socket.onmessage = function(e) {
     
     var x = data.data.result.scores;
     var output = [];
-    for (var i=0; i<4; i++) {
-      output.push(x[i]);
+    for (var i=0; i<5; i++) {
+      if (x[i])
+        output.push(x[i]);
+      //~ } catch(e) {}
     }
-    
+    //~ console.log('output',output);
+    //~ console.log('here1');
     var t = $('#top-scores-'+data.data.spectra1).DataTable({
       data: output,
       paging: false,
@@ -731,6 +751,7 @@ socket.onmessage = function(e) {
     });
     t.order([0, 'desc']) // reorders in correct direction
       .draw();
+    //~ console.log('here');
   }
   
   return;
@@ -766,7 +787,8 @@ function singleScore(id) {
     //~ data: result,
     columns: [
       {data: 'score', title: 'Score'},
-      {data: 'strain', title: 'Strain',
+      {data: 'id', title: 'Spectra ID'},
+      {data: 'strain', title: 'Strain Name',
         render: function(data, type) {
           return '<span style="color:steelblue;font-weight:400;cursor:pointer;" data-id="'+data+'" onclick="sp(this);">'
             + data + '</span>';
@@ -1191,13 +1213,14 @@ function ajaxLibrary(form) {
         
       //~ }
       for (var i=0; i<$('#customFile')[0].files.length; i++) {
-        preprocessed.items[i] = false;
         var f = new FormData(form);
         f.set('file', $('#customFile')[0].files[i]);
         f.set('tmp_library', library);
         f.set('upload_count', i);
         f.set('ip', preprocessed.ip);
         //~ f.set('search_library', f.get());
+        //~ preprocessed.items[i] = false;
+        //preprocessed.items[i] = f;
         uploadHelper(f);
       }
     },
@@ -1305,18 +1328,12 @@ function uploadHelper(formData) {
     // on success
     success: function(response) {
       console.log(response);
-      //~ t.modal('hide');
-      
-      if (response.status == 'preprocessing') {
-        //~ t.title.text('Preprocessing');
-        //~ t.progress.text('0%');
-      }
+      //~ if (response.status == 'preprocessing') {}
     },
     
     // on error
     error: function(response) {
       console.log(response);
-      //~ t.modal('hide');
       $('#upload-button')[0].disabled = false;
       try {
         var r = JSON.parse(response.responseJSON.errors);

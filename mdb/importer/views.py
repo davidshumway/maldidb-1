@@ -145,6 +145,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
         user_task = user_task
     ))
   rows = cursor.execute("SELECT * FROM metaData").fetchall()
+  created_metadata = {} # keeps object store keyed by strain_id
   for row in rows:
     data = {
       'strain_id': row[0],
@@ -187,10 +188,12 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
     if form.is_valid():
       entry = form.save(commit = False)
       entry.save()
+      # Adds to object store
+      created_metadata[row[0]] = entry
     else:
       print(form.errors)
       raise ValueError('xxxxx')
-  
+    
   # XML
   if user_task:
     user_task.statuses.add(
@@ -198,6 +201,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
         status = 'info', extra = 'Inserting XML', user_task = user_task
     ))
   rows = cursor.execute("SELECT * FROM XML").fetchall()
+  created_xml = {} # key is xml_hash
   for row in rows:
     data = {
       'xml_hash': row[0],
@@ -229,6 +233,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
     if form.is_valid():
       entry = form.save(commit = False)
       entry.save()
+      created_xml[row[0]] = entry
     else:
       form.non_field_errors()
       field_errors = [(field.label, field.errors) for field in form] 
@@ -258,14 +263,23 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
     ))
   t = 'IndividualSpectra' if idbac_version == '1.0.0' else 'spectra'
   rows = cursor.execute('SELECT * FROM ' + t).fetchall()
-  strains = set() # Python set
+  # ~ strains = set() # Python set
   for row in rows:
-    sxml = XML.objects.filter(xml_hash = row[2])
-    if sxml:
-      sxml = sxml[0]
-    smd = Metadata.objects.filter(strain_id = row[3])
-    if smd:
-      smd = smd[0]
+    # ~ sxml = XML.objects.filter(xml_hash = row[2])
+    # ~ if sxml:
+      # ~ sxml = sxml[0]
+    #smd = Metadata.objects.filter(strain_id = row[3])
+    #if smd:
+    #  smd = smd[0]
+    try:
+      sxml = created_xml[row[2]].id
+    except:
+      sxml = ''
+    try:
+      smd = created_metadata[row[3]].id
+    except:
+      smd = ''
+      
     pm = json.loads(row[4])
     
     data = {
@@ -277,8 +291,8 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
       'spectrum_mass_hash': row[0],
       'spectrum_intensity_hash': row[1],
       
-      'xml_hash': sxml.id,
-      'strain_id': smd.id,
+      'xml_hash': sxml,
+      'strain_id': smd,#smd.id,
       'peak_mass': ','.join(map(str, pm['mass'])),
       'peak_intensity': ','.join(map(str, pm['intensity'])),
       'peak_snr': ','.join(map(str, pm['snr'])),
@@ -321,7 +335,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
     if form.is_valid():
       entry = form.save(commit = False)
       entry.save()
-      strains.add(smd.id)
+      # ~ strains.add(smd.id)
       info['spectra']['protein' if row[6] > 6000 else 'sm'] += 1
     else:
       form.non_field_errors()
