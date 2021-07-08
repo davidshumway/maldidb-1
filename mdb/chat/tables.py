@@ -105,14 +105,32 @@ class LibraryTable(tables.Table):
 class MetadataTable(tables.Table):
   class Meta:
     model = Metadata
-    attrs = {"class": "table maintable"}
-    template_name = "chat/bootstrap4_mod.html"
-    exclude = ("id",)
+    attrs = {'class': 'table maintable'}
+    template_name = 'chat/bootstrap4_mod.html'
+    exclude = ('id',)
 
 class LabgroupTable(tables.Table):
-  lab = tables.Column(linkify=True)
+  lab_name = tables.Column(linkify=True)
+  owners = tables.ManyToManyColumn(accessor = 'owners',
+    verbose_name = 'Num. owners'
+  )
+  members = tables.ManyToManyColumn(accessor = 'members',
+    verbose_name = 'Num. members'
+  )
+  # TODO: link to lab libraries
+  # TODO: number of lab libraries
+  
+  def render_owners(self, value):
+    '''
+    '''
+    return len(value.all())
+  def render_members(self, value):
+    '''
+    '''
+    return len(value.all())
+    
   class Meta:
     model = LabGroup
-    attrs = {"class": "table maintable"}
-    template_name = "chat/bootstrap4_mod.html"
-    exclude = ("id",)
+    attrs = {'class': 'table maintable'}
+    template_name = 'chat/bootstrap4_mod.html'
+    exclude = ('id',)

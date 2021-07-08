@@ -364,6 +364,7 @@ class SearchResultsView(ListView):
     )
     return object_list
 
+@method_decorator(login_required, name = 'dispatch')
 class UserTaskListView(SingleTableView):
   model = UserTask
   table_class = UserTaskTable

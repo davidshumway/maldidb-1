@@ -9,7 +9,7 @@ from .models import UserProfile
 User = get_user_model()
 
 def register(request):
-  # Redirect if user is already loggedIn
+  # Redirect if user is already logged in
   if request.user.is_authenticated:
     return redirect(reverse('chat:home'))
   if request.method == 'POST':

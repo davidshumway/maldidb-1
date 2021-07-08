@@ -146,7 +146,6 @@ class Library(models.Model):
   )
   
   def __str__(self):
-    #return f"{self.user.username}'s library"
     return self.title
   
   def get_fields(self):
@@ -158,9 +157,9 @@ class Library(models.Model):
 class LabGroup(models.Model):
   '''
   
-  At least one owner. Zero or more members.
-  "LabGroup.members: null has no effect on ManyToManyField."
-  "LabGroup.owners: null has no effect on ManyToManyField."
+  Labs: At least one owner. Zero or more members.
+  TODO: Lab privacy level
+  
   '''
   lab_name = models.CharField(max_length = 200)
   lab_description = models.TextField(blank = True)
@@ -189,7 +188,6 @@ class LabGroup(models.Model):
 # ~ @receiver(post_save, sender = LabGroup, dispatch_uid = None)
 # ~ def update_stock(sender, instance, **kwargs):
   # ~ '''Add each owner to the group as a member when creating the group.
-  
   # ~ TODO: This only adds the owners when the LabGroup is first created.
         # ~ When updating the lab group, the form's values override this.'''
   # ~ for owner in instance.owners.all():

@@ -32,16 +32,17 @@ INSTALLED_APPS = [
   'files',
   'spectra_search',
   'spectra',
+  'ncbitaxonomy',
+  'docs',
   'django_tables2',
   'django_filters',
   'bootstrap4',
   'jquery',
   'django_extensions',
   'rest_framework',
-  'ncbitaxonomy',
+  'markdownx',
   'django.contrib.postgres' # To use the search lookup, 'django.contrib.postgres'
                             # must be in your INSTALLED_APPS.
-  #'ajaxuploader',
 ]
 
 MIDDLEWARE = [

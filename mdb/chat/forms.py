@@ -124,7 +124,7 @@ class AddXmlForm(forms.ModelForm):
 class AddLabGroupForm(forms.ModelForm):
   class Meta:
     model = LabGroup
-    exclude = ('created_by',)
+    exclude = ('created_by', 'user_default_lab')
 
 class AddLibraryForm(forms.ModelForm):
   
