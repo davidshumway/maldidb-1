@@ -113,13 +113,13 @@ def process_file(request, file, form, owner, upload_count, ip):
   # ~ ws.connect('ws://' + ip)
   # ~ ws.send('{"message": ""}')
   
-  print(f'preprocess file{file}')
+  # ~ print(f'preprocess file{file}')
   f1 = file.replace('uploads/', 'uploads/sync/')
   current_loc = '/home/app/web/media/' + file
   new_loc = '/' + file.replace('uploads/', 'uploads/sync/')
   os.system('cp ' + current_loc + ' ' + new_loc)
   data = {'file': f1}
-  print(f'send{data}')
+  # ~ print(f'send{data}')
   r = requests.get('http://plumber:8000/preprocess', params = data)
 
   # Adds sqlite spectra to db

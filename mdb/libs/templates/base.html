@@ -54,11 +54,17 @@
 	  </a>
 	  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
 	    <a class="dropdown-item" href="{% url 'chat:home' %}">Home</a>
-	    <a class="dropdown-item" href="{% url 'chat:home' %}">Latest news</a>
+<!--
 	    <a class="dropdown-item" href="{% url 'chat:home' %}">About</a>
+-->
+<!--
 	    <a class="dropdown-item" href="{% url 'chat:home' %}">Contact</a>
+-->
 	    <a class="dropdown-item" href="{% url 'spectra_search:basic_search' %}">Basic Search</a>
+	    <a class="dropdown-item" href="{% url 'chat:home' %}">Documentation</a>
+<!--
 	    <a class="dropdown-item" href="{% url 'spectra_search:basic_search' %}">Advanced Search</a>
+-->
 <!--
 	    <a class="dropdown-item" href="{% url 'chat:view_cosine' %}">Cosine similarity &amp; heatmap</a>
 -->
@@ -83,7 +89,9 @@
 	    <a class="dropdown-item" href="{% url 'chat:metadata_results' %}">Metadata</a>
 	    <a class="dropdown-item" href="{% url 'chat:labgroups_results' %}">Lab Groups</a>
 	    <a class="dropdown-item" href="{% url 'chat:xml_results' %}">XML Data</a>
+<!--
 	    <a class="dropdown-item" href="{% url 'chat:home' %}">IDBac SQLite</a>
+-->
 	  </div>
 	</li>
 	<li class="nav-item dropdown"><!--class=active-->
@@ -91,13 +99,19 @@
 	    Add
 	  </a>
 	  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+<!--
 	    <a class="dropdown-item" href="{% url 'spectra:add_post' %}">Spectrum - All</a>
 	    <a class="dropdown-item" href="{% url 'spectra:add_post' %}">Spectrum - Replicates</a>
 	    <a class="dropdown-item" href="{% url 'spectra:add_post' %}">Spectrum - Collapsed</a>
+-->
 	    <a class="dropdown-item" href="{% url 'chat:add_lib' %}">Library</a>
+<!--
 	    <a class="dropdown-item" href="{% url 'chat:add_metadata' %}">Metadata</a>
+-->
 	    <a class="dropdown-item" href="{% url 'chat:add_labgroup' %}">Lab Group</a>
+<!--
 	    <a class="dropdown-item" href="{% url 'chat:add_xml' %}">XML Data</a>
+-->
 	    <a class="dropdown-item" href="{% url 'importer:add_sqlite' %}">IDBac SQLite</a>
 	  </div>
 	</li>

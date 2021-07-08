@@ -44,7 +44,7 @@ function show_filter(e) {
   <!-- begin row -->
   <div class="row">
   <!-- begin col left -->
-  <div class="col-6" id="col-left">
+  <div class="col-6 mx-auto" id="col-left">
       
     <div class="card" style="">
       <!--Height: All tabs same height to keep card body height
@@ -311,28 +311,17 @@ function show_filter(e) {
       <!-- end card body 1 -->
 
       <div class="card-body" id="nss-card-2" style="display:none;">
-        <div id="cosine-status" style=""
-          class="alert alert-info">
+        <div id="cosine-status" style="" class="alert alert-info">
           <b>Status</b><br />
           <span id="stat2-title">Task: Calculating cosine similarity measure...</span><br />
           <span id="stat2-complete"></span>
         </div>
-<!--
-        <form action="{ url 'spectra_search:'%}"
-          class="" method="POST" style=""
-          id="spectra_search_type_form">
-          { csrf_token }
-          Select a library to search against:
-          { with f=spectra_search_type_form.search_library }
-            { f }
-          { endwith }
-        </form>
--->
         <table class="card-text" id="file-listing2">
         </table>
       </div>
       
       <div class="card-body" id="nss-card-3" style="display:none;">
+        <div class="alert alert-info">Comparing spectra from 3k-15k only</div>
         <table id="data-table"></table>
       </div>
       

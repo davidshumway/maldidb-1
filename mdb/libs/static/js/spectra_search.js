@@ -139,7 +139,6 @@ function toggleAddlFields() {
   }
   return false;
 }
-//~ $(document).ready(function(){
 window.addEventListener('DOMContentLoaded', (event) => {
   // Adds search library select
   $('.lst_').click(function() {
@@ -166,7 +165,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
   } catch(e) {}
   $('#id_library_create_new')[0].disabled = true;
   $('#id_library_select')[0].disabled = true;
-  
+  $('#upload_form')[0].library_save_type[0].checked = true;
+  $('#id_library_create_new')[0].value = '';
   
   // toggle search options
   $('#toggle-search-opts').click(toggleAddlFields);

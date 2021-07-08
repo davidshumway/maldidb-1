@@ -256,7 +256,7 @@ def collapse_lib(self, title, client, search_library):
     cosine_scores(self, l.id, client, search_library)
     
 def cosine_scores(self, library, client, search_library):
-  '''Performs cosine scoring for unknown library against a known one
+  '''Performs cosine scoring for unknown library against a known one.
   '''
   ws = websocket.WebSocket()
   ws.connect('ws://localhost:8000/ws/pollData')
@@ -278,14 +278,13 @@ def cosine_scores(self, library, client, search_library):
   if len(n2) == 0:
     print('No collapsed spectra in search library!')
     return
-  print(f'n2{n2}')
   
   # Performs cosine score for every unknown spectra
   for spectra1 in n1:
     data = {
       'ids': [spectra1.id] + [s['id'] for s in list(n2)]
     }
-    print(f'data{data}')
+    # ~ print(f'data{data}')
     r = requests.post(
       'http://plumber:8000/cosine',
       params = data
@@ -298,7 +297,7 @@ def cosine_scores(self, library, client, search_library):
         'intensity': v['intensity'],
         'snr': v['snr'],
       }
-    print(f'r.json()["similarity"]:{r.json()["similarity"]}')
+    # ~ print(f'r.json()["similarity"]:{r.json()["similarity"]}')
     
     # Creates a dictionary sorted by its values (similarity score)
     from collections import OrderedDict
