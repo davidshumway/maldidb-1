@@ -3,17 +3,21 @@ from django.urls import reverse
 from chat.models import *
 
 class AbstractSpectra(models.Model):
-  privacyChoices = [
-    ('PB', 'Public'),
-    ('PR', 'Private'),
-  ]
-  privacy_level = models.CharField(
-    max_length = 2,
-    choices = privacyChoices,
-    default = 'PB',
-    blank = True,
-    null = True
-  )
+  '''
+  '''
+  
+  # Privacy level is library-wide
+  # ~ privacyChoices = [
+    # ~ ('PB', 'Public'),
+    # ~ ('PR', 'Private'),
+  # ~ ]
+  # ~ privacy_level = models.CharField(
+    # ~ max_length = 2,
+    # ~ choices = privacyChoices,
+    # ~ default = 'PB',
+    # ~ blank = True,
+    # ~ null = True
+  # ~ )
   
   library = models.ForeignKey(
     'chat.Library',

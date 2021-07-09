@@ -10,6 +10,7 @@ import json
 import sqlite3
 from django.contrib.auth.decorators import login_required
 from mdb.utils import *
+from django.utils.crypto import get_random_string
 
 @login_required
 def add_sqlite(request):
@@ -20,6 +21,15 @@ def add_sqlite(request):
       return redirect('chat:user_tasks')
   else:
     form = LoadSqliteForm()
+    u = request.user
+    # own libraries
+    user_libs = Library.objects.filter(created_by__exact = u)
+    form.fields['library'].queryset = user_libs
+    # own labs
+    user_labs = LabGroup.objects.filter(
+      Q(owners__in = [u]) | Q(members__in = [u])
+    )
+    form.fields['lab'].queryset = user_labs
   return render(request, 'importer/add_sqlite.html', {'form': form})
 
 def handle_uploaded_file(request, tmpForm):
@@ -29,11 +39,14 @@ def handle_uploaded_file(request, tmpForm):
   Metadata strain_id and XML xml_hash should both be unique but they
   are not in R01 data?
   
+  TODO: Remove /tmp/ uploaded sqlite files
+  
   :param tmpForm: Copy of the LoadSqliteForm
   '''
   if request.FILES and request.FILES['file']:
     f = request.FILES['file']
-    with open('/tmp/test.db', 'wb+') as destination:
+    tmpdb = '/tmp/' + get_random_string(8) + '.db'
+    with open(tmpdb, 'wb+') as destination:
       for chunk in f.chunks():
         destination.write(chunk)
     t = UserTask.objects.create(
@@ -46,24 +59,9 @@ def handle_uploaded_file(request, tmpForm):
       extra = 'Loading SQLite file ' + str(f),
       user_task = t
     ))
-    thread = _insert(request, tmpForm, '/tmp/test.db', t)
-  elif tmpForm.cleaned_data['upload_type'] == 'all': # hosted on server
-    hc = [
-      '2019_04_15_10745_db-2_0_0.sqlite',
-      '2019_06_06_22910_db-2_0_0.sqlite',
-      '2019_06_12_10745_db-2_0_0.sqlite',
-      '2019_07_02_22910_db-2_0_0.sqlite',
-      '2019_07_10_10745_db-2_0_0.sqlite',
-      '2019_07_17_1003534_db-2_0_0.sqlite',
-      '2019_09_04_10745_db-2_0_0.sqlite',
-      '2019_09_11_1003534_db-2_0_0.sqlite',
-      '2019_09_18_22910_db-2_0_0.sqlite',
-      '2019_09_25_10745_db-2_0_0.sqlite',
-      '2019_10_10_1003534_db-2_0_0.sqlite',
-      '2019_11_13_1003534_db-2_0_0.sqlite',
-      '2019_11_20_1003534_db-2_0_0.sqlite',
-    ]
-    for f in hc:
+    thread = _insert(request, tmpForm, tmpdb, t)
+  elif tmpForm.cleaned_data['upload_type'] == 'r01': # hosted on server
+    for f in tmpForm.cleaned_data['r01data']:
       t = UserTask.objects.create(
         owner = request.user,
         task_description = 'idbac_sql'
@@ -78,6 +76,37 @@ def handle_uploaded_file(request, tmpForm):
         user_task = t
       ))
       _insert(request, tmpForm, '/home/app/web/r01data/' + f, t)
+  # ~ elif tmpForm.cleaned_data['upload_type'] == 'all': # hosted on server
+    # ~ hc = [
+      # ~ '2019_04_15_10745_db-2_0_0.sqlite',
+      # ~ '2019_06_06_22910_db-2_0_0.sqlite',
+      # ~ '2019_06_12_10745_db-2_0_0.sqlite',
+      # ~ '2019_07_02_22910_db-2_0_0.sqlite',
+      # ~ '2019_07_10_10745_db-2_0_0.sqlite',
+      # ~ '2019_07_17_1003534_db-2_0_0.sqlite',
+      # ~ '2019_09_04_10745_db-2_0_0.sqlite',
+      # ~ '2019_09_11_1003534_db-2_0_0.sqlite',
+      # ~ '2019_09_18_22910_db-2_0_0.sqlite',
+      # ~ '2019_09_25_10745_db-2_0_0.sqlite',
+      # ~ '2019_10_10_1003534_db-2_0_0.sqlite',
+      # ~ '2019_11_13_1003534_db-2_0_0.sqlite',
+      # ~ '2019_11_20_1003534_db-2_0_0.sqlite',
+    # ~ ]
+    # ~ for f in hc:
+      # ~ t = UserTask.objects.create(
+        # ~ owner = request.user,
+        # ~ task_description = 'idbac_sql'
+      # ~ )
+      # ~ t.statuses.add(UserTaskStatus.objects.create(
+        # ~ status = 'start',
+        # ~ user_task = t
+      # ~ ))
+      # ~ t.statuses.add(UserTaskStatus.objects.create(
+        # ~ status = 'info',
+        # ~ extra = 'Loading SQLite file ' + f,
+        # ~ user_task = t
+      # ~ ))
+      # ~ _insert(request, tmpForm, '/home/app/web/r01data/' + f, t)
     
 @start_new_thread
 def _insert(request, tmpForm, uploadFile, user_task):
@@ -135,7 +164,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
       entry = form.save(commit = False)
       entry.save()
     else:
-        raise ValueError('xxxxx')
+        raise ValueError('x1')
         
   # Metadata
   if user_task:
@@ -192,7 +221,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
       created_metadata[row[0]] = entry
     else:
       print(form.errors)
-      raise ValueError('xxxxx')
+      raise ValueError('x2')
     
   # XML
   if user_task:
@@ -237,7 +266,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
     else:
       form.non_field_errors()
       field_errors = [(field.label, field.errors) for field in form] 
-      raise ValueError('xxxxx')
+      raise ValueError('x3' + str(field_errors))
   
   # Locale
   # Works. Skip for now.
@@ -263,14 +292,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
     ))
   t = 'IndividualSpectra' if idbac_version == '1.0.0' else 'spectra'
   rows = cursor.execute('SELECT * FROM ' + t).fetchall()
-  # ~ strains = set() # Python set
   for row in rows:
-    # ~ sxml = XML.objects.filter(xml_hash = row[2])
-    # ~ if sxml:
-      # ~ sxml = sxml[0]
-    #smd = Metadata.objects.filter(strain_id = row[3])
-    #if smd:
-    #  smd = smd[0]
     try:
       sxml = created_xml[row[2]].id
     except:
@@ -286,7 +308,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
       'created_by': request.user.id,
       'library': tmpForm.cleaned_data['library'].id,
       # ~ 'lab': tmpForm.cleaned_data['lab'].id,
-      'privacy_level': tmpForm.cleaned_data['privacy_level'][0],
+      # ~ 'privacy_level': tmpForm.cleaned_data['privacy_level'],
       
       'spectrum_mass_hash': row[0],
       'spectrum_intensity_hash': row[1],
@@ -330,8 +352,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
       raise ValueError('unique constraint failed on spectra!')
     except:
       pass
-      
-    # ~ form = SpectraForm(data)
+    
     if form.is_valid():
       entry = form.save(commit = False)
       entry.save()
@@ -340,7 +361,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
     else:
       form.non_field_errors()
       field_errors = [(field.label, field.errors) for field in form]
-      raise ValueError('xxxxx')
+      raise ValueError('x4' + str(field_errors))
   
   from django.db import connection
   connection.close()

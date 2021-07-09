@@ -1,6 +1,7 @@
 from django import forms
 from chat.models import Library, LabGroup
-  
+import os
+
 class LoadSqliteForm(forms.Form):
   lab = forms.ModelChoiceField(
     queryset = LabGroup.objects.all(), to_field_name="lab_name"
@@ -9,8 +10,8 @@ class LoadSqliteForm(forms.Form):
     queryset = Library.objects.all(), to_field_name="title"
   )  
   choices = [
-    ('single', 'Load a single IDBac SQLite file'),
-    ('all', 'Load all IDBac R01 data files'),
+    ('single', 'Upload a single IDBac SQLite file'),
+    ('r01', 'Load one or more hosted IDBac R01 data files'),
   ]
   upload_type = forms.CharField(
     label = 'Upload type',
@@ -19,14 +20,24 @@ class LoadSqliteForm(forms.Form):
     initial = 'single')
   file = forms.FileField(required = False,
     label = 'Select an IDBac SQLite file to upload')
-  privacy_level = forms.MultipleChoiceField(choices = [
-    ('PB', 'Public'),
-    ('PR', 'Private'),
-  ])
+  
+  files = []
+  for filename in os.listdir('/home/app/web/r01data/'):
+    if '.sqlite' in filename:
+      files.append((filename, filename))
+  r01data = forms.MultipleChoiceField(choices = files)
+
+  privacy_level = forms.CharField(
+    label = 'Privacy level',
+    widget = forms.RadioSelect(choices = [
+      ('PB', 'Public'),
+      ('PR', 'Private'),
+    ]),
+    required = True,
+    initial = 'PB')
   
   def clean(self):
     data = self.cleaned_data
-    #print('add form', data)
     if data.get('file') == None and data.get('upload_type') == 'single':
       raise forms.ValidationError(
         'Select a file to upload!'

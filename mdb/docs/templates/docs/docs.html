@@ -6,89 +6,93 @@
 {% endblock %}
 
 {% block content %}
+<style type="text/css">
+.doc-content img {
+  max-width: 1000px;
+  border: 1px solid #333;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+</style>
 
+{% for category in categories %}
+  <a id="{{category.slug|safe}}" style="position:absolute;top:0;left:0;"></a>
+{% endfor %}
+        
 
-  <div class="row">
-    <div class="col-sm-3">
-      <div class="card">
-        <div class="card-header">Topics</div>
-        <div class="card-body">
-          <nav class="nav flex-column">
-            <a class="nav-link active" href="#">Active</a>
-            <a class="nav-link" href="#">Link</a>
-            <a class="nav-link" href="#">Link</a>
-            <a class="nav-link disabled pb-0 pt-0" href="#">Disabled</a>
-            <a class="nav-link disabled ml-3" style="" href="#">child</a>
-          </nav>
-          <nav class="nav flex-column">
-          {% for category in categories %}
-            {% if category.type == 'category' %}
-            <a class="nav-link pb-0 pt-0 doc-link" href="#"
-              id="doc-{{category.slug|safe}}"
-              >{{ category.short_title|safe }}</a>
-            {% else %}
-            <a class="nav-link pb-0 pt-0 ml-3 doc-link" href="#"
-              id="doc-{{category.slug|safe}}"
-              >-{{ category.short_title|safe }}</a>
+<div class="row">
+  <div class="col-sm-3">
+    <div class="card">
+      <div class="card-header">Documentation topics</div>
+      <div class="card-body">
+        <nav class="nav flex-column">
+        {% for category in categories %}
+          <a class="nav-link pb-1 pt-1 doc-link"
+            href="#{{category.slug|safe}}"
+            id="doc-{{category.slug|safe}}"
+            >{{ category.short_title|safe }}</a>
+          {% for sub in sub_categories %}
+            {% if sub.parent == category %}
+              <a class="nav-link pb-1 pt-1 ml-4 doc-link"
+                href="#{{sub.slug|safe}}"
+                id="doc-{{category.slug|safe}}"
+                >{{ sub.short_title|safe }}</a>
             {% endif %}
           {% endfor %}
-          </nav>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-9">
-      <div class="card">
-        <div class="card-body">
-          <h3>
-          {% for category in categories %}
-            <div style="display:none;" class="doc-title"
-              id="doc-title-{{category.slug|safe}}">
-              {{ category.long_title|safe }}
-            </div>
-          {% endfor %}
-          </h3>
-          
-          {% for category in categories %}
-            <div style="display:none;" class="doc-content"
-              id="doc-content-{{category.slug|safe}}">
-              {{ category.formatted_markdown|safe }}
-            </div>
-          {% endfor %}
-          
-<!--
-          x
--->
-          <div class="markdownx row">
-<!--
-            <div class="col-md-6">
-              
-            </div>
--->
-            <div class="col-md-6">
-<!--
-              <div class="markdownx-preview">#header
--->
-<!--
-              hi</div>
--->
-            </div>
-          </div>
-        </div>
+        {% endfor %}
+        </nav>
       </div>
     </div>
   </div>
+  <div class="col-sm-9">
+    <div class="card">
+      <div class="card-body">
+        
+        {% for category in categories %}
+        <div style="display:none;" class="doc-content"
+            id="doc-content-{{category.slug|safe}}">
+          <h4>{{ category.long_title|safe }}</h4>
+          <div>
+            {{ category.formatted_markdown|safe }}
+          </div>
+          {% for sub in sub_categories %}
+            {% if sub.parent == category %}
+              <a id="{{sub.slug|safe}}"></a><br/><br/><br/>
+              <h5>{{ sub.long_title|safe }}</h5>
+              <div>
+                {{ sub.formatted_markdown|safe }}
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
 
 <script type="text/javascript">
 window.addEventListener('DOMContentLoaded', (event) => {
-   $('.doc-link').on('click', function(e) {
-     console.log(this);
-     console.log(this.dataset);
-     console.log(this.id);
-     $('.doc-title').css('display', 'none');
-     $('.doc-content').css('display', 'none');
-     $('#' + this.id.replace('doc-', 'doc-title-')).css('display', '');
-     $('#' + this.id.replace('doc-', 'doc-content-')).css('display', '');
-   });
+  // sets nav onclick
+  $('.doc-link').on('click', function(e) {
+    console.log(this);
+    console.log(this.dataset);
+    console.log(this.id);
+    $('.doc-content').css('display', 'none');
+    $('#' + this.id.replace('doc-', 'doc-content-')).css('display', '');
+  });
+  $('.doc-link')[0].click();
+  
+  // loads from href
+  var x = /#([\d\D]+)$/.exec(document.location.href);
+  if (x && x[1]) {
+    //~ console.log('#doc-' + x[1]);
+    var h = '#' + x[1];
+    $('a[href="' + h + '"]')[0].click(); 
+    //~ $('#)[0].click();
+  }
+  
 });
 </script>
 {% endblock %}

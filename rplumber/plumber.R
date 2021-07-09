@@ -476,11 +476,7 @@ preprocess <- function(file) {
   sID <- base::basename(tools::file_path_sans_ext(mzFilePaths))
   # replace the Django portion of filename ("_[\w\d]+$")
   sID <- str_replace(sID, '_[a-zA-Z0-9]+$', '')
-#~   print('sID')
-#~   print(sID)
   f <- sanitize(sub('uploads/sync', '', file))
-#~   print('f')
-#~   print(f)
   IDBacApp:::idbac_create(
     fileName = f,
     filePath = './uploads/sync')

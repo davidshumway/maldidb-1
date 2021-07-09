@@ -4,9 +4,6 @@ from markdownx.models import MarkdownxField
 from markdownx.utils import markdownify
 from django.contrib import admin
 
-class DocsPageAdmin(admin.ModelAdmin):
-  list_display = ('short_title', 'order')
-
 class DocsPage(models.Model):
   '''
   ...ordering also applies to sub-categories
@@ -31,12 +28,13 @@ class DocsPage(models.Model):
     blank = True,
     null = True)
   
-  content = MarkdownxField()
+  content = MarkdownxField(blank = True, null = True)
   # ~ content = models.TextField(blank = True)
   
-  slug = models.SlugField(null = False, unique = True, editable = False)
+  slug = models.SlugField(max_length = 200, blank = True, null = True,
+    unique = True, editable = True)
   
-  @admin.display(ordering = 'order')
+  # ~ @admin.display(ordering = 'order')
   
   #class Meta:
   #  ordering = ('order',)
@@ -52,5 +50,11 @@ class DocsPage(models.Model):
     
   def save(self, *args, **kwargs):
     if not self.slug:
-      self.slug = slugify(self.long_title)
+      self.slug = slugify(self.short_title)
     return super().save(*args, **kwargs)
+
+# ~ class DocsPageAdmin(admin.ModelAdmin):
+  # ~ list_display = ('short_title', 'order',)
+  # ~ ordering = 'order'
+  # ~ def get_ordering(self, request):
+    # ~ return ['order']

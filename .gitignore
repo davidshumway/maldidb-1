@@ -9,9 +9,16 @@ db.sqlite3
 maldidb.sock
 mdb.sock
 uploads/**
-media/uploads/**
-/mdb/media/uploads/**
-media/posts/**
+
+#### media/uploads/**
+media/uploads/
+
+#### /mdb/media/uploads/**
+/mdb/media/uploads
+
+### media/posts/**
+media/posts/
+
 project.env
 .goutputstream*
 /mdb/static/

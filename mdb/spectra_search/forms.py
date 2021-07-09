@@ -250,26 +250,14 @@ class SpectraLibraryForm(forms.Form):
     # validate search library
     if d.get('library_search_type') == 'r01':
       pass
-      # ~ d['search_library_own'] = Library.objects.none()
-      # ~ d['search_library_lab'] = Library.objects.none()
-      # ~ d['search_library_public'] = Library.objects.none()
     elif d.get('library_search_type') == 'own':
       d['search_library'] = d['search_library_own']
-      # ~ d['search_library_own'] = Library.objects.none()
-      # ~ d['search_library_lab'] = Library.objects.none()
-      # ~ d['search_library_public'] = Library.objects.none()
     elif d.get('library_search_type') == 'lab':
       d['search_library'] = d['search_library_lab']
-      # ~ d['search_library_own'] = Library.objects.none()
-      # ~ d['search_library_lab'] = Library.objects.none()
-      # ~ d['search_library_public'] = Library.objects.none()
     elif d.get('library_search_type') == 'pub':
       d['search_library'] = d['search_library_public']
-      # ~ d['search_library_own'] = Library.objects.none()
-      # ~ d['search_library_lab'] = Library.objects.none()
-      # ~ d['search_library_public'] = Library.objects.none()
       
-    print(f'cleaned{d}')
+    # ~ print(f'cleaned{d}')
     
     
     # validate upload library

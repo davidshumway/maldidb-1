@@ -51,18 +51,30 @@
 	
 <script type="text/javascript">
 function toggleFile(e) {
-	$('#id_file').parent().toggleClass(
-		'toggle-display',
-		this.id != 'id_upload_type_0'
-	);
+  var v = $('form')[0].upload_type.value;
+  if (v == 'single') {
+    $('#id_file').parent().toggleClass('toggle-display', false);
+    $('#id_r01data').parent().toggleClass('toggle-display', true);
+  } else if (v == 'r01') {
+    $('#id_file').parent().toggleClass('toggle-display', true);
+    $('#id_r01data').parent().toggleClass('toggle-display', false);
+  }
+  //~ } else { // == r01
+    //~ $('#id_file').parent().toggleClass('toggle-display', true);
+    //~ $('#id_r01data').parent().toggleClass('toggle-display', false);
+  //~ }
+  
+	
 }
 // id_upload_type_1
 window.addEventListener('DOMContentLoaded', (event) => {
   var x1 = $('#id_upload_type_0');
   var x2 = $('#id_upload_type_1');
-  console.log(x1);
+  //~ var x3 = $('#id_upload_type_2');
   x1.click(toggleFile);
   x2.click(toggleFile);
+  //~ x3.click(toggleFile);
+  x1[0].click();
 });
 </script>
 {% endblock %}
