@@ -259,15 +259,14 @@ class SpectraLibraryForm(forms.Form):
       
     # ~ print(f'cleaned{d}')
     
-    
     # validate upload library
-    # ~ if d.get('save_to_library') == True:
     if d.get('library_save_type') == 'RANDOM':
       title = get_random_string(8)
+      # (safe check) Checks random entry doesn't exist
       x = False
       c = 100
       while x is False and c > 0:
-        c -= 1 # safe check
+        c -= 1
         n = Library.objects.filter(
           created_by = self.user,
           title = title
@@ -277,13 +276,17 @@ class SpectraLibraryForm(forms.Form):
           new_lib = Library.objects.create(
             created_by = self.user,
             title = title,
-            lab = user_lab
+            lab = user_lab,
+            privacy_level = 'PR'
           )
           d['library'] = new_lib
     elif d.get('library_save_type') == 'NEW':
+      # TODO: Library can have same title by same user but saved
+      #       in a different lab group.
       n = Library.objects.filter(
         created_by = self.user,
-        title = d.get('library_create_new')
+        title = d.get('library_create_new'),
+          privacy_level = 'PR'
       )
       if len(n) != 0:
         raise forms.ValidationError(
@@ -293,7 +296,8 @@ class SpectraLibraryForm(forms.Form):
         new_lib = Library.objects.create(
           created_by = self.user,
           title = d.get('library_create_new'),
-          lab = user_lab
+          lab = user_lab,
+          privacy_level = 'PR'
         )
         d['library'] = new_lib
     elif d.get('library_save_type') == 'EXISTING':

@@ -454,35 +454,29 @@ def search(request):
   return render(request, 'chat/search.html', {'spectra': {}, 'comment_form': {}})
   
 def home(request):
-  comment_form = CommentForm()
+  # ~ comment_form = CommentForm()
   
-  x = XML.objects.all()
-  y = Metadata.objects.all()
-  y1 = Locale.objects.all()
-  y2 = Version.objects.all()
-  spectra = Spectra.objects.all()
-  lib = Library.objects.all()
+  # ~ x = XML.objects.all()
+  # ~ m = len(Metadata.objects.all())
+  # ~ y1 = Locale.objects.all()
+  # ~ y2 = Version.objects.all()
+  # ~ s = len(Spectra.objects.all())
+  l1 = len(Library.objects.filter(privacy_level = 'PB'))
+  l2 = len(Library.objects.all())
+  s1 = len(Spectra.objects.all())
   
-  countLib = {}
-  
-  # Stats
-  for libInstance in lib.iterator():
-    bb = libInstance
-    aa = Spectra.objects.filter(library = libInstance.id).count()
-    countLib[libInstance.title] = aa
-  
-  #ib.set
   return render(
     request,
     'chat/home.html',
     {
-      'spectra': spectra,
-      'comment_form': comment_form,
-      'xml': x,
-      'metadata': y,
-      'locale': y1,
-      'version': y2,
-      'library': lib,
-      'countLib': countLib,
+      # ~ 'spectra': spectra,
+      # ~ 'comment_form': comment_form,
+      # ~ 'xml': x,
+      # ~ 'metadata': m,
+      # ~ 'locale': y1,
+      # ~ 'version': y2,
+      'library_public': l1,
+      'library_total': l2,
+      'spectra_total': s1,
     }
   )
