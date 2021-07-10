@@ -140,6 +140,7 @@ function toggleAddlFields() {
   return false;
 }
 window.addEventListener('DOMContentLoaded', (event) => {
+  
   // Adds search library select
   $('.lst_').click(function() {
     var s = $('#search-library' + this.dataset.ltype);
@@ -216,7 +217,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
   //
   $('#add-form').click(function() {
     var index = $('#id_inline_test_models-TOTAL_FORMS').val()
-    var newTable = $('#id_inline_test_models-__prefix__-DELETE').parents('table').clone()
+    var newTable = $('#id_inline_test_models-__prefix__-DELETE')
+      .parents('table').clone()
     newTable.find(':input').each(function() {
       for (attr of ['name', 'id'])
         $(this).attr(
@@ -231,6 +233,30 @@ window.addEventListener('DOMContentLoaded', (event) => {
     newTable.slideDown()
   })
   
+  // window href (#custom)
+  if (/#custom/.exec(document.location.href)) {
+    $('#upload-more-opts')[0].click();
+    $('#library_save_type2')[0].click();
+    $('#id_library_create_new')[0].focus();
+  }
+  else if (/\#([^$]+)$/.exec(document.location.href)) {
+    var x = decodeURIComponent(
+      /\#([^$]+)$/.exec(document.location.href)[1]);
+    $('#upload-more-opts')[0].click();
+    $('#library_save_type3')[0].click();
+    var opt = $('#id_library_select')[0].options;
+    for (var i in opt) {
+      //~ console.log(option)
+      //~ console.log(option.value)
+      if (opt[i].value == x) {
+        $('#id_library_select')[0].value = opt[i].value;
+        //~ $('#id_library_select')[0].selectedIndex = i;
+        break;
+      }
+      //~ i++;
+    }
+    
+  }
 });
 
 // works locally & remotely

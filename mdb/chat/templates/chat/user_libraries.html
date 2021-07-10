@@ -21,21 +21,58 @@ My Libraries
 </script>
   
 <div class="row">
-  <div class="col-sm-8">
+  <div class="col-sm-8 mx-auto">
+    <div class="card">
+      <div class="card-header">Actions</div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-sm-6 text-center">
+            <div class="input-group mb-3">
+              <div class="input-group-prepend">
+                <label class="input-group-text" for="inputGroupSelect01">
+                  Add spectra to an existing library</label>
+              </div>
+              <select class="custom-select" id="inputGroupSelect01">
+                <option selected>Choose...</option>
+                {% for library in library_data %}
+                  <option value="{{ library.title|safe }}">
+                    {{ library.title|safe }} | {{ library.lab_name|safe }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            OR
+            <div class="mt-3">
+              <a href="{% url 'spectra_search:basic_search' %}#custom">
+              <button class="btn btn-primary btn-lg">
+                Create custom library</button></a>
+            </div>
+          </div>
+          <div class="col-sm-6" style="border-left: 1px solid #777;">
+            <div class="input-group mb-3">
+              <div class="input-group-prepend">
+                <label class="input-group-text" for="inputGroupSelect02">
+                  Edit an existing library</label>
+              </div>
+              <select class="custom-select" id="inputGroupSelect02">
+                <option selected>Choose...</option>
+                {% for library in library_data %}
+                  <option value="{{ library.id }}">
+                    {{ library.title|safe }} | {{ library.lab_name|safe }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-8 mx-auto mt-4">
     <div class="card">
       <div class="card-header">My Libraries</div>
       <div class="card-body">
         <table id="library-table"></table>
-      </div>
-    </div>
-  </div>
-  <div class="col-sm-4">
-    <div class="card">
-      <div class="card-header">Actions</div>
-      <div class="card-body">
-        Add spectra to an existing library
-        Create a new custom library
-        Edit an existing library
       </div>
     </div>
   </div>
@@ -49,11 +86,11 @@ My Libraries
 var t = $('#library-table').DataTable({
   data: JSON.parse($('#library-data')[0].textContent),
   columns: [
-    {data: 'lab_name', title: 'Lab Name'},
-    {data: 'title', title: 'Library Title'},
-    {data: 'num_spectra', title: 'Number Spectra'},
-    //~ {data: 'num_metadata', title: 'Number Metadata'},
-    //~ {data: 'num_metadata', title: 'Number Metadata'},
+    {data: 'lab_name', title: 'Lab'},
+    {data: 'title', title: 'Title'},
+    {data: 'num_spectra', title: 'Spectra'},
+    {data: 'num_cspectra', title: 'Col. Spectra'},
+    {data: 'num_metadata', title: 'Metadata'},
     {data: 'privacy_level', title: 'Privacy level',
       render: function(data, type) {
         return (data == 'PB') ? 'public' : 'private'
@@ -61,5 +98,18 @@ var t = $('#library-table').DataTable({
     }
   ]
 });
+
+// Add
+$('#inputGroupSelect01')[0].onchange = function(e){
+  document.location.href = '{% url "spectra_search:basic_search" %}' +
+    '#' + encodeURIComponent(this.value);
+}
+// Edit
+$('#inputGroupSelect02')[0].onchange = function(e){
+  document.location.href = '{% url "chat:view_library_base" %}' +
+    this.value;
+}
+// css, default = arbitrary px
+$('#library-table').css('width', '100%'); 
 </script>
 {% endblock%}

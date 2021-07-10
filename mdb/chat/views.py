@@ -41,12 +41,24 @@ def user_libraries(request):
     'lab_name': s['lab__lab_name'],
     'title': s['title'],
     'num_spectra': len(list(Spectra.objects.filter(library_id = s['id']))),
+    'num_cspectra': len(list(CollapsedSpectra.objects.filter(library_id = s['id']))),
+    'num_metadata': len(list(Metadata.objects.filter(library_id = s['id']))),
     'privacy_level': s['privacy_level']
   } for s in list(Library.objects.filter(created_by = request.user)\
     .values(
       'id', 'lab__lab_name', 'title', 'privacy_level'
     ))
   ]
+  
+  # ~ l2 = [{
+    # ~ 'id': s['id'],
+    # ~ 'lab_name': s['lab__lab_name'],
+    # ~ 'title': s['title'],
+  # ~ } for s in list(Library.objects.filter(created_by = request.user)\
+    # ~ .values(
+      # ~ 'id', 'lab__lab_name', 'title'
+    # ~ ))
+  # ~ ]
   # ~ l1 = []
   # ~ x = Library.objects.filter(created_by = request.user)\
     # ~ .values(

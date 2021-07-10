@@ -98,12 +98,17 @@ class SpectraLibraryForm(forms.Form):
       attrs = {
         'class': 'custom-select'}
     ),
-    empty_label = 'Select a library'
+    empty_label = 'Choose...'
   )
   
   library_create_new = forms.CharField(
     required = False,
-    help_text = 'Enter a name for the new library')
+    help_text = 'Enter a name for the new library',
+    widget = forms.TextInput(
+      attrs = {
+        'class': 'form-control'}
+    )
+  )
   library_save_type = forms.CharField(label = '',
     widget = forms.RadioSelect(choices = [
       ('RANDOM', 'Random'),

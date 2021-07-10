@@ -31,6 +31,7 @@ urlpatterns = [
   path('xml/<xml_hash>/', views.xml_profile, name='view_xml'),
   path('xml/edit/<xml_hash>/', views.edit_xml, name='edit_xml'),
   
+  path('library/', views.library_profile, name='view_library_base'),
   path('library/<library_id>/', views.library_profile, name='view_library'),
   path('library/edit/<library_id>/', views.edit_libprofile, name='edit_libprofile'),
   
