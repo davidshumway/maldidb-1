@@ -149,16 +149,26 @@ def ajax_upload_library(request):
     form = SpectraLibraryForm(data = request.POST, files = request.FILES,
       request = request)
     if form.is_valid():
-      # ~ form.request = request # pass request to save() method
-      # ~ form.save()
-      return JsonResponse({
-          'status': 'success', 
-          'data': {
-            'library': form.cleaned_data['library'].title,
-            'search_library': form.cleaned_data['search_library'].id
-          }
-        }, 
-        status=200)
+      if form.cleaned_data['search_library']:
+        return JsonResponse({
+            'status': 'success', 
+            'data': {
+              'library': form.cleaned_data['library'].title,
+              'library_id': form.cleaned_data['library'].id,
+              'search_library': form.cleaned_data['search_library'].id
+            }
+          }, 
+          status=200)
+      else:
+        return JsonResponse({
+            'status': 'success', 
+            'data': {
+              'library': form.cleaned_data['library'].title,
+              'library_id': form.cleaned_data['library'].id,
+              'search_library': False
+            }
+          }, 
+          status=200)
     else:
       e = form.errors.as_json()
       return JsonResponse({'errors': e}, status=400)
@@ -179,9 +189,7 @@ def ajax_upload(request):
   print(f'request.POST{request.POST}')
   if request.method == 'POST':
     form = SpectraUploadForm(data = request.POST, files = request.FILES,
-      request = request#,
-      # ~ library = Library.objects.filter(title__exact = request.POST.get('library'),
-        # ~ created_by__exact = request.user)
+      request = request
     )
     if form.is_valid():
       form.request = request # pass request to save() method
@@ -195,9 +203,8 @@ def ajax_upload(request):
         title__exact = request.POST.get('tmp_library'),
         created_by__exact = request.user).first()
         
-      # ~ if form.cleaned_data['preprocess'] == True:
       file = str(form.instance.file)
-      # ~ filename = file.replace('uploads/', '')
+
       form.cleaned_data['privacy_level'] = ['PR']
       process_file(request, file, form, owner,
         form.cleaned_data['upload_count'], form.cleaned_data['ip'])

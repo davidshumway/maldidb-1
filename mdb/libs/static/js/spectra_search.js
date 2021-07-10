@@ -1,44 +1,73 @@
 
-function updateFileList(input) {
+function updateFileList(input, showStatusCols) {
   // file-listing
   if (!input)
-    input = document.getElementById('customFile');
+    var input = document.getElementById('customFile');
   $('#file-selector').css('display', 'none');
   for (var i in input.files) {
     input.files[i].upload = i;
     input.files[i].preprocess = i;
   }
-  var t = $('#file-listing').DataTable({
-    data: input.files,
-    columns: [
-      {data: 'name', title: 'Name'},
-      {data: 'size', title: 'Size',
-        render: function(data, type) {
-          if (data < 1024)
-            return data + ' bytes';
-          else if (data < 1024*1000)
-            return Math.round(data/1024) + 'KB';
-          else if (data < 1024*1000000)
-            return Math.round(data/(1024*1000)) + 'MB';
-          else if (data < 1024*1000000000)
-            return Math.round(data/(1024*1000000)) + 'GB';
-          else 
-            return data + ' bytes';
+  if (!showStatusCols) {
+    preprocessed.table1 = $('#file-listing').DataTable({
+      data: input.files,
+      destroy: true,
+      columns: [
+        {data: 'name', title: 'Name'},
+        {data: 'size', title: 'Size',
+          render: function(data, type) {
+            if (data < 1024)
+              return data + ' bytes';
+            else if (data < 1024*1000)
+              return Math.round(data/1024) + 'KB';
+            else if (data < 1024*1000000)
+              return Math.round(data/(1024*1000)) + 'MB';
+            else if (data < 1024*1000000000)
+              return Math.round(data/(1024*1000000)) + 'GB';
+            else 
+              return data + ' bytes';
+          }
         }
-      },
-      {data: 'upload', title: 'Upload status',
-        render: function(data, type) {
-          return '<span id="filetable-upload' + data + '"></span>';
+      ]
+    });
+    preprocessed.table1.draw();
+  } else {
+    $('#file-listing').css('display', 'none');
+    $('#file-listing-preprocessing').css('display', '');
+    preprocessed.table1.destroy();
+    var t = $('#file-listing-preprocessing').DataTable({
+      data: input.files,
+      destroy: true,
+      columns: [
+        {data: 'name', title: 'Name'},
+        {data: 'size', title: 'Size',
+          render: function(data, type) {
+            if (data < 1024)
+              return data + ' bytes';
+            else if (data < 1024*1000)
+              return Math.round(data/1024) + 'KB';
+            else if (data < 1024*1000000)
+              return Math.round(data/(1024*1000)) + 'MB';
+            else if (data < 1024*1000000000)
+              return Math.round(data/(1024*1000000)) + 'GB';
+            else 
+              return data + ' bytes';
+          }
+        },
+        {data: 'upload', title: 'Upload status',
+          render: function(data, type) {
+            return '<span id="filetable-upload' + data + '"></span>';
+          }
+        },
+        {data: 'preprocess', title: 'Preprocess status',
+          render: function(data, type) {
+            return '<div id="filetable-preprocess' + data + '" style="text-align:center;width:100%;">pending</div>';
+          }
         }
-      },
-      {data: 'preprocess', title: 'Preprocess status',
-        render: function(data, type) {
-          return '<div id="filetable-preprocess' + data + '" style="text-align:center;width:100%;"></div>';
-        }
-      },
-    ]
-  });
-  t.draw();
+      ]
+    });
+    t.draw();
+  }
 }
 function toggleSearchTypeOpts(e) {
   var s = $('#div-searchtype-opts');
@@ -151,7 +180,9 @@ window.addEventListener('DOMContentLoaded', (event) => {
   
   // Page reload: resets fields
   //$('#upload_form')[0].library_search_type.value // 'r01'
-  $('#upload_form')[0].library_search_type[0].checked = true;
+  try {
+    $('#upload_form')[0].library_search_type[0].checked = true;
+  } catch(e) {}
   try {
     $('#upload_form')[0].search_library.selectedIndex = 1;
   } catch(e) {}
@@ -239,24 +270,22 @@ window.addEventListener('DOMContentLoaded', (event) => {
     $('#library_save_type2')[0].click();
     $('#id_library_create_new')[0].focus();
   }
-  else if (/\#([^$]+)$/.exec(document.location.href)) {
+  else if (/#([^$]+)$/.exec(document.location.href)) {
     var x = decodeURIComponent(
-      /\#([^$]+)$/.exec(document.location.href)[1]);
+      /#([^$]+)$/.exec(document.location.href)[1]);
     $('#upload-more-opts')[0].click();
     $('#library_save_type3')[0].click();
     var opt = $('#id_library_select')[0].options;
     for (var i in opt) {
-      //~ console.log(option)
-      //~ console.log(option.value)
       if (opt[i].value == x) {
         $('#id_library_select')[0].value = opt[i].value;
-        //~ $('#id_library_select')[0].selectedIndex = i;
         break;
       }
-      //~ i++;
     }
-    
   }
+  
+  // post-load styling
+
 });
 
 // works locally & remotely
@@ -694,7 +723,13 @@ socket.onmessage = function(e) {
     }
     
   } else if (data.message == 'completed collapsing') {
-    // show next tab: search type
+    // if search: show next tab (search type)
+    // if basic file upload: redirect to library
+    if (!preprocessed.search_library) {
+      document.location.href = '/library/' + preprocessed.library_id;
+      return;
+    }
+    
     // choose 
     //$nss-card-2
     $('#nss-1').removeClass('active');
@@ -1189,26 +1224,35 @@ function makeChart(el, dataXY) {
   
 // upload form
 function upload(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  
   $('#upload-button')[0].disabled = true;
   var form = new FormData(this);
   
-  console.log(new FormData(this));
-  console.log(new FormData(this).values());
-  console.log($('#customFile')[0].files);
-  console.log($('#customFile')[0].files[0]);
+  //~ console.log(new FormData(this));
+  //~ console.log(new FormData(this).values());
+  //~ console.log($('#customFile')[0].files);
+  //~ console.log($('#customFile')[0].files[0]);
+  
+  updateFileList(false, true);
   
   // Shows overall status
   preprocessed.total = $('#customFile')[0].files.length;
   $('#stat-complete').text('0/' + preprocessed.total + ' completed');
   $('#preprocess-upload-status').css('display', 'block');
   
-  preprocessed.search_library = form.get('search_library');
+  if (form.get('search_library')) {
+    // Search
+    preprocessed.search_library = form.get('search_library');
+  } else {
+    // File upload
+    preprocessed.search_library = false;
+  }
   
   // first create library or validate existing library
   // then loop through files and add them individually.
   ajaxLibrary(this);
-  
-  event.preventDefault();
 }
 function ajaxLibrary(form) {
   
@@ -1226,11 +1270,13 @@ function ajaxLibrary(form) {
     contentType: false,
     // on success
     success: function(response) {
-      console.log(response);
+      
       //~ var r = JSON.parse(response.responseJSON);
       var library = response.data.library;
       preprocessed.library = library;
+      preprocessed.library_id = response.data.library_id;
       preprocessed.search_library = response.data.search_library;
+      //~ console.log('ajaxLibrary',response.data);return;
       
       // Loop through upload files and start each one
       //~ $.each($('#customFile')[0].files, function() {
@@ -1271,34 +1317,6 @@ function ajaxLibrary(form) {
 }
 
 function uploadHelper(formData) {
-  //~ return;
-  
-  // Modal tempalte adapted from
-  // https://github.com/jakobadam/bootstrap-uploadprogress
-  //~ var template = '<div class="modal fade" id="file-progress-modal">\
-  //~ <div class="modal-dialog">\
-    //~ <div class="modal-content">\
-      //~ <div class="modal-header">\
-        //~ <button type="button" class="close" data-dismiss="modal" aria-label="Close">\
-        //~ <span aria-hidden="true">&times;</span></button>\
-        //~ <h4 class="modal-title">Uploading</h4>\
-      //~ </div>\
-      //~ <div class="modal-body">\
-        //~ <div class="modal-message"></div>\
-        //~ <div class="progress">\
-          //~ <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0"\
-               //~ aria-valuemax="100" style="width: 0%;min-width: 2em;">\
-            //~ 0%\
-          //~ </div>\
-        //~ </div>\
-      //~ </div>\
-      //~ <div class="modal-footer" style="display:none">\
-        //~ <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>\
-      //~ </div>\
-    //~ </div>\
-  //~ </div>\
-//~ </div>';
-  
   var template = '\
     <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0"\
          aria-valuemax="100" style="width: 0%;min-width: 2em;">\
@@ -1306,13 +1324,6 @@ function uploadHelper(formData) {
     </div>';
           
   var t = $(template);
-  //~ t.modal({
-    //~ backdrop: 'static',
-    //~ keyboard: false
-  //~ });
-  //~ t.message = t.find('.modal-message');
-  //~ t.title = t.find('.modal-title');
-    //~ //this.$modal_footer = this.$modal.find('.modal-footer');
   var n = $('#filetable-upload' + formData.get('upload_count'));
   $('#filetable-upload' + formData.get('upload_count')).append(t);
   t.progress = n.find('.progress-bar');
@@ -1331,14 +1342,6 @@ function uploadHelper(formData) {
           t.progress.css('width', pct + '%');
         }
       }, false);
-
-      // Download
-      //~ xhr.addEventListener('progress', function(evt){
-        //~ if (evt.lengthComputable) {
-          //~ var percentComplete = evt.loaded / evt.total;
-        //~ }
-      //~ }, false);
-
       return xhr;
     },
     

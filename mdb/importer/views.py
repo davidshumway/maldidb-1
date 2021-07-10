@@ -32,6 +32,7 @@ def add_sqlite(request):
     form.fields['lab'].queryset = user_labs
   return render(request, 'importer/add_sqlite.html', {'form': form})
 
+@login_required
 def handle_uploaded_file(request, tmpForm):
   '''
   Spectra is inserted last as it depends on XML and Metadata tables.

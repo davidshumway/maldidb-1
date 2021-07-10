@@ -118,7 +118,12 @@ def xml_profile(request, xml_hash):
     {'xml': xml, 'lab': lab}
   )
 
-def library_profile(request, library_id):
+def library_profile(request, library_id = False):
+  if library_id is False:
+    return render(
+      request,
+      'chat/library_profile.html'
+    )
   lib = Library.objects.get(id = library_id)
   lab = LabGroup.objects.get(id = lib.lab.id)
   s = Spectra.objects.filter(library__exact = lib)

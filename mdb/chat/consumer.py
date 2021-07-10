@@ -73,7 +73,6 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     # tells client collapse completed
     try:
       val = json.loads(text_data)
-      # ~ print(f'val{val}')
       if val['type'] == 'completed collapsing':
         d = json.dumps({
           'data': {
@@ -214,7 +213,8 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
 def collapse_lib(self, title, client, search_library):
   '''
   :param str title: Unknown library's title
-  :param int search_library: Library ID
+  :param int search_library: optional lib. ID from upload+search, or
+    False if via simple file upload
   '''
   l = Library.objects.filter(title__exact = title,
     created_by = self.scope['user']).first()
@@ -233,7 +233,7 @@ def collapse_lib(self, title, client, search_library):
       library_id__exact = l.id,
       spectra_content__exact = 'PR') \
       .order_by('id').select_related('strain_id__strain_id') \
-      .values('id', 'strain_id', 'strain_id__strain_id')
+      .values('id', 'strain_id', 'strain_id__strain_id', 'library_id')
     
     # ~ CollapsedSpectra.objects.filter(library_id__exact = 1,spectra_content__exact = 'PR').order_by('id').select_related('strain_id').values('id', 'strain_id')
     
@@ -253,7 +253,8 @@ def collapse_lib(self, title, client, search_library):
     ws.close()
     
     # Do cosine scores
-    cosine_scores(self, l.id, client, search_library)
+    if search_library is not False:
+      cosine_scores(self, l.id, client, search_library)
     
 def cosine_scores(self, library, client, search_library):
   '''Performs cosine scoring for unknown library against a known one.

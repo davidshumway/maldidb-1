@@ -5,7 +5,7 @@ from files.models import UserFile
 from dal import autocomplete
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from django.utils.crypto import get_random_string # for random library
+from django.utils.crypto import get_random_string # random library
 User = get_user_model()
 
 class SpectraCollectionsForm(forms.ModelForm):
@@ -106,7 +106,7 @@ class SpectraLibraryForm(forms.Form):
     help_text = 'Enter a name for the new library',
     widget = forms.TextInput(
       attrs = {
-        'class': 'form-control'}
+        'class': 'form-control', 'placeholder': 'Enter a library title ...'}
     )
   )
   library_save_type = forms.CharField(label = '',
@@ -126,7 +126,7 @@ class SpectraLibraryForm(forms.Form):
   search_library = forms.ModelChoiceField(
     queryset = Library.objects.all(),
     to_field_name = 'title',
-    required = True,
+    required = False,
     widget = forms.Select(
       attrs = {
         'class': 'custom-select'}
@@ -165,6 +165,7 @@ class SpectraLibraryForm(forms.Form):
     # ~ empty_label = 'Public library'
   )
   library_search_type = forms.CharField(label = '',
+    required = False,
     widget = forms.RadioSelect(choices = [
       ('r01', 'R01 datasets'),
       ('own', 'Own datasets'),
@@ -291,7 +292,7 @@ class SpectraLibraryForm(forms.Form):
       n = Library.objects.filter(
         created_by = self.user,
         title = d.get('library_create_new'),
-          privacy_level = 'PR'
+        privacy_level = 'PR'
       )
       if len(n) != 0:
         raise forms.ValidationError(

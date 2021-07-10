@@ -2,10 +2,10 @@
 {% load widget_tweaks %}
 
 {% block navtitle %}
-Basic Search
+File Upload
 {% endblock %}
 {% block title %}
-	Basic Search
+File Upload
 {% endblock %}
 
 {% block content %}
@@ -29,18 +29,7 @@ var formURLs = {
   library: "{% url 'spectra_search:ajax_upload_library' %}",
   files: "{% url 'spectra_search:ajax_upload' %}"
 }
-  
-function show_filter(e) {
-  document.getElementById('filters').style.display='block';
-  e.preventDefault();
-  e.stopPropagation();
-}
 </script>
-
-<!-- After file upload form, get-form-div is placed inside this form. -->
-<form action="{% url 'spectra_search:basic_search' %}" class=""
-  method="GET" style="" id="search-form">
-</form>
 
 <div class="container" style="width:100%;max-width:inherit;">
 
@@ -109,6 +98,7 @@ function show_filter(e) {
             <button onclick="javascript:updateFileList()"></button>
 -->
           </div>
+          
           <table class="card-text" id="file-listing" style="width: 100% !important;">
           </table>
           <table class="card-text" id="file-listing-preprocessing"
@@ -178,107 +168,6 @@ function show_filter(e) {
               </div>
             </div>
             
-            <div class="form-group row mt-2">
-              <div class="col-sm-12">
-                <span style="text-decoration:underline;"
-                  >Closest match search</span>
-              </div>
-            </div>
-            
-            <div class="form-group row mt-2">
-              <label for="" class="col-sm-3 col-form-label">
-              Generate a table of top matches against:<br/>
-              (select spectra library against which unknown will be queried)
-              </label>
-              <div class="col-sm-9">
-<!--
-                <input type="email" class="form-control" id="inputEmail3" placeholder="Email">
--->
-                <div id="search-library" class="sl_" >
-                  {% with f=upload_form.search_library %}
-                    {{ f }}
-                  {% endwith %}
-                </div>
-                <div id="search-library-own" class="sl_" style="display:none;">
-                  {% with f=upload_form.search_library_own %}
-                    {{ f }}
-                  {% endwith %}
-                </div>
-                <div id="search-library-lab" class="sl_" style="display:none;">
-                  {% with f=upload_form.search_library_lab %}
-                    {{ f }}
-                  {% endwith %}
-                </div>
-                <div id="search-library-public" class="sl_" style="display:none;">
-                  {% with f=upload_form.search_library_public %}
-                    {{ f }}
-                  {% endwith %}
-                </div>
-              </div>
-            </div>
-            
-            <div class="form-group row mt-2">
-              <div class="col-form-label col-sm-3">
-                Library filter
-              </div>
-              <div class="col-sm-9">
-
-                <div class="input-group">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text">
-                      <input class=" lst_" type="radio"
-                        name="library_search_type" id="gridRadios1"
-                        value="r01" data-ltype="" checked>
-                    </span>
-                    <span class="input-group-text">
-                      <label class="form-check-label" for="gridRadios1">
-                        R01 datasets
-                      </label></span>
-                  </div>
-                </div>
-                <div class="input-group">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text">
-                      <input class="lst_" type="radio"
-                        name="library_search_type" id="gridRadios2"
-                        value="own" data-ltype="-own">
-                    </span>
-                    <span class="input-group-text">
-                      <label class="form-check-label" for="gridRadios2">
-                        My datasets
-                      </label></span>
-                  </div>
-                </div>
-                <div class="input-group">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text">
-                      <input class="lst_" type="radio"
-                        name="library_search_type" id="gridRadios3"
-                        value="lab" data-ltype="-lab">
-                    </span>
-                    <span class="input-group-text">
-                      <label class="form-check-label" for="gridRadios3">
-                        Lab datasets (member/owner)
-                      </label></span>
-                  </div>
-                </div>
-                <div class="input-group">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text">
-                      <input class="lst_" type="radio"
-                        name="library_search_type" id="gridRadios4"
-                        value="pub" data-ltype="-public">
-                    </span>
-                    <span class="input-group-text">
-                      <label class="form-check-label" for="gridRadios4">
-                        All public datasets
-                      </label></span>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-            
             <div class="form-group">
               {% with f=upload_form.preprocess %}
                 {{ f }}
@@ -286,49 +175,12 @@ function show_filter(e) {
                   >{{ f.label }}</label>
               {% endwith %}
             </div>
-<!--
-            <div class="form-group">
-              {% with f=upload_form.cKingdom %}
-                {{ f }}
-              {% endwith %}
-            </div>
-            <div class="form-group">
-              {% with f=upload_form.cPhylum %}
-                {{ f }}
-              {% endwith %}
-            </div>
-            <div class="form-group">
-              {% with f=upload_form.cClass %}
-                {{ f }}
-              {% endwith %}
-            </div>
-            <div class="form-group">
-              {% with f=upload_form.cOrder %}
-                {{ f }}
-              {% endwith %}
-            </div>
-            <div class="form-group">
-              {% with f=upload_form.cGenus %}
-                {{ f }}
-              {% endwith %}
-            </div>
-            <div class="form-group">
-              {% with f=upload_form.cSpecies %}
-                {{ f }}
-              {% endwith %}
-            </div>
-            
-
-
-            {{ metadata_form.media }}
--->
-
             
           </div>
           <!-- End more options -->
           
           <div class="text-center">
-            <button type="submit" class="btn btn-primary"
+            <button type="" class="btn btn-primary"
               id="upload-button">Upload</button>
           </div>
         </form>
@@ -363,40 +215,6 @@ function show_filter(e) {
   
 </div>
 <!-- end container -->
-
-<!-- spectra comparison -->
-<div class="container" style="width:100%;max-width:inherit;display:none;"
-  id="container-dendro">
-<div class="row">
-  <div class="col-sm-6">
-    <div class="card">
-    <div class="card-body" id="spectra-viz" style="overflow:hidden;">
-    </div></div></div>
-  <div class="col-sm-6">
-    <div class="card">
-    <div class="card-header" id="dendro-viz-head">
-      <button style="border:1px solid #0a0a0a;cursor:pointer;"
-        id="dendro-viz-toggle">
-        <input type="checkbox" checked />
-        [ ]
-      </button>
-    </div>
-    <div class="card-body" id="dendro-viz" style="overflow:hidden;">
-    </div></div></div>
-</div>
-</div>
-<!-- end container -->
-
-<!-- if search results, minimize search form -->
-<div class="row">
-  <input type="button" class="btn btn-primary" id="search_toggle"
-    style="display: none; width: 180px;" value="Edit Search" />
-</div>
-{% if form.show_tbl %}  
-  {% render_table table %}
-{% endif %}
-
-</div>
 
 <script src="{% static 'js/spectra_search.js' %}"></script>
 
