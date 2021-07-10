@@ -49,4 +49,7 @@ urlpatterns = [
   
   path('statuses/<status_id>/', views.user_task_status_profile, name='user_task_statuses'),
   
+  path('site_metrics/', views.site_metrics, name='site_metrics'),
+  path('user_libraries/', views.user_libraries, name='user_libraries'),
+  
 ]

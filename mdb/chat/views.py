@@ -23,6 +23,64 @@ from mdb.utils import *
 
 import requests
 
+@login_required
+def user_libraries(request):
+  # ~ l1 = [{
+    # ~ 'lab_name': s['lab__lab_name'],
+    # ~ 'title': s['title'],
+    # ~ 'num_spectra': s['num_spectra'],
+    # ~ 'privacy_level': s['privacy_level'],
+  # ~ } for s in Library.objects.filter(created_by = request.user)\
+    # ~ .annotate(num_spectra = Count('spectra'))\
+    # ~ .values(
+      # ~ ['lab__lab_name', 'title', 'num_spectra', 'privacy_level']
+    # ~ )
+  # ~ ]
+  l1 = [{
+    'id': s['id'],
+    'lab_name': s['lab__lab_name'],
+    'title': s['title'],
+    'num_spectra': len(list(Spectra.objects.filter(library_id = s['id']))),
+    'privacy_level': s['privacy_level']
+  } for s in list(Library.objects.filter(created_by = request.user)\
+    .values(
+      'id', 'lab__lab_name', 'title', 'privacy_level'
+    ))
+  ]
+  # ~ l1 = []
+  # ~ x = Library.objects.filter(created_by = request.user)\
+    # ~ .values(
+      # ~ 'lab__lab_name', 'title', 'num_spectra', 'privacy_level'
+    # ~ )
+  # ~ for s in x:
+    # ~ l1.append({
+      # ~ 'lab_name': s['lab__lab_name'],
+      # ~ 'title': s['title'],
+      # ~ 'num_spectra': len([ Spectra.objects.filter(library = s) ]),
+      # ~ 'privacy_level': s['privacy_level']
+    # ~ })
+    
+  return render(request,
+    'chat/user_libraries.html',
+    {
+      'library_data': l1
+    }
+  )
+  
+def site_metrics(request):
+  l1 = len(Library.objects.filter(privacy_level = 'PB'))
+  l2 = len(Library.objects.all())
+  s1 = len(Spectra.objects.all())
+  return render(request,
+    'chat/site_metrics.html',
+    {
+      'library_public': l1,
+      'library_total': l2,
+      'spectra_total': s1,
+    }
+  )
+
+@login_required
 def user_task_status_profile(request, status_id):
   uts = UserTaskStatus.objects.get(id = status_id)
   return render(
@@ -454,29 +512,7 @@ def search(request):
   return render(request, 'chat/search.html', {'spectra': {}, 'comment_form': {}})
   
 def home(request):
-  # ~ comment_form = CommentForm()
-  
-  # ~ x = XML.objects.all()
-  # ~ m = len(Metadata.objects.all())
-  # ~ y1 = Locale.objects.all()
-  # ~ y2 = Version.objects.all()
-  # ~ s = len(Spectra.objects.all())
-  l1 = len(Library.objects.filter(privacy_level = 'PB'))
-  l2 = len(Library.objects.all())
-  s1 = len(Spectra.objects.all())
-  
   return render(
     request,
-    'chat/home.html',
-    {
-      # ~ 'spectra': spectra,
-      # ~ 'comment_form': comment_form,
-      # ~ 'xml': x,
-      # ~ 'metadata': m,
-      # ~ 'locale': y1,
-      # ~ 'version': y2,
-      'library_public': l1,
-      'library_total': l2,
-      'spectra_total': s1,
-    }
+    'chat/home.html'
   )

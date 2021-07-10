@@ -19,152 +19,113 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" id="mainNav">
-      
-      <a class="navbar-brand" href="{% url 'chat:home' %}">MALDI-TOF spectra database</a>
-      
-      <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      
-      
-      
-    <div class="collapse navbar-collapse" id="navbarResponsive">
-      <ul class="navbar-nav mr-auto">
-	<li class="nav-item dropdown"><!--class=active-->
-	  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-	    Menu
-	  </a>
-	  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-	    <a class="dropdown-item" href="{% url 'chat:home' %}">Home</a>
-<!--
-	    <a class="dropdown-item" href="{% url 'chat:home' %}">About</a>
--->
-<!--
-	    <a class="dropdown-item" href="{% url 'chat:home' %}">Contact</a>
--->
-	    <a class="dropdown-item" href="{% url 'spectra_search:basic_search' %}">Basic Search</a>
-	    <a class="dropdown-item" href="{% url 'docs:docs' %}">Documentation</a>
-<!--
-	    <a class="dropdown-item" href="{% url 'spectra_search:basic_search' %}">Advanced Search</a>
--->
-<!--
-	    <a class="dropdown-item" href="{% url 'chat:view_cosine' %}">Cosine similarity &amp; heatmap</a>
--->
-<!--
-	  <div class="dropdown-divider"></div>
-	    <a class="dropdown-item" href="#">Something else here</a>
-	  </div>
--->
-	</li>
-	<li class="nav-item dropdown"><!--class=active-->
-	  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-	    Browse
-	  </a>
-	  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-	    <!--<a class="dropdown-item" href=" url 'spectra_search:spectra_results' ">Spectrum - All</a>-->
-	    <a class="dropdown-item" href="{% url 'spectra_search:spectra_results' %}">Spectra - All</a>
-<!--
-	    <a class="dropdown-item" href="{% url 'chat:home' %}">Spectrum - Replicates</a>
--->
-	    <a class="dropdown-item" href="{% url 'spectra_search:spectra_results2' %}">Spectra - Collapsed</a>
-	    <a class="dropdown-item" href="{% url 'chat:libraries_results' %}">Libraries</a>
-	    <a class="dropdown-item" href="{% url 'chat:metadata_results' %}">Metadata</a>
-	    <a class="dropdown-item" href="{% url 'chat:labgroups_results' %}">Lab Groups</a>
-	    <a class="dropdown-item" href="{% url 'chat:xml_results' %}">XML Data</a>
-<!--
-	    <a class="dropdown-item" href="{% url 'chat:home' %}">IDBac SQLite</a>
--->
-	  </div>
-	</li>
-	{% if request.user.is_authenticated %}
-	<li class="nav-item dropdown"><!--class=active-->
-	  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-	    Add
-	  </a>
-	  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-	    <a class="dropdown-item" href="{% url 'chat:add_lib' %}">Library</a>
-	    <a class="dropdown-item" href="{% url 'chat:add_labgroup' %}">Lab Group</a>
-	    <a class="dropdown-item" href="{% url 'importer:add_sqlite' %}">IDBac SQLite</a>
-	  </div>
-	</li>
-	{% endif %}
-      </ul>
-    </div>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" id="mainNav">
+    <a class="navbar-brand" href="{% url 'chat:home' %}">MALDI-TOF spectra database</a>
+    
+    <button class="navbar-toggler navbar-toggler-right" type="button"
+      data-toggle="collapse" data-target="#navbarResponsive"
+      aria-controls="navbarResponsive" aria-expanded="false"
+      aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  
+  
     
     <div class="collapse navbar-collapse" id="navbarResponsive">
-        <ul class="navbar-nav ml-auto">
-          {% if request.user.is_authenticated %}
+      <ul class="navbar-nav mr-4">
+	  <li class="nav-item dropdown"><!--class=active-->
+	    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	    Menu
+	    </a>
+	    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+	      <a class="dropdown-item" href="{% url 'chat:home' %}">Home</a>
+	      <a class="dropdown-item" href="{% url 'spectra_search:basic_search' %}">Basic Search</a>
+	      <a class="dropdown-item" href="{% url 'docs:docs' %}">Documentation</a>
+	      <a class="dropdown-item" href="{% url 'chat:site_metrics' %}">Site Metrics</a>
+	    
+	      <div class="dropdown-divider"></div>
+	      
+	      <div class="ml-3 mt-3 mb-2">Browse</div>
+	      
+	      <a class="dropdown-item" href="{% url 'spectra_search:spectra_results' %}">Spectra - All</a>
+	      <a class="dropdown-item" href="{% url 'spectra_search:spectra_results2' %}">Spectra - Collapsed</a>
+	      <a class="dropdown-item" href="{% url 'chat:libraries_results' %}">Libraries</a>
+	      <a class="dropdown-item" href="{% url 'chat:metadata_results' %}">Metadata</a>
+	      <a class="dropdown-item" href="{% url 'chat:labgroups_results' %}">Lab Groups</a>
+	      <a class="dropdown-item" href="{% url 'chat:xml_results' %}">XML Data</a>
+	      
+	      {% if request.user.is_authenticated %}
+	      <div class="dropdown-divider"></div>
+
+	      <div class="ml-3 mt-3 mb-2">Add</div>
+	      
+	      <a class="dropdown-item" href="{% url 'chat:add_lib' %}">Library</a>
+	      <a class="dropdown-item" href="{% url 'chat:add_labgroup' %}">Lab Group</a>
+	      <a class="dropdown-item" href="{% url 'importer:add_sqlite' %}">IDBac SQLite</a>
+	      {% endif %}
+	      
+	    </div>
+	  </li>
+      </ul>
+      
+      <div class="mr-auto" id="">
+	{% block navtitle %}
+	{% endblock %}
+      </div>
+      
+      <ul class="navbar-nav ml-auto">
+	{% if request.user.is_authenticated %}
 	    <li class="nav-item dropdown">
 	      <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-		Hello, {{ request.user }}
+		  Hello, {{ request.user }}
 	      </a>
 	      <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-		<a class="dropdown-item" href="{% url 'accounts:view-profile' request.user %}">Profile</a>
-		<a class="dropdown-item" href="{% url 'chat:user_tasks' %}">Tasks</a>
-		<a class="dropdown-item" href="{% url 'files:user_files' %}">Files</a>
-		<a class="dropdown-item" href="{% url 'spectra:home' %}">Spectra</a>
-<!--
-		<a class="dropdown-item" href="{% url 'chat:home' %}">Logs</a>
--->
-		<a class="dropdown-item" href="{% url 'accounts:logout' %}">Logout</a>
+		  <a class="dropdown-item" href="{% url 'accounts:view-profile' request.user %}">Profile</a>
+		  <a class="dropdown-item" href="{% url 'chat:user_tasks' %}">Tasks</a>
+		  <a class="dropdown-item" href="{% url 'files:user_files' %}">Files</a>
+		  <a class="dropdown-item" href="{% url 'spectra:home' %}">Spectra</a>
+		  <a class="dropdown-item" href="{% url 'accounts:logout' %}">Logout</a>
 	      </div>
 	    </li>
-	  
-<!--
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'chat:home' %}">
-                <i class="fas fa-fw fa-user"></i> Hello, {{ request.user }}</a>
-            </li>
--->
-<!--
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'accounts:followers' %}">
-                <i class="fas fa-fw fa-users"></i> Followers
-              </a>
-            </li>
--->
-<!--
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'accounts:logout' %}">
-                <i class="fas fa-fw fa-sign-out-alt"></i> Logout
-              </a>
-            </li>
--->
-        {% else %}
-          <li class="nav-item">
-              <a class="nav-link" href="{% url 'accounts:login' %}">
-                <i class="fas fa-fw fa-sign-in-alt"></i> Login
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'accounts:register' %}">
-                <i class="fas fa-fw fa-user-check"></i> Register
-              </a>
-            </li>
-        {% endif %}
-      </ul>	
+      {% else %}
+	<li class="nav-item">
+	  <a class="nav-link" href="{% url 'accounts:login' %}">
+	  <i class="fas fa-fw fa-sign-in-alt"></i> Login
+	  </a>
+	</li>
+	<li class="nav-item">
+	  <a class="nav-link" href="{% url 'accounts:register' %}">
+	  <i class="fas fa-fw fa-user-check"></i> Register
+	  </a>
+	</li>
+      {% endif %}
+      </ul>
+      
+    </div>
+    
+    <div class="" id="">
     </div>
   </nav>
   
-  <div class="content-wrapper">    
-    <div class="container-fluid my-5 pt-3">
-      {% block content %}
-      {% endblock %}
-    </div>
-    <!-- /.container-fluid-->
-    <!-- /.content-wrapper-->
-    <footer class="sticky-footer fixed-bottom bg-dark text-light">
-      <div class="container">
+  <div class="content-wrapper">
+    
+  <div class="container-fluid my-5 pt-3">
+    {% block content %}
+    {% endblock %}
+  </div>
+  <!-- /.container-fluid-->
+  <!-- /.content-wrapper-->
+  <footer class="sticky-footer fixed-bottom bg-dark text-light">
+    <div class="container">
 	<div class="text-center">
 	  <small>Copyright © UIC 2020, 2021</small>
 	</div>
-      </div>
-    </footer>
+    </div>
+  </footer>
   </div>
-    
+  
   
 
-    
+  
 </body>
 </html>

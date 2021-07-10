@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block navtitle %}
+Site metrics
+{% endblock %}
+{% block title %}
+Site metrics
+{% endblock %}
+
+{% block content %}
+  
+<div class="col-sm-3 mx-auto mt-4">
+  <div class="card">
+    <div class="card-header">Site metrics</div>
+    <div class="card-body">
+      Libraries (public): {{library_public}}<br/>
+      Libraries (total): {{library_total}}<br/>
+      Spectra: {{spectra_total}}<br/>
+      Active users (10 minutes): {{ request.online_now.count }}
+    </div>
+  </div>
+</div>
+  
+{% endblock %}

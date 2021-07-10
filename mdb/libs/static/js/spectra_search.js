@@ -190,9 +190,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
   // toggles branch length on dendrogram
   $('#dendro-viz-toggle').click(function(event) {
     var input = $('#dendro-viz-toggle input')[0];
-    //~ console.log('ic1:',input.checked);
     input.checked = (input.checked) ? false : true;
-    //~ console.log('ic2:',input.checked);
     input.chart.update(input.checked);
     event.preventDefault();
     event.stopPropagation();

@@ -2,6 +2,9 @@
 {% load render_table from django_tables2 %}
 {% load static %}
 
+{% block navtitle %}
+Library Details: {{ library.title }}
+{% endblock %}
 {% block title %}
   Library Details: {{ library.title }}
 {% endblock %}

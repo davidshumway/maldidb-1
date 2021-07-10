@@ -2,9 +2,11 @@
 
 {% load widget_tweaks %}
 
-
+{% block navtitle %}
+Home
+{% endblock %}
 {% block title %}
-  Home
+Home
 {% endblock %}
 
 {% block content %}
@@ -18,13 +20,32 @@
 -->
 
 <div class="row">
-  <div class="col-md-8 col-sm-8 mx-auto">
-    <div class="card">
-      <div class="card-header">Site overview</div>
+  <div class="col-sm-8 mx-auto pt-4 pb-4">
+    <div class="card pt-4 pb-4">
+<!--
+      <div class="card-header">Next steps ...</div>
+-->
       <div class="card-body">
-	Libraries (public): {{library_public}}<br/>
-	Libraries (total): {{library_total}}<br/>
-	Spectra: {{spectra_total}}<br/>
+	<div class="row">
+	  <div class="col-sm-6">
+	    <a href="{% url 'spectra_search:basic_search' %}">
+	    <button class="btn btn-primary btn-lg btn-block"
+	      style="height: 90px;">
+	    Search spectra against database
+	    </button></a>
+	  </div>
+	  <div class="col-sm-6">
+	    <a href="{% url 'chat:user_libraries' %}">
+	    <button class="btn btn-primary btn-lg btn-block"
+	      style="height: 90px;">
+	    Manage a custom library
+	    </button></a>
+	  </div>
+	  <div class="col-sm-12 mt-4">
+	    *Note: All spectra in database were acquired using MALDI-dried
+	    drop method as described in [ref]
+	  </div>
+	</div>
       </div>
     </div>
   </div>

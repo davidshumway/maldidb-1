@@ -1,8 +1,11 @@
 {% extends 'base.html' %}
 {% load render_table from django_tables2 %}
 
+{% block navtitle %}
+Metadata Details: {{ metadata.strain_id }}
+{% endblock %}
 {% block title %}
-	Metadata Details: {{ metadata.strain_id }}
+Metadata Details: {{ metadata.strain_id }}
 {% endblock %}
 
 {% block content %}

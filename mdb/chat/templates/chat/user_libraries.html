@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block navtitle %}
+My Libraries
+{% endblock %}
+{% block title %}
+My Libraries
+{% endblock %}
+
+{% block content %}
+
+{% load bootstrap4 %}
+{% load static %}
+<link rel="stylesheet" type="text/css"
+  href="{% static 'css/datatables.min.css' %}"/>
+<script type="text/javascript" src="{% static 'js/datatables.min.js' %}">
+</script>
+<script type="text/javascript" src="{% static 'js/d3.6.7.0.min.js' %}">
+</script>
+<script type="text/javascript" src="{% static 'js/dropzone.5.7.0.js' %}">
+</script>
+  
+<div class="row">
+  <div class="col-sm-8">
+    <div class="card">
+      <div class="card-header">My Libraries</div>
+      <div class="card-body">
+        <table id="library-table"></table>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card">
+      <div class="card-header">Actions</div>
+      <div class="card-body">
+        Add spectra to an existing library
+        Create a new custom library
+        Edit an existing library
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- e.g. <script id="..." type="application/json">{...}</script>
+-->
+{{ library_data|json_script:"library-data" }}
+
+<script>
+var t = $('#library-table').DataTable({
+  data: JSON.parse($('#library-data')[0].textContent),
+  columns: [
+    {data: 'lab_name', title: 'Lab Name'},
+    {data: 'title', title: 'Library Title'},
+    {data: 'num_spectra', title: 'Number Spectra'},
+    //~ {data: 'num_metadata', title: 'Number Metadata'},
+    //~ {data: 'num_metadata', title: 'Number Metadata'},
+    {data: 'privacy_level', title: 'Privacy level',
+      render: function(data, type) {
+        return (data == 'PB') ? 'public' : 'private'
+      }
+    }
+  ]
+});
+</script>
+{% endblock%}

@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 {% load render_table from django_tables2 %}
 
+{% block navtitle %}
+Task Status
+{% endblock %}
 {% block title %}
 	Task Status: {{ user_task_status.id }}
 {% endblock %}

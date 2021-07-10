@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 {% load render_table from django_tables2 %}
 
-
+{% block navtitle %}
+Lab Profile: {{ lab.lab_name }}
+{% endblock %}
 {% block title %}
 	Lab Profile: {{ lab.lab_name }}
 {% endblock %}
