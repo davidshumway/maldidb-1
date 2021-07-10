@@ -853,10 +853,10 @@ function singleScore(id) {
             + data + '</span>';
         }
       },
-      {data: 'kingdom', title: 'Kingdom'},
-      {data: 'phylum', title: 'Phylum'},
-      {data: 'class', title: 'Class'},
-      {data: 'order', title: 'Order'},
+      //~ {data: 'kingdom', title: 'Kingdom'},
+      //~ {data: 'phylum', title: 'Phylum'},
+      //~ {data: 'class', title: 'Class'},
+      //~ {data: 'order', title: 'Order'},
       {data: 'family', title: 'Family'},
       {data: 'genus', title: 'Genus'},
       {data: 'species', title: 'Species'},
