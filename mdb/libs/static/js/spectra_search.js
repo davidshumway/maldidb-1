@@ -745,8 +745,8 @@ socket.onmessage = function(e) {
       columns: [
         //~ {data: 'id', title: 'Spectra ID'},
         //~ {data: 'strain_id', title: 'Strain ID'},
-        {data: 'strain_id__strain_id', title: 'Unknown Strain Name'},
-        {data: 'id', title: 'Top scores (Strain Name, Genus / Species)',
+        {data: 'strain_id__strain_id', title: 'Unknown Strain ID'},
+        {data: 'id', title: 'Top scores (Strain ID, Genus / Species)',
           render: function(data, type) {
             // e.g. top-scores-8373
             return '<table id="top-scores-'+data+'" class="table table-sm"></table>'; //width: 500px;white-space: pre-line;
@@ -847,7 +847,7 @@ function singleScore(id) {
     columns: [
       {data: 'score', title: 'Score'},
       //~ {data: 'id', title: 'Spectra ID'},
-      {data: 'strain', title: 'Strain Name',
+      {data: 'strain', title: 'Strain ID',
         render: function(data, type) {
           return '<span style="color:steelblue;font-weight:400;cursor:pointer;" data-id="'+data+'" onclick="sp(this);">'
             + data + '</span>';
