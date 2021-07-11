@@ -47,6 +47,8 @@ When the build is finished, the site processes will start, including Django.
 When Django runs for the first time, the first time that NCBI taxonomy data is present, there will be additional processing time while the taxonomy data is inserted into the database.
 A `GinIndex` is also created for indexing the taxonomic data (e.g. http://logan.tw/posts/2017/12/30/full-text-search-with-django-and-postgresql/).
 
+Avoid rebuilding on successive starts by calling ```docker-compose up``` or ```docker-compose start``` to start the system.
+
 ## Manual install
 ### Install prerequisites
 - R
