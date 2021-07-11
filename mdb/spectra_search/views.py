@@ -280,7 +280,8 @@ class FilteredCollapsedSpectraListView(SingleTableMixin, FilterView):
     qs = super().get_queryset()
     qs = qs.annotate(num_spectra = Count('collapsed_spectra'))
     return qs
-    
+
+@method_decorator(login_required, name = 'dispatch')
 class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
   '''
   todo: combine filter.form and table
@@ -392,118 +393,6 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     '''
     if len(self.request.GET) == 0:
       return Spectra.objects.none()
-    
-    # ~ form = SpectraSearchForm(self.request.GET, self.request.FILES)
-    # ~ if form.is_valid():
-      # ~ print('valid form')
-      # ~ pass
-    # ~ else:
-      # ~ print('invalid form')
-      # ~ return self.queryset
-    
-    # ~ sm = form.cleaned_data['peak_mass'];
-    # ~ si = form.cleaned_data['peak_intensity'];
-    # ~ sn = form.cleaned_data['peak_snr'];
-    # ~ srep = form.cleaned_data['replicates'];
-    # ~ scut = form.cleaned_data['spectrum_cutoff'];
-    # ~ if sm and si and sn and srep and scut:
-      # ~ self.show_tbl = True
-      
-      # ~ # Create a search object for user, or anonymous user
-      # ~ try:
-        # ~ obj, created = SearchSpectra.objects.get_or_create(
-          # ~ peak_mass = sm,
-          # ~ peak_intensity = si,
-          # ~ peak_snr = sn,
-          # ~ created_by = self.request.user)
-      # ~ except:
-        # ~ obj, created = SearchSpectra.objects.get_or_create(
-          # ~ peak_mass = sm,
-          # ~ peak_intensity = si,
-          # ~ peak_snr = sn,
-          # ~ created_by = None)
-      
-      # ~ search_id = obj.id
-      
-      # ~ if srep == 'collapsed':
-        # ~ n = CollapsedSpectra.objects.all()
-      # ~ else:
-        # ~ n = Spectra.objects.all()
-      
-      # ~ # tof_mode
-      # ~ if scut == 'small':
-        # ~ n = n.filter(max_mass__lt = 6000)
-      # ~ elif scut == 'protein': # protein
-        # ~ n = n.filter(max_mass__gt = 6000)
-      # ~ else: # protein
-        # ~ pass
-      
-      # ~ # optionals
-      # ~ slib = form.cleaned_data['libraryXX'];
-      # ~ slab = form.cleaned_data['labXX'];
-      # ~ ssid = form.cleaned_data['strain_idXX'];
-      # ~ sxml = form.cleaned_data['xml_hashXX'];
-      # ~ scrb = form.cleaned_data['created_byXX'];
-      # ~ #print(f'fcd: {form.cleaned_data}' ) # 
-      # ~ if slib.exists():
-        # ~ n = n.filter(library__in = slib)
-      # ~ if slab.exists():
-        # ~ n = n.filter(lab_name__in = slab)
-      # ~ if ssid.exists():
-        # ~ n = n.filter(strain_id__in = ssid)
-      # ~ if sxml.exists():
-        # ~ n = n.filter(xml_hash__in = sxml)
-      # ~ if scrb.exists():
-        # ~ n = n.filter(created_by__in = scrb)
-      # ~ n = n.order_by('xml_hash')
-      
-      # ~ idx = {}
-      # ~ count = 0
-      
-      # ~ search_ids = []
-      # ~ for spectra in n:
-        # ~ search_ids.append(spectra.id)
-        # ~ idx[count] = spectra
-        # ~ count += 1
-      
-      # ~ # bin  
-      # ~ #result = sc.bin_peaks()
-      # ~ import requests
-      # ~ headers = {'"Content-Type': 'application/json"'}
-      # ~ payload = {'id': search_id, 'ids': search_ids}
-      # ~ r = requests.post(
-        # ~ 'http://plumber:7002/binPeaks',
-        # ~ data = payload, headers = headers
-      # ~ )
-      # ~ result = r.json() # built-in requests method
-      # ~ print('result is:', result)
-      
-      # ~ # sort by key
-      # ~ from django.db.models import Case, When
-      # ~ sorted_list = []
-      # ~ pk_list = []
-      # ~ scores = {}
-      # ~ first = True
-      # ~ for key, value in result.items():
-        # ~ if first: # skip first
-          # ~ first = False
-          # ~ continue
-        # ~ k = int(key) - 2 # starts with 1, and 1st is search spectra
-        # ~ sorted_list.append({'id': idx[k].id, 'score': float(value)})
-        # ~ scores[idx[k].id] = float(value)
-      # ~ sorted_list.sort(key = sort_func, reverse = True)
-      # ~ pk_list = [key.get('id') for key in sorted_list]
-      # ~ preserved = Case(*[When(pk = pk, then = pos) for pos, pk in enumerate(pk_list)])
-      # ~ q = Spectra.objects.filter(id__in = pk_list).order_by(preserved)
-      
-      # ~ # Overwrite table data to add custom data, i.e., the score
-      # ~ self.table_data = {'scores': scores, 'queryset': q}
-      
-      # ~ # Returns a queryset
-      # ~ return q
-
-    # ~ # Empty queryset
-    # ~ return Spectra.objects.none()
 
 def sort_func(e):
   return e['score']
