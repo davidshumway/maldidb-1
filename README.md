@@ -28,8 +28,10 @@ Edit project.env to include the following:
 Add R01 data files, if present, to a new folder in `./mdb` titled `r01data`:
 
 ```bash
- mkdir ./mdb/r01data
+mkdir ./mdb/r01data
 ```
+
+Add NCBI taxonomy data files (available from https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/) `nodes.dmp` and `names.dmp`, if present, to the same `r01data` folder.
 
 Finally, build and run the project:
 
@@ -40,6 +42,10 @@ PostgreSQL does not need to be installed on the system beforehand unless perform
 
 Running `docker-compose up --build` the first time may take 15-30 minutes to complete. However, successive
 builds should complete within 15-30 seconds.
+
+When the build is finished, the site processes will start, including Django.
+When Django runs for the first time, the first time that NCBI taxonomy data is present, there will be additional processing time while the taxonomy data is inserted into the database.
+A `GinIndex` is also created for indexing the taxonomic data (e.g. http://logan.tw/posts/2017/12/30/full-text-search-with-django-and-postgresql/).
 
 ## Manual install
 ### Install prerequisites

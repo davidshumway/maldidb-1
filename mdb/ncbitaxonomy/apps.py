@@ -179,7 +179,13 @@ class NcbitaxonomyConfig(AppConfig):
             # ~ except:
               # ~ print(f'node w/o parent? name:{node.name} txid:{node.txid} txtype:{node.txtype} parentid:{node.parentid}')
           # ~ TxNode.objects.bulk_update(created_nodes, ['parent'])
-            
+          
+          # Creates (updates) the GinIndex
+          # http://logan.tw/posts/2017/12/30/
+          #  full-text-search-with-django-and-postgresql/
+          from django.contrib.postgres.search import SearchVector
+          TxNode.objects.update(search_vector=SearchVector('name'))
+
         except FileNotFoundError:
           print('NCBI: NCBI data files not found')
           pass
