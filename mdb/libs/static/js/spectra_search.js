@@ -81,27 +81,24 @@ function toggleSearchTypeOpts(e) {
   return false;
 }
 function toggleNavSearch(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  
+  d3.select('#dendro-viz').selectAll('*').remove();
+  d3.select('#svg-histo').selectAll('*').remove();
+  d3.select('#spectra-viz').selectAll('*').remove();
+  
   $('#nav-search-source a').removeClass('active');
-  //~ $('.nav-link').removeClass('active');
   $(this).addClass('active');
   
-  //~ $('#nss-card-1').addClass('toggle-display');
-  //~ $('#nss-card-2').addClass('toggle-display');
-  //~ $('#nss-card-3').addClass('toggle-display');
   $('#nss-card-1').css('display', 'none');
   $('#nss-card-2').css('display', 'none');
   $('#nss-card-3').css('display', 'none');
   
-  //~ for (var i=1; i<=3; i++) {
-    //~ $('#nss-card-'+i).addClass('toggle-display');
-  //~ }
   
   var n = $(this).attr('id').split('-')[1]; // e.g. "nss-1"
   $('#nss-card-' + n).css('display', 'block');
-  //~ $('#nss-card-' + n).removeClass('toggle-display');
   
-  e.preventDefault();
-  e.stopPropagation();
   return false;
 }
 function toggleUploadOpts(e) {
@@ -1224,11 +1221,6 @@ function upload(event) {
   
   $('#upload-button')[0].disabled = true;
   var form = new FormData(this);
-  
-  //~ console.log(new FormData(this));
-  //~ console.log(new FormData(this).values());
-  //~ console.log($('#customFile')[0].files);
-  //~ console.log($('#customFile')[0].files[0]);
   
   updateFileList(false, true);
   

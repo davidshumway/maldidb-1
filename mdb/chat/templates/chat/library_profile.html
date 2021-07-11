@@ -43,7 +43,7 @@ Library Details: {{ library.title }}
     <div class="row">
       
       <div class="col-sm-4">
-        <div class="card m-3">
+        <div class="card mt-3">
           <div class="card-body">
             <div class="card-title">
               Title: {{ library.title|safe }}
@@ -84,7 +84,7 @@ Library Details: {{ library.title }}
       
       {% if request.user in lab.owners.all %}
       <div class="col-sm-6">
-        <div class="card">
+        <div class="card mt-3">
           <div class="card-header">Library management</div>
           <div class="card-body">
             
@@ -92,7 +92,7 @@ Library Details: {{ library.title }}
               class="card-link btn btn-secondary">
               Collapse library replicates</a>
             
-            <div class="alert alert-info">
+            <div class="alert alert-info mt-1">
               Collapsing replicates overwrites any collapsed spectra
               already in the library.</div>
             
@@ -101,6 +101,7 @@ Library Details: {{ library.title }}
               Edit Library Details</a>
             
           </div>
+        </div>
       </div>
       {% endif %}
       
