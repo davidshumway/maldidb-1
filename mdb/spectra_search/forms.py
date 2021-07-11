@@ -287,11 +287,10 @@ class SpectraLibraryForm(forms.Form):
           )
           d['library'] = new_lib
     elif d.get('library_save_type') == 'NEW':
-      # TODO: Library can have same title by same user but saved
-      #       in a different lab group.
       n = Library.objects.filter(
         created_by = self.user,
         title = d.get('library_create_new'),
+        lab = user_lab,
         privacy_level = 'PR'
       )
       if len(n) != 0:

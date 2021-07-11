@@ -114,7 +114,7 @@ class Library(models.Model):
   
   lab = models.ForeignKey(
     'LabGroup', on_delete = models.CASCADE,
-    blank = True, null = True)
+    blank = False, null = False)
   
   title = models.CharField(max_length = 200)
   description = models.TextField(blank = True)

@@ -173,12 +173,14 @@ def edit_libprofile(request, library_id):
   ''' edit details of library '''    
   if request.method == "POST":
     # instance kwargs passed in sets the user on the modelForm
-    form = LibProfileForm(request.POST, request.FILES, instance = Library.objects.get(id = library_id))
+    form = LibProfileForm(request.POST, request.FILES,
+      instance = Library.objects.get(id = library_id), request = request)
     if form.is_valid():
       form.save()
-      return redirect(reverse('chat:view_lab', args = (library_id, )))
+      return redirect(reverse('chat:view_library', args = (library_id, )))
   else:
-    form = LibProfileForm(instance = Library.objects.get(id = library_id))
+    form = LibProfileForm(instance = Library.objects.get(id = library_id),
+      request = request)
   return render(request, 'chat/edit_libprofile.html', {'form': form})
     
 @login_required

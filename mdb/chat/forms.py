@@ -101,13 +101,22 @@ class ViewCosineForm(forms.Form):
 class LibProfileForm(forms.ModelForm):
   class Meta:
     model = Library
-    exclude = ('id',) 
-
+    exclude = ('id', 'created_by')
+  
+  def __init__(self, *args, **kwargs):
+    request = kwargs.pop('request')
+    self.user = request.user
+    super(LibProfileForm, self).__init__(*args, **kwargs)
+    user = self.user
+    user_labs = LabGroup.objects \
+      .filter(Q(owners__in = [user]) | Q(members__in = [user]))
+    self.fields['lab'].queryset = user_labs
+    
 class LabProfileForm(forms.ModelForm):
   class Meta:
     model = LabGroup
-    exclude = ('id',) 
-
+    exclude = ('id', 'user_default_lab')
+  
 # ~ class SearchForm(forms.ModelForm):
   # ~ """Search by peaks/intensities, or upload mzXML or mzML file."""
   # ~ class Meta:

@@ -122,6 +122,11 @@ class CollapsedSpectra(AbstractSpectra):
   
   generated_date = models.DateTimeField(auto_now_add = True, blank = True)
   
+  # ~ class Meta:
+    # ~ indexes = [
+      # ~ models.Index(fields = ['collapsed_spectra',]),
+    # ~ ]
+    
   def get_absolute_url(self):
     return reverse('spectra:view_spectra2', kwargs = {'spectra_id' : self.id})
   

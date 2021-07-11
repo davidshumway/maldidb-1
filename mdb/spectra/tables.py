@@ -23,7 +23,7 @@ class CollapsedSpectraTable(tables.Table):
   library = tables.Column(linkify=True)
   id = tables.Column(linkify=True)
   selector = tables.CheckBoxColumn()
-  collapsed_spectra = tables.ManyToManyColumn()
+  #collapsed_spectra = tables.ManyToManyColumn()
   num_spectra = tables.Column()
   # ~ num_spectra = tables.ManyToManyColumn(accessor = 'collapsed_spectra',
     # ~ transform = lambda user: u.name
