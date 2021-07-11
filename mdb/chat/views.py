@@ -4,6 +4,8 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django import forms
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 from .forms import *
 from .models import *
@@ -268,8 +270,6 @@ def simple_list(request):
 
 from django_tables2 import MultiTableMixin
 from django.views.generic.base import TemplateView
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
     
 @login_required
 def collapse_library(request, lib_id):

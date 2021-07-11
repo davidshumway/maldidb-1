@@ -13,6 +13,7 @@ from django_tables2.views import SingleTableMixin
 from django_tables2 import SingleTableView
 import django_tables2 as tables
 from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 # R
 from chat.rfn import SpectraScores
 # Distance measurement
