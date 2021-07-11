@@ -224,7 +224,8 @@ class Metadata(models.Model):
   pi_firstname_lastname = models.CharField(max_length = 255, blank = True)
   pi_orcid = models.CharField(max_length = 255, blank = True)
   
-  dna_16s = models.CharField(max_length = 255, blank = True)
+  dna_16s = models.TextField(blank = True)
+  # ~ dna_16s = models.CharField(max_length = 255, blank = True)
   
   created_by = models.ForeignKey(
     settings.AUTH_USER_MODEL,

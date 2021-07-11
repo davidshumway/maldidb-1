@@ -838,12 +838,9 @@ function singleScore(id) {
   $('#nss-card-2').css('display', 'none');
   $('#nss-card-3').css('display', 'block');
   
-  //~ $('#data-table').text(''); // clear if any
-  
   var t = $('#data-table').DataTable({
     data: data.scores,
     destroy: true, // https://datatables.net/manual/tech-notes/3
-    //~ data: result,
     columns: [
       {data: 'score', title: 'Score'},
       {data: 'id', title: 'Spectra ID'},
@@ -1023,7 +1020,6 @@ function singleScore(id) {
       for (var i in node) {
         if (i.indexOf('peaks') === 0) { // 1 leaf, 1 branch
           var x = /peaks(\d+)/.exec(i);
-          //~ x = (x) ? pidx[x[1]] : '[ Unknown sample ]'; // unknown node is "peaks"
           x = (x) ? x[1] : '[ Unknown sample ]'; // unknown node is "peaks"
           leaf.branchset.push({
             name: x,
@@ -1037,7 +1033,6 @@ function singleScore(id) {
       for (var i in node) {
         if (i.indexOf('peaks') === 0) {
           var x = /peaks(\d+)/.exec(i);
-          //~ x = (x) ? pidx[x[1]] : '[ Unknown sample ]'; // unknown node is "peaks"
           x = (x) ? x[1] : '[ Unknown sample ]'; // unknown node is "peaks"
           leaf.branchset.push({
             name: x,
@@ -1062,7 +1057,7 @@ function singleScore(id) {
     //~ name: '---',
     //~ height: 0
   //~ }
-  console.log(data.tree);
+  //~ console.log(data.tree);
   dendro(data);
 }
 
@@ -1309,9 +1304,7 @@ function ajaxLibrary(form) {
             }
           }
         }
-      } catch(e) {
-        
-      }
+      } catch(e) {}
     }
   });
 }
@@ -1354,7 +1347,7 @@ function uploadHelper(formData) {
     contentType: false,
     // on success
     success: function(response) {
-      console.log(response);
+      //~ console.log(response);
       //~ if (response.status == 'preprocessing') {}
     },
     

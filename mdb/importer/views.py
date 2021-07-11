@@ -221,8 +221,8 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
       # Adds to object store
       created_metadata[row[0]] = entry
     else:
-      print(form.errors)
-      raise ValueError('x2')
+      field_errors = [(field.label, field.errors) for field in form] 
+      raise ValueError('x2' + str(field_errors))
     
   # XML
   if user_task:

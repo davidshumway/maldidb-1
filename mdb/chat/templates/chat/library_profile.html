@@ -41,51 +41,70 @@ Library Details: {{ library.title }}
 <div class="tab-content" id="">
   <div class="tab-pane fade show active" id="navdetail" role="tabpanel" aria-labelledby="navdetail-tab">
     <div class="row">
-    <div class="card m-3">
-      <div class="card-body">
-        <div class="card-title">
-          Title: {{ library.title }}
+      
+      <div class="col-sm-4">
+        <div class="card m-3">
+          <div class="card-body">
+            <div class="card-title">
+              Title: {{ library.title|safe }}
+            </div>
+            <div class="card-title">
+              Description: {{ library.description|safe }}
+            </div>
+            <div class="card-title">
+              Privacy Setting: {{ library.privacy_level }}
+            </div>
+            <div class="card-title">
+              Quality: {{ library.quality_rating }}
+            </div>
+            <div class="card-title">
+              Created by: {{ library.created_by|safe }}
+            </div>
+            <div class="card-title">
+              Lab: {{ library.lab|safe }}
+            </div>
+            <div class="card-title">  
+              Spectra:
+              <a href="{% url 'spectra_search:spectra_results' %}?library={{library.id}}" class="card-link">
+                {{ spectra|length }}</a>
+            </div>
+            <div class="card-title">  
+              Collapsed spectra:
+              <a href="{% url 'spectra_search:spectra_results2' %}?library={{library.id}}" class="card-link">
+                {{ collapsed_spectra|length }}</a>
+            </div>
+            <div class="card-title">  
+              Metadata:
+              <a href="{% url 'chat:metadata_results' %}?library={{library.id}}" class="card-link">
+                {{ metadata|length }}</a>
+            </div>
+          </div>
         </div>
-        <div class="card-title">
-          Description: {{ library.description }}
-        </div>
-        <div class="card-title">
-          Privacy Setting: {{ library.privacy_level }}
-        </div>
-        <div class="card-title">
-          Quality: {{ library.quality_rating }}
-        </div>
-        <div class="card-title">
-          Created by: {{ library.created_by }}
-        </div>
-        <div class="card-title">
-          Lab: {{ library.lab }}
-        </div>
-        <div class="card-title"><!--TODO: href-->
-          Spectra:
-          <a href="{% url 'spectra_search:spectra_results' %}?library={{library.id}}" class="card-link">
-            {{ spectra|length }}</a>
-        </div>
-        <div class="card-title"><!--TODO: href-->
-          Collapsed spectra:
-          <a href="{% url 'spectra_search:spectra_results2' %}?library={{library.id}}" class="card-link">
-            {{ collapsed_spectra|length }}</a>
-        </div>
-        <div class="card-title"><!--TODO: href-->
-          Metadata:
-          <a href="{% url 'chat:metadata_results' %}?library={{library.id}}" class="card-link">
-            {{ metadata|length }}</a>
-        </div>
-        {% if request.user in lab.owners.all %}
-        <div class="card-body">
-          <a href="{% url 'chat:edit_libprofile' library.id %}" class="card-link btn btn-danger">
-            Edit Library Details</a>
-        </div>
-        {% endif %}
       </div>
+      
+      {% if request.user in lab.owners.all %}
+      <div class="col-sm-6">
+        <div class="card">
+          <div class="card-header">Library management</div>
+          <div class="card-body">
+            
+            <a href="{% url 'chat:collapse_library' library.id %}"
+              class="card-link btn btn-secondary">
+              Collapse library replicates</a>
+            
+            <div class="alert alert-info">
+              Collapsing replicates overwrites any collapsed spectra
+              already in the library.</div>
+            
+            <a href="{% url 'chat:edit_libprofile' library.id %}"
+              class="card-link btn btn-secondary">
+              Edit Library Details</a>
+            
+          </div>
+      </div>
+      {% endif %}
+      
     </div>
-    </div>
-    
   </div><!--/navdetail-->
   
   <!--/Begin navsearch-->

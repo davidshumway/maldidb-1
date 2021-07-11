@@ -77,30 +77,26 @@ class XmlTable(tables.Table):
     sequence = ('selector', '...')
     
 class LibraryTable(tables.Table):
-  created_by = tables.Column(linkify = True)
+  # ~ created_by = tables.Column(linkify = True)
   lab = tables.Column(linkify = True)
   title = tables.Column(linkify = True)
-  collapse_replicates = tables.Column(accessor = 'id',
-    verbose_name = 'Collapse Replicates')
-  selector = tables.CheckBoxColumn(accessor = 'id')
+  # ~ collapse_replicates = tables.Column(accessor = 'id',
+    # ~ verbose_name = 'Collapse Replicates')
+  # ~ selector = tables.CheckBoxColumn(accessor = 'id')
   
-  def render_collapse_replicates(self, value):
-    r = reverse('chat:collapse_library', args = [str(value)])
-    return format_html(
-      '<a href="{}">collapse</a>', r
-    )
-    # old version
-    # ~ r = reverse('chat:preview_collapse_lib') #, args=(value, )
+  # ~ def render_collapse_replicates(self, value):
+    # ~ r = reverse('chat:collapse_library', args = [str(value)])
     # ~ return format_html(
-      # ~ '<a href="{}?library='+str(value)+'">preview</a>', r
+      # ~ '<a href="{}">collapse</a>', r
     # ~ )
     
   class Meta:
     model = Library
     attrs = {'class': 'table maintable'}
     template_name = 'chat/bootstrap4_mod.html'
-    exclude = ('id',)
-    sequence = ('selector', '...')
+    exclude = ('id', 'created_by')
+    sequence = ('title', 'lab', '...')
+    # ~ sequence = ('selector', '...')
 
 class MetadataTable(tables.Table):
   class Meta:
