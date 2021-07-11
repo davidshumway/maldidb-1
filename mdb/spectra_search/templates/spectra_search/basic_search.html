@@ -109,9 +109,9 @@ function show_filter(e) {
             <button onclick="javascript:updateFileList()"></button>
 -->
           </div>
-          <table class="card-text" id="file-listing" style="width: 100% !important;">
+          <table class="table table-sm card-text table-bordered table-striped" id="file-listing" style="width: 100% !important;">
           </table>
-          <table class="card-text" id="file-listing-preprocessing"
+          <table class="table table-sm card-text table-bordered table-striped" id="file-listing-preprocessing"
             style="width: 100% !important; display:none;"></table>
             
           <div class="alert alert-danger toggle-display" id="file-error">
@@ -342,13 +342,13 @@ function show_filter(e) {
           <span id="stat2-title">Task: Calculating cosine similarity measure...</span><br />
           <span id="stat2-complete"></span>
         </div>
-        <table class="card-text" id="file-listing2" style="width: 100% !important;">
+        <table class="table table-sm card-text table-bordered" id="file-listing2" style="width: 100% !important;">
         </table>
       </div>
       
       <div class="card-body" id="nss-card-3" style="display:none;">
         <div class="alert alert-info">Comparing spectra from 3k-15k only</div>
-        <table id="data-table" style="width: 100% !important;"></table>
+        <table class="table table-sm table-bordered table-striped" id="data-table" style="width: 100% !important;"></table>
       </div>
       
     </div>

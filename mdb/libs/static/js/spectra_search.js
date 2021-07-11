@@ -84,10 +84,6 @@ function toggleNavSearch(e) {
   e.preventDefault();
   e.stopPropagation();
   
-  d3.select('#dendro-viz').selectAll('*').remove();
-  d3.select('#svg-histo').selectAll('*').remove();
-  d3.select('#spectra-viz').selectAll('*').remove();
-  
   $('#nav-search-source a').removeClass('active');
   $(this).addClass('active');
   
@@ -99,6 +95,16 @@ function toggleNavSearch(e) {
   var n = $(this).attr('id').split('-')[1]; // e.g. "nss-1"
   $('#nss-card-' + n).css('display', 'block');
   
+  if (n != 3) { // hides result tab
+    $('#nss-3').css('display', 'none');
+    d3.select('#dendro-viz').selectAll('*').remove();
+    d3.select('#svg-histo').selectAll('*').remove();
+    d3.select('#spectra-viz').selectAll('*').remove();
+    $('#col-right').css('display', 'none');
+    $('#container-dendro').css('display', 'none');
+  } else if (n == 3) {
+    //~ $('#col-right').css('display', '');
+  }
   return false;
 }
 function toggleUploadOpts(e) {
@@ -280,8 +286,6 @@ window.addEventListener('DOMContentLoaded', (event) => {
       }
     }
   }
-  
-  // post-load styling
 
 });
 
@@ -739,13 +743,13 @@ socket.onmessage = function(e) {
     var t = $('#file-listing2').DataTable({
       data: data.data.results,
       columns: [
-        {data: 'id', title: 'Spectra ID'},
-        {data: 'strain_id', title: 'Strain ID'},
-        {data: 'strain_id__strain_id', title: 'Strain Name'},
+        //~ {data: 'id', title: 'Spectra ID'},
+        //~ {data: 'strain_id', title: 'Strain ID'},
+        {data: 'strain_id__strain_id', title: 'Unknown Strain Name'},
         {data: 'id', title: 'Top scores (Strain Name, Genus / Species)',
           render: function(data, type) {
             // e.g. top-scores-8373
-            return '<table id="top-scores-'+data+'" style=""></table>'; //width: 500px;white-space: pre-line;
+            return '<table id="top-scores-'+data+'" class="table table-sm"></table>'; //width: 500px;white-space: pre-line;
           }
         },
         {data: 'id', title: '',
@@ -788,10 +792,7 @@ socket.onmessage = function(e) {
     for (var i=0; i<5; i++) {
       if (x[i])
         output.push(x[i]);
-      //~ } catch(e) {}
     }
-    //~ console.log('output',output);
-    //~ console.log('here1');
     var t = $('#top-scores-'+data.data.spectra1).DataTable({
       data: output,
       paging: false,
@@ -803,11 +804,14 @@ socket.onmessage = function(e) {
         {data: 'strain', title: ''},
         {data: 'genus', title: ''},
         {data: 'species', title: ''},
-      ]
+      ],
+      'headerCallback': function( thead, data, start, end, display ) {
+        thead.remove();
+        //$(thead).find('th').eq(0).html( 'Displaying '+(end-start)+' records' );
+      }
     });
     t.order([0, 'desc']) // reorders in correct direction
       .draw();
-    //~ console.log('here');
   }
   
   return;
@@ -835,12 +839,14 @@ function singleScore(id) {
   $('#nss-card-2').css('display', 'none');
   $('#nss-card-3').css('display', 'block');
   
+  $('#col-right').css('display', '');
+  
   var t = $('#data-table').DataTable({
     data: data.scores,
     destroy: true, // https://datatables.net/manual/tech-notes/3
     columns: [
       {data: 'score', title: 'Score'},
-      {data: 'id', title: 'Spectra ID'},
+      //~ {data: 'id', title: 'Spectra ID'},
       {data: 'strain', title: 'Strain Name',
         render: function(data, type) {
           return '<span style="color:steelblue;font-weight:400;cursor:pointer;" data-id="'+data+'" onclick="sp(this);">'
