@@ -58,7 +58,11 @@ class SpectraCollectionsForm(forms.ModelForm):
       # ~ 'cGenus': autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete'),
       # ~ 'cClass': autocomplete.ModelSelect2(url = 'chat:metadata_autocomplete'),
     # ~ }
-  
+
+class LibraryModelChoiceField(forms.ModelChoiceField):
+  def label_from_instance(self, obj):
+    return f'{obj.title} | {obj.lab}'
+
 class SpectraLibraryForm(forms.Form):
   '''Processes the library portion of upload form.
   
@@ -66,9 +70,20 @@ class SpectraLibraryForm(forms.Form):
   '''
   file = forms.FileField(
     label = 'Upload one or more files',
-    required = True,
+    required = False,
     widget = forms.ClearableFileInput(attrs={'multiple': True})
   )
+  search_from_existing = LibraryModelChoiceField(
+    queryset = Library.objects.all(),
+    # ~ to_field_name = 'id',
+    required = False,
+    widget = forms.Select(
+      attrs = {
+        'class': 'custom-select'}
+    ),
+    empty_label = 'Choose...'
+  )
+  
   # ~ save_to_library = forms.BooleanField(
     # ~ required = True,
     # ~ label = 'Save upload(s) to a library? (optional)',
@@ -125,7 +140,7 @@ class SpectraLibraryForm(forms.Form):
 
   search_library = forms.ModelChoiceField(
     queryset = Library.objects.all(),
-    to_field_name = 'title',
+    # ~ to_field_name = 'title',
     required = False,
     widget = forms.Select(
       attrs = {
@@ -136,7 +151,7 @@ class SpectraLibraryForm(forms.Form):
   )
   search_library_own = forms.ModelChoiceField(
     queryset = Library.objects.all(),
-    to_field_name = 'title',
+    # ~ to_field_name = 'title',
     required = False,
     widget = forms.Select(
       attrs = {
@@ -146,7 +161,7 @@ class SpectraLibraryForm(forms.Form):
   )
   search_library_lab = forms.ModelChoiceField( # where user is a member or owner
     queryset = Library.objects.all(),
-    to_field_name = 'title',
+    # ~ to_field_name = 'title',
     required = False,
     widget = forms.Select(
       attrs = {
@@ -156,7 +171,7 @@ class SpectraLibraryForm(forms.Form):
   )
   search_library_public = forms.ModelChoiceField(
     queryset = Library.objects.all(),
-    to_field_name = 'title',
+    # ~ to_field_name = 'title',
     required = False,
     widget = forms.Select(
       attrs = {

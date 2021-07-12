@@ -47,7 +47,7 @@ function show_filter(e) {
   <!-- begin row -->
   <div class="row">
   <!-- begin col left -->
-  <div class="col-8 mx-auto" id="col-left">
+  <div class="col-10 mx-auto" id="col-left">
       
     <div class="card" style="">
       <!--Height: All tabs same height to keep card body height
@@ -57,7 +57,7 @@ function show_filter(e) {
         <ul class="nav nav-tabs card-header-tabs" id="nav-search-source">
           <li class="nav-item">
             <a class="nav-link active" href="#" id="nss-1"
-              >Upload mzml / mzxml file(s) of your isolate here</a>
+              >Select unknown isolate(s)</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" id="nss-2" href="#"
@@ -67,17 +67,6 @@ function show_filter(e) {
             <a class="nav-link" id="nss-3" href="#"
               style="display:none;">Result</a>
           </li>
-<!--Off for now
-          <li class="nav-item">
-            <a class="nav-link" href="#" id="nss-2">Previously uploaded files</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#" id="nss-3">Library spectra</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#" id="nss-4">Manual spectra entry</a>
-          </li>
--->
         </ul>
       </div>
       <div class="card-body" id="nss-card-1" style="">
@@ -90,28 +79,56 @@ function show_filter(e) {
         </div>
         
         <!-- File upload form -->
-        <form action="{% url 'spectra_search:ajax_upload' %}"
-          class="" method="POST" style=""
-          id="upload_form">
+        <form action="" class="" method="" style="" id="upload_form">
           {% csrf_token %}
           
-          <div class="" id="file-selector"><!--bs/custom-file-->
-            <input type="file" class=""
-              id="customFile" name="file" multiple
-              onchange="javascript:updateFileList(this, false);"
-              onload="javascript:updateFileList(this, false);"
-              style="display:none;"><!--bs/custom-file-input-->
-            <label class="" for="customFile"
-              style="border:1px dashed;background-color:#fefefe;padding:30px;width:100%;text-align:center;"
-              >Choose file(s) to upload</label>
-            <!--bs/custom-file-label-->
+          <div class="form-group row" id="file-selector">
+            
+            <div class="col-sm-5" id="file-selector-col1">
+              <input type="file" class=""
+                id="customFile" name="file" multiple
+                onchange="javascript:updateFileList(event, this, false);"
+                onload="javascript:updateFileList(event, this, false);"
+                style="display:none;">
+              <label class="rounded" for="customFile"
+                style="border:1px dashed;background-color:#fefefe;padding:40px;width:100%;min-height:140px;text-align:center;"
+                >Upload mzml / mzxml file(s) of your isolate here</label>
+            </div>
+            
+            <div class="col-sm-2" id="file-selector-col2">
+              <div class="text-center" style="padding-top:40px;min-height:140px;overflow:hidden;"
+                >OR</div>
+            </div>
+            
+            <div class="col-sm-5 mx-auto">
 <!--
-            <button onclick="javascript:updateFileList()"></button>
+              <label class="rounded" for=""
+                style="border:1px dashed;background-color:#fefefe;padding:40px;width:100%;min-height:140px;text-align:center;"
+                >Use a previous upload</label>
 -->
+              <div class="input-group" style="margin-top:40px;">
+                <div class="input-group-prepend">
+                  <label class="input-group-text" for="inputGroupSelect02">
+                   Use a previous upload</label>
+                </div>
+                {{ upload_form.search_from_existing }}
+<!--
+                <select class="custom-select" id="inputGroupSelect02">
+                  <option selected>Choose...</option>
+                   for library in library_data 
+                   endfor 
+                </select>
+-->             
+              </div>
+              
+            </div>
           </div>
-          <table class="table table-sm card-text table-bordered table-striped" id="file-listing" style="width: 100% !important;">
+          
+          <table class="table table-sm card-text table-bordered table-striped"
+            id="file-listing" style="width: 100% !important;">
           </table>
-          <table class="table table-sm card-text table-bordered table-striped" id="file-listing-preprocessing"
+          <table class="table table-sm card-text table-bordered table-striped"
+            id="file-listing-preprocessing"
             style="width: 100% !important; display:none;"></table>
             
           <div class="alert alert-danger toggle-display" id="file-error">
@@ -119,13 +136,13 @@ function show_filter(e) {
           
           <p class="card-text text-center mt-3">
             <a href="#" id="upload-more-opts" onclick="return false;"
-              >Show more options</a>
+              style="display:none;">Show more options</a>
           </p>
           
           <!-- Begin more options -->
           <div id="div-upload-opts" style="display:none;">
             
-            <div class="form-group row mt-5">
+            <div class="form-group row mt-5" id="opts-upload-location">
               <div class="col-sm-3 col-form-label"
                 >Upload location</div>
               <div class="col-sm-9">
@@ -328,8 +345,8 @@ function show_filter(e) {
           <!-- End more options -->
           
           <div class="text-center">
-            <button type="submit" class="btn btn-primary"
-              id="upload-button">Upload</button>
+            <button class="btn btn-primary" style="display:none;" 
+              id="upload-button">Upload and Search</button>
           </div>
         </form>
         <!-- End file upload form -->
@@ -348,7 +365,7 @@ function show_filter(e) {
       
       <div class="card-body" id="nss-card-3" style="display:none;">
         <div class="alert alert-info">Comparing spectra from 3k-15k only</div>
-        <table class="table table-sm table-bordered table-striped" id="data-table" style="width: 100% !important;"></table>
+        <table class="table table-responsive-sm table-bordered table-striped" id="data-table" style="width: 100% !important;"></table>
       </div>
       
     </div>

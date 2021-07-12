@@ -8,7 +8,6 @@ class DocsPage(models.Model):
   '''
   ...ordering also applies to sub-categories
   '''
-  # ~ slug = models.CharField(max_length = 20) # link / href / id
   short_title = models.CharField(max_length = 200, unique = True, ) # left-hand panel
   long_title = models.CharField(max_length = 200, unique = True, ) # main content title
   type = models.CharField(
@@ -34,11 +33,6 @@ class DocsPage(models.Model):
   slug = models.SlugField(max_length = 200, blank = True, null = True,
     unique = True, editable = True)
   
-  # ~ @admin.display(ordering = 'order')
-  
-  #class Meta:
-  #  ordering = ('order',)
-
   def formatted_markdown(self):
     '''
     https://github.com/neutronX/django-markdownx/issues/83#issuecomment-500536739
@@ -52,9 +46,3 @@ class DocsPage(models.Model):
     if not self.slug:
       self.slug = slugify(self.short_title)
     return super().save(*args, **kwargs)
-
-# ~ class DocsPageAdmin(admin.ModelAdmin):
-  # ~ list_display = ('short_title', 'order',)
-  # ~ ordering = 'order'
-  # ~ def get_ordering(self, request):
-    # ~ return ['order']

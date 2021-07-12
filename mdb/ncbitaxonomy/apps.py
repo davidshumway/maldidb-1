@@ -183,8 +183,9 @@ class NcbitaxonomyConfig(AppConfig):
           # Creates (updates) the GinIndex
           # http://logan.tw/posts/2017/12/30/
           #  full-text-search-with-django-and-postgresql/
+          print(f'NCBI: adding GIN')
           from django.contrib.postgres.search import SearchVector
-          TxNode.objects.update(search_vector=SearchVector('name'))
+          TxNode.objects.update(search_vector = SearchVector('name'))
 
         except FileNotFoundError:
           print('NCBI: NCBI data files not found')

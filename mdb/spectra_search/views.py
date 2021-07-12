@@ -311,13 +311,18 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     context['upload_form'] = SpectraLibraryForm(request = self.request)
     u = self.request.user
     
+    # all (using bitwise or https://github.com/django/django/blob/
+    #   master/django/db/models/query.py#L308)
+    all = Library.objects.none()
     # r01
     alice, created = User.objects.get_or_create(username = 'alice')
     q = Library.objects.filter(title__exact = 'R01 Data',
       created_by__exact = alice)
+    all = all | q
     context['upload_form'].fields['search_library'].queryset = q
     # own libraries (library_select shares this qs)
     q = Library.objects.filter(created_by__exact = u)
+    all = all | q
     context['upload_form'].fields['search_library_own'].queryset = q
     context['upload_form'].fields['library_select'].queryset = q
     # own labs
@@ -327,10 +332,14 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     q = Library.objects.filter(
       Q(lab__in = user_labs)
     ).order_by('-id')
+    all = all | q
     context['upload_form'].fields['search_library_lab'].queryset = q
     # public
     q = Library.objects.filter(privacy_level__exact = 'PB').order_by('-id')
     context['upload_form'].fields['search_library_public'].queryset = q
+    all = all | q
+    # all libraries
+    context['upload_form'].fields['search_from_existing'].queryset = all
     
     f = SpectraFilter(self.request.GET, queryset = self.queryset)
     context['filter'] = f

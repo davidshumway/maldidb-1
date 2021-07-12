@@ -1,5 +1,14 @@
 
+function showUploadControls() {
+  $('#upload-more-opts').css('display', '');
+  $('#upload-button').css('display', '');
+}
 function updateFileList(input, showStatusCols) {
+  // Updates file list table (after customFile changed)
+  showUploadControls();
+  
+  $('#upload-button').click(upload);
+  
   // file-listing
   if (!input)
     var input = document.getElementById('customFile');
@@ -34,7 +43,9 @@ function updateFileList(input, showStatusCols) {
   } else {
     $('#file-listing').css('display', 'none');
     $('#file-listing-preprocessing').css('display', '');
-    preprocessed.table1.destroy();
+    if (preprocessed.table1) {
+      preprocessed.table1.destroy();
+    }
     var t = $('#file-listing-preprocessing').DataTable({
       data: input.files,
       destroy: true,
@@ -110,10 +121,12 @@ function toggleNavSearch(e) {
 function toggleUploadOpts(e) {
   var s = $('#div-upload-opts');
   if (s.css('display') == 'none') {
-    s.css('display', 'block');
+    s.css('display', '');
+    $('#uploadfile-opts').css('display', '');
     $(this).text('Hide more options')
   } else {
     s.css('display', 'none');
+    $('#uploadfile-opts').css('display', 'none');
     $(this).text('Show more options')
   }
   return false;
@@ -198,6 +211,21 @@ window.addEventListener('DOMContentLoaded', (event) => {
   try {
     $('#upload_form')[0].search_library_public.selectedIndex = 1;
   } catch(e) {}
+  try {
+    $('#id_search_from_existing')[0].selectedIndex = 0;
+  } catch(e) {}
+  try{
+    $('#id_search_from_existing')[0].onchange = function(e) {
+      $('#file-selector-col1').css('display', 'none');
+      $('#file-selector-col2').css('display', 'none');
+      $('#opts-upload-location').css('display', 'none');
+      $('#upload-button').text('Search');
+      showUploadControls();
+      // Jumps straight to consumer.cosine_scores
+      $('#upload-button').click(search);
+      //~ $('#upload_form').submit(search);
+    }
+  } catch(e) {}
   $('#id_library_create_new')[0].disabled = true;
   $('#id_library_select')[0].disabled = true;
   $('#upload_form')[0].library_save_type[0].checked = true;
@@ -220,7 +248,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
   $('#upload-more-opts').click(toggleUploadOpts);
   
   // upload
-  $('#upload_form').submit(upload);
+  //~ $('#upload-button').click(upload);
+  //$('#upload_form').submit(upload);
   
   // toggles branch length on dendrogram
   $('#dendro-viz-toggle').click(function(event) {
@@ -692,7 +721,6 @@ socket.onmessage = function(e) {
   console.log(e);
   var data = JSON.parse(e.data).data;
   console.log(data);
-  //~ console.log(data.ip);
   
   try {
     if (data.ip) {
@@ -718,7 +746,7 @@ socket.onmessage = function(e) {
       $('#stat-complete').text('');
       // socket send
       socket.send(JSON.stringify({
-        collapseLibrary: preprocessed.library,
+        collapseLibrary: preprocessed.library_id,
         searchLibrary: preprocessed.search_library
       }));
     }
@@ -781,11 +809,6 @@ socket.onmessage = function(e) {
     // Stores by collapsed spectra id
     preprocessed.collapsed_data[data.data.spectra1] = 
       data.data.result;
-    //~ console.log(preprocessed.collapsed_data);
-    //~ for (var i in data.data.results) {
-      //~ var x = data.data.results[i];
-      //~ preprocessed.collapsed_data[x.id] = data.data.results[i];
-    //~ }
     
     var x = data.data.result.scores;
     var output = [];
@@ -793,6 +816,7 @@ socket.onmessage = function(e) {
       if (x[i])
         output.push(x[i]);
     }
+    //return;
     var t = $('#top-scores-'+data.data.spectra1).DataTable({
       data: output,
       paging: false,
@@ -805,8 +829,13 @@ socket.onmessage = function(e) {
         {data: 'genus', title: ''},
         {data: 'species', title: ''},
       ],
-      'headerCallback': function( thead, data, start, end, display ) {
-        thead.remove();
+      'headerCallback': function(thead, data, start, end, display) {
+        // Removing thead (thead.remove()) causes errors in table, so...
+        $(thead).css('display', 'none');
+        //~ try { // ??
+          //~ thead.remove();
+        //~ } catch(e) {}
+        //~ thead.remove();
         //$(thead).find('th').eq(0).html( 'Displaying '+(end-start)+' records' );
       }
     });
@@ -1220,13 +1249,50 @@ function makeChart(el, dataXY) {
       //~ .attr("fill", "#00aa88");
   }
   
-// upload form
+// Search only
+function search(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  
+  $('#upload-button')[0].disabled = true;
+  //~ var form = new FormData(this);
+  
+  var f = $('#upload_form')[0];
+  switch(f.library_search_type.value) {
+    case 'r01':
+      preprocessed.search_library = f.search_library.value;
+      break;
+    case 'own':
+      preprocessed.search_library = f.search_library_own.value;
+      break;
+    case 'lab':
+      preprocessed.search_library = f.search_library_lab.value;
+      break;
+    case 'pub':
+      preprocessed.search_library = f.search_library_public.value;
+      break;
+  }
+  //~ preprocessed.library = library;
+  preprocessed.library_id = f.search_from_existing.value;
+
+  // socket send
+  socket.send(JSON.stringify({
+    existingLibrary: f.search_from_existing.value,
+    searchLibrary: preprocessed.search_library
+  }));
+  
+  console.log('preprocessed', preprocessed);
+  return false;
+}
+
+// Search + upload or upload only
 function upload(event) {
   event.preventDefault();
   event.stopPropagation();
   
   $('#upload-button')[0].disabled = true;
-  var form = new FormData(this);
+  var form = new FormData($('#upload_form')[0]);
+  //~ var form = new FormData(this);
   
   updateFileList(false, true);
   
@@ -1235,19 +1301,20 @@ function upload(event) {
   $('#stat-complete').text('0/' + preprocessed.total + ' completed');
   $('#preprocess-upload-status').css('display', 'block');
   
-  if (form.get('search_library')) {
-    // Search
+  if (form.get('library_search_type')) {
+    // Menu: Basic search
     preprocessed.search_library = form.get('search_library');
   } else {
-    // File upload
+    // Menu: Add files
     preprocessed.search_library = false;
   }
   
-  // first create library or validate existing library
-  // then loop through files and add them individually.
   ajaxLibrary(this);
+  
+  return false;
 }
-function ajaxLibrary(form) {
+function ajaxLibrary() {
+  // Creates or validates library before upload
   
   $.ajax({
     xhr: function() {
@@ -1256,7 +1323,7 @@ function ajaxLibrary(form) {
     },
     
     dataType: 'JSON',
-    data: new FormData(form),
+    data: new FormData($('#upload_form')[0]),
     url: formURLs.library,
     type: 'POST',
     processData: false,
@@ -1276,7 +1343,7 @@ function ajaxLibrary(form) {
         
       //~ }
       for (var i=0; i<$('#customFile')[0].files.length; i++) {
-        var f = new FormData(form);
+        var f = new FormData($('#upload_form')[0]);
         f.set('file', $('#customFile')[0].files[i]);
         f.set('tmp_library', library);
         f.set('upload_count', i);

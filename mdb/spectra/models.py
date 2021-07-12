@@ -259,7 +259,6 @@ class BinnedPeaks(models.Model):
 # ~ class CollapsedCosineScore(AbstractCosineScore):
 class CollapsedCosineScore(models.Model):
   '''
-  Todo: Needs to save binned peaks representation of spectra
   '''
   spectra = models.ForeignKey(
     'CollapsedSpectra',
@@ -267,8 +266,9 @@ class CollapsedCosineScore(models.Model):
   library = models.ForeignKey(
     'chat.Library',
     on_delete = models.CASCADE)
-  scores = models.TextField()
-  spectra_ids = models.TextField()
+  result = models.TextField()
+  # ~ scores = models.TextField()
+  # ~ spectra_ids = models.TextField()
   #intensities = models.TextField()
   #binned_peaks = models.ManyToManyField('BinnedPeaks')
   

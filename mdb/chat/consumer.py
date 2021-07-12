@@ -19,7 +19,7 @@ clients = {}
 class DashConsumer(AsyncJsonWebsocketConsumer):
   
   async def connect(self):
-    print('==================1')
+    # ~ print('==================1')
     
     self.client_id = str(uuid.uuid4())
     clients[self.client_id] = self
@@ -34,7 +34,7 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     await self.send_json({'data': {'ip': self.client_id}})
 
   async def disconnect(self, close_code):
-    print('==================2')
+    # ~ print('==================2')
     await self.channel_layer.group_discard(
       self.groupname,
       self.channel_name
@@ -44,6 +44,19 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     '''
     '''
     # ~ print('==================3')
+    
+    
+    # client asks to search existing
+    try:
+      val = json.loads(text_data)
+      if 'existingLibrary' in val and 'searchLibrary' in val:
+        cosine_scores_existing(self, val['existingLibrary'],
+          self.client_id, val['searchLibrary'])
+    except Exception as e:
+      print(e)
+      pass
+      
+    ## file upload ##
     
     # tells client preprocessing is complete
     try:
@@ -56,14 +69,14 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
           }
         })
         await clients[val['data']['client']].send(text_data = d)
-    except Exception as e:    
+    except Exception as e:
       print(e)
       pass
     
     # client asks to collapse library
     try:
       val = json.loads(text_data)
-      if 'collapseLibrary' in val: # key in val
+      if 'collapseLibrary' in val and 'searchLibrary' in val:
         collapse_lib(self, val['collapseLibrary'], self.client_id,
           val['searchLibrary'])
     except Exception as e:
@@ -210,87 +223,155 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     # ~ await self.send(text_data = json.dumps(event['value']))
   
 @start_new_thread
-def collapse_lib(self, title, client, search_library):
+def collapse_lib(self, library, client, search_library):
   '''
   :param str title: Unknown library's title
   :param int search_library: optional lib. ID from upload+search, or
     False if via simple file upload
   '''
-  l = Library.objects.filter(title__exact = title,
-    created_by = self.scope['user']).first()
-  if l:
-    data = {
-      'id': l.id,
-      'owner': self.scope['user'].id
+  # TODO: Library.objects.filter should account for lab
+  # ~ l = Library.objects.filter(title__exact = title,
+    # ~ created_by = self.scope['user']).first()
+  # ~ if l:
+  data = {
+    'id': library,
+    'owner': self.scope['user'].id
+  }
+  r = requests.get(
+    'http://plumber:8000/collapseLibrary',
+    params = data
+  )
+  
+  # relays it's done and sends back ids
+  n1 = CollapsedSpectra.objects.filter( # unknown spectra
+    library_id__exact = library,
+    spectra_content__exact = 'PR') \
+    .order_by('id').select_related('strain_id__strain_id') \
+    .values('id', 'strain_id', 'strain_id__strain_id', 'library_id')
+  
+  ws = websocket.WebSocket()
+  ws.connect('ws://localhost:8000/ws/pollData')
+  ws.send(json.dumps({
+    'type': 'completed collapsing',
+    'data': {
+      'client': client,
+      'results': [{
+        'id': s['id'],
+        'strain_id': s['strain_id'],
+        'strain_id__strain_id': s['strain_id__strain_id']
+      } for s in list(n1)]
     }
-    r = requests.get(
-      'http://plumber:8000/collapseLibrary',
-      params = data
-    )
-    # ~ print(f'r{r}')
-    # relays it's done and send back ids
-    n1 = CollapsedSpectra.objects.filter( # unknown spectra
-      library_id__exact = l.id,
-      spectra_content__exact = 'PR') \
-      .order_by('id').select_related('strain_id__strain_id') \
-      .values('id', 'strain_id', 'strain_id__strain_id', 'library_id')
-    
-    # ~ CollapsedSpectra.objects.filter(library_id__exact = 1,spectra_content__exact = 'PR').order_by('id').select_related('strain_id').values('id', 'strain_id')
-    
-    ws = websocket.WebSocket()
-    ws.connect('ws://localhost:8000/ws/pollData')
-    ws.send(json.dumps({
-      'type': 'completed collapsing',
-      'data': {
-        'client': client,
-        'results': [{
-          'id': s['id'],
-          'strain_id': s['strain_id'],
-          'strain_id__strain_id': s['strain_id__strain_id']
-        } for s in list(n1)]
-      }
-    }))
-    ws.close()
-    
-    # Do cosine scores
-    if search_library is not False:
-      cosine_scores(self, l.id, client, search_library)
-    
+  }))
+  ws.close()
+  
+  # Does cosine scores
+  if search_library is not False:
+    cosine_scores(self, library, client, search_library)
+
+@start_new_thread
+def cosine_scores_existing(self, library, client, search_library):
+  #l = Library.objects.filter(title__exact = title,
+  #  created_by = self.scope['user']).first()
+  
+  # relays it's "done" and sends back ids
+  n1 = CollapsedSpectra.objects.filter( # unknown spectra
+    library_id__exact = library,
+    spectra_content__exact = 'PR') \
+    .order_by('id').select_related('strain_id__strain_id') \
+    .values('id', 'strain_id', 'strain_id__strain_id', 'library_id')
+  ws = websocket.WebSocket()
+  ws.connect('ws://localhost:8000/ws/pollData')
+  ws.send(json.dumps({
+    'type': 'completed collapsing',
+    'data': {
+      'client': client,
+      'results': [{
+        'id': s['id'],
+        'strain_id': s['strain_id'],
+        'strain_id__strain_id': s['strain_id__strain_id']
+      } for s in list(n1)]
+    }
+  }))
+  ws.close()
+  cosine_scores(self, library, client, search_library)
+  
 def cosine_scores(self, library, client, search_library):
-  '''Performs cosine scoring for unknown library against a known one.
+  '''Performs cosine for unknown library against a known one.
   '''
   ws = websocket.WebSocket()
   ws.connect('ws://localhost:8000/ws/pollData')
   
-  search_library_obj = Library.objects.get(id = search_library)
+  print(f'lib {library} sl {search_library}')
+  try:
+    search_library_obj = Library.objects.get(id = search_library)
+  except Library.DoesNotExist:
+    print('Search library does not exist?')
+    ws.close()
+    return
   
+  print(f'search_library_obj {search_library_obj}')
+  #except:
+  #  print('Bad search library?')
+  #  return
+    
   n1 = CollapsedSpectra.objects.filter( # unknown spectra
     library_id__exact = library,
     spectra_content__exact = 'PR'
   )
   n2 = CollapsedSpectra.objects.filter(
-    library__exact = search_library,
+    # ~ library_id__exact = search_library,
+    library = search_library,
     spectra_content__exact = 'PR'
   ).order_by('id').values('id', 'strain_id__strain_id',
     'strain_id__cSpecies', 'strain_id__cGenus', 'strain_id__cFamily',
     'strain_id__cOrder', 'strain_id__cClass', 'strain_id__cPhylum',
     'strain_id__cKingdom')
   
+  # ~ search_library_obj
+  
+  # TODO: Provide user feedback of issue
   if len(n2) == 0:
     print('No collapsed spectra in search library!')
+    ws.close()
     return
   
   # Performs cosine score for every unknown spectra
   for spectra1 in n1:
-    data = {
-      'ids': [spectra1.id] + [s['id'] for s in list(n2)]
-    }
-    # ~ print(f'data{data}')
-    r = requests.post(
-      'http://plumber:8000/cosine',
-      params = data
-    )
-    tmp = r.json()['binnedPeaks']
+    
+    # Checks if there is already an existing score
+    ccs = None
+    try:
+      obj = CollapsedCosineScore.objects.get(
+        spectra = spectra1,
+        library = search_library_obj)
+      # exists
+      ccs = json.loads(obj.result)
+    except CollapsedCosineScore.DoesNotExist:
+      data = {
+        'ids': [spectra1.id] + [s['id'] for s in list(n2)]
+      }
+      r = requests.post(
+        'http://plumber:8000/cosine',
+        params = data
+      )
+      if r.status_code != 200: # ??
+        ws.close()
+        print(r.status_code)
+        return
+      
+      # stores result using get_or_create rather than get to avoid
+      # possible concurrency issues
+      obj, created = CollapsedCosineScore.objects.get_or_create(
+        spectra = spectra1,
+        library = search_library_obj, # lib unnecessary in ccs model
+        result = r.text)
+      if obj is False:
+        ws.close()
+        return #??
+      ccs = r.json()
+      
+    tmp = ccs['binnedPeaks']
+    # ~ tmp = r.json()['binnedPeaks']
     binned_peaks = {}
     for v in tmp: # Dictionary of binned peaks
       binned_peaks[str(v['csId'][0])] = {
@@ -298,35 +379,28 @@ def cosine_scores(self, library, client, search_library):
         'intensity': v['intensity'],
         'snr': v['snr'],
       }
-    # ~ print(f'r.json()["similarity"]:{r.json()["similarity"]}')
     
     # Creates a dictionary sorted by its values (similarity score)
     from collections import OrderedDict
     k = [str(s['id']) for s in list(n2)] # one less
-    v = r.json()['similarity'][1:] # one more remove first???
+    v = ccs['similarity'][1:] # one more remove first???
+    # ~ v = r.json()['similarity'][1:] # one more remove first???
     o = OrderedDict(
       sorted(dict(zip(k, v)).items(),
         key = lambda x: (x[1], x[0]), reverse = True)
     )
     
-    # ~ strain_ids = ['Unknown sample'] +\
-      # ~ [str(s['strain_id__strain_id']) for s in list(n2)]
-    # ~ strain_id__cSpecies = ['Unknown sample'] +\
-      # ~ [str(s['strain_id__cSpecies']) if s['strain_id__cSpecies'] != '' else 'N/A' for s in list(n2)]
-    # ~ strain_id__cGenus = ['Unknown sample'] +\
-      # ~ [str(s['strain_id__cGenus']) if s['strain_id__cGenus'] != '' else 'N/A' for s in list(n2)]
-
-    obj = CollapsedCosineScore.objects.create(
-      spectra = spectra1,
-      library = search_library_obj, # lib unnecessary in ccs model
-      scores = ','.join(map(str, list(o.values()))),
-      spectra_ids = ','.join(map(str, o.keys())))
-    
-    if obj is False:
-      ws.close()
-      return #??
+    # ~ #'similarity' = d[1,],
+    # ~ #'binnedPeaks' = b,
+    # ~ #'dendro'
+    # ~ obj = CollapsedCosineScore.objects.create(
+      # ~ spectra = spectra1,
+      # ~ library = search_library_obj, # lib unnecessary in ccs model
+      # ~ scores = ','.join(map(str, list(o.values()))),
+      # ~ spectra_ids = ','.join(map(str, o.keys())))
       
     u = ['Unknown sample']
+    
     result = {
       'scores': [],
       'ids': {
@@ -342,7 +416,8 @@ def cosine_scores(self, library, client, search_library):
       # ~ 'strain_ids': strain_ids,
       # ~ 'strain_id__cSpecies': strain_id__cSpecies,
       # ~ 'strain_id__cGenus': strain_id__cGenus,
-      'dendro': r.json()['dendro'],
+      'dendro': ccs['dendro'],
+      # ~ 'dendro': r.json()['dendro'],
       # ~ 'dendro2': r.json()['dendro2'],
       'original': {
         'peak_mass': spectra1.peak_mass,
