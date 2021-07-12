@@ -58,17 +58,72 @@ print.data.frame <- function (
 }
 
 #* Cosine2
-#* Cosine of library of unknowns (1-n) versus existing library (e.g. R01)
 #* @post /cosine2
 function(req, ids) {
+  ids <- as.numeric(ids)
+  if (length(ids) < 2) {
+    stop('less than two comparison ids given!')
+  }
+  
+  # s1 / s2 required to contain one or more db results
+  s1 <- dbSpectra(ids[[1]])
+  s2 <- dbSpectra(ids[2:length(ids)])
+  allPeaks <- do.call(c, c(s1['peaks'], s2['peaks']))
+  
+  allPeaks <- MALDIquant::trim(allPeaks, c(3000, 15000))
+
+  emptyProtein <- unlist(
+    lapply(allPeaks, MALDIquant::isEmpty)
+  )
+  
+  proteinMatrix <- IDBacApp:::createFuzzyVector(
+    massStart = 3000,
+    massEnd = 15000,
+    ppm = 1000,
+    massList = lapply(allPeaks[!emptyProtein], function(x) x@mass),
+    intensityList = lapply(allPeaks[!emptyProtein], function(x) x@intensity))
+  x <- IDBacApp:::idbac_dendrogram_creator(
+    bootstraps = 100,
+    distanceMethod = 'cosine',
+    clusteringMethod = 'average',
+    proteinMatrix
+  )
+
+  print(ids)
+  print(x['distance'])
+  return()
+  
+  tree1 <- data.tree::as.Node(x['dendrogram']$dendrogram)
+  
+  b <- list()
+  for(i in 1:length(ids)) {
+    b <- append(b, list(list(
+      'mass' = '1,2,3',
+      'intensity' = '1,1,1',
+      'snr' = '1,1,1',
+      'csId' = ids[[i]]
+    )))
+  }
+  
+  # from list to json
+  # https://www.r-bloggers.com/2015/05/
+  #  convert-data-tree-to-and-from-list-json-networkd3-and-more/
+  return(list(
+    'similarity' = ids[2:length(ids)],
+    'binnedPeaks' = b,
+    'dendro' = toJSON(as.list(tree1, unname = TRUE))#,
+#~     'dendro2' = toJSON(list(
+#~       merges=cluster,
+#~       seq=hc$labels,
+#~       order=hc$order,
+#~       maxHeight=max(hc$height)
+#~     ))
+  ))
 }
 
 #* Cosine: Get cosine scores for a set of db spectra
 #* Ids must correlate to at least 2 rows
-#*     https://github.com/strejcem/MALDIvs16S/../R/MALDIbacteria.Rsimilarity
-#*     coop::cosine(t(featureMatrix))
 #* Initial cut-offs of 3k and 15k.
-#* Todo: library=, lab=, strain=, user=, ...
 #* @param req Built-in
 #* @param ids List of IDs from Spectra table
 #* @return Returns first cos. similarity matrix row, and binnedPeaks data

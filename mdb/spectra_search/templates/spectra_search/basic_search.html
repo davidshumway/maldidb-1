@@ -87,8 +87,8 @@ function show_filter(e) {
             <div class="col-sm-5" id="file-selector-col1">
               <input type="file" class=""
                 id="customFile" name="file" multiple
-                onchange="javascript:updateFileList(event, this, false);"
-                onload="javascript:updateFileList(event, this, false);"
+                onchange="javascript:updateFileList(this, false);"
+                onload="javascript:updateFileList(this, false);"
                 style="display:none;">
               <label class="rounded" for="customFile"
                 style="border:1px dashed;background-color:#fefefe;padding:40px;width:100%;min-height:140px;text-align:center;"

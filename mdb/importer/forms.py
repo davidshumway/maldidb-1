@@ -25,7 +25,7 @@ class LoadSqliteForm(forms.Form):
   for filename in os.listdir('/home/app/web/r01data/'):
     if '.sqlite' in filename:
       files.append((filename, filename))
-  r01data = forms.MultipleChoiceField(choices = files)
+  r01data = forms.MultipleChoiceField(choices = files, required = False)
 
   privacy_level = forms.CharField(
     label = 'Privacy level',
@@ -39,6 +39,10 @@ class LoadSqliteForm(forms.Form):
   def clean(self):
     data = self.cleaned_data
     if data.get('file') == None and data.get('upload_type') == 'single':
+      raise forms.ValidationError(
+        'Select a file to upload!'
+      )
+    elif data.get('r01data') == None and data.get('upload_type') == 'r01':
       raise forms.ValidationError(
         'Select a file to upload!'
       )

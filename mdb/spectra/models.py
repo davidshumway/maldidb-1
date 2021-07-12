@@ -272,6 +272,10 @@ class CollapsedCosineScore(models.Model):
   #intensities = models.TextField()
   #binned_peaks = models.ManyToManyField('BinnedPeaks')
   
+  # ~ class Meta:
+    # ~ indexes = [
+      # ~ models.Index(fields = ['spectra', 'library']),
+    # ~ ]
 # ~ class CollapsedCosineScore(AbstractCosineScore):
   # ~ spectra1 = models.ForeignKey(
     # ~ 'CollapsedSpectra',

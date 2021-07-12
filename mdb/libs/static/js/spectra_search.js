@@ -777,7 +777,8 @@ socket.onmessage = function(e) {
         {data: 'id', title: 'Top scores (Strain ID, Genus / Species)',
           render: function(data, type) {
             // e.g. top-scores-8373
-            return '<table id="top-scores-'+data+'" class="table table-sm"></table>'; //width: 500px;white-space: pre-line;
+            return '<table id="top-scores-' + data + '"'+
+              'class="table table-sm" style="width:100% !important;"></table>';
           }
         },
         {data: 'id', title: '',

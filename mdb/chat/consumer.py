@@ -325,15 +325,31 @@ def cosine_scores(self, library, client, search_library):
   ).order_by('id').values('id', 'strain_id__strain_id',
     'strain_id__cSpecies', 'strain_id__cGenus', 'strain_id__cFamily',
     'strain_id__cOrder', 'strain_id__cClass', 'strain_id__cPhylum',
-    'strain_id__cKingdom')
+    'strain_id__cKingdom', 'peak_intensity', )
+  
+  # makes a dict of n2 to avoid another hit to db later
+  search_lib_dict = {str(value['id']): value for value in list(n2)}
+  
+  # ~ n2 = CollapsedSpectra.objects.filter(library_id = 12937, spectra_content__exact = 'PR').order_by('id').values('id', 'strain_id__strain_id',    'strain_id__cSpecies', 'strain_id__cGenus', 'strain_id__cFamily', 'strain_id__cOrder', 'strain_id__cClass', 'strain_id__cPhylum', 'strain_id__cKingdom')
   
   # ~ search_library_obj
+  
+  # TEST ONLY clears ccs cache
+  # ~ print('clear ccs cache')
+  # ~ CollapsedCosineScore.objects.all().delete()
+  # ~ print('done clear')
   
   # TODO: Provide user feedback of issue
   if len(n2) == 0:
     print('No collapsed spectra in search library!')
     ws.close()
     return
+  
+  # Inserts into cache after sending data back to client,
+  # and in addition uses bulk_create rather than create.
+  # Caching the score to db on each loop iteration results in
+  # 100x slowdown (e.g. 5 seconds per iteration versus 0.05 seconds).
+  collapsed_score_objects = []
   
   # Performs cosine score for every unknown spectra
   for spectra1 in n1:
@@ -361,13 +377,19 @@ def cosine_scores(self, library, client, search_library):
       
       # stores result using get_or_create rather than get to avoid
       # possible concurrency issues
-      obj, created = CollapsedCosineScore.objects.get_or_create(
+      collapsed_score_objects.append(CollapsedCosineScore(
         spectra = spectra1,
-        library = search_library_obj, # lib unnecessary in ccs model
-        result = r.text)
-      if obj is False:
-        ws.close()
-        return #??
+        library = search_library_obj,
+        result = r.text
+      ))
+      
+      # ~ obj, created = CollapsedCosineScore.objects.get_or_create(
+        # ~ spectra = spectra1,
+        # ~ library = search_library_obj,
+        # ~ result = r.text)
+      # ~ if obj is False:
+        # ~ ws.close()
+        # ~ return #??
       ccs = r.json()
       
     tmp = ccs['binnedPeaks']
@@ -383,12 +405,14 @@ def cosine_scores(self, library, client, search_library):
     # Creates a dictionary sorted by its values (similarity score)
     from collections import OrderedDict
     k = [str(s['id']) for s in list(n2)] # one less
-    v = ccs['similarity'][1:] # one more remove first???
-    # ~ v = r.json()['similarity'][1:] # one more remove first???
-    o = OrderedDict(
+    v = ccs['similarity'][1:] # one more remove first??
+    score_dict = OrderedDict(
       sorted(dict(zip(k, v)).items(),
         key = lambda x: (x[1], x[0]), reverse = True)
     )
+    # e.g. score_dict: OrderedDict([('12019', 0.551), ('12011', 0.519), ... ])
+
+    # ~ return
     
     # ~ #'similarity' = d[1,],
     # ~ #'binnedPeaks' = b,
@@ -427,31 +451,61 @@ def cosine_scores(self, library, client, search_library):
         'binned_snr': binned_peaks[str(spectra1.id)]['snr'],
       }
     }
+    # ~ ws.send(json.dumps({
+      # ~ 'type': 'completed cosine',
+      # ~ 'data': {
+        # ~ 'client': client,
+        # ~ 'result': result,
+        # ~ 'spectra1': spectra1.id
+      # ~ }
+    # ~ }))
+    # ~ continue
     
-    from django.db.models import Case, When
-    preserved = Case(*[When(pk = pk, then = pos) for pos, pk in enumerate(o)])
-    q = CollapsedSpectra.objects.filter(id__in = o.keys()).order_by(preserved)
+    # Results limited to 4
+    # ~ from django.db.models import Case, When
+    # ~ preserved = Case(*[When(pk = pk, then = pos) for pos, pk in enumerate(o)])
+    # ~ q = CollapsedSpectra.objects.filter(id__in = o.keys()).order_by(preserved)[0:4]
     rowcount = 1
-    for cs in q:
+    for (idx, id) in enumerate(score_dict): # e.g. 0 '12346' 0.2
+      # ~ print(k,v,x[v])
+    # ~ for (id, score) in o:
+    # ~ for cs in q:
+      s = search_lib_dict[id]
       result['scores'].append({
-        'score': o[str(cs.id)],
-        'id': cs.id,
-        'strain': cs.strain_id.strain_id,
-        'kingdom': cs.strain_id.cKingdom,
-        'phylum': cs.strain_id.cPhylum,
-        'class': cs.strain_id.cClass,
-        'order': cs.strain_id.cOrder,
-        'family': cs.strain_id.cFamily,
-        'genus': cs.strain_id.cGenus,
-        'species': cs.strain_id.cSpecies,
+        'score': score_dict[id],
+        'id': id,
+        # ~ 'score': o[str(cs.id)],
+        # ~ 'id': cs.id,
+        'strain': s['strain_id__strain_id'],
+        # ~ 'strain': cs.strain_id.strain_id,
+        
+        # Add in individual view, if required
+        # ~ 'kingdom': cs.strain_id.cKingdom,
+        # ~ 'phylum': cs.strain_id.cPhylum,
+        # ~ 'class': cs.strain_id.cClass,
+        # ~ 'order': cs.strain_id.cOrder,
+        
+        # ~ 'family': cs.strain_id.cFamily,
+        # ~ 'genus': cs.strain_id.cGenus,
+        # ~ 'species': cs.strain_id.cSpecies,
+        # ~ 'rowcount': rowcount,
+        # ~ 'peak_mass': cs.peak_mass,
+        # ~ 'peak_intensity': cs.peak_intensity,
+        'family': s['strain_id__cFamily'],
+        'genus': s['strain_id__cGenus'],
+        'species': s['strain_id__cSpecies'],
         'rowcount': rowcount,
-        'peak_mass': cs.peak_mass,
-        'peak_intensity': cs.peak_intensity,
-        'binned_mass': binned_peaks[str(cs.id)]['mass'],
-        'binned_intensity': binned_peaks[str(cs.id)]['intensity'],
-        'binned_snr': binned_peaks[str(cs.id)]['snr'],
+        
+        # Add in individual view for original spectra view
+        # ~ 'peak_mass': cs.peak_mass,
+        # ~ 'peak_intensity': cs.peak_intensity,
+        'binned_mass': binned_peaks[id]['mass'],
+        'binned_intensity': binned_peaks[id]['intensity'],
+        'binned_snr': binned_peaks[id]['snr'],
       })
       rowcount += 1
+      if rowcount >= 4:
+        break
     ws.send(json.dumps({
       'type': 'completed cosine',
       'data': {
@@ -460,8 +514,10 @@ def cosine_scores(self, library, client, search_library):
         'spectra1': spectra1.id
       }
     }))
-      
+  
   # closes socket
   ws.close()
   
+  # caches the scores for next time (after client has received data)
+  CollapsedCosineScore.objects.bulk_create(collapsed_score_objects)
   
