@@ -11,8 +11,8 @@ Documentation
 {% block content %}
 <style type="text/css">
 .doc-content img {
-  max-width: 100%;
-  min-width: 400px;
+  max-width: 70%;
+  min-width: 200px;
   border: 1px solid #333;
   margin-left: auto;
   margin-right: auto;
@@ -23,12 +23,45 @@ Documentation
 {% for category in categories %}
   <a id="{{category.slug|safe}}" style="position:absolute;top:0;left:0;"></a>
 {% endfor %}
+
+<button type="button" 
+        class="btn btn-primary" 
+        data-toggle="modal" 
+        data-target="#exampleModal">
+    Click to view modal
+</button>
+
+<div class="modal fade" id="exampleModal" tabindex="-1" 
+  role="dialog" aria-labelledby="exampleModalLabel" 
+  aria-hidden="true">
+  <div class="modal-dialog" role="document"
+    style="max-width: inherit !important;">
+    <div class="modal-content">
+<!--
+      <div class="modal-header">
+        <h5 class="modal-title" 
+          id="exampleModalLabel">
+        ----ssss
+        </h5>
+      </div>
+-->
+
+      <div class="modal-body">
+        <button type="button" class="close" data-dismiss="modal" 
+          aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+        <img src="http://localhost/media/home.png" style="width:100%;" />
+      </div>
+    </div>
+  </div>
+</div>
         
 
 <div class="row">
-  <div class="col-sm-4">
+  <div class="col-sm-3 mx-auto">
     
-    <div class="sticky-top" style="top:60px;">
+    <div class="sticky-top" style="top: 120px;">
     <div class="card">
       <div class="card-header">Documentation topics</div>
       <div class="card-body">
@@ -52,9 +85,9 @@ Documentation
     </div>
     </div>
   </div>
-  <div class="col-sm-8">
-    <div class="card">
-      <div class="card-body">
+  <div class="col-sm-9 mx-auto" style="">
+    <div class="card" style="margin-top: 56px; margin-left: -6px;">
+      <div class="card-body" style="padding: 80px 180px;min-height: 800px;">
         
         {% for category in categories %}
         <div style="display:none;" class="doc-content"
