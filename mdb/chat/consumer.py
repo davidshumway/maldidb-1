@@ -500,6 +500,8 @@ def cosine_scores(self, library, client, search_library):
         return
       
       # Awaits db write until all scores are sent back to client
+      # Downside: If two clients are asking for the same search ("lib1 vs. lib2"),
+      #  then no chance to work together.
       collapsed_score_objects.append(CollapsedCosineScore(
         spectra = spectra1,
         library = search_library_obj,
@@ -566,7 +568,7 @@ def cosine_scores(self, library, client, search_library):
         # ~ 'binned_snr': binned_peaks[id]['snr'],
       })
       rowcount += 1
-      if rowcount >= 10:
+      if rowcount >= 5:
         break
     ws.send(json.dumps({
       'type': 'completed cosine',

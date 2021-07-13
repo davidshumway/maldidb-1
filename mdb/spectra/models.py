@@ -67,18 +67,20 @@ class AbstractSpectra(models.Model):
     null = True,
     db_index=True) # sort by sid
   
-  # ~ unique_together = (
-    # ~ strain_id,
-    # ~ spectrum_mass_hash,
-    # ~ spectrum_intensity_hash
-  # ~ )
+  # Seems unnecessary.
+  # i.e., disallow two same spectra from having more than one strain_id
+  # in a library.
+  ##unique_together /strain_id/spectrum_mass_hash/spectrum_intensity_hash/library
   
   class Meta:
     abstract = True
-    unique_together= (
-      ('spectrum_mass_hash', 'spectrum_intensity_hash', 'library'),)
-    # ~ unique_together= (('xml_hash', 'library'),)
-  
+    
+    # Also seems unnecessary.
+    # i.e., disallow two same spectra from being in a library
+    ##unique_together= (
+    ##  ('spectrum_mass_hash', 'spectrum_intensity_hash', 'library'),
+    ##)
+    
   def get_absolute_url(self):
     return reverse('spectra:view_spectra', args = (self.id,))
   
