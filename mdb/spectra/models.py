@@ -65,21 +65,17 @@ class AbstractSpectra(models.Model):
     on_delete = models.CASCADE,
     blank = True,
     null = True,
-    db_index=True) # sort by sid
-  
-  # Seems unnecessary.
-  # i.e., disallow two same spectra from having more than one strain_id
-  # in a library.
-  ##unique_together /strain_id/spectrum_mass_hash/spectrum_intensity_hash/library
+    db_index = True) # sort by sid
   
   class Meta:
     abstract = True
     
-    # Also seems unnecessary.
-    # i.e., disallow two same spectra from being in a library
-    ##unique_together= (
-    ##  ('spectrum_mass_hash', 'spectrum_intensity_hash', 'library'),
-    ##)
+    # Disallow two same spectra from being in a library
+    unique_together= (
+      ('spectrum_mass_hash', 'spectrum_intensity_hash', 'library'),
+    )
+    ## or
+    ## unique_together /strain_id/spectrum_mass_hash/spectrum_intensity_hash/library
     
   def get_absolute_url(self):
     return reverse('spectra:view_spectra', args = (self.id,))
