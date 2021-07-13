@@ -155,7 +155,7 @@ function show_filter(e) {
                     </span>
                     <span class="input-group-text">
                       <label class="form-check-label" for="library_save_type1">
-                        Use a randomly assigned library
+                        Create new library using randomly assigned title
                       </label></span>
                   </div>
                 </div>
@@ -356,7 +356,7 @@ function show_filter(e) {
       <div class="card-body" id="nss-card-2" style="display:none;">
         <div id="cosine-status" style="" class="alert alert-info">
           <b>Status</b><br />
-          <span id="stat2-title">Task: Calculating cosine similarity measure...</span><br />
+          <span id="stat2-title">Task: Generating cosine similarity measure...</span><br />
           <span id="stat2-complete"></span>
         </div>
         <table class="table table-sm card-text table-bordered" id="file-listing2" style="width: 100% !important;">
@@ -373,6 +373,14 @@ function show_filter(e) {
   <!-- end col left -->
   
   <div class="col-0" id="col-right">
+      <div class="card">
+        <div class="card-body" id="spectra-mirror" style="overflow:hidden;">
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body" id="spectra-viz" style="overflow:hidden;">
+        </div>
+      </div>
   </div>
     
   </div>
@@ -384,23 +392,19 @@ function show_filter(e) {
 <!-- spectra comparison -->
 <div class="container" style="width:100%;max-width:inherit;display:none;"
   id="container-dendro">
-<div class="row">
-  <div class="col-sm-6">
-    <div class="card">
-    <div class="card-body" id="spectra-viz" style="overflow:hidden;">
-    </div></div></div>
-  <div class="col-sm-6">
-    <div class="card">
-    <div class="card-header" id="dendro-viz-head">
-      <button style="border:1px solid #0a0a0a;cursor:pointer;"
-        id="dendro-viz-toggle">
-        <input type="checkbox" checked />
-        [ ]
-      </button>
-    </div>
-    <div class="card-body" id="dendro-viz" style="overflow:hidden;">
-    </div></div></div>
-</div>
+  <div class="row">
+    <div class="col-sm-10">
+      <div class="card">
+      <div class="card-header" id="dendro-viz-head">
+        <button style="border:1px solid #0a0a0a;cursor:pointer;"
+          id="dendro-viz-toggle">
+          <input type="checkbox" checked />
+          [ ]
+        </button>
+      </div>
+      <div class="card-body" id="dendro-viz" style="overflow:hidden;">
+      </div></div></div>
+  </div>
 </div>
 <!-- end container -->
 

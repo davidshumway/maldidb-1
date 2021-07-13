@@ -113,6 +113,7 @@ function toggleNavSearch(e) {
     d3.select('#spectra-viz').selectAll('*').remove();
     $('#col-right').css('display', 'none');
     $('#container-dendro').css('display', 'none');
+    $('#col-left')[0].className = 'col-sm-10 mx-auto';
   } else if (n == 3) {
     //~ $('#col-right').css('display', '');
   }
@@ -339,16 +340,18 @@ function drawHisto() {
   var data = document.getElementById('select-histo').data;
   var selected = document.getElementById('select-histo').selected;
   
+  //460,400
   var margin = {top: 10, right: 30, bottom: 40, left: 50},
-    width = 460 - margin.left - margin.right,
-    height = 400 - margin.top - margin.bottom;
+    width = 360 - margin.left - margin.right,
+    height = 300 - margin.top - margin.bottom;
   if (document.getElementById('svg-histo')) {
     document.getElementById('svg-histo').parentNode
       .removeChild(document.getElementById('svg-histo'))
   }
   
   d3.select('#svg-histo').selectAll('*').remove();
-  var svg = d3.select('#col-right')
+  //~ var svg = d3.select('#col-right')
+  var svg = d3.select('#spectra-mirror')
     .append('svg')
       .attr('id', 'svg-histo')
       .attr('width', width + margin.left + margin.right)
@@ -737,15 +740,15 @@ socket.onmessage = function(e) {
     //preprocessed.items[c] = true;
     preprocessed.count++;
     $('#filetable-preprocess' + c).text('done');
-    //~ $('#stat-complete').text(preprocessed.count)
     $('#stat-complete').text(
       preprocessed.count + '/' + preprocessed.total + ' completed');
     // Collapses library if all are preprocessed
     if (preprocessed.count == preprocessed.total) {
-      $('#stat-title').text('Collapsing library entries');
+      $('#stat-title').text('Collapsing library entries...');
       $('#stat-complete').text('');
-      // socket send
+      
       socket.send(JSON.stringify({
+        type: 'collapse library',
         collapseLibrary: preprocessed.library_id,
         searchLibrary: preprocessed.search_library
       }));
@@ -783,7 +786,10 @@ socket.onmessage = function(e) {
         },
         {data: 'id', title: '',
           render: function(data, type) {
-            return '<a href="#" onclick="javascript:singleScore(' + data + ')">Explore more</a>';
+            return '<button href="#" id="open-result-' + data + '" ' +
+              //'data-id="' + data + '" ' +
+              'class="btn btn-secondary" ' +
+              'onclick="javascript:loadSingleScore(this, ' + data + ')">Explore more</button>';
           }
         }
       ]
@@ -808,8 +814,7 @@ socket.onmessage = function(e) {
     }
     
     // Stores by collapsed spectra id
-    preprocessed.collapsed_data[data.data.spectra1] = 
-      data.data.result;
+    preprocessed.collapsed_data[data.data.spectra1] = data.data.result;
     
     var x = data.data.result.scores;
     var output = [];
@@ -817,7 +822,6 @@ socket.onmessage = function(e) {
       if (x[i])
         output.push(x[i]);
     }
-    //return;
     var t = $('#top-scores-'+data.data.spectra1).DataTable({
       data: output,
       paging: false,
@@ -833,15 +837,20 @@ socket.onmessage = function(e) {
       'headerCallback': function(thead, data, start, end, display) {
         // Removing thead (thead.remove()) causes errors in table, so...
         $(thead).css('display', 'none');
-        //~ try { // ??
-          //~ thead.remove();
-        //~ } catch(e) {}
-        //~ thead.remove();
-        //$(thead).find('th').eq(0).html( 'Displaying '+(end-start)+' records' );
       }
     });
     t.order([0, 'desc']) // reorders in correct direction
       .draw();
+  }
+  else if (data.message == 'single score result') {
+    // Updates scores, dendro, original, keeping 'ids'
+    preprocessed.collapsed_data[data.data.spectra1].scores = data.data.result.scores;
+    preprocessed.collapsed_data[data.data.spectra1].dendro = data.data.result.dendro;
+    preprocessed.collapsed_data[data.data.spectra1].original = data.data.result.original;
+     //~ = data.data.result;
+    singleScore(data.data.spectra1);
+    
+    $('#open-result-' + data.data.spectra1)[0].disabled = false;
   }
   
   return;
@@ -850,6 +859,23 @@ socket.onclose = function(e){
   console.log(e);
 }
 
+function loadSingleScore(btn, id) {
+  //~ this.onclick = function() {};
+  btn.disabled = true;
+  
+  // Checks if cached and otherwise loads from server
+  if (preprocessed.collapsed_data[id].dendro) {
+    singleScore(id);
+    btn.disabled = false;
+  } else {
+    socket.send(JSON.stringify({
+      type: 'single score',
+      spectra1: id,
+      //~ collapseLibrary: preprocessed.library_id,
+      searchLibrary: preprocessed.search_library
+    }));
+  }
+}
 function singleScore(id) {
   var data = preprocessed.collapsed_data[id];
   
@@ -871,6 +897,8 @@ function singleScore(id) {
   
   $('#col-right').css('display', '');
   
+  $('#col-left')[0].className = 'col-sm-6 mx-auto'
+  
   var t = $('#data-table').DataTable({
     data: data.scores,
     destroy: true, // https://datatables.net/manual/tech-notes/3
@@ -879,8 +907,9 @@ function singleScore(id) {
       //~ {data: 'id', title: 'Spectra ID'},
       {data: 'strain', title: 'Strain ID',
         render: function(data, type) {
-          return '<span style="color:steelblue;font-weight:400;cursor:pointer;" data-id="'+data+'" onclick="sp(this);">'
-            + data + '</span>';
+          return '<span style="color:steelblue;font-weight:400;cursor:pointer;" ' +
+            'data-id="'+data+'" onclick="sp(this);">' +
+            data + '</span>';
         }
       },
       //~ {data: 'kingdom', title: 'Kingdom'},
@@ -900,8 +929,8 @@ function singleScore(id) {
   // set the dimensions and margins of the graph
   $('#col-left').removeClass('col-12');
   $('#col-right').removeClass('col-0');
-  $('#col-left').addClass('col-8');
-  $('#col-right').addClass('col-4');
+  $('#col-left').addClass('col-6');
+  $('#col-right').addClass('col-6');
   if (!$('#select-histo').length) {
     d3.select('#col-right')
       .append('select')

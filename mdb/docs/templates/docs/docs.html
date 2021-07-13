@@ -24,41 +24,33 @@ Documentation
   <a id="{{category.slug|safe}}" style="position:absolute;top:0;left:0;"></a>
 {% endfor %}
 
-<button type="button" 
-        class="btn btn-primary" 
-        data-toggle="modal" 
-        data-target="#exampleModal">
-    Click to view modal
-</button>
-
-<div class="modal fade" id="exampleModal" tabindex="-1" 
-  role="dialog" aria-labelledby="exampleModalLabel" 
-  aria-hidden="true">
+<div class="modal fade" id="imModal" tabindex="-1" 
+  role="dialog" aria-labelledby="imModalLabel" aria-hidden="true"
+  style="padding: 0 10px 0 10px !important;">
   <div class="modal-dialog" role="document"
     style="max-width: inherit !important;">
     <div class="modal-content">
 <!--
       <div class="modal-header">
         <h5 class="modal-title" 
-          id="exampleModalLabel">
-        ----ssss
+          id="imModalLabel">
         </h5>
       </div>
 -->
-
       <div class="modal-body">
         <button type="button" class="close" data-dismiss="modal" 
           aria-label="Close">
-          <span aria-hidden="true">×</span>
+          <span aria-hidden="true">x</span>
         </button>
-        <img src="http://localhost/media/home.png" style="width:100%;" />
+        <img src="http://localhost/media/home.png" style="width:80%;position:relative;margin-left:10%;" 
+          id="modal-img" />
       </div>
     </div>
   </div>
 </div>
         
 
-<div class="row">
+<div class="row" id="docs-body">
   <div class="col-sm-3 mx-auto">
     
     <div class="sticky-top" style="top: 120px;">
@@ -127,12 +119,26 @@ window.addEventListener('DOMContentLoaded', (event) => {
   // loads from href
   var x = /#([\d\D]+)$/.exec(document.location.href);
   if (x && x[1]) {
-    //~ console.log('#doc-' + x[1]);
     var h = '#' + x[1];
     $('a[href="' + h + '"]')[0].click(); 
-    //~ $('#)[0].click();
   }
   
+  // sets img onclick
+  $('#docs-body img').each(function(idx) {
+    //~ $(this).attr('data-toggle', 'modal');
+    //~ $(this).attr('data-target', 'imModal');
+    $(this)[0].setAttribute('data-toggle', 'modal');
+    $(this)[0].setAttribute('data-target', '#imModal');
+    $(this).css('cursor', 'pointer');
+    $(this).mouseover(function(e) {
+      $('#modal-img').attr('src', this.getAttribute('src'));
+      e.stopPropagation();
+      e.preventDefault();
+      // Padding always resets to pr-14 ??
+      $('#imModal').css('padding', '0 10px 0 10px');
+      return false;
+    });
+  });
 });
 </script>
 {% endblock %}

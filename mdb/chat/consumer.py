@@ -44,14 +44,37 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     '''
     '''
     # ~ print('==================3')
-    
+    try:
+      val = json.loads(text_data)
+    except Exception as e:
+      print(e)
+      return
     
     # client asks to search existing
     try:
-      val = json.loads(text_data)
       if 'existingLibrary' in val and 'searchLibrary' in val:
         cosine_scores_existing(self, val['existingLibrary'],
           self.client_id, val['searchLibrary'])
+    except Exception as e:
+      print(e)
+      pass
+    # client asks for full data of single score
+    try:
+      if val['type'] == 'single score':
+        single_score(self, self.client_id, val)
+    except Exception as e:
+      print(e)
+      pass
+    # tells client single score result
+    try:
+      if val['type'] == 'single score result':
+        d = json.dumps({
+          'data': {
+            'message': 'single score result',
+            'data': val['data']
+          }
+        })
+        await clients[val['data']['client']].send(text_data = d)
     except Exception as e:
       print(e)
       pass
@@ -60,7 +83,6 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     
     # tells client preprocessing is complete
     try:
-      val = json.loads(text_data)
       if val['type'] == 'completed preprocessing':
         d = json.dumps({
           'data': {
@@ -75,8 +97,7 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     
     # client asks to collapse library
     try:
-      val = json.loads(text_data)
-      if 'collapseLibrary' in val and 'searchLibrary' in val:
+      if val['type'] == 'collapse library':
         collapse_lib(self, val['collapseLibrary'], self.client_id,
           val['searchLibrary'])
     except Exception as e:
@@ -85,7 +106,6 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
       
     # tells client collapse completed
     try:
-      val = json.loads(text_data)
       if val['type'] == 'completed collapsing':
         d = json.dumps({
           'data': {
@@ -100,7 +120,6 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
       
     # tells client cosine completed
     try:
-      val = json.loads(text_data)
       if val['type'] == 'completed cosine':
         d = json.dumps({
           'data': {
@@ -117,7 +136,6 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     
     # client asks for alignment
     try:
-      val = json.loads(text_data)
       if val['type'] == 'align':
         align(self, val, self.client_id)
     except Exception as e:    
@@ -125,7 +143,6 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
       pass
     # send align status update
     try:
-      val = json.loads(text_data)
       if val['type'] == 'align status':
         d = json.dumps({
           'data': {
@@ -137,9 +154,8 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     except Exception as e:    
       print(e)
       pass
-    # send alignment data
+    # sends back alignment data
     try:
-      val = json.loads(text_data)
       if val['type'] == 'completed align':
         d = json.dumps({
           'data': {
@@ -153,15 +169,13 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
       pass
     # client saves alignment
     try:
-      val = json.loads(text_data)
       if val['type'] == 'save align':
         save_align(self, val, self.client_id)
     except Exception as e:
       print(e)
       pass
-    # send save alignment success
+    # sends save alignment success
     try:
-      val = json.loads(text_data)
       if val['type'] == 'completed save align':
         d = json.dumps({
           'data': {
@@ -175,15 +189,13 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
       pass
     # client asks for manual alignment
     try:
-      val = json.loads(text_data)
       if val['type'] == 'manual_align':
         manual_align(self, val, self.client_id)
     except Exception as e:    
       print(e)
       pass
-    # send manual alignment success
+    # sends manual alignment success
     try:
-      val = json.loads(text_data)
       if val['type'] == 'completed manual align':
         d = json.dumps({
           'data': {
@@ -197,15 +209,13 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
       pass
     # client asks to save manual alignment
     try:
-      val = json.loads(text_data)
       if val['type'] == 'save manual align':
         save_manual_align(self, val, self.client_id)
     except Exception as e:    
       print(e)
       pass
-    # send save manual alignment success
+    # sends save manual alignment success
     try:
-      val = json.loads(text_data)
       if val['type'] == 'completed save manual align':
         d = json.dumps({
           'data': {
@@ -294,6 +304,123 @@ def cosine_scores_existing(self, library, client, search_library):
   }))
   ws.close()
   cosine_scores(self, library, client, search_library)
+
+@start_new_thread
+def single_score(self, client, msg):
+  '''
+  
+  :param msg['spectra1']: Collapsed spectra ID of unknown sample
+  :param msg['searchLibrary']: Library ID of known entries
+  '''
+  ws = websocket.WebSocket()
+  ws.connect('ws://localhost:8000/ws/pollData')
+  
+  ccs = None
+  try:
+    obj = CollapsedCosineScore.objects.get(
+      spectra = msg['spectra1'],
+      library = Library.objects.get(id = msg['searchLibrary']))
+    ccs = json.loads(obj.result)
+    spectra1 = CollapsedSpectra.objects.get(id = msg['spectra1'])
+  except CollapsedSpectra.DoesNotExist:
+    print('CollapsedSpectra.DoesNotExist')
+    ws.close()
+    return
+  except CollapsedCosineScore.DoesNotExist:
+    print('CollapsedSpectra.DoesNotExist')
+    ws.close()
+    return
+  except Library.DoesNotExist:
+    print('Library.DoesNotExist')
+    ws.close()
+    return
+  except Exception as e:
+    print(e)
+    ws.close()
+    return
+  
+  n2 = CollapsedSpectra.objects.filter(
+    library = msg['searchLibrary'],
+    spectra_content__exact = 'PR'
+  ).order_by('id').values('id', 'strain_id__strain_id',
+    'strain_id__cSpecies', 'strain_id__cGenus', 'strain_id__cFamily',
+    'strain_id__cOrder', 'strain_id__cClass', 'strain_id__cPhylum',
+    'strain_id__cKingdom', 'peak_mass', 'peak_intensity')
+  
+  # Creates dict of n2
+  search_lib_dict = {str(value['id']): value for value in list(n2)}
+  
+  # Creates dictionary of binned peaks
+  tmp = ccs['binnedPeaks']
+  binned_peaks = {}
+  for v in tmp:
+    binned_peaks[str(v['csId'][0])] = {
+      'mass': v['mass'],
+      'intensity': v['intensity'],
+      'snr': v['snr'],
+    }
+  
+  # Creates dictionary sorted by its values (similarity score)
+  from collections import OrderedDict
+  k = [str(s['id']) for s in list(n2)] # one less
+  v = ccs['similarity'][1:] # one more remove first??
+  score_dict = OrderedDict(
+    sorted(dict(zip(k, v)).items(),
+      key = lambda x: (x[1], x[0]), reverse = True)
+  )
+  
+  u = ['Unknown sample']
+  result = {
+    'scores': [],
+    'dendro': ccs['dendro'],
+    'original': {
+      'peak_mass': spectra1.peak_mass,
+      'peak_intensity': spectra1.peak_intensity,
+      'binned_mass': binned_peaks[str(msg['spectra1'])]['mass'],
+      'binned_intensity': binned_peaks[str(msg['spectra1'])]['intensity'],
+      'binned_snr': binned_peaks[str(msg['spectra1'])]['snr'],
+    }
+  }
+  
+  rowcount = 1
+  for (idx, id) in enumerate(score_dict): # e.g. 0 '12346' 0.2
+    s = search_lib_dict[id]
+    result['scores'].append({
+      'score': score_dict[id],
+      'id': id,
+      'strain': s['strain_id__strain_id'],
+      
+      # ~ 'kingdom': cs.strain_id.cKingdom,
+      # ~ 'phylum': cs.strain_id.cPhylum,
+      # ~ 'class': cs.strain_id.cClass,
+      # ~ 'order': cs.strain_id.cOrder,
+      
+      # ~ 'peak_mass': cs.peak_mass,
+      # ~ 'peak_intensity': cs.peak_intensity,
+      
+      'family': s['strain_id__cFamily'],
+      'genus': s['strain_id__cGenus'],
+      'species': s['strain_id__cSpecies'],
+      'rowcount': rowcount,
+      
+      'peak_mass': s['peak_mass'],
+      'peak_intensity': s['peak_intensity'],
+      'binned_mass': binned_peaks[id]['mass'],
+      'binned_intensity': binned_peaks[id]['intensity'],
+      'binned_snr': binned_peaks[id]['snr'],
+    })
+    # ~ rowcount += 1
+    # ~ if rowcount >= 10:
+      # ~ break
+  ws.send(json.dumps({
+    'type': 'single score result',
+    'data': {
+      'client': client,
+      'result': result,
+      'spectra1': spectra1.id
+    }
+  }))
+  ws.close()
   
 def cosine_scores(self, library, client, search_library):
   '''Performs cosine for unknown library against a known one.
@@ -309,10 +436,7 @@ def cosine_scores(self, library, client, search_library):
     ws.close()
     return
   
-  print(f'search_library_obj {search_library_obj}')
-  #except:
-  #  print('Bad search library?')
-  #  return
+  # ~ print(f'search_library_obj {search_library_obj}')
     
   n1 = CollapsedSpectra.objects.filter( # unknown spectra
     library_id__exact = library,
@@ -325,7 +449,7 @@ def cosine_scores(self, library, client, search_library):
   ).order_by('id').values('id', 'strain_id__strain_id',
     'strain_id__cSpecies', 'strain_id__cGenus', 'strain_id__cFamily',
     'strain_id__cOrder', 'strain_id__cClass', 'strain_id__cPhylum',
-    'strain_id__cKingdom', 'peak_intensity', )
+    'strain_id__cKingdom')
   
   # makes a dict of n2 to avoid another hit to db later
   search_lib_dict = {str(value['id']): value for value in list(n2)}
@@ -351,7 +475,7 @@ def cosine_scores(self, library, client, search_library):
   # 100x slowdown (e.g. 5 seconds per iteration versus 0.05 seconds).
   collapsed_score_objects = []
   
-  # Performs cosine score for every unknown spectra
+  # Performs cosine score for every unknown spectra in first library
   for spectra1 in n1:
     
     # Checks if there is already an existing score
@@ -375,34 +499,17 @@ def cosine_scores(self, library, client, search_library):
         print(r.status_code)
         return
       
-      # stores result using get_or_create rather than get to avoid
-      # possible concurrency issues
+      # Awaits db write until all scores are sent back to client
       collapsed_score_objects.append(CollapsedCosineScore(
         spectra = spectra1,
         library = search_library_obj,
         result = r.text
       ))
-      
-      # ~ obj, created = CollapsedCosineScore.objects.get_or_create(
-        # ~ spectra = spectra1,
-        # ~ library = search_library_obj,
-        # ~ result = r.text)
-      # ~ if obj is False:
-        # ~ ws.close()
-        # ~ return #??
       ccs = r.json()
-      
-    tmp = ccs['binnedPeaks']
-    # ~ tmp = r.json()['binnedPeaks']
-    binned_peaks = {}
-    for v in tmp: # Dictionary of binned peaks
-      binned_peaks[str(v['csId'][0])] = {
-        'mass': v['mass'],
-        'intensity': v['intensity'],
-        'snr': v['snr'],
-      }
     
-    # Creates a dictionary sorted by its values (similarity score)
+    # Returns shorter version, while explore more returns full data
+    
+    # Creates dictionary sorted by its values (similarity score)
     from collections import OrderedDict
     k = [str(s['id']) for s in list(n2)] # one less
     v = ccs['similarity'][1:] # one more remove first??
@@ -410,21 +517,8 @@ def cosine_scores(self, library, client, search_library):
       sorted(dict(zip(k, v)).items(),
         key = lambda x: (x[1], x[0]), reverse = True)
     )
-    # e.g. score_dict: OrderedDict([('12019', 0.551), ('12011', 0.519), ... ])
-
-    # ~ return
     
-    # ~ #'similarity' = d[1,],
-    # ~ #'binnedPeaks' = b,
-    # ~ #'dendro'
-    # ~ obj = CollapsedCosineScore.objects.create(
-      # ~ spectra = spectra1,
-      # ~ library = search_library_obj, # lib unnecessary in ccs model
-      # ~ scores = ','.join(map(str, list(o.values()))),
-      # ~ spectra_ids = ','.join(map(str, o.keys())))
-      
     u = ['Unknown sample']
-    
     result = {
       'scores': [],
       'ids': {
@@ -437,12 +531,71 @@ def cosine_scores(self, library, client, search_library):
         'genus': u + [str(s['strain_id__cGenus']) if s['strain_id__cGenus'] != '' else 'N/A' for s in list(n2)],
         'species': u + [str(s['strain_id__cSpecies']) if s['strain_id__cSpecies'] != '' else 'N/A' for s in list(n2)]
       },
-      # ~ 'strain_ids': strain_ids,
-      # ~ 'strain_id__cSpecies': strain_id__cSpecies,
-      # ~ 'strain_id__cGenus': strain_id__cGenus,
+      # ~ 'dendro': ccs['dendro'],
+      # ~ 'original': {
+        # ~ 'peak_mass': spectra1.peak_mass,
+        # ~ 'peak_intensity': spectra1.peak_intensity,
+        # ~ 'binned_mass': binned_peaks[str(spectra1.id)]['mass'],
+        # ~ 'binned_intensity': binned_peaks[str(spectra1.id)]['intensity'],
+        # ~ 'binned_snr': binned_peaks[str(spectra1.id)]['snr'],
+      # ~ }
+    }
+    
+    rowcount = 1
+    for (idx, id) in enumerate(score_dict): # e.g. 0 '12346' 0.2
+      s = search_lib_dict[id]
+      result['scores'].append({
+        'score': score_dict[id],
+        'id': id,
+        'strain': s['strain_id__strain_id'],
+
+        # ~ 'kingdom': cs.strain_id.cKingdom,
+        # ~ 'phylum': cs.strain_id.cPhylum,
+        # ~ 'class': cs.strain_id.cClass,
+        # ~ 'order': cs.strain_id.cOrder,
+
+        'family': s['strain_id__cFamily'],
+        'genus': s['strain_id__cGenus'],
+        'species': s['strain_id__cSpecies'],
+        'rowcount': rowcount,
+        
+        # ~ 'peak_mass': cs.peak_mass,
+        # ~ 'peak_intensity': cs.peak_intensity,
+        # ~ 'binned_mass': binned_peaks[id]['mass'],
+        # ~ 'binned_intensity': binned_peaks[id]['intensity'],
+        # ~ 'binned_snr': binned_peaks[id]['snr'],
+      })
+      rowcount += 1
+      if rowcount >= 10:
+        break
+    ws.send(json.dumps({
+      'type': 'completed cosine',
+      'data': {
+        'client': client,
+        'result': result,
+        'spectra1': spectra1.id
+      }
+    }))
+    continue
+    
+    
+    
+    
+      
+    u = ['Unknown sample']
+    result = {
+      'scores': [],
+      'ids': {
+        'strain': u + [str(s['strain_id__strain_id']) for s in list(n2)],
+        'kingdom': u + [str(s['strain_id__cKingdom']) if s['strain_id__cKingdom'] != '' else 'N/A' for s in list(n2)],
+        'phylum': u + [str(s['strain_id__cPhylum']) if s['strain_id__cPhylum'] != '' else 'N/A' for s in list(n2)],
+        'class': u + [str(s['strain_id__cClass']) if s['strain_id__cClass'] != '' else 'N/A' for s in list(n2)],
+        'order': u + [str(s['strain_id__cOrder']) if s['strain_id__cOrder'] != '' else 'N/A' for s in list(n2)],
+        'family': u + [str(s['strain_id__cFamily']) if s['strain_id__cFamily'] != '' else 'N/A' for s in list(n2)],
+        'genus': u + [str(s['strain_id__cGenus']) if s['strain_id__cGenus'] != '' else 'N/A' for s in list(n2)],
+        'species': u + [str(s['strain_id__cSpecies']) if s['strain_id__cSpecies'] != '' else 'N/A' for s in list(n2)]
+      },
       'dendro': ccs['dendro'],
-      # ~ 'dendro': r.json()['dendro'],
-      # ~ 'dendro2': r.json()['dendro2'],
       'original': {
         'peak_mass': spectra1.peak_mass,
         'peak_intensity': spectra1.peak_intensity,
@@ -451,25 +604,12 @@ def cosine_scores(self, library, client, search_library):
         'binned_snr': binned_peaks[str(spectra1.id)]['snr'],
       }
     }
-    # ~ ws.send(json.dumps({
-      # ~ 'type': 'completed cosine',
-      # ~ 'data': {
-        # ~ 'client': client,
-        # ~ 'result': result,
-        # ~ 'spectra1': spectra1.id
-      # ~ }
-    # ~ }))
-    # ~ continue
     
-    # Results limited to 4
     # ~ from django.db.models import Case, When
     # ~ preserved = Case(*[When(pk = pk, then = pos) for pos, pk in enumerate(o)])
     # ~ q = CollapsedSpectra.objects.filter(id__in = o.keys()).order_by(preserved)[0:4]
     rowcount = 1
     for (idx, id) in enumerate(score_dict): # e.g. 0 '12346' 0.2
-      # ~ print(k,v,x[v])
-    # ~ for (id, score) in o:
-    # ~ for cs in q:
       s = search_lib_dict[id]
       result['scores'].append({
         'score': score_dict[id],
@@ -504,7 +644,7 @@ def cosine_scores(self, library, client, search_library):
         'binned_snr': binned_peaks[id]['snr'],
       })
       rowcount += 1
-      if rowcount >= 4:
+      if rowcount >= 10:
         break
     ws.send(json.dumps({
       'type': 'completed cosine',
