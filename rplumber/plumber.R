@@ -527,32 +527,37 @@ mqSerial <- function(l) {
 #* @get /preprocess
 preprocess <- function(file) {
   library(stringr)
-  mzFilePaths <- list(file.path(paste0('/app/', file)))
-  sID <- base::basename(tools::file_path_sans_ext(mzFilePaths))
-  # replace the Django portion of filename ("_[\w\d]+$")
-  sID <- str_replace(sID, '_[a-zA-Z0-9]+$', '')
-  f <- sanitize(sub('uploads/sync', '', file))
-  IDBacApp:::idbac_create(
-    fileName = f,
-    filePath = './uploads/sync')
-  idbacPool <- IDBacApp:::idbac_connect(
-    fileName = f,
-    filePath = './uploads/sync/')[[1]]
-  IDBacApp:::spectraProcessingFunction(
-    rawDataFilePath = file.path(paste0('/app/', file)),
-    sampleID = sID,
-    pool = idbacPool, 
-    acquisitionInfo = NULL,
-  )
-#~   IDBacApp:::db_from_mzml(
-#~     mzFilePaths = mzFilePaths,
-#~     sampleIds = sIDs,
-#~     idbacPool = idbacPool,
-#~     acquisitionInfo = NULL) #...)
+  tryCatch({
+    mzFilePaths <- list(file.path(paste0('/app/', file)))
+    sID <- base::basename(tools::file_path_sans_ext(mzFilePaths))
+    # replaces the Django portion of filename ("_[\w\d]+$")
+    sID <- str_replace(sID, '_[a-zA-Z0-9]+$', '')
+    f <- sanitize(sub('uploads/sync', '', file))
+    IDBacApp:::idbac_create(
+      fileName = f,
+      filePath = './uploads/sync')
+    idbacPool <- IDBacApp:::idbac_connect(
+      fileName = f,
+      filePath = './uploads/sync/')[[1]]
+    IDBacApp:::spectraProcessingFunction(
+      rawDataFilePath = file.path(paste0('/app/', file)),
+      sampleID = sID,
+      pool = idbacPool, 
+      acquisitionInfo = NULL,
+    )
+  },
+  warning = function(warn) {
+    print(paste("preprocess WARN:", warn))
+  },
+  error = function(err) {
+    return('')
+    print(paste("preprocess ERROR: ", err))
+  },
+  finally = function(f) {
+    #print(paste("e: ", e))
+  })
   
-  # return location of the idbac sqlite file.  
-#~   print('sqlite file:')
-#~   print(f)
+  # returns location of the idbac sqlite file.
   return(f)
 }
 sanitize <- function(filename, replacement = "") {

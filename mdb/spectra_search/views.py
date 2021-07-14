@@ -109,36 +109,54 @@ class MetadataAutocomplete(autocomplete.Select2QuerySetView):
 def process_file(request, file, form, owner, upload_count, ip):
   '''Runs R methods to process a spectra file
   '''
-  ws = websocket.WebSocket()
-  ws.connect('ws://localhost:8000/ws/pollData')
-  # ~ ws.connect('ws://' + ip)
-  # ~ ws.send('{"message": ""}')
-  
-  # ~ print(f'preprocess file{file}')
-  f1 = file.replace('uploads/', 'uploads/sync/')
-  current_loc = '/home/app/web/media/' + file
-  new_loc = '/' + file.replace('uploads/', 'uploads/sync/')
-  os.system('cp ' + current_loc + ' ' + new_loc)
-  data = {'file': f1}
-  # ~ print(f'send{data}')
-  r = requests.get('http://plumber:8000/preprocess', params = data)
+  try:
+    ws = websocket.WebSocket()
+    ws.connect('ws://localhost:8000/ws/pollData')
+    # ~ ws.connect('ws://' + ip)
+    # ~ ws.send('{"message": ""}')
+    
+    # ~ print(f'preprocess file{file}')
+    f1 = file.replace('uploads/', 'uploads/sync/')
+    current_loc = '/home/app/web/media/' + file
+    new_loc = '/' + file.replace('uploads/', 'uploads/sync/')
+    os.system('cp ' + current_loc + ' ' + new_loc)
+    data = {'file': f1}
+    # ~ print(f'send{data}')
+    r = requests.get('http://plumber:8000/preprocess', params = data)
 
-  # Adds sqlite spectra to db
-  info = idbac_sqlite_insert(request, form,
-    '/uploads/sync/' + str(r.json()[0]) + '.sqlite',
-    user_task = False
-  )
+    # Adds sqlite spectra to db
+    info = idbac_sqlite_insert(request, form,
+      '/uploads/sync/' + str(r.json()[0]) + '.sqlite',
+      user_task = False
+    )
+  except:
+    print('pf2')
   
   # Communicates completion back to upload
-  ws.send(json.dumps({
-    'type': 'completed preprocessing',
-    'data': {
-      'count': upload_count,
-      'client': ip,
-    }
-  }))
-  
-  ws.close()
+  try:
+    ws.send(json.dumps({
+      'type': 'completed preprocessing',
+      'data': {
+        'count': upload_count,
+        'client': ip,
+      }
+    }))    
+    ws.close()
+  except:
+    print('pf1')
+    try:
+      ws = websocket.WebSocket()
+      ws.connect('ws://localhost:8000/ws/pollData')
+      ws.send(json.dumps({
+        'type': 'completed preprocessing',
+        'data': {
+          'count': upload_count,
+          'client': ip,
+        }
+      }))    
+      ws.close()
+    except:
+      print('pf3')
   return
   
 def upload_status(request):
