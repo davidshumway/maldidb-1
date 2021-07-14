@@ -123,7 +123,23 @@ def process_file(request, file, form, owner, upload_count, ip):
     data = {'file': f1}
     # ~ print(f'send{data}')
     r = requests.get('http://plumber:8000/preprocess', params = data)
-
+    
+    if r.text == '':
+      # ex: "simpleWarning in if (class(input) == \"list\") {: the condition
+      # has length > 1 and only the first element will be used\n"
+      ws.send(json.dumps({
+        'type': 'completed preprocessing',
+        'data': {
+          'count': upload_count,
+          'client': ip,
+        }
+      }))    
+      ws.close()
+      return
+    # ~ t = UserTask.objects.create( # ok
+      # ~ owner = request.user,
+      # ~ task_description = 'idbac_sql'
+    # ~ )
     # Adds sqlite spectra to db
     info = idbac_sqlite_insert(request, form,
       '/uploads/sync/' + str(r.json()[0]) + '.sqlite',

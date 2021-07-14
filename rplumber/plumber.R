@@ -548,6 +548,7 @@ preprocess <- function(file) {
   },
   warning = function(warn) {
     print(paste("preprocess WARN:", warn))
+    return('')
   },
   error = function(err) {
     return('')
