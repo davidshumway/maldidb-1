@@ -521,9 +521,10 @@ mqSerial <- function(l) {
   as.character(paste0('"', paste(l, collapse = ','), '"'))
 }
 
-#* Preprocess: Preprocess spectra file uploads
+#* Preprocess: Preprocesses a spectra file upload
 #* @param file File path to preprocess
-#* @return File path of resulting sqlite file
+#* @return File path of resulting sqlite file, or empty in the case of 
+#*   WARN or ERROR.
 #* @get /preprocess
 preprocess <- function(file) {
   library(stringr)

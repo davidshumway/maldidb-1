@@ -5,9 +5,11 @@ function showUploadControls() {
 }
 function updateFileList(input, showStatusCols) {
   // Updates file list table (after customFile changed)
+  // @param showStatusCols(Boolean): False initially, then true thereafter
   showUploadControls();
   
-  $('#upload-button').click(upload);
+  if (!showStatusCols)
+    $('#upload-button').click(upload);
   
   // file-listing
   if (!input)
@@ -175,7 +177,14 @@ function toggleSearchForm() {
     si.css('display', 'block');
   }
 }
-
+function toggleUseFilenames() {
+  console.log($(this));
+  console.log($(this)[0]);
+  console.log($(this)[0].checked);
+  $('#id_file_strain_ids')[0].disabled = $(this)[0].checked;
+  if (!$(this)[0].checked)
+    $('#id_file_strain_ids')[0].focus();
+}
 function toggleAddlFields() {
   $('.search-addl-fields').toggleClass('toggle-display');
   if ($(this).text() == 'Additional search options') {
@@ -227,10 +236,16 @@ window.addEventListener('DOMContentLoaded', (event) => {
       //~ $('#upload_form').submit(search);
     }
   } catch(e) {}
+  try {
+    $('#id_file_strain_ids')[0].disabled = $('#id_use_filenames')[0].checked;
+  } catch(e) {}
   $('#id_library_create_new')[0].disabled = true;
   $('#id_library_select')[0].disabled = true;
   $('#upload_form')[0].library_save_type[0].checked = true;
   $('#id_library_create_new')[0].value = '';
+  
+  // use filenames
+  $('#id_use_filenames').click(toggleUseFilenames);
   
   // toggle search options
   $('#toggle-search-opts').click(toggleAddlFields);
@@ -485,7 +500,7 @@ var preprocessed = {
   total: 0,
   items: {},
   library: null,
-  ip: null,
+  client: null,
   search_library: null,
   cosine_count: 0,
   cosine_total: 0,
@@ -726,8 +741,8 @@ socket.onmessage = function(e) {
   console.log(data);
   
   try {
-    if (data.ip) {
-      preprocessed.ip = data.ip;
+    if (data.client) {
+      preprocessed.client = data.client;
     }
   } catch (e) {
     console.log(e);
@@ -1279,10 +1294,24 @@ function makeChart(el, dataXY) {
       //~ .attr("fill", "#00aa88");
   }
   
-// Search only
+function setFormReadOnly() {
+  var elements = $('#upload_form')[0].elements;
+  for (var i in elements) {
+    elements[i].readOnly = true;
+    elements[i].onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  }
+    
+  
+}
+// Search only, no upload
 function search(event) {
   event.preventDefault();
   event.stopPropagation();
+  setFormReadOnly();
   
   $('#upload-button')[0].disabled = true;
   //~ var form = new FormData(this);
@@ -1326,11 +1355,6 @@ function upload(event) {
   
   updateFileList(false, true);
   
-  // Shows overall status
-  preprocessed.total = $('#customFile')[0].files.length;
-  $('#stat-complete').text('0/' + preprocessed.total + ' completed');
-  $('#preprocess-upload-status').css('display', 'block');
-  
   if (form.get('library_search_type')) {
     // Menu: Basic search
     preprocessed.search_library = form.get('search_library');
@@ -1339,13 +1363,15 @@ function upload(event) {
     preprocessed.search_library = false;
   }
   
-  ajaxLibrary(this);
+  ajaxLibrary();
   
   return false;
 }
 function ajaxLibrary() {
   // Creates or validates library before upload
-  
+  var form = new FormData($('#upload_form')[0]);
+  form.set('number_files', $('#customFile')[0].files.length);
+  form.set('file', '');
   $.ajax({
     xhr: function() {
      var xhr = new window.XMLHttpRequest();
@@ -1353,42 +1379,49 @@ function ajaxLibrary() {
     },
     
     dataType: 'JSON',
-    data: new FormData($('#upload_form')[0]),
+    data: form,
     url: formURLs.library,
     type: 'POST',
     processData: false,
     contentType: false,
     // on success
     success: function(response) {
+      setFormReadOnly();
+      
+      // Shows overall status
+      preprocessed.total = $('#customFile')[0].files.length;
+      $('#stat-complete').text('0/' + preprocessed.total + ' completed');
+      $('#preprocess-upload-status').css('display', 'block');
       
       //~ var r = JSON.parse(response.responseJSON);
       var library = response.data.library;
       preprocessed.library = library;
       preprocessed.library_id = response.data.library_id;
       preprocessed.search_library = response.data.search_library;
-      //~ console.log('ajaxLibrary',response.data);return;
       
       // Loop through upload files and start each one
-      //~ $.each($('#customFile')[0].files, function() {
-        
-      //~ }
       for (var i=0; i<$('#customFile')[0].files.length; i++) {
         var f = new FormData($('#upload_form')[0]);
         f.set('file', $('#customFile')[0].files[i]);
         f.set('tmp_library', library);
+        f.set('library_id', preprocessed.library_id);
         f.set('upload_count', i);
-        f.set('ip', preprocessed.ip);
-        //~ f.set('search_library', f.get());
-        //~ preprocessed.items[i] = false;
-        //preprocessed.items[i] = f;
+        f.set('client', preprocessed.client);
         uploadHelper(f);
       }
     },
     // on error
     error: function(response) {
-      console.log(response);
+      //console.log(response);
       var r = JSON.parse(response.responseJSON.errors);
       console.log(r);
+      try {
+        if (r.file_strain_ids.length) {
+          $('#file_strain_ids_error').removeClass('toggle-display');
+          $('#file_strain_ids_error').text(r.file_strain_ids[0].message);
+          $('#upload-button')[0].disabled = false;
+        }
+      } catch(e) {}
       try {
         if (r.__all__.length > 0) {
           for (var i in r.__all__) {

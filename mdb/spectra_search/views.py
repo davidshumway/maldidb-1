@@ -106,14 +106,13 @@ class MetadataAutocomplete(autocomplete.Select2QuerySetView):
 #-----------------------------------------------------------------------
 
 @start_new_thread
-def process_file(request, file, form, owner, upload_count, ip):
-  '''Runs R methods to process a spectra file
+def process_file(request, file, form, owner, upload_count, client):
+  '''
+  Runs R methods to process a mzml or mzxml file
   '''
   try:
     ws = websocket.WebSocket()
     ws.connect('ws://localhost:8000/ws/pollData')
-    # ~ ws.connect('ws://' + ip)
-    # ~ ws.send('{"message": ""}')
     
     # ~ print(f'preprocess file{file}')
     f1 = file.replace('uploads/', 'uploads/sync/')
@@ -131,7 +130,7 @@ def process_file(request, file, form, owner, upload_count, ip):
         'type': 'completed preprocessing',
         'data': {
           'count': upload_count,
-          'client': ip,
+          'client': client,
         }
       }))    
       ws.close()
@@ -143,10 +142,11 @@ def process_file(request, file, form, owner, upload_count, ip):
     # Adds sqlite spectra to db
     info = idbac_sqlite_insert(request, form,
       '/uploads/sync/' + str(r.json()[0]) + '.sqlite',
-      user_task = False
+      user_task = False,
+      upload_count = upload_count
     )
-  except:
-    print('pf2')
+  except Exception as e:
+    print('pf2', e)
   
   # Communicates completion back to upload
   try:
@@ -154,7 +154,7 @@ def process_file(request, file, form, owner, upload_count, ip):
       'type': 'completed preprocessing',
       'data': {
         'count': upload_count,
-        'client': ip,
+        'client': client,
       }
     }))    
     ws.close()
@@ -167,7 +167,7 @@ def process_file(request, file, form, owner, upload_count, ip):
         'type': 'completed preprocessing',
         'data': {
           'count': upload_count,
-          'client': ip,
+          'client': client,
         }
       }))    
       ws.close()
@@ -180,12 +180,15 @@ def upload_status(request):
 
 @login_required
 def ajax_upload_library(request):
+  '''
+  Validates form before upload
+  '''
   if request.method == 'POST':
     form = SpectraLibraryForm(data = request.POST, files = request.FILES,
       request = request)
     if form.is_valid():
       if form.cleaned_data['search_library']:
-        return JsonResponse({
+        return JsonResponse({ # search
             'status': 'success', 
             'data': {
               'library': form.cleaned_data['library'].title,
@@ -195,7 +198,7 @@ def ajax_upload_library(request):
           }, 
           status=200)
       else:
-        return JsonResponse({
+        return JsonResponse({ # upload only
             'status': 'success', 
             'data': {
               'library': form.cleaned_data['library'].title,
@@ -213,15 +216,13 @@ def ajax_upload_library(request):
 @login_required
 def ajax_upload(request):
   '''
+  Uploads one or more files.
+  
   Preprocessing (optional) - Once uploaded, spawn new thread to preprocess.
-  
   UserFile has file location, e.g., "uploads/Bacillus_ByZQI1O.mzXML".
-  
   If owner=None, then CollapsedSpectra.create(created_by=None) still works.
-   
   Todo: Anonymous session to access anon. upload.
   '''
-  print(f'request.POST{request.POST}')
   if request.method == 'POST':
     form = SpectraUploadForm(data = request.POST, files = request.FILES,
       request = request
@@ -229,20 +230,19 @@ def ajax_upload(request):
     if form.is_valid():
       form.request = request # pass request to save() method
       form.save() # Django saves the file
-      owner = request.user.id if request.user.is_authenticated else None
-      lab, created = LabGroup.objects.get_or_create(
-        lab_name = 'FileUploads' # initializes file uploads group
-      )
-      form.cleaned_data['lab'] = lab
-      form.cleaned_data['library'] = Library.objects.filter(
-        title__exact = request.POST.get('tmp_library'),
-        created_by__exact = request.user).first()
+      owner = request.user.id #if request.user.is_authenticated else None
+      # ~ lab, created = LabGroup.objects.get_or_create(
+        # ~ lab_name = 'FileUploads' # initializes file uploads group
+      # ~ )
+      # ~ form.cleaned_data['lab'] = lab
+      form.cleaned_data['library'] = Library.objects.get(
+        id = form.cleaned_data['library_id'])
         
       file = str(form.instance.file)
-
+      
       form.cleaned_data['privacy_level'] = ['PR']
       process_file(request, file, form, owner,
-        form.cleaned_data['upload_count'], form.cleaned_data['ip'])
+        form.cleaned_data['upload_count'], form.cleaned_data['client'])
       return JsonResponse({'status': 'preprocessing'}, status=200)
     else:
       e = form.errors.as_json()

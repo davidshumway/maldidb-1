@@ -134,11 +134,15 @@ def _insert(request, tmpForm, uploadFile, user_task):
         status = 'complete', user_task = user_task
     ))
 
-def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
+def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False, upload_count = None):
   '''
   Unique: Library + Metadata.strain_id, Library + XML.xml_hash
-  Version 1: Overwrites unique entries. TODO: User feedback.
+  Beta version: Overwrites unique entries. TODO: User feedback.
+  From mzml/mzxml files, metadata will only have a single entry.
   
+  :param tmpForm: One of spectra_search.forms.SpectraUploadForm or
+    importer.forms.LoadSqliteForm
+  :param upload_count: Indexing for mzml/mzxml file uploads
   :return: Optionally returns an info object detailing results
   '''
   idbac_version = '1.0.0'
@@ -176,9 +180,26 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
     ))
   rows = cursor.execute("SELECT * FROM metaData").fetchall()
   created_metadata = {} # keeps object store keyed by strain_id
+  # Uses file_strain_ids for strain_id, if present
+  try:
+    import re
+    #use_sids = False
+    file_sid = None
+    if tmpForm.cleaned_data['use_filenames'] is False:
+      sids = re.sub('[\r\n]+', '\n', tmpForm.cleaned_data['file_strain_ids'].strip())
+      sids = sids.split('\n')
+      # ~ print('sids',sids)
+      file_sid = sids[upload_count]
+  except:
+    pass
+    # ~ use_sids = False
+  # ~ idx = 0
+  # ~ i = 0
   for row in rows:
+    # ~ sid = sids[idx] if use_sids is True else row[0]
+    sid = file_sid if file_sid is not None else row[0]
     data = {
-      'strain_id': row[0],
+      'strain_id': sid, #row[0],
       'genbank_accession': row[1],
       'ncbi_taxid': row[2],
       'cKingdom': row[3],
@@ -204,7 +225,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
     }
     m1 = False
     try:
-      m1 = Metadata.objects.get(strain_id__exact = row[0],
+      m1 = Metadata.objects.get(strain_id__exact = sid,
         library = tmpForm.cleaned_data['library']
       )
       form = MetadataForm(data, instance = m1)
@@ -218,8 +239,11 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
     if form.is_valid():
       entry = form.save(commit = False)
       entry.save()
-      # Adds to object store
-      created_metadata[row[0]] = entry
+      # Adds to object stores
+      created_metadata[sid] = entry
+      # ~ if use_sids:
+        # ~ old_sids[row[0]] = entry
+      # ~ created_metadata[row[0]] = entry
     else:
       field_errors = [(field.label, field.errors) for field in form] 
       raise ValueError('x2' + str(field_errors))
@@ -299,7 +323,10 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False):
     except:
       sxml = ''
     try:
-      smd = created_metadata[row[3]].id
+      if file_sid is not None:
+        smd = created_metadata[file_sid].id
+      else:
+        smd = created_metadata[row[3]].id
     except:
       smd = ''
       

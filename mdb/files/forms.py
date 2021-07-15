@@ -10,12 +10,20 @@ User = get_user_model()
 
 class FileUploadForm(forms.Form):
   '''
+  Performs similar tasks as spectra.forms.SpectraLibraryForm
+  
+  TODO: This form and spectra.forms.SpectraLibraryForm should inherit
+    from an abstract parent form.
   '''
   file = forms.FileField(
     label = 'Upload one or more files',
-    required = True,
+    required = False,
     widget = forms.ClearableFileInput(attrs={'multiple': True})
   )
+  number_files = forms.IntegerField(widget = forms.HiddenInput(),
+    initial = 0)
+    
+  # save to existing library
   library_select = forms.ModelChoiceField(
     queryset = Library.objects.all(),
     to_field_name = 'title',
@@ -43,6 +51,18 @@ class FileUploadForm(forms.Form):
     ])
   )
   
+  use_filenames = forms.BooleanField(
+    required = False,
+    initial = True,
+    label = 'Use filenames for strain IDs?')
+  
+  file_strain_ids = forms.CharField(
+    required = False,
+    widget = forms.Textarea(attrs = {'rows': 6, 'style': 'width:100%;'}),
+    # Bug? Setting disabled causes the form to ignore any input here.
+    # ~ disabled = True
+    )
+    
   preprocess = forms.BooleanField(
     required = True,
     initial = True,
@@ -72,6 +92,37 @@ class FileUploadForm(forms.Form):
         # ~ Q(created_by__exact = user)
       # ~ ).order_by('-id')
       # ~ self.fields['library_select'].queryset = q
+  
+  def clean_file_strain_ids(self):
+    d = self.cleaned_data['file_strain_ids']
+    if self.cleaned_data['use_filenames'] is False:
+      try:
+        if self.cleaned_data['number_files'] is False:
+          raise forms.ValidationError('Field "number_files" missing!')
+      except:
+        raise forms.ValidationError('Field "number_files" missing!')
+      if d.strip() == '':
+        raise forms.ValidationError(
+          'List of filenames must not be empty!'
+        )
+      import re
+      x = re.sub('[\r\n]+', '\n', d.strip())
+      x = x.split('\n')
+      # Entries == form entries
+      if len(x) != self.cleaned_data['number_files']:
+        raise forms.ValidationError(
+          'Number of filenames ({}) does not match number of files ({})!'
+          .format(len(x), self.cleaned_data['number_files']))
+      # < 255
+      for tmpmd in x:
+        if len(tmpmd.strip()) > 255:
+          raise forms.ValidationError(
+            'Filenames contains an entry > 255 characters!')
+      # Unique, e.g. [1,1] != {1}
+      if len(set(x)) != len(x):
+        raise forms.ValidationError(
+            'Filenames are not unique!')
+    return d
     
   def clean(self):
     '''
@@ -81,7 +132,7 @@ class FileUploadForm(forms.Form):
     # ~ cleaned_data['cKingdom'] = Metadata.objects.none()
     # ~ d['cKingdom'] = Metadata.objects.filter(cKingdom__exact = 'Bacteria')
     # ~ d['cClass'] = Metadata.objects.filter(cClass__exact = 'Gammaproteobacteria')
-    print(f'clean{d}')
+    # ~ print(f'clean{d}')
     
     # user's lab
     user_lab, created = LabGroup.objects.get_or_create(
@@ -90,6 +141,7 @@ class FileUploadForm(forms.Form):
       owners__in = [self.user])
     if created:
       user_lab.owners.add(self.user)
+      user_lab.members.add(self.user)
       user_lab.save()
     
     # validate upload library

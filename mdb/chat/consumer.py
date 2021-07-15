@@ -31,7 +31,7 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     )
     await self.accept()
     
-    await self.send_json({'data': {'ip': self.client_id}})
+    await self.send_json({'data': {'client': self.client_id}})
 
   async def disconnect(self, close_code):
     # ~ print('==================2')
@@ -533,14 +533,6 @@ def cosine_scores(self, library, client, search_library):
         'genus': u + [str(s['strain_id__cGenus']) if s['strain_id__cGenus'] != '' else 'N/A' for s in list(n2)],
         'species': u + [str(s['strain_id__cSpecies']) if s['strain_id__cSpecies'] != '' else 'N/A' for s in list(n2)]
       },
-      # ~ 'dendro': ccs['dendro'],
-      # ~ 'original': {
-        # ~ 'peak_mass': spectra1.peak_mass,
-        # ~ 'peak_intensity': spectra1.peak_intensity,
-        # ~ 'binned_mass': binned_peaks[str(spectra1.id)]['mass'],
-        # ~ 'binned_intensity': binned_peaks[str(spectra1.id)]['intensity'],
-        # ~ 'binned_snr': binned_peaks[str(spectra1.id)]['snr'],
-      # ~ }
     }
     
     rowcount = 1
@@ -560,12 +552,6 @@ def cosine_scores(self, library, client, search_library):
         'genus': s['strain_id__cGenus'],
         'species': s['strain_id__cSpecies'],
         'rowcount': rowcount,
-        
-        # ~ 'peak_mass': cs.peak_mass,
-        # ~ 'peak_intensity': cs.peak_intensity,
-        # ~ 'binned_mass': binned_peaks[id]['mass'],
-        # ~ 'binned_intensity': binned_peaks[id]['intensity'],
-        # ~ 'binned_snr': binned_peaks[id]['snr'],
       })
       rowcount += 1
       if rowcount >= 5:
@@ -580,83 +566,6 @@ def cosine_scores(self, library, client, search_library):
     }))
     continue
     
-    
-    
-    
-      
-    u = ['Unknown sample']
-    result = {
-      'scores': [],
-      'ids': {
-        'strain': u + [str(s['strain_id__strain_id']) for s in list(n2)],
-        'kingdom': u + [str(s['strain_id__cKingdom']) if s['strain_id__cKingdom'] != '' else 'N/A' for s in list(n2)],
-        'phylum': u + [str(s['strain_id__cPhylum']) if s['strain_id__cPhylum'] != '' else 'N/A' for s in list(n2)],
-        'class': u + [str(s['strain_id__cClass']) if s['strain_id__cClass'] != '' else 'N/A' for s in list(n2)],
-        'order': u + [str(s['strain_id__cOrder']) if s['strain_id__cOrder'] != '' else 'N/A' for s in list(n2)],
-        'family': u + [str(s['strain_id__cFamily']) if s['strain_id__cFamily'] != '' else 'N/A' for s in list(n2)],
-        'genus': u + [str(s['strain_id__cGenus']) if s['strain_id__cGenus'] != '' else 'N/A' for s in list(n2)],
-        'species': u + [str(s['strain_id__cSpecies']) if s['strain_id__cSpecies'] != '' else 'N/A' for s in list(n2)]
-      },
-      'dendro': ccs['dendro'],
-      'original': {
-        'peak_mass': spectra1.peak_mass,
-        'peak_intensity': spectra1.peak_intensity,
-        'binned_mass': binned_peaks[str(spectra1.id)]['mass'],
-        'binned_intensity': binned_peaks[str(spectra1.id)]['intensity'],
-        'binned_snr': binned_peaks[str(spectra1.id)]['snr'],
-      }
-    }
-    
-    # ~ from django.db.models import Case, When
-    # ~ preserved = Case(*[When(pk = pk, then = pos) for pos, pk in enumerate(o)])
-    # ~ q = CollapsedSpectra.objects.filter(id__in = o.keys()).order_by(preserved)[0:4]
-    rowcount = 1
-    for (idx, id) in enumerate(score_dict): # e.g. 0 '12346' 0.2
-      s = search_lib_dict[id]
-      result['scores'].append({
-        'score': score_dict[id],
-        'id': id,
-        # ~ 'score': o[str(cs.id)],
-        # ~ 'id': cs.id,
-        'strain': s['strain_id__strain_id'],
-        # ~ 'strain': cs.strain_id.strain_id,
-        
-        # Add in individual view, if required
-        # ~ 'kingdom': cs.strain_id.cKingdom,
-        # ~ 'phylum': cs.strain_id.cPhylum,
-        # ~ 'class': cs.strain_id.cClass,
-        # ~ 'order': cs.strain_id.cOrder,
-        
-        # ~ 'family': cs.strain_id.cFamily,
-        # ~ 'genus': cs.strain_id.cGenus,
-        # ~ 'species': cs.strain_id.cSpecies,
-        # ~ 'rowcount': rowcount,
-        # ~ 'peak_mass': cs.peak_mass,
-        # ~ 'peak_intensity': cs.peak_intensity,
-        'family': s['strain_id__cFamily'],
-        'genus': s['strain_id__cGenus'],
-        'species': s['strain_id__cSpecies'],
-        'rowcount': rowcount,
-        
-        # Add in individual view for original spectra view
-        # ~ 'peak_mass': cs.peak_mass,
-        # ~ 'peak_intensity': cs.peak_intensity,
-        'binned_mass': binned_peaks[id]['mass'],
-        'binned_intensity': binned_peaks[id]['intensity'],
-        'binned_snr': binned_peaks[id]['snr'],
-      })
-      rowcount += 1
-      if rowcount >= 10:
-        break
-    ws.send(json.dumps({
-      'type': 'completed cosine',
-      'data': {
-        'client': client,
-        'result': result,
-        'spectra1': spectra1.id
-      }
-    }))
-  
   # closes socket
   ws.close()
   

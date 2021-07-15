@@ -64,15 +64,22 @@ class LibraryModelChoiceField(forms.ModelChoiceField):
     return f'{obj.title} | {obj.lab}'
 
 class SpectraLibraryForm(forms.Form):
-  '''Processes the library portion of upload form.
+  '''
+  Processes the library portion of upload form.
   
-  Stores upload files to pass to upload form.
+  File is just a placeholder, i.e. no files uploaded via this form,
+  whereas number_files represents the number of files in the File
+  field.
+  
   '''
   file = forms.FileField(
     label = 'Upload one or more files',
     required = False,
     widget = forms.ClearableFileInput(attrs={'multiple': True})
   )
+  number_files = forms.IntegerField(widget = forms.HiddenInput(),
+    initial = 0)
+  
   search_from_existing = LibraryModelChoiceField(
     queryset = Library.objects.all(),
     # ~ to_field_name = 'id',
@@ -84,27 +91,7 @@ class SpectraLibraryForm(forms.Form):
     empty_label = 'Choose...'
   )
   
-  # ~ save_to_library = forms.BooleanField(
-    # ~ required = True,
-    # ~ label = 'Save upload(s) to a library? (optional)',
-    # ~ widget = forms.CheckboxInput(
-      # ~ attrs = {
-        # ~ 'class': 'form-check-input'}
-    # ~ ),
-    # ~ initial = True,
-  # ~ )
-  # If yes... todo: filter by user's membership and/or public libs
-  # ~ lab = forms.ModelChoiceField(
-    # ~ queryset = LabGroup.objects.all(),
-    # ~ to_field_name = 'lab_name',
-    # ~ required = False,
-    # ~ widget = forms.Select(
-      # ~ attrs = {
-        # ~ 'class': 'custom-select'}
-    # ~ ),
-    # ~ disabled = True,
-    # ~ empty_label = 'Select a lab'
-  # ~ )
+  # save to existing library
   library_select = forms.ModelChoiceField(
     queryset = Library.objects.all(),#.none(),
     to_field_name = 'title',
@@ -131,6 +118,18 @@ class SpectraLibraryForm(forms.Form):
       ('EXISTING', 'Existing'),
     ])
   )
+  
+  use_filenames = forms.BooleanField(
+    required = False,
+    initial = True,
+    label = 'Use filenames for strain IDs?')
+  
+  file_strain_ids = forms.CharField(
+    required = False,
+    widget = forms.Textarea(attrs = {'rows': 6, 'style': 'width:100%;'}),
+    # Bug? Setting disabled causes the form to ignore any input here.
+    # ~ disabled = True
+    )
   
   preprocess = forms.BooleanField(
     required = True,
@@ -248,16 +247,49 @@ class SpectraLibraryForm(forms.Form):
         # ~ Q(created_by__exact = user)
       # ~ ).order_by('-id')
       # ~ self.fields['library_select'].queryset = q
+  
+  def clean_file_strain_ids(self):
+    d = self.cleaned_data['file_strain_ids']
+    if self.cleaned_data['use_filenames'] is False:
+      try:
+        if self.cleaned_data['number_files'] is False:
+          raise forms.ValidationError('Field "number_files" missing!')
+      except:
+        raise forms.ValidationError('Field "number_files" missing!')
+      if d.strip() == '':
+        raise forms.ValidationError(
+          'List of filenames must not be empty!'
+        )
+      import re
+      x = re.sub('[\r\n]+', '\n', d.strip())
+      x = x.split('\n')
+      # Entries == form entries
+      if len(x) != self.cleaned_data['number_files']:
+        raise forms.ValidationError(
+          'Number of filenames ({}) does not match number of files ({})!'
+          .format(len(x), self.cleaned_data['number_files']))
+      # < 255
+      for tmpmd in x:
+        if len(tmpmd.strip()) > 255:
+          raise forms.ValidationError(
+            'Filenames contains an entry > 255 characters!')
+      # Unique, e.g. [1,1] != {1}
+      if len(set(x)) != len(x):
+        raise forms.ValidationError(
+            'Filenames are not unique!')
+    return d
     
   def clean(self):
     '''
     Adds "library" key
     '''
+    # ~ print(f'clean{self.cleaned_data}')
     d = super().clean()
+    # ~ print(f'd{d}')
     # ~ cleaned_data['cKingdom'] = Metadata.objects.none()
     # ~ d['cKingdom'] = Metadata.objects.filter(cKingdom__exact = 'Bacteria')
     # ~ d['cClass'] = Metadata.objects.filter(cClass__exact = 'Gammaproteobacteria')
-    print(f'clean{d}')
+    # ~ print(f'clean{d}')
     
     # user's lab
     user_lab, created = LabGroup.objects.get_or_create(
@@ -266,6 +298,7 @@ class SpectraLibraryForm(forms.Form):
       owners__in = [self.user])
     if created:
       user_lab.owners.add(self.user)
+      user_lab.members.add(self.user)
       user_lab.save()
     
     # validate search library
@@ -278,8 +311,6 @@ class SpectraLibraryForm(forms.Form):
     elif d.get('library_search_type') == 'pub':
       d['search_library'] = d['search_library_public']
       
-    # ~ print(f'cleaned{d}')
-    
     # validate upload library
     if d.get('library_save_type') == 'RANDOM':
       title = get_random_string(8)
@@ -347,19 +378,19 @@ class SpectraUploadForm(forms.ModelForm):
   upload_count = forms.IntegerField()
   
   # For use with websockets 
-  ip = forms.CharField(label = '', required = False)
+  client = forms.CharField(label = '', required = False)
    
+  library_id = forms.IntegerField(required = True)
   # ~ library = forms.ModelChoiceField(
-    # ~ queryset = Library.objects.none(),
-    # ~ to_field_name = 'title',
-    # ~ required = True#,
-    # ~ widget = forms.Select(
-      # ~ attrs = {
-        # ~ 'class': 'custom-select'}
-    # ~ ),
-    # ~ disabled = True,
-    # ~ empty_label = 'Select a library'
+    # ~ queryset = Library.objects.all(),
+    # ~ to_field_name = 'id',
+    # ~ required = True
   # ~ )
+  
+  use_filenames = forms.BooleanField(required = False,
+    initial = True)
+  
+  file_strain_ids = forms.CharField(required = False)
   
   class Meta:
     model = UserFile
@@ -386,7 +417,15 @@ class SpectraUploadForm(forms.ModelForm):
       # ~ l = kwargs.pop('library')
     super(SpectraUploadForm, self).__init__(*args, **kwargs)
     user = self.user
-      
+  
+  # ~ def clean(self):
+    # ~ d = super().clean()
+    # ~ try:
+      # ~ d['library_id'] = Library.objects.get(id = d['library_id'])
+    # ~ except:
+      # ~ raise forms.ValidationError('Missing library!')
+    # ~ return d
+          
 class SpectraSearchForm(forms.ModelForm):
   '''Replicated, Collapsed, all
   Small molecule, Protein, all [or range, e.g., 3k-8k]
