@@ -48,9 +48,18 @@ function updateFileList(input, showStatusCols) {
     if (preprocessed.table1) {
       preprocessed.table1.destroy();
     }
-    var t = $('#file-listing-preprocessing').DataTable({
+    preprocessed.table2 = $('#file-listing-preprocessing').DataTable({
       data: input.files,
       destroy: true,
+      columnDefs: [{ // progress bar, 3rd column (2)
+        targets: 2,
+        createdCell: function(td, cellData, rowData, row, col) {
+          //~ console.log('createdCell td cellData', td, cellData);
+          // td: html td element
+          // cellData: the row number, e.g. row0 = "0"
+          preprocessed.table2_progressbars[cellData] = td;
+        }
+      }],
       columns: [
         {data: 'name', title: 'Name'},
         {data: 'size', title: 'Size',
@@ -69,7 +78,9 @@ function updateFileList(input, showStatusCols) {
         },
         {data: 'upload', title: 'Upload status',
           render: function(data, type) {
-            return '<span id="filetable-upload' + data + '"></span>';
+            return '';
+            //~ return '<span id="filetable-upload' + data + '"></span>';
+            //~ return table2_progressbars[data];
           }
         },
         {data: 'preprocess', title: 'Preprocess status',
@@ -79,7 +90,7 @@ function updateFileList(input, showStatusCols) {
         }
       ]
     });
-    t.draw();
+    preprocessed.table2.draw();
   }
 }
 function toggleSearchTypeOpts(e) {
@@ -178,9 +189,6 @@ function toggleSearchForm() {
   }
 }
 function toggleUseFilenames() {
-  console.log($(this));
-  console.log($(this)[0]);
-  console.log($(this)[0].checked);
   $('#id_file_strain_ids')[0].disabled = $(this)[0].checked;
   if (!$(this)[0].checked)
     $('#id_file_strain_ids')[0].focus();
@@ -504,7 +512,10 @@ var preprocessed = {
   search_library: null,
   cosine_count: 0,
   cosine_total: 0,
-  collapsed_data: {}
+  collapsed_data: {},
+  table1: null,
+  table2: null,
+  table2_progressbars: {} // holds {"row-index": td-element}
 }
 function sp(el) {
   //makeChartBtm
@@ -804,7 +815,8 @@ socket.onmessage = function(e) {
             return '<button href="#" id="open-result-' + data + '" ' +
               //'data-id="' + data + '" ' +
               'class="btn btn-secondary" ' +
-              'onclick="javascript:loadSingleScore(this, ' + data + ')">Explore more</button>';
+              'onclick="javascript:loadSingleScore(this, ' + data + ')">' +
+              'Explore more</button>';
           }
         }
       ]
@@ -1439,28 +1451,39 @@ function ajaxLibrary() {
 
 function uploadHelper(formData) {
   var template = '\
-    <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0"\
-         aria-valuemax="100" style="width: 0%;min-width: 2em;">\
-      0%\
-    </div>';
+    <div class="row" style="width:100%;">\
+      <div class="col-sm-3 progress-bar-txt"\
+        aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>\
+      <div class="col-sm-9" class="progress-bar-status">\
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0"\
+          aria-valuemax="100" style="width: 0%;min-width: 2em;">\
+          \
+        </div>\
+    </div></div>';
           
   var t = $(template);
-  var n = $('#filetable-upload' + formData.get('upload_count'));
-  $('#filetable-upload' + formData.get('upload_count')).append(t);
+  //~ var n = $('#filetable-upload' + formData.get('upload_count'));
+  var n = $(preprocessed.table2_progressbars[formData.get('upload_count')]);
+  n.append(t);
+  t.progress_txt = n.find('.progress-bar-txt');
   t.progress = n.find('.progress-bar');
+  console.log(t);
+  console.log(n);
   
   $.ajax({
     xhr: function() {
       var xhr = new window.XMLHttpRequest();
-
-      // Upload, filetable-upload{i}
       xhr.upload.addEventListener('progress', function(evt){
         if (evt.lengthComputable) {
           var pct = Math.round(100 * evt.loaded / evt.total);
-          // filetable-upload
           t.progress.attr('aria-valuenow', pct);
-          t.progress.text(pct + '%');
+          t.progress.html('&nbsp;');
+          //~ t.progress.text(' ');
+          //~ t.progress.text(pct + '%');
           t.progress.css('width', pct + '%');
+          
+          t.progress_txt.attr('aria-valuenow', pct);
+          t.progress_txt.text(pct + '%');
         }
       }, false);
       return xhr;
