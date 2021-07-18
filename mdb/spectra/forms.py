@@ -1,8 +1,22 @@
 from django import forms
 from .models import *
 from django.contrib.auth import get_user_model
+from chat.models import Library
 # ~ User = get_user_model()
 
+class LibCompareForm(forms.ModelForm):
+  library = forms.ModelMultipleChoiceField(
+    queryset = Library.objects.all(),
+    #multiple = True
+    widget = forms.Select(
+      attrs = {'class': 'custom-select', 'multiple': True,
+        'style': 'height:300px;'}
+    )
+  )
+  class Meta:
+    model = Library
+    fields = ['library']
+  
 class SpectraEditForm(forms.ModelForm):
   class Meta:
     model = Spectra

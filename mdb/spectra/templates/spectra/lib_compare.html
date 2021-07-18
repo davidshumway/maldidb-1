@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block navtitle %}
+Library compare
+{% endblock %}
+{% block title %}
+Library compare
+{% endblock %}
+
+{% block content %}
+
+{% load bootstrap4 %}
+{% load static %}
+
+<link rel="stylesheet" type="text/css"
+  href="{% static 'css/datatables.min.css' %}"/>
+ 
+<script type="text/javascript" src="{% static 'js/datatables.min.js' %}">
+  </script>
+<script type="text/javascript" src="{% static 'js/d3.6.7.0.min.js' %}">
+  </script>
+<script type="text/javascript" src="{% static 'js/dropzone.5.7.0.js' %}">
+  </script>
+
+<form action="" class="" method="" style="" id="">
+{% csrf_token %}
+
+<div class="card mx-auto p-2 col-sm-12 col-md-8">
+  <div class="row mx-auto">
+    <div class="input-group m-4">
+      <div class="input-group-prepend">
+        <span class="input-group-text">Select two or more libraries</span>
+      </div>
+      <div>
+        {% with f=form.library %}
+        {{ f }}
+        {% endwith %}
+      </div>
+    </div>
+  </div>
+  <button type="button" class="btn btn-primary" onclick="javascript:check(this);">
+    Check similarity</button>
+</div>
+
+</form>
+
+<script type="text/javascript">
+var socket = new WebSocket('ws://' + location.host + '/ws/pollData');
+socket.onopen = function(e){
+  //console.log(e);
+}
+socket.onmessage = function(e) {
+  console.log(e);
+  var data = JSON.parse(e.data).data;
+  console.log(data);
+  
+  if (data.message == 'completed library comparison') {
+    
+  }
+}
+function check(btn) {
+  var x = $('#id_library option:selected');
+  var selected = [];
+  for (var i=0; i<x.length; i++) {
+    selected.push(x[i].value);
+  }
+  
+  $('#id_library')[0].disabled = true;
+  btn.disabled = true;
+  
+  socket.send(JSON.stringify({
+    type: 'library comparison',
+    libraries: selected,
+  }));
+}
+</script>
+{% endblock %}
+

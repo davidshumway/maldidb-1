@@ -16,10 +16,8 @@ class UserFilesListView(SingleTableView):
 
 class FileUpload(ListView):
   model = UserFile
-  # ~ table_class = UserFileTable
   template_name = 'files/file_upload.html'
   
-# ~ def file_upload():
   def get_context_data(self, **kwargs):
     context = super().get_context_data(**kwargs)
     context['upload_form'] = FileUploadForm()

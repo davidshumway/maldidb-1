@@ -50,7 +50,28 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
       print(e)
       return
     
-    # client asks to search existing
+    # client: lib-compare
+    try:
+      if val['type'] == 'library comparison':
+        cosine_score_libraries(self, val, self.client_id)
+    except Exception as e:
+      print(e)
+      pass
+    # tells client result
+    try:
+      if val['type'] == 'library comparison result':
+        d = json.dumps({
+          'data': {
+            'message': 'library comparison result',
+            'data': val['data']
+          }
+        })
+        await clients[val['data']['client']].send(text_data = d)
+    except Exception as e:
+      print(e)
+      pass
+      
+    # client: search existing
     try:
       if 'existingLibrary' in val and 'searchLibrary' in val:
         cosine_scores_existing(self, val['existingLibrary'],
@@ -58,7 +79,7 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     except Exception as e:
       print(e)
       pass
-    # client asks for full data of single score
+    # client: full data of single score
     try:
       if val['type'] == 'single score':
         single_score(self, self.client_id, val)
@@ -231,6 +252,89 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
   async def deprocessing(self, event):
     print('==================4')
     # ~ await self.send(text_data = json.dumps(event['value']))
+  
+@start_new_thread
+def cosine_score_libraries(self, val, client):
+  '''
+  '''
+  LibrariesCosineScore.objects.all().delete()
+  
+  # check db
+  # https://stackoverflow.com/questions/16324362/django-queryset-get-exact-manytomany-lookup
+  from django.db.models import Count
+  #LibrariesCosineScore.objects.filter(
+  q = LibrariesCosineScore.objects.annotate(count = Count('libraries'))\
+    .filter(count = len(val['libraries']))
+  for lid in val['libraries']:
+    q = q.filter(libraries = lid)
+  if len(q) > 1: #??
+    pass
+  elif len(q) == 1:
+    #q = q[0] # result
+    ws = websocket.WebSocket()
+    ws.connect('ws://localhost:8000/ws/pollData')
+    ws.send(json.dumps({
+      'type': 'library comparison result',
+      'data': {
+        'client': client,
+        'result': q[0].result
+      }
+    }))
+    ws.close()
+    return 
+  
+  # Checks libraries exist
+  try:
+    lib_cos_score = LibrariesCosineScore.objects.create(
+      result = '' 
+    )
+    for lid in val['libraries']:
+      lib_cos_score.libraries.add(Library.objects.get(id = lid))
+    lib_cos_score.save()
+  except Exception as e:
+    # e.g. if a Library id doesn't exist
+    print('e:', e)
+    return
+
+  # Creates a new score
+  data = {
+    'ids': val['libraries']
+  }
+  # ~ print('data',data)
+  r = requests.post(
+    'http://plumber:8000/cosineLibCompare',
+    params = data
+  )
+  # ~ r = requests.get(
+    # ~ 'http://plumber:8000/cosineLibCompare',
+    # ~ params = data
+  # ~ )
+  # ~ print(r)
+  # Writes result to db and sends response
+  if r.status_code == 200:
+    lib_cos_score.result = r.text
+    lib_cos_score.save()
+    
+    ws = websocket.WebSocket()
+    ws.connect('ws://localhost:8000/ws/pollData')
+    ws.send(json.dumps({
+      'type': 'library comparison result',
+      'data': {
+        'client': client,
+        'result': r.text
+      }
+    }))
+    ws.close()
+  
+    #result = [{lib_id: 1, spectra_id: 999, scores: [{to: 123, s: 0.6}, {to: 124, s: 0.7}]}
+#~   data = [
+#~   {'id': '0', 'edges': [{'1': 0.2}, {'2': 0.9}, {'3': 0.5}]},
+#~   {'id': '1', 'edges': [{'2': 0.9}, {'3': 0.5}, {'0': 0.2}]},
+#~   {'id': '2', 'edges': [{'1': 0.9}, {'3': 0.5}, {'0': 0.9}]},
+#~   {'id': '3', 'edges': [{'0': 0.5}, {'1': 0.5}, {'2': 0.5}]}
+#~ ]
+
+
   
 @start_new_thread
 def collapse_lib(self, library, client, search_library):
@@ -456,8 +560,6 @@ def cosine_scores(self, library, client, search_library):
   
   # ~ n2 = CollapsedSpectra.objects.filter(library_id = 12937, spectra_content__exact = 'PR').order_by('id').values('id', 'strain_id__strain_id',    'strain_id__cSpecies', 'strain_id__cGenus', 'strain_id__cFamily', 'strain_id__cOrder', 'strain_id__cClass', 'strain_id__cPhylum', 'strain_id__cKingdom')
   
-  # ~ search_library_obj
-  
   # TEST ONLY clears ccs cache
   # ~ print('clear ccs cache')
   # ~ CollapsedCosineScore.objects.all().delete()
@@ -509,7 +611,7 @@ def cosine_scores(self, library, client, search_library):
       ))
       ccs = r.json()
     
-    # Returns shorter version, while explore more returns full data
+    # Returns shorter version, while "explore more" returns full data
     
     # Creates dictionary sorted by its values (similarity score)
     from collections import OrderedDict

@@ -57,8 +57,31 @@ print.data.frame <- function (
   )
 }
 
-#* Cosine2
-#* @post /cosine2
+#* cosineLibCompare
+#* Returns full result of cosine similarity of one or more libraries
+#* @param ids Ids of one or more libraries
+#* @post /cosineLibCompare
+function(req, ids) {
+  print(ids)
+  ids <- as.numeric(ids)
+  if (sum(is.na(ids)) != 0) {
+    stop('ids contain non-numerics!')
+  }
+  s <- dbLibrarySpectra(ids)
+  allPeaks <- MALDIquant::trim(s['peaks']$peaks, c(3000, 15000))
+  binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
+  featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, s['spectra']$spectra)
+
+  d <- coop::cosine(t(featureMatrix))
+  d <- round(d, 3)
+#~   print(head(d))
+  return(list(
+    'similarity' = d
+  ))
+}
+
+#* Cosine_disttest
+#* @post /cosine_disttest
 function(req, ids) {
   ids <- as.numeric(ids)
   if (length(ids) < 2) {
@@ -92,33 +115,7 @@ function(req, ids) {
   print(ids)
   print(x['distance'])
   return()
-  
-  tree1 <- data.tree::as.Node(x['dendrogram']$dendrogram)
-  
-  b <- list()
-  for(i in 1:length(ids)) {
-    b <- append(b, list(list(
-      'mass' = '1,2,3',
-      'intensity' = '1,1,1',
-      'snr' = '1,1,1',
-      'csId' = ids[[i]]
-    )))
-  }
-  
-  # from list to json
-  # https://www.r-bloggers.com/2015/05/
-  #  convert-data-tree-to-and-from-list-json-networkd3-and-more/
-  return(list(
-    'similarity' = ids[2:length(ids)],
-    'binnedPeaks' = b,
-    'dendro' = toJSON(as.list(tree1, unname = TRUE))#,
-#~     'dendro2' = toJSON(list(
-#~       merges=cluster,
-#~       seq=hc$labels,
-#~       order=hc$order,
-#~       maxHeight=max(hc$height)
-#~     ))
-  ))
+  # ...
 }
 
 #* Cosine: Get cosine scores for a set of db spectra
@@ -144,8 +141,6 @@ function(req, ids) {
   allSpectra <- MALDIquant::trim(allSpectra, c(3000, 15000))
   
   binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
-  
-  #binnedPeaks <- trim(binnedPeaks, c(3000,15000))
   
   featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, allSpectra)
   
@@ -199,16 +194,6 @@ function(req, ids) {
 #~     ))
   ))
   
-  #return(d[1,])
-  
-  d <- stats::as.dist(1 - coop::cosine(proteinMatrix))
-  d <- as.matrix(d)
-  d <- round(d, 3)
-  d <- d[1,]
-  
-  
-  return(d)
-  
   ## not used
   # visualizes sparse matrix
   
@@ -233,7 +218,7 @@ function(req, ids) {
   x <- proteinMatrix * ceiling(proteinMatrix[, 1])
   
   # times first column
-#~   x <- proteinMatrix * proteinMatrix[, 1]
+  # x <- proteinMatrix * proteinMatrix[, 1]
 
   x <- x[, ordering]
   png(file = 'scatterplot2.png',  width = 10, height = 10, units = 'in', res = 600)
@@ -276,7 +261,7 @@ function(req, ids) {
     }, mc.cores = n_core))
   }
   
-#~   genmatred <- redim_matrix(as.matrix(pmReorder), target_height = 600, target_width = 50) 
+  # genmatred <- redim_matrix(as.matrix(pmReorder), target_height = 600, target_width = 50) 
   g <- redim_matrix(as.matrix(x), target_height = 1000, target_width = ncol(x)) 
   png(file = 'scatterplot3.png')
   image(
@@ -290,33 +275,20 @@ function(req, ids) {
   dev.off()
   
   return(d)
-  
-
-#~   library(jsonlite)
-#~   a <- list( # capture output helpful for serializing S4 class
-#~     'ids' = ids,
-#~     'allPeaks' = capture.output(allPeaks),
-#~     'allSpectra' = capture.output(allSpectra),
-#~     'binnedPeaks' = capture.output(binnedPeaks),
-#~     'featureMatrix' = capture.output(featureMatrix),
-#~     'cosineScores' = capture.output(dfull),
-#~     #'cosineScoresUt' = capture.output(d),
-#~     'cosineScoresUt' = d
-#~   )
-#~   jsonlite::toJSON(a)
 }
 
-# Helper function to retrieve all spectra from a library
-dbLibrarySpectra <- function(id) {
+# Helper function to retrieve all spectra from one or more libraries
+dbLibrarySpectra <- function(ids) {
   c <- connect()
-  id <- as.numeric(id)
-  s <- paste0('SELECT peak_mass, peak_intensity, peak_snr, id
+  #id <- as.numeric(id)
+  s <- paste(unlist(ids), collapse = ',')
+  s <- paste0('SELECT peak_mass, peak_intensity, peak_snr, id, library_id
     FROM spectra_collapsedspectra
-    WHERE id=', id)
+    WHERE library_id IN (', s, ') AND max_mass > 6000')
   q <- dbGetQuery(c$con, s)
   if (nrow(q) < 1) {
     disconnect(c$drv, c$con)
-    stop('database returned less than one row (library)!')
+    stop('database returned less than one row!')
   }
     
   allSpectra = list()
@@ -423,13 +395,14 @@ collapseLibrary <- function(id, owner = F) {
 collapseStrainsInLibrary <- function(lid, sid, type, owner) {
   lid <- as.numeric(lid)
   sid <- as.numeric(sid)
-  if (owner == F) {
+#~   if (owner == F) {
 #~     print('owner is anon.')
-    owner <- ''
-  } else {
+#~     owner <- ''
+#~   } else {
 #~     print('owner is not anon.')
-    owner <- paste0('"created_by":"', as.numeric(owner), '",')
-  }
+#~     owner <- paste0('"created_by":"', as.numeric(owner), '",')
+#~   }
+  owner <- paste0('"created_by":"', as.numeric(owner), '",')
   if (type == 'PR')
     sym <- '>'
   else {

@@ -20,6 +20,9 @@ import django_tables2 as tables
 
 from rest_framework.viewsets import ModelViewSet
 
+from chat.models import LabGroup, Library
+from django.db.models import Q
+
 class CollapsedCosineScoreViewSet(ModelViewSet):
   '''
   Showing latest ten entries.
@@ -57,6 +60,28 @@ def spectra_profile(request, spectra_id):
 def spectra2_profile(request, spectra_id):
   spectra = CollapsedSpectra.objects.get(id = spectra_id)
   return render(request, 'spectra/spectra_profile.html', {'spectra': spectra})
+
+@login_required
+def lib_compare(request):
+  if request.method == "POST":
+    form = LibCompareForm(request.POST, request.FILES)
+    if form.is_valid():
+      #form.save()
+      #return redirect(reverse('chat:view_metadata', args = (strain_id, )))
+      pass
+  else:
+    form = LibCompareForm()
+  # shows all available to user
+  u = request.user
+  user_labs = LabGroup.objects.filter(
+    Q(owners__in = [u]) | Q(members__in = [u])
+  )
+  form.fields['library'].queryset = Library.objects.filter(
+    Q(created_by__exact = u) | 
+    Q(lab__in = user_labs) |
+    Q(privacy_level__exact = 'PB')
+  )
+  return render(request, 'spectra/lib_compare.html', {'form': form})
   
 @login_required
 def edit_spectra(request, spectra_id):

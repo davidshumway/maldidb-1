@@ -14,13 +14,7 @@ from django_tables2 import SingleTableView
 import django_tables2 as tables
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-# R
-from chat.rfn import SpectraScores
-# Distance measurement
-#from sklearn.metrics.pairwise import cosine_similarity
-# spectra table
 from spectra.tables import *
-# importer
 from importer.views import idbac_sqlite_insert
 # preprocess
 import requests
@@ -347,16 +341,16 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     
     # all (using bitwise or https://github.com/django/django/blob/
     #   master/django/db/models/query.py#L308)
-    all = Library.objects.none()
+    all_libs = Library.objects.none()
     # r01
     alice, created = User.objects.get_or_create(username = 'alice')
     q = Library.objects.filter(title__exact = 'R01 Data',
       created_by__exact = alice)
-    all = all | q
+    all_libs = all_libs | q
     context['upload_form'].fields['search_library'].queryset = q
     # own libraries (library_select shares this qs)
     q = Library.objects.filter(created_by__exact = u)
-    all = all | q
+    all_libs = all_libs | q
     context['upload_form'].fields['search_library_own'].queryset = q
     context['upload_form'].fields['library_select'].queryset = q
     # own labs
@@ -366,14 +360,14 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     q = Library.objects.filter(
       Q(lab__in = user_labs)
     ).order_by('-id')
-    all = all | q
+    all_libs = all_libs | q
     context['upload_form'].fields['search_library_lab'].queryset = q
     # public
     q = Library.objects.filter(privacy_level__exact = 'PB').order_by('-id')
     context['upload_form'].fields['search_library_public'].queryset = q
-    all = all | q
+    all_libs = all_libs | q
     # all libraries
-    context['upload_form'].fields['search_from_existing'].queryset = all
+    context['upload_form'].fields['search_from_existing'].queryset = all_libs
     
     f = SpectraFilter(self.request.GET, queryset = self.queryset)
     context['filter'] = f

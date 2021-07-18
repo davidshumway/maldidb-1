@@ -253,8 +253,17 @@ class BinnedPeaks(models.Model):
   spectra = models.ForeignKey(
     'CollapsedSpectra',
     on_delete = models.CASCADE)
+
+class LibrariesCosineScore(models.Model):
+  '''
   
-# ~ class CollapsedCosineScore(AbstractCosineScore):
+  XXX:param library_ids: A "hash" of libraries scored in the format ("l1id|l2id|l3id")
+    where library id is ascending
+  '''
+  libraries = models.ManyToManyField('chat.Library')
+  result = models.TextField()
+  ##library_ids = models.TextField(blank = False, null = False)
+  
 class CollapsedCosineScore(models.Model):
   '''
   '''

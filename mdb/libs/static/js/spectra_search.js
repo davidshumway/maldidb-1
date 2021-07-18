@@ -54,10 +54,16 @@ function updateFileList(input, showStatusCols) {
       columnDefs: [{ // progress bar, 3rd column (2)
         targets: 2,
         createdCell: function(td, cellData, rowData, row, col) {
-          //~ console.log('createdCell td cellData', td, cellData);
           // td: html td element
           // cellData: the row number, e.g. row0 = "0"
           preprocessed.table2_progressbars[cellData] = td;
+        }
+      }, { // status, 3rd column (2)
+        targets: 3,
+        createdCell: function(td, cellData, rowData, row, col) {
+          // td: html td element
+          // cellData: the row number, e.g. row0 = "0"
+          preprocessed.table2_status_cells[cellData] = td;
         }
       }],
       columns: [
@@ -85,7 +91,8 @@ function updateFileList(input, showStatusCols) {
         },
         {data: 'preprocess', title: 'Preprocess status',
           render: function(data, type) {
-            return '<div id="filetable-preprocess' + data + '" style="text-align:center;width:100%;">pending</div>';
+            return '';
+            //return '<div id="filetable-preprocess' + data + '" style="text-align:center;width:100%;">pending</div>';
           }
         }
       ]
@@ -344,10 +351,10 @@ window.addEventListener('DOMContentLoaded', (event) => {
 
 // works locally & remotely
 var socket = new WebSocket('ws://' + location.host + '/ws/pollData');
-     
 socket.onopen = function(e){
   console.log(e);
 }
+
 function getSubgroups(data) {
 
   // Selected taxonomy e.g. "kingdom"
@@ -515,7 +522,8 @@ var preprocessed = {
   collapsed_data: {},
   table1: null,
   table2: null,
-  table2_progressbars: {} // holds {"row-index": td-element}
+  table2_progressbars: {}, // holds {"row-index": td-element}
+  table2_status_cells: {}
 }
 function sp(el) {
   //makeChartBtm
@@ -763,9 +771,10 @@ socket.onmessage = function(e) {
   
   if (data.message == 'completed preprocessing') {
     var c = data.count;
-    //preprocessed.items[c] = true;
     preprocessed.count++;
-    $('#filetable-preprocess' + c).text('done');
+    $(preprocessed.table2_status_cells[c]).text('done');
+    
+    //~ $('#filetable-preprocess' + c).text('done');
     $('#stat-complete').text(
       preprocessed.count + '/' + preprocessed.total + ' completed');
     // Collapses library if all are preprocessed
