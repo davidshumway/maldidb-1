@@ -60,12 +60,7 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
     # tells client result
     try:
       if val['type'] == 'library comparison result':
-        d = json.dumps({
-          'data': {
-            'message': 'library comparison result',
-            'data': val['data']
-          }
-        })
+        d = json.dumps(val)
         await clients[val['data']['client']].send(text_data = d)
     except Exception as e:
       print(e)
@@ -257,7 +252,7 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
 def cosine_score_libraries(self, val, client):
   '''
   '''
-  LibrariesCosineScore.objects.all().delete()
+  # ~ LibrariesCosineScore.objects.all().delete()
   
   # check db
   # https://stackoverflow.com/questions/16324362/django-queryset-get-exact-manytomany-lookup
@@ -267,17 +262,14 @@ def cosine_score_libraries(self, val, client):
     .filter(count = len(val['libraries']))
   for lid in val['libraries']:
     q = q.filter(libraries = lid)
-  if len(q) > 1: #??
-    pass
-  elif len(q) == 1:
-    #q = q[0] # result
+  if len(q) > 0:
     ws = websocket.WebSocket()
     ws.connect('ws://localhost:8000/ws/pollData')
     ws.send(json.dumps({
       'type': 'library comparison result',
       'data': {
         'client': client,
-        'result': q[0].result
+        'result': lib_score_parseresult(q[0].result)
       }
     }))
     ws.close()
@@ -300,16 +292,10 @@ def cosine_score_libraries(self, val, client):
   data = {
     'ids': val['libraries']
   }
-  # ~ print('data',data)
   r = requests.post(
     'http://plumber:8000/cosineLibCompare',
     params = data
   )
-  # ~ r = requests.get(
-    # ~ 'http://plumber:8000/cosineLibCompare',
-    # ~ params = data
-  # ~ )
-  # ~ print(r)
   # Writes result to db and sends response
   if r.status_code == 200:
     lib_cos_score.result = r.text
@@ -321,21 +307,34 @@ def cosine_score_libraries(self, val, client):
       'type': 'library comparison result',
       'data': {
         'client': client,
-        'result': r.text
+        'result': lib_score_parseresult(r.text)
       }
     }))
     ws.close()
-  
-    #result = [{lib_id: 1, spectra_id: 999, scores: [{to: 123, s: 0.6}, {to: 124, s: 0.7}]}
-#~   data = [
-#~   {'id': '0', 'edges': [{'1': 0.2}, {'2': 0.9}, {'3': 0.5}]},
-#~   {'id': '1', 'edges': [{'2': 0.9}, {'3': 0.5}, {'0': 0.2}]},
-#~   {'id': '2', 'edges': [{'1': 0.9}, {'3': 0.5}, {'0': 0.9}]},
-#~   {'id': '3', 'edges': [{'0': 0.5}, {'1': 0.5}, {'2': 0.5}]}
-#~ ]
 
+def lib_score_parseresult(result):
+  r = json.loads(result)
+  # ~ print(f'r{r}')
+  x = []
+  c1 = 0
+  for i in r['ids']:
+    edges = []
+    c2 = 0
+    for j in r['similarity'][c1]:
+      edges.append({
+        'id': r['ids'][c2][0],
+        'lid': r['lib_ids'][c2][0],
+        's': r['similarity'][c1][c2]
+      })
+      c2 += 1
+    x.append({
+      'id': r['ids'][c1][0],
+      'lid': r['lib_ids'][c1][0],
+      'edges': edges
+    })
+    c1 += 1
+  return x
 
-  
 @start_new_thread
 def collapse_lib(self, library, client, search_library):
   '''

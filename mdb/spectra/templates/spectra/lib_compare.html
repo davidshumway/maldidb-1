@@ -26,20 +26,34 @@ Library compare
 <form action="" class="" method="" style="" id="">
 {% csrf_token %}
 
-<div class="card mx-auto p-2 col-sm-12 col-md-8">
-  <div class="row mx-auto">
-    <div class="input-group m-4">
-      <div class="input-group-prepend">
-        <span class="input-group-text">Select two or more libraries</span>
+<div class="card mx-auto p-2 col-sm-12 col-md-10">
+  <div class="row">
+    <div class="col-sm-6">
+      <div class="input-group m-2">
+        <div class="input-group-prepend">
+          <span class="input-group-text">Select two or more libraries</span>
+        </div>
+        <div>
+          {% with f=form.library %}
+          {{ f }}
+          {% endwith %}
+        </div>
       </div>
-      <div>
-        {% with f=form.library %}
-        {{ f }}
-        {% endwith %}
+    </div>
+    <div class="col-sm-6">
+      <div class="input-group m-2">
+        <div class="input-group-prepend">
+          <span class="input-group-text">Result</span>
+        </div>
+        <div>
+          <textarea class="form-control" style="height:400px;" disabled="true"
+            id="result"></textarea>
+        </div>
       </div>
     </div>
   </div>
-  <button type="button" class="btn btn-primary" onclick="javascript:check(this);">
+  <button id="btn-check" type="button" class="btn btn-primary"
+    onclick="javascript:check(this);">
     Check similarity</button>
 </div>
 
@@ -52,11 +66,48 @@ socket.onopen = function(e){
 }
 socket.onmessage = function(e) {
   console.log(e);
-  var data = JSON.parse(e.data).data;
+  var data = JSON.parse(e.data);
   console.log(data);
+  console.log(data.type);
   
-  if (data.message == 'completed library comparison') {
+  if (data.type == 'library comparison result') {
+    $('#id_library')[0].disabled = false;
+    $('#btn-check')[0].disabled = false;
+    $('#result').text(JSON.stringify(data.data.result));
     
+    //~ var x = JSON.parse(data.data.result);
+    //~ console.log(x.ids);         // [ [1], [2], ... ]
+    //~ console.log(x.lib_ids);     // [ [1], [2], ... ]
+    //~ console.log(x.similarity);  // [ [1, 0.5, 0.2, ...], [...], ... ]
+    
+    // rx - Array of results
+    // rx[i] - Single node / spectra
+    // rx[i].library - Library id of spectra
+    // rx[i].spectra - Spectra id of spectra
+    // rx[i].edges - Array of edges
+    // rx[i].edges[j] - Edge object
+    // rx[i].edges[j].id - Other spectra id
+    // rx[i].edges[j].lid - Other spectra library id
+    // rx[i].edges[j].s - Similarity score
+    //~ var rx = [];
+    //~ for (var i in x.ids) {
+      //~ var edges = [];
+      //~ for (var j in x.similarity[i]) {
+        //~ //if (j == 0) continue; // Skips edge to itself
+        //~ edges.push({
+          //~ id: x.ids[j][0],
+          //~ lid: x.lib_ids[j][0],
+          //~ s: x.similarity[i][j]
+        //~ })
+      //~ }
+      //~ rx.push({
+        //~ lid: x.lib_ids[i][0],
+        //~ id: x.ids[i][0],
+        //~ edges: edges
+      //~ })
+    //~ }
+    
+    //~ $('#result').text(JSON.stringify(rx));
   }
 }
 function check(btn) {

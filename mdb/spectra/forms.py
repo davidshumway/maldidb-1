@@ -10,7 +10,7 @@ class LibCompareForm(forms.ModelForm):
     #multiple = True
     widget = forms.Select(
       attrs = {'class': 'custom-select', 'multiple': True,
-        'style': 'height:300px;'}
+        'style': 'height:400px;'}
     )
   )
   class Meta:

@@ -60,6 +60,8 @@ print.data.frame <- function (
 #* cosineLibCompare
 #* Returns full result of cosine similarity of one or more libraries
 #* @param ids Ids of one or more libraries
+#* @return Similarity: [0:[scores 1-n], 1:[scores 1-n], ...], and
+#*   Ids: [0:[spectraid, libraryid], 1:[spectraid, libraryid], ...]
 #* @post /cosineLibCompare
 function(req, ids) {
   print(ids)
@@ -67,16 +69,23 @@ function(req, ids) {
   if (sum(is.na(ids)) != 0) {
     stop('ids contain non-numerics!')
   }
+  print('retrieving db spectra')
   s <- dbLibrarySpectra(ids)
+  print('trimming')
   allPeaks <- MALDIquant::trim(s['peaks']$peaks, c(3000, 15000))
+  print('binning')
   binnedPeaks <- MALDIquant::binPeaks(allPeaks, tolerance = 0.002)
+  print('calculating intensity matrix')
   featureMatrix <- MALDIquant::intensityMatrix(binnedPeaks, s['spectra']$spectra)
-
+  
+  print('calculating cosine score')
   d <- coop::cosine(t(featureMatrix))
   d <- round(d, 3)
-#~   print(head(d))
+  
   return(list(
-    'similarity' = d
+    'similarity' = d,
+    'ids' = s['ids']$ids,
+    'lib_ids' = s['lib_ids']$lib_ids
   ))
 }
 
@@ -284,7 +293,7 @@ dbLibrarySpectra <- function(ids) {
   s <- paste(unlist(ids), collapse = ',')
   s <- paste0('SELECT peak_mass, peak_intensity, peak_snr, id, library_id
     FROM spectra_collapsedspectra
-    WHERE library_id IN (', s, ') AND max_mass > 6000')
+    WHERE library_id IN (', s, ') AND max_mass > 6000 ORDER BY id ASC')
   q <- dbGetQuery(c$con, s)
   if (nrow(q) < 1) {
     disconnect(c$drv, c$con)
@@ -293,8 +302,10 @@ dbLibrarySpectra <- function(ids) {
     
   allSpectra = list()
   allPeaks = list()
+  ids = list()
+  lib_ids = list()
   
-  # q&d initial solution: require monotonically increasing ids
+  # q&d initial solution: requires monotonically increasing ids
   ix <- 0
   
   for(i in 1:nrow(q)) {
@@ -313,10 +324,12 @@ dbLibrarySpectra <- function(ids) {
         mass = as.numeric(strsplit(row$peak_mass, ",")[[1]]),
         intensity = as.numeric(strsplit(row$peak_intensity, ",")[[1]]))
     )
+    ids <- append(ids, row$id)
+    lib_ids <- append(lib_ids, row$library_id)
   }
   disconnect(c$drv, c$con)
    
-  list('peaks' = allPeaks, 'spectra' = allSpectra)
+  list('peaks' = allPeaks, 'spectra' = allSpectra, 'ids' = ids, 'lib_ids' = lib_ids)
 }
 
 # Helper function to retrieve list of IDs from Django's DB
