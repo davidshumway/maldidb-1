@@ -323,7 +323,7 @@ def lib_score_parseresult(result):
     for j in r['similarity'][c1]:
       edges.append({
         'id': r['ids'][c2][0],
-        'lid': r['lib_ids'][c2][0],
+        # ~ 'lid': r['lib_ids'][c2][0],
         's': r['similarity'][c1][c2]
       })
       c2 += 1
