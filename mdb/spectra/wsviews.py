@@ -12,6 +12,7 @@ from mdb.utils import *
 @start_new_thread
 def cosine_score_libraries(self, val, client):
   '''
+  
   '''
   # ~ LibrariesCosineScore.objects.all().delete()
   

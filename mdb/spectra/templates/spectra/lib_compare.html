@@ -73,7 +73,21 @@ socket.onmessage = function(e) {
   if (data.type == 'library comparison result') {
     $('#id_library')[0].disabled = false;
     $('#btn-check')[0].disabled = false;
-    $('#result').text(JSON.stringify(data.data.result));
+    // truncates if more than 10 results
+    
+    if (data.data.result.length > 10) {
+      $('#result').text(JSON.stringify(data.data.result.slice(9)));
+    } else {
+      $('#result').text(JSON.stringify(data.data.result));
+    }
+    
+    var a = document.createElement('a');
+    //~ a.href = 'data:attachment/text,' + encodeURI(textToSave);
+    a.href = 'data:application/json,' +
+      encodeURI(JSON.stringify(data.data.result));
+    a.target = '_blank';
+    a.download = 'results.json';
+    a.click();
     
     //~ var x = JSON.parse(data.data.result);
     //~ console.log(x.ids);         // [ [1], [2], ... ]
