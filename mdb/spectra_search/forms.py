@@ -63,14 +63,13 @@ class LibraryModelChoiceField(forms.ModelChoiceField):
   def label_from_instance(self, obj):
     return f'{obj.title} | {obj.lab}'
 
-class SpectraLibraryForm(forms.Form):
+class FileLibraryForm(forms.Form):
   '''
-  Processes the library portion of upload form.
+  Processes the library portion of an upload form.
   
   File is just a placeholder, i.e. no files uploaded via this form,
   whereas number_files represents the number of files in the File
   field.
-  
   '''
   file = forms.FileField(
     label = 'Upload one or more files',
@@ -136,7 +135,109 @@ class SpectraLibraryForm(forms.Form):
     initial = True,
     label = 'Perform spectra preprocessing?',
     disabled = True)
-
+  
+  def __init__(self, *args, **kwargs):
+    request = kwargs.pop('request')
+    self.user = request.user
+    super(FileLibraryForm, self).__init__(*args, **kwargs)
+    
+  def clean_file_strain_ids(self):
+    d = self.cleaned_data['file_strain_ids']
+    if self.cleaned_data['use_filenames'] is False:
+      try:
+        if self.cleaned_data['number_files'] is False:
+          raise forms.ValidationError('Field "number_files" missing!')
+      except:
+        raise forms.ValidationError('Field "number_files" missing!')
+      if d.strip() == '':
+        raise forms.ValidationError(
+          'List of filenames must not be empty!'
+        )
+      import re
+      x = re.sub('[\r\n]+', '\n', d.strip())
+      x = x.split('\n')
+      # Entries == form entries
+      if len(x) != self.cleaned_data['number_files']:
+        raise forms.ValidationError(
+          'Number of filenames ({}) does not match number of files ({})!'
+          .format(len(x), self.cleaned_data['number_files']))
+      # < 255
+      for tmpmd in x:
+        if len(tmpmd.strip()) > 255:
+          raise forms.ValidationError(
+            'Filenames contains an entry > 255 characters!')
+      # Unique, e.g. [1,1] != {1}
+      if len(set(x)) != len(x):
+        raise forms.ValidationError(
+            'Filenames are not unique!')
+    return d
+  
+  def clean(self):
+    '''
+    Adds "library" key
+    '''
+    d = super().clean()
+    # ~ print(f'clean{d}')
+    
+    # user's lab
+    user_lab, created = LabGroup.objects.get_or_create(
+      lab_name = self.user.username + '\'s default lab',
+      user_default_lab = True,
+      owners__in = [self.user])
+    if created:
+      user_lab.owners.add(self.user)
+      user_lab.members.add(self.user)
+      user_lab.save()
+    
+    # validates upload library
+    if d.get('library_save_type') == 'RANDOM':
+      title = get_random_string(8)
+      # (safe check) Checks random entry doesn't exist
+      x = False
+      c = 100
+      while x is False and c > 0:
+        c -= 1
+        n = Library.objects.filter(
+          created_by = self.user,
+          title = title
+        )
+        if len(n) == 0:
+          x = True
+          new_lib = Library.objects.create(
+            created_by = self.user,
+            title = title,
+            lab = user_lab,
+            privacy_level = 'PR'
+          )
+          d['library'] = new_lib
+    elif d.get('library_save_type') == 'NEW':
+      n = Library.objects.filter(
+        created_by = self.user,
+        title = d.get('library_create_new'),
+        lab = user_lab,
+        privacy_level = 'PR'
+      )
+      if len(n) != 0:
+        raise forms.ValidationError(
+          'Library title already exists!'
+        )
+      else:
+        new_lib = Library.objects.create(
+          created_by = self.user,
+          title = d.get('library_create_new'),
+          lab = user_lab,
+          privacy_level = 'PR'
+        )
+        d['library'] = new_lib
+    elif d.get('library_save_type') == 'EXISTING':
+      d['library'] = d['library_select']
+    
+    return d
+    
+class SpectraLibraryForm(FileLibraryForm):
+  '''
+  Inherits FileLibraryForm and adds search logic.
+  '''
   search_library = forms.ModelChoiceField(
     queryset = Library.objects.all(),
     # ~ to_field_name = 'title',
@@ -234,10 +335,10 @@ class SpectraLibraryForm(forms.Form):
       # ~ ),
     # ~ }
   
-  def __init__(self, *args, **kwargs):
-    request = kwargs.pop('request')
-    self.user = request.user
-    super(SpectraLibraryForm, self).__init__(*args, **kwargs)
+  # ~ def __init__(self, *args, **kwargs):
+    # ~ request = kwargs.pop('request')
+    # ~ self.user = request.user
+    # ~ super(SpectraLibraryForm, self).__init__(*args, **kwargs)
     # ~ user = self.user
     # ~ if request.user.is_authenticated:
       # ~ user_labs = LabGroup.objects \
@@ -248,60 +349,14 @@ class SpectraLibraryForm(forms.Form):
       # ~ ).order_by('-id')
       # ~ self.fields['library_select'].queryset = q
   
-  def clean_file_strain_ids(self):
-    d = self.cleaned_data['file_strain_ids']
-    if self.cleaned_data['use_filenames'] is False:
-      try:
-        if self.cleaned_data['number_files'] is False:
-          raise forms.ValidationError('Field "number_files" missing!')
-      except:
-        raise forms.ValidationError('Field "number_files" missing!')
-      if d.strip() == '':
-        raise forms.ValidationError(
-          'List of filenames must not be empty!'
-        )
-      import re
-      x = re.sub('[\r\n]+', '\n', d.strip())
-      x = x.split('\n')
-      # Entries == form entries
-      if len(x) != self.cleaned_data['number_files']:
-        raise forms.ValidationError(
-          'Number of filenames ({}) does not match number of files ({})!'
-          .format(len(x), self.cleaned_data['number_files']))
-      # < 255
-      for tmpmd in x:
-        if len(tmpmd.strip()) > 255:
-          raise forms.ValidationError(
-            'Filenames contains an entry > 255 characters!')
-      # Unique, e.g. [1,1] != {1}
-      if len(set(x)) != len(x):
-        raise forms.ValidationError(
-            'Filenames are not unique!')
-    return d
-    
   def clean(self):
     '''
-    Adds "library" key
+    
     '''
-    # ~ print(f'clean{self.cleaned_data}')
     d = super().clean()
-    # ~ print(f'd{d}')
-    # ~ cleaned_data['cKingdom'] = Metadata.objects.none()
-    # ~ d['cKingdom'] = Metadata.objects.filter(cKingdom__exact = 'Bacteria')
-    # ~ d['cClass'] = Metadata.objects.filter(cClass__exact = 'Gammaproteobacteria')
     # ~ print(f'clean{d}')
     
-    # user's lab
-    user_lab, created = LabGroup.objects.get_or_create(
-      lab_name = self.user.username + '\'s default lab',
-      user_default_lab = True,
-      owners__in = [self.user])
-    if created:
-      user_lab.owners.add(self.user)
-      user_lab.members.add(self.user)
-      user_lab.save()
-    
-    # validate search library
+    # validates search library
     if d.get('library_search_type') == 'r01':
       pass
     elif d.get('library_search_type') == 'own':
@@ -310,63 +365,8 @@ class SpectraLibraryForm(forms.Form):
       d['search_library'] = d['search_library_lab']
     elif d.get('library_search_type') == 'pub':
       d['search_library'] = d['search_library_public']
-      
-    # validate upload library
-    if d.get('library_save_type') == 'RANDOM':
-      title = get_random_string(8)
-      # (safe check) Checks random entry doesn't exist
-      x = False
-      c = 100
-      while x is False and c > 0:
-        c -= 1
-        n = Library.objects.filter(
-          created_by = self.user,
-          title = title
-        )
-        if len(n) == 0:
-          x = True
-          new_lib = Library.objects.create(
-            created_by = self.user,
-            title = title,
-            lab = user_lab,
-            privacy_level = 'PR'
-          )
-          d['library'] = new_lib
-    elif d.get('library_save_type') == 'NEW':
-      n = Library.objects.filter(
-        created_by = self.user,
-        title = d.get('library_create_new'),
-        lab = user_lab,
-        privacy_level = 'PR'
-      )
-      if len(n) != 0:
-        raise forms.ValidationError(
-          'Library title already exists!'
-        )
-      else:
-        new_lib = Library.objects.create(
-          created_by = self.user,
-          title = d.get('library_create_new'),
-          lab = user_lab,
-          privacy_level = 'PR'
-        )
-        d['library'] = new_lib
-    elif d.get('library_save_type') == 'EXISTING':
-      d['library'] = d['library_select']
+    
     return d
-  
-# ~ class SpectraSearchTypeForm(forms.Form):
-  # ~ search_library = forms.ModelChoiceField(
-    # ~ queryset = Library.objects.all(),
-    # ~ to_field_name = 'title',
-    # ~ required = True,
-    # ~ widget = forms.Select(
-      # ~ attrs = {
-        # ~ 'class': 'custom-select'}
-    # ~ ),
-    # ~ disabled = False,
-    # ~ empty_label = 'Select a library to search against'
-  # ~ )
   
 class SpectraUploadForm(forms.ModelForm):
   file = forms.FileField(

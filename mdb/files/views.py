@@ -2,8 +2,9 @@ from django.shortcuts import render
 from .models import UserFile
 from django_tables2 import SingleTableView
 from .tables import *
-from .forms import *
+# ~ from .forms import *
 from django.views.generic.list import ListView
+from spectra_search.forms import FileLibraryForm
 
 class UserFilesListView(SingleTableView):
   model = UserFile
@@ -20,7 +21,7 @@ class FileUpload(ListView):
   
   def get_context_data(self, **kwargs):
     context = super().get_context_data(**kwargs)
-    context['upload_form'] = FileUploadForm()
+    context['upload_form'] = FileLibraryForm(request = self.request) #FileUploadForm()
     u = self.request.user
     
     # own libraries (library_select shares this qs)

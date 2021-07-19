@@ -45,7 +45,6 @@ class DashConsumer(AsyncJsonWebsocketConsumer):
   async def receive(self, text_data):
     '''
     '''
-    # ~ print('==================3')
     try:
       val = json.loads(text_data)
     except Exception as e:
