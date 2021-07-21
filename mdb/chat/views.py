@@ -27,17 +27,6 @@ import requests
 
 @login_required
 def user_libraries(request):
-  # ~ l1 = [{
-    # ~ 'lab_name': s['lab__lab_name'],
-    # ~ 'title': s['title'],
-    # ~ 'num_spectra': s['num_spectra'],
-    # ~ 'privacy_level': s['privacy_level'],
-  # ~ } for s in Library.objects.filter(created_by = request.user)\
-    # ~ .annotate(num_spectra = Count('spectra'))\
-    # ~ .values(
-      # ~ ['lab__lab_name', 'title', 'num_spectra', 'privacy_level']
-    # ~ )
-  # ~ ]
   l1 = [{
     'id': s['id'],
     'lab_name': s['lab__lab_name'],
@@ -46,7 +35,20 @@ def user_libraries(request):
     'num_cspectra': len(list(CollapsedSpectra.objects.filter(library_id = s['id']))),
     'num_metadata': len(list(Metadata.objects.filter(library_id = s['id']))),
     'privacy_level': s['privacy_level']
-  } for s in list(Library.objects.filter(created_by = request.user)\
+  } for s in list(Library.objects.filter(created_by = request.user).exclude(lab__lab_type = 'user-uploads')\
+    .values(
+      'id', 'lab__lab_name', 'title', 'privacy_level'
+    ))
+  ]
+  l2 = [{
+    'id': s['id'],
+    'lab_name': s['lab__lab_name'],
+    'title': s['title'],
+    'num_spectra': len(list(Spectra.objects.filter(library_id = s['id']))),
+    'num_cspectra': len(list(CollapsedSpectra.objects.filter(library_id = s['id']))),
+    'num_metadata': len(list(Metadata.objects.filter(library_id = s['id']))),
+    'privacy_level': s['privacy_level']
+  } for s in list(Library.objects.filter(created_by = request.user, lab__lab_type = 'user-uploads')\
     .values(
       'id', 'lab__lab_name', 'title', 'privacy_level'
     ))
@@ -77,7 +79,8 @@ def user_libraries(request):
   return render(request,
     'chat/user_libraries.html',
     {
-      'library_data': l1
+      'library_data': l1,
+      'uploads_data': l2
     }
   )
   
@@ -392,36 +395,6 @@ class LibCollapseListView(MultiTableMixin, TemplateView):
       ]
       return self.queryset
 
-def preview_collapse_lib(request):
-  '''Preview collapse of library's replicates'''
-  
-  # ~ try:
-    # ~ initial['library'] = Library.objects.get(
-      # ~ id = request.GET.get('library', None)
-    # ~ )
-  # ~ except Library.DoesNotExist:
-    # ~ pass    
-  # ~ lib = Library.objects.get(id = lib_id)
-  # ~ spectra = Spectra.objects.filter(library = lib)
-  # ~ md = Metadata.objects.filter(library = lib)
-  #if request.method == "POST":
-  #  form = LibraryCollapseForm(request.POST, request.FILES)
-  #    # ~ instance = Library.objects.get(id = lib_id))
-  #  if form.is_valid():
-  #    form.save()
-  #    return redirect(reverse('chat:home'))
-  #    # ~ return redirect(reverse('chat:view_metadata', args = (lib_id, )))
-  # ~ else:
-    
-  return render(request, 'chat/collapse_library.html', {'form': form})
-  
-  # ~ return render(
-      # ~ request,
-      # ~ 'chat/collapse_library.html',
-      # ~ #{'library': lib, 'spectra': spectra, 'metadata': md, 'form': form}
-      # ~ {'form': form}
-  # ~ )
-  
 class SearchResultsView(ListView):
   model = Spectra
   template_name = 'chat/search_results.html'
@@ -472,36 +445,12 @@ class LibrariesListView(SingleTableView):
       return Library.objects.filter(privacy_level__exact = 'PB')
     # Otherwise logged in
     user_labs = LabGroup.objects \
-      .filter(Q(owners__in = [u]) | Q(members__in = [u])
-      )
+      .filter(Q(owners__in = [u]) | Q(members__in = [u]))\
+      .exclude(lab_type = 'user-uploads')
     return Library.objects.filter( \
         Q(lab__in = user_labs) | Q(privacy_level__exact = 'PB') | \
         Q(created_by__exact = u)
       ).order_by('-id')
-      
-def view_cosine(request):
-  '''API for exploring cosine data
-  
-  Returns three objects: binned peaks (list), feature matrix (list),
-    cosine scores (matrix)
-  '''
-  if request.method == 'POST':
-    form = ViewCosineForm(request.POST, request.FILES)
-    if form.is_valid():
-      sc = SpectraScores(form).info()
-      return render(
-        request,
-        'chat/view_cosine.html',
-        {'form': form, 'sc': sc}
-      )
-  else:
-    form = ViewCosineForm() #instance = None)
-  return render(request, 'chat/view_cosine.html', {'form': form})
-
-# ~ class MetadataListView(SingleTableView):
-  # ~ model = Metadata
-  # ~ table_class = MetadataTable
-  # ~ template_name = 'chat/metadata.html'
 
 class MetadataFilter(django_filters.FilterSet):
   library = django_filters.ModelMultipleChoiceFilter(

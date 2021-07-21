@@ -115,7 +115,7 @@ class LibProfileForm(forms.ModelForm):
 class LabProfileForm(forms.ModelForm):
   class Meta:
     model = LabGroup
-    exclude = ('id', 'user_default_lab')
+    exclude = ('id', 'lab_type')
   
 # ~ class SearchForm(forms.ModelForm):
   # ~ """Search by peaks/intensities, or upload mzXML or mzML file."""
@@ -133,7 +133,7 @@ class AddXmlForm(forms.ModelForm):
 class AddLabGroupForm(forms.ModelForm):
   class Meta:
     model = LabGroup
-    exclude = ('created_by', 'user_default_lab')
+    exclude = ('created_by', 'lab_type')
 
 class AddLibraryForm(forms.ModelForm):
   

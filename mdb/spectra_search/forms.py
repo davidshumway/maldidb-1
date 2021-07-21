@@ -179,27 +179,28 @@ class FileLibraryForm(forms.Form):
     d = super().clean()
     # ~ print(f'clean{d}')
     
-    # user's lab
-    user_lab, created = LabGroup.objects.get_or_create(
-      lab_name = self.user.username + '\'s default lab',
-      user_default_lab = True,
-      owners__in = [self.user])
-    if created:
-      user_lab.owners.add(self.user)
-      user_lab.members.add(self.user)
-      user_lab.save()
-    
     # validates upload library
     if d.get('library_save_type') == 'RANDOM':
+      # user's uploads lab
+      user_lab, created = LabGroup.objects.get_or_create(
+        lab_name = self.user.username + '\'s uploads',
+        lab_type = 'user-uploads',
+        # ~ user_default_lab = True,
+        owners__in = [self.user])
+      if created:
+        user_lab.owners.add(self.user)
+        user_lab.members.add(self.user)
+        user_lab.save()
       title = get_random_string(8)
-      # (safe check) Checks random entry doesn't exist
+      # Checks random entry doesn't exist
       x = False
       c = 100
       while x is False and c > 0:
         c -= 1
         n = Library.objects.filter(
           created_by = self.user,
-          title = title
+          title = title,
+          lab = user_lab
         )
         if len(n) == 0:
           x = True
@@ -211,15 +212,23 @@ class FileLibraryForm(forms.Form):
           )
           d['library'] = new_lib
     elif d.get('library_save_type') == 'NEW':
+      # user's library lab
+      user_lab, created = LabGroup.objects.get_or_create(
+        lab_name = self.user.username + '\'s default lab',
+        lab_type = 'user-default',
+        owners__in = [self.user])
+      if created:
+        user_lab.owners.add(self.user)
+        user_lab.members.add(self.user)
+        user_lab.save()
       n = Library.objects.filter(
         created_by = self.user,
         title = d.get('library_create_new'),
-        lab = user_lab,
-        privacy_level = 'PR'
+        lab = user_lab
       )
       if len(n) != 0:
         raise forms.ValidationError(
-          'Library title already exists!'
+          'Library already exists!'
         )
       else:
         new_lib = Library.objects.create(

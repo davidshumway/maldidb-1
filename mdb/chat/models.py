@@ -169,9 +169,19 @@ class LabGroup(models.Model):
   members = models.ManyToManyField(settings.AUTH_USER_MODEL,
     blank = True,
     related_name = 'lab_members')
-  user_default_lab = models.BooleanField( # dedicated lab for every user
-    blank = True,
-    default = False)
+  lab_type = models.CharField(
+    max_length = 20,
+    choices = [
+      ('user-uploads', 'User uploads lab'),
+      ('user-default', 'User default lab'),
+      ('other', 'Other lab'), # any other lab
+    ],
+    default = 'other',
+  )
+  
+  # ~ user_default_lab = models.BooleanField( # dedicated lab for every user
+    # ~ blank = True,
+    # ~ default = False)
     #models.ForeignKey(
     #settings.AUTH_USER_MODEL,
     #on_delete = models.CASCADE)

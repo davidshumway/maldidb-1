@@ -5,6 +5,7 @@ from .tables import *
 # ~ from .forms import *
 from django.views.generic.list import ListView
 from spectra_search.forms import FileLibraryForm
+from chat.models import Library
 
 class UserFilesListView(SingleTableView):
   model = UserFile
@@ -25,7 +26,8 @@ class FileUpload(ListView):
     u = self.request.user
     
     # own libraries (library_select shares this qs)
-    q = Library.objects.filter(created_by__exact = u)
+    q = Library.objects.filter(created_by__exact = u)\
+      .exclude(lab__lab_type = 'user-uploads')
     context['upload_form'].fields['library_select'].queryset = q
     
     return context

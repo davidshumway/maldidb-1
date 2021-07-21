@@ -349,13 +349,14 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     all_libs = all_libs | q
     context['upload_form'].fields['search_library'].queryset = q
     # own libraries (library_select shares this qs)
-    q = Library.objects.filter(created_by__exact = u)
+    q = Library.objects.filter(created_by__exact = u,
+      lab__lab_type = 'user-default')
     all_libs = all_libs | q
     context['upload_form'].fields['search_library_own'].queryset = q
     context['upload_form'].fields['library_select'].queryset = q
     # own labs
     user_labs = LabGroup.objects.filter(
-      Q(owners__in = [u]) | Q(members__in = [u])
+      (Q(owners__in = [u]) | Q(members__in = [u])) & Q(lab_type = 'user-default')
     )
     q = Library.objects.filter(
       Q(lab__in = user_labs)
@@ -363,7 +364,8 @@ class FilteredSpectraSearchListView(SingleTableMixin, FilterView):
     all_libs = all_libs | q
     context['upload_form'].fields['search_library_lab'].queryset = q
     # public
-    q = Library.objects.filter(privacy_level__exact = 'PB').order_by('-id')
+    q = Library.objects.filter(privacy_level__exact = 'PB',
+      lab__lab_type = 'user-default').order_by('-id')
     context['upload_form'].fields['search_library_public'].queryset = q
     all_libs = all_libs | q
     # all libraries

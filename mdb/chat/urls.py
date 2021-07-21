@@ -5,9 +5,6 @@ app_name = 'chat'
 urlpatterns = [
   path('', views.home, name='home'),
 
-  # API endpoint to retrieve binned peaks, intensity matrix, cosine score
-  path('cosine/', views.view_cosine, name='view_cosine'),
-  
   path('data/add_metadata', views.add_metadata, name='add_metadata'),
   path('data/add_lib', views.add_lib, name='add_lib'),
   path('data/add_labgroup', views.add_labgroup, name='add_labgroup'),
@@ -39,14 +36,8 @@ urlpatterns = [
   path('labs/edit/<lab_id>/', views.edit_labprofile, name='edit_labprofile'),
   
   path('collapse/<lib_id>/', views.collapse_library, name='collapse_library'),
-  # ~ path('preview_collapse/', views.LibCollapseListView.as_view(), name='preview_collapse_lib'),
-  # ~ path('preview_collapse/', views.preview_collapse_lib, name='preview_collapse_lib'),
-  # ~ path('preview_collapse/lib/', views.preview_collapse_lib, name='preview_collapse_lib'),
-  # ~ path('preview_collapse/lib/<lib_id>/', views.preview_collapse_lib, name='preview_collapse_lib'), #<lib_id>/
-  
   
   path('tasks/', views.UserTaskListView.as_view(), name='user_tasks'),
-  # ~ path('logs/', UserLogsListView.as_view(), name='user_logs'),
   
   path('statuses/<status_id>/', views.user_task_status_profile, name='user_task_statuses'),
   
