@@ -72,7 +72,9 @@ My Libraries
     <div class="card">
       <div class="card-header">Libraries</div>
       <div class="card-body">
-        <table id="library-table"></table>
+        <table id="library-table" style="width:100%;"
+          class="table table-sm table-bordered table-striped nowrap">
+        </table>
       </div>
     </div>
   </div>
@@ -80,7 +82,9 @@ My Libraries
     <div class="card">
       <div class="card-header">Uploads (non-library uploads)</div>
       <div class="card-body">
-        <table id="uploads-table"></table>
+        <table id="uploads-table" style="width:100%;"
+          class="table table-sm table-bordered table-striped nowrap">
+        </table>
       </div>
     </div>
   </div>
@@ -94,6 +98,7 @@ My Libraries
 <script>
 var t = $('#library-table').DataTable({
   data: JSON.parse($('#library-data')[0].textContent),
+  scrollX: true,
   columns: [
     {data: 'lab_name', title: 'Lab'},
     {data: 'title', title: 'Title'},
@@ -111,6 +116,7 @@ var t = $('#library-table').DataTable({
 $('#library-table').css('width', '100%'); 
 var t = $('#uploads-table').DataTable({
   data: JSON.parse($('#uploads-data')[0].textContent),
+  scrollX: true,
   columns: [
     {data: 'lab_name', title: 'Lab'},
     {data: 'title', title: 'Title'},

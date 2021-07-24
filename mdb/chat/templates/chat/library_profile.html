@@ -6,7 +6,7 @@
 Library Details: {{ library.title }}
 {% endblock %}
 {% block title %}
-  Library Details: {{ library.title }}
+Library Details: {{ library.title }}
 {% endblock %}
 
 {% block content %}
@@ -17,238 +17,282 @@ Library Details: {{ library.title }}
 <script type="text/javascript" src="{% static 'js/datatables.min.js' %}">
   </script>
 
-
-<ul class="nav nav-tabs" id="myTab" role="tablist">
-  <li class="nav-item">
-    <a class="nav-link active" id="navdetail-tab" data-toggle="tab"
-      href="#navdetail" role="tab" aria-controls="navdetail" aria-selected="true"
-      >Library details</a>
-  </li>
-  {% if request.user in lab.owners.all %}
-  <li class="nav-item">
-    <a class="nav-link" id="navsearch-tab" data-toggle="tab"
-      href="#navsearch" role="tab" aria-controls="navsearch" aria-selected="false"
-      >NCBI taxonomy search</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link" id="navmodify-tab" data-toggle="tab"
-      href="#navmodify" role="tab" aria-controls="navmodify" aria-selected="false"
-      >NCBI taxonomy bulk modify</a>
-  </li>
-  {% endif %}
-</ul>
-
-<div class="tab-content" id="">
-  <div class="tab-pane fade show active" id="navdetail" role="tabpanel" aria-labelledby="navdetail-tab">
-    <div class="row">
-      
-      <div class="col-sm-4">
-        <div class="card mt-3">
-          <div class="card-body">
-            <div class="card-title">
-              Title: {{ library.title|safe }}
-            </div>
-            <div class="card-title">
-              Description: {{ library.description|safe }}
-            </div>
-            <div class="card-title">
-              Privacy Setting: {{ library.privacy_level }}
-            </div>
-            <div class="card-title">
-              Quality: {{ library.quality_rating }}
-            </div>
-            <div class="card-title">
-              Created by: {{ library.created_by|safe }}
-            </div>
-            <div class="card-title">
-              Lab: {{ library.lab|safe }}
-            </div>
-            <div class="card-title">  
-              Spectra:
-              <a href="{% url 'spectra_search:spectra_results' %}?library={{library.id}}" class="card-link">
-                {{ spectra|length }}</a>
-            </div>
-            <div class="card-title">  
-              Collapsed spectra:
-              <a href="{% url 'spectra_search:spectra_results2' %}?library={{library.id}}" class="card-link">
-                {{ collapsed_spectra|length }}</a>
-            </div>
-            <div class="card-title">  
-              Metadata:
-              <a href="{% url 'chat:metadata_results' %}?library={{library.id}}" class="card-link">
-                {{ metadata|length }}</a>
-            </div>
-          </div>
-        </div>
+<div class="row">
+  <div class="col-md-2 col-sm-6">
+    <div class="card">
+      <div class="card-header">Actions</div>
+      <div class="nav flex-column nav-pills p-4" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+        <a class="nav-link active" id="navdetail-tab" data-toggle="pill"
+          href="#navdetail" role="tab" aria-controls="navdetail"
+          aria-selected="true">Library details</a>
+        {% if request.user in lab.owners.all %}
+        <a class="nav-link" id="navsearch-tab" data-toggle="pill"
+          href="#navsearch" role="tab" aria-controls="navsearch"
+          aria-selected="false">NCBI taxonomy search</a>
+        <a class="nav-link" id="navmodify-tab" data-toggle="pill"
+          href="#navmodify" role="tab" aria-controls="navmodify"
+          aria-selected="false">NCBI taxonomy bulk modify</a>
+        {% endif %}
       </div>
-      
-      {% if request.user in lab.owners.all %}
-      <div class="col-sm-6">
-        <div class="card mt-3">
-          <div class="card-header">Library management</div>
-          <div class="card-body">
-            
-            <a href="{% url 'chat:collapse_library' library.id %}"
-              class="card-link btn btn-secondary">
-              Collapse library replicates</a>
-            
-            <div class="alert alert-info mt-1">
-              Collapsing replicates overwrites any collapsed spectra
-              already in the library.</div>
-            
-            <a href="{% url 'chat:edit_libprofile' library.id %}"
-              class="card-link btn btn-secondary">
-              Edit Library Details</a>
-            
-          </div>
-        </div>
-      </div>
-      {% endif %}
-      
     </div>
-  </div><!--/navdetail-->
+  </div>
   
-  <!--/Begin navsearch-->
-  <div class="tab-pane fade" id="navsearch" role="tabpanel" aria-labelledby="navsearch-tab">
-
-    <!-- Begin -->
-    <div class="row">
-    <div class="card m-3 mx-auto">
-      <div class="card-body">
-            
-        <label for="align-prefix"
-          >(Optional) Enter a prefix for the strain ID, e.g. "NRRL":</label>
-        <input type="text" placeholder="" size=20 id="align-prefix" />
-        
-        <div>
-        <button type="button" class="btn btn-primary"
-          onclick="javascript:align(this);" id="align-load"
-          >Load alignments</button>
-        
-        <button type="button" class="btn btn-primary" id="align-import"
-            style="display:none;"
-            >Import NCBI taxonomy IDs for exact matches</button>
-        </div>
-        
-        <br />
-        <div class="alert alert-info" role="alert" id="align-alert"
-          style="display:none;"></div>
-          
-        <br />
-        <div id="align" style="display:none">
-          <table id="align1"
-            class="table table-bordered table-responsive table-condensed"
-            style="display:none; width:100%;">
-            <caption style="caption-side: top">Exact matches</caption></caption>
-            </table><!-- cell-border compact stripe-->
-          
-          <br />
-          <table id="align2"
-            class="table table-bordered table-responsive table-condensed"
-            style="display:none; width:100%;">
-            <caption style="caption-side: top">Partial matches</caption></table>
-        </div>
-    </div></div></div>
-    <!-- End -->
-  </div><!--/navsearch-->
-  
-  <!--/Begin navmodify-->
-  <div class="tab-pane fade" id="navmodify" role="tabpanel" aria-labelledby="navmodify-tab">
-    
-    <div class="row">
-    <div class="card m-3 mx-auto">
-      <div class="card-body">
-        <p>
-          <a class="btn btn-primary" data-toggle="collapse"
-            href="#instructions" role="button"
-            aria-expanded="false" aria-controls="instructions"
-            id="toggleInstructions"
-            >Show instructions</a>
-        </p>
-        <div class="row">
-          <div class="col">
-            <div class="collapse multi-collapse" id="instructions">
-              <div class="card card-body alert alert-info">
-                <p>Enter metadata for one or more entries in the library
-                based on entry strain ID.</p>
-                <p></p>
-                <p>Paste library strain IDs to be aligned separated 
-                by a newline character, for example:</p>
-                
-                <pre>B-10
-B-11
-B-12
-B-14</pre>
-                <p>Leave a blank space for unknown species data, for
-                example:</p>
-                
-                <pre>Streptomyces tendae
-Streptomyces erythrogriseus
-
-Streptomyces koyangensis</pre>
-
+  <div class="tab-content col-md-10 col-sm-6" id="">
+    <!--Begin navdetail-->
+    <div class="tab-pane fade show active" id="navdetail" role="tabpanel" aria-labelledby="navdetail-tab">
+      <div class="row">
+        <div class="col-sm-6 mx-auto">
+          <div class="card">
+            <div class="card-header">
+              Library overview
+            </div>
+            <div class="card-body">
+              <div class="card-title">
+                Title: {{ library.title|safe }}
+              </div>
+              <div class="card-title">
+                Description: {{ library.description|safe }}
+              </div>
+              <div class="card-title">
+                Privacy Setting: {{ library.privacy_level }}
+              </div>
+              <div class="card-title">
+                Quality: {{ library.quality_rating }}
+              </div>
+              <div class="card-title">
+                Created by: {{ library.created_by|safe }}
+              </div>
+              <div class="card-title">
+                Lab: {{ library.lab|safe }}
+              </div>
+              <div class="card-title">  
+                #Spectra: {{ lengths.spectra }}
+<!--
+                <a href="{% url 'spectra_search:spectra_results' %}?library={{library.id}}" class="card-link">
+                  </a>
+-->
+              </div>
+              <div class="card-title">  
+                #Collapsed spectra: {{ lengths.collapsed_spectra }}
+<!--
+                <a href="{% url 'spectra_search:spectra_results2' %}?library={{library.id}}" class="card-link">
+                  </a>
+-->
+              </div>
+              <div class="card-title">  
+                #Metadata: {{ lengths.metadata }}
+<!--
+                <a href="{% url 'chat:metadata_results' %}?library={{library.id}}" class="card-link">
+                  </a>
+-->
               </div>
             </div>
           </div>
         </div>
-  <script type="text/javascript">
-  $('#instructions').collapse({
-  toggle: false
-  });
-  $('#instructions').on('shown.bs.collapse', function () {
-  $('#toggleInstructions').text('Hide instructions');
-  });
-  $('#instructions').on('hidden.bs.collapse', function () {
-  $('#toggleInstructions').text('Show instructions');
-  });
-  </script>
         
-        <div class="row">
-          <div class="col">
-            <label for="">Strain IDs:</label>
-            <textarea class="form-control" id="manual1"></textarea>
-          </div>
-          <div class="col">
-            <label for="">Genus:</label>
-            <textarea class="form-control" id="manual2"></textarea>
-          </div>
-          <div class="col">
-            <label for="">Species:</label>
-            <textarea class="form-control" id="manual3"></textarea>
+        {% if request.user in lab.owners.all %}
+        <div class="col-sm-6 mx-auto">
+          <div class="card">
+            <div class="card-header">Library management</div>
+            <div class="card-body">
+              
+              <a href="{% url 'chat:collapse_library' library.id %}"
+                class="card-link btn btn-secondary">
+                Collapse library replicates</a>
+              
+              <div class="alert alert-info mt-1">
+                Collapsing replicates overwrites any collapsed spectra
+                already in the library.</div>
+              
+              <a href="{% url 'chat:edit_libprofile' library.id %}"
+                class="card-link btn btn-secondary">
+                Edit Library Details</a>
+              
+            </div>
           </div>
         </div>
-        
-        <br/>
-        <button class="btn btn-primary"
-          onclick="javascript:manualAlign(this);" id="manual-align-preview"
-          >Preview alignment</button>
-        <button type="button" class="btn btn-primary" id="manual-align-import"
-            style="display:none;"
-            >Import NCBI taxonomy IDs for exact matches</button>
-        
-        <br />
-        <div class="alert alert-info mt-2" role="alert" id="align-alert-manual"
-          style="display:none;"></div>
-          
-        <br/>
-        <table id="align3"
-            class="table table-bordered table-responsive table-condensed"
-            style="display:none; width:100%;">
-            <caption style="caption-side: top">Exact matches</caption></table>
-        <br/>
-        <table id="align4"
-            class="table table-bordered table-responsive table-condensed"
-            style="display:none; width:100%;">
-            <caption style="caption-side: top">Partial matches</caption></table>
-      </div></div></div>
+        {% endif %}
+      </div>
+      
+      <div class="row">
+        <div class="col-sm-12 col-md-12 col-lg-12 mt-2">
+          <div class="card">
+            <div class="card-header">Spectra</div>
+            <div class="card-body">
+              <table id="table-spectra" style="width:100%;"
+                class="table table-sm table-bordered table-striped nowrap">
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-12 col-md-12 col-lg-12 mt-2">
+          <div class="card">
+            <div class="card-header">Collapsed Spectra</div>
+            <div class="card-body">
+              <table id="table-cspectra" style="width:100%;"
+                class="table table-sm table-bordered table-striped nowrap">
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-12 col-md-12 col-lg-12 mt-2">
+          <div class="card">
+            <div class="card-header">Metadata</div>
+            <div class="card-body">
+              <table id="table-metadata" style="width:100%;"
+                class="table table-sm table-bordered table-striped nowrap">
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!--/navdetail-->
+    
+    <!--Begin navsearch-->
+    <div class="tab-pane fade" id="navsearch" role="tabpanel" aria-labelledby="navsearch-tab">
+
+      <!-- Begin -->
+      <div class="row">
+        <div class="card mx-auto">
+          <div class="card-header">NCBI taxonomy search</div>
+          <div class="card-body">
+                
+            <label for="align-prefix"
+              >(Optional) Enter a prefix for the strain ID, e.g. "NRRL":</label>
+            <input type="text" placeholder="" size=20 id="align-prefix" />
+            
+            <div>
+            <button type="button" class="btn btn-primary"
+              onclick="javascript:align(this);" id="align-load"
+              >Load alignments</button>
+            
+            <button type="button" class="btn btn-primary" id="align-import"
+                style="display:none;"
+                >Import NCBI taxonomy IDs for exact matches</button>
+            </div>
+            
+            <br />
+            <div class="alert alert-info" role="alert" id="align-alert"
+              style="display:none;"></div>
+              
+            <br />
+            <div id="align" style="display:none">
+              <table id="align1"
+                class="table table-bordered table-responsive table-condensed"
+                style="display:none; width:100%;">
+                <caption style="caption-side: top">Exact matches</caption>
+                </table>
+              
+              <br />
+              <table id="align2"
+                class="table table-bordered table-responsive table-condensed"
+                style="display:none; width:100%;">
+                <caption style="caption-side: top">Partial matches</caption>
+                </table>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- End -->
-  </div><!--/navmodify-->
-</div><!--/tab-content-->
+    </div><!--/navsearch-->
+    
+    <!--Begin navmodify-->
+    <div class="tab-pane fade" id="navmodify" role="tabpanel" aria-labelledby="navmodify-tab">
+      
+      <div class="row">
+        <div class="card mx-auto">
+          <div class="card-header">NCBI taxonomy bulk modify</div>
+          <div class="card-body">
+            <p>
+              <a class="btn btn-primary" data-toggle="collapse"
+                href="#instructions" role="button"
+                aria-expanded="false" aria-controls="instructions"
+                id="toggleInstructions"
+                >Show instructions</a>
+            </p>
+            <div class="row">
+              <div class="col">
+                <div class="collapse multi-collapse" id="instructions">
+                  <div class="card card-body alert alert-info">
+                    <p>Enter metadata for one or more entries in the library
+                    based on entry strain ID.</p>
+                    <p></p>
+                    <p>Paste library strain IDs to be aligned separated 
+                    by a newline character, for example:</p>
+                    
+                    <pre>B-10
+B-11
+B-12
+B-14</pre>
+                    <p>Leave a blank space for unknown species data, for
+                    example:</p>
+                    
+                    <pre>Streptomyces tendae
+Streptomyces erythrogriseus
 
+Streptomyces koyangensis</pre>
 
-<div class="row">
-
-<div class="col-sm-12">
+                  </div>
+                </div>
+              </div>
+            </div>
+      <script type="text/javascript">
+      $('#instructions').collapse({
+      toggle: false
+      });
+      $('#instructions').on('shown.bs.collapse', function () {
+      $('#toggleInstructions').text('Hide instructions');
+      });
+      $('#instructions').on('hidden.bs.collapse', function () {
+      $('#toggleInstructions').text('Show instructions');
+      });
+      </script>
+            
+            <div class="row">
+              <div class="col">
+                <label for="">Strain IDs:</label>
+                <textarea class="form-control" id="manual1"></textarea>
+              </div>
+              <div class="col">
+                <label for="">Genus:</label>
+                <textarea class="form-control" id="manual2"></textarea>
+              </div>
+              <div class="col">
+                <label for="">Species:</label>
+                <textarea class="form-control" id="manual3"></textarea>
+              </div>
+            </div>
+            
+            <br/>
+            <button class="btn btn-primary"
+              onclick="javascript:manualAlign(this);" id="manual-align-preview"
+              >Preview alignment</button>
+            <button type="button" class="btn btn-primary" id="manual-align-import"
+              style="display:none;"
+              >Import NCBI taxonomy IDs for exact matches</button>
+            
+            <br />
+            <div class="alert alert-info mt-2" role="alert" id="align-alert-manual"
+              style="display:none;"></div>
+              
+            <br/>
+            <table id="align3"
+              class="table table-bordered table-responsive table-condensed"
+              style="display:none; width:100%;">
+              <caption style="caption-side: top">Exact matches</caption>
+              </table>
+            <br/>
+            <table id="align4"
+              class="table table-bordered table-responsive table-condensed"
+              style="display:none; width:100%;">
+              <caption style="caption-side: top">Partial matches</caption>
+              </table>
+          </div>
+        </div>
+      </div>
+      <!-- End -->
+    </div><!--/navmodify-->
+  </div>
   
 </div>
 
@@ -258,334 +302,20 @@ Streptomyces koyangensis</pre>
   cursor: pointer;
 }
 </style>
+
+<!--{'library': lib, 'lab': lab, 'spectra': s, 'collapsed_spectra': s2,
+    'metadata': m}-->
+    
+{{ spectra|json_script:"data-spectra" }}
+{{ collapsed_spectra|json_script:"data-cspectra" }}
+{{ metadata|json_script:"data-metadata" }}
+
 <script type="text/javascript">
-var alignments = null; // To be set later
-var alignments2 = null; // To be set later
-var tableDom = 
-  '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-3"l><"col-sm-12 col-md-3"f>>' +
-  '<"row"<"col-sm-12"tr>>' +
-  '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>';
-function noevent(e) {
-  e.stopPropagation();
-  e.preventDefault();
-  return false;
-}
-var socket = new WebSocket('ws://' + location.host + '/ws/pollData');
-socket.onopen = function(e){
-  //console.log(e);
-}
-socket.onmessage = function(e) {
-  $('#align-load')[0].disabled = false;
-  $('#align-prefix')[0].disabled = false;
-  
-  console.log(e);
-  var data = JSON.parse(e.data).data;
-  console.log(data);
-  
-  // exact matches versus non-matches
-  if (data.message == 'completed align') {
-    $('#align-alert')
-      .text('Showing only Metadata entries where the NCBI taxonomic ID is empty');
-    $('#align1').css('display', '');
-    $('#align2').css('display', '');
-    $('#align-import').css('display', '');
-    $('#align').css('display', '');
-    
-    if (data.data.result1.length > 0) {
-      $('#align-import').on('click', alignImport);
-      $('#align-import')[0].disabled = false;
-      alignments = data.data.result1;
-    } else {
-      $('#align-import')[0].disabled = true;
-    }
-    
-    var t = $('#align1').DataTable({
-      data: data.data.result1,
-      destroy: true, // https://datatables.net/manual/tech-notes/3
-      columns: [
-        {data: 'id', title: 'ID'},
-        {data: 'strain_id', title: 'Strain ID'},
-        //~ {data: 'strain_id__strain_id', title: 'Strain Name'},
-        {data: 'exact_name', title: 'Name'},
-        {data: 'exact_sciname', title: 'Scientific name'},
-        {data: 'exact_txid', title: 'NCBI taxonomic ID'},
-        {data: 'exact_txtype', title: 'Taxonomic rank'},
-        {data: 'exact_parentname', title: 'Parent name'}
-      ]
-    });
-    t.draw();
-    var t2 = $('#align2').DataTable({
-      data: data.data.result2,
-      destroy: true, // https://datatables.net/manual/tech-notes/3
-      dom: tableDom,
-      buttons: [
-        'selectAll',
-        'selectNone',
-        {
-          text: 'Add selected Metadata',
-          action: function (e, dt, button, config) {
-            // for each selected row, get the database ID plus the selected option value
-            var x = dt.rows({selected: true}).data().toArray();
-            var y = dt.rows({selected: true}).nodes();
-            var save = [];
-            for (var i in x) {
-              var s = y[i].getElementsByTagName('select');
-              if (s.length == 0) continue; // no option
-              save.push({
-                exact_txid: s[0].options[s[0].selectedIndex].value,
-                id: x[i].id
-              })
-            }
-            saveAlignSelected(save);
-            // removes selected
-            dt.rows({selected: true}).remove().draw();
-          }
-        }
-      ],
-      language: {
-        buttons: {
-          selectAll: "Select all",
-          selectNone: "Select none"
-        }
-      },
-      columnDefs: [{
-        orderable: false,
-        className: 'select-checkbox',
-        targets:   0
-      }],
-      select: {
-        style: 'multi+shift',
-        toggleable: true
-      },
-      columns: [
-        {data: 'id', title: ' ',
-          render: function(data, type) {
-            return '';
-          }
-        },
-        {data: 'partial_ids', title: 'Update ID',
-          render: function(data, type) {
-            if (!data || data.length == 0) return '';
-            var d = [];
-            for (var i in data) {
-              d.push('<option value="' + i + '">' + i + '</option>');
-            }
-            return '<select onclick="javascript: noevent(event);">' +
-              d.join() + '</select>';
-          }
-        },
-        {data: 'id', title: 'ID'},
-        {data: 'strain_id', title: 'Strain ID'},
-        {data: 'partial_type', title: 'Search'},//,
-        {data: 'partial', title: 'Result (includes up to two results)',
-          render: function(data, type) {
-            return data.split('|').join('<br>');
-          }
-        }
-      ]
-    });
-    t.draw();
-  }
-  // 
-  else if (data.message == 'align status') {
-    $('#align-alert').text(data.data.status);
-  }
-  // 
-  else if (data.message == 'completed save align') {
-    $('#align-alert').text('Alignment updated!');
-  }
-  //
-  else if (data.message == 'completed manual align') {
-    $('#manual-align-import').css('display', '');
-    $('#align3').css('display', '');
-    $('#align4').css('display', '');
-    $('#align-alert-manual').text('');
-    $('#align-alert-manual').css('display', 'none');
-    $('#manual-align-preview')[0].disabled = false;
-    $('#manual1')[0].disabled = false;
-    $('#manual2')[0].disabled = false;
-    $('#manual3')[0].disabled = false;
-    
-    if (data.data.result1.length > 0) {
-      $('#manual-align-import').on('click', alignImportManual);
-      $('#manual-align-import')[0].disabled = false;
-      alignments2 = data.data.result1;
-    } else {
-      $('#manual-align-import')[0].disabled = true;
-    }
-    
-    var t = $('#align3').DataTable({
-      data: data.data.result1,
-      destroy: true, // https://datatables.net/manual/tech-notes/3
-      columns: [
-        {data: 'sid', title: 'Strain ID'},
-        //~ {data: 'strain_id__strain_id', title: 'Strain Name'},
-        {data: 'genus', title: 'Input genus'},
-        {data: 'species', title: 'Input species'},
-        {data: 'txid1', title: 'NCBI genus ID'},
-        {data: 'txid2', title: 'NCBI species ID'}
-      ]
-    });
-    t.draw();
-    var t = $('#align4').DataTable({
-      data: data.data.result2,
-      destroy: true, // https://datatables.net/manual/tech-notes/3
-      dom: tableDom,
-      buttons: [
-        'selectAll',
-        'selectNone',
-        {
-          text: 'Add selected Metadata',
-          action: function (e, dt, button, config) {
-            // for each selected row, get the database ID plus the selected option value
-            var x = dt.rows({selected: true}).data().toArray();
-            var y = dt.rows({selected: true}).nodes();
-            var save = [];
-            for (var i in x) {
-              var s = y[i].getElementsByTagName('select');
-              if (s.length == 0) continue; // no option
-              save.push({
-                exact_txid: s[0].options[s[0].selectedIndex].value,
-                id: x[i].id
-              })
-            }
-            saveAlignSelected(save);
-            // removes selected
-            dt.rows({selected: true}).remove().draw();
-          }
-        }
-      ],
-      language: {
-        buttons: {
-          selectAll: "Select all",
-          selectNone: "Select none"
-        }
-      },
-      columnDefs: [{
-        orderable: false,
-        className: 'select-checkbox',
-        targets:   0
-      }],
-      select: {
-        style: 'multi+shift',
-        toggleable: true
-      },
-
-      columns: [
-        {data: 'id', title: ' ',
-          render: function(data, type) {
-            return '';
-          }
-        },
-        {data: 'partial_ids', title: 'Update ID',
-          render: function(data, type) {
-            if (!data || data.length == 0) return '';
-            var d = [];
-            for (var i in data) {
-              d.push('<option value="' + i + '">' + i + '</option>');
-            }
-            return '<select onclick="javascript: noevent(event);">' +
-              d.join() + '</select>';
-          }
-        },
-
-        {data: 'id', title: 'ID'},
-        {data: 'sid', title: 'Strain ID'},
-        {data: 'genus', title: 'Input genus'},
-        {data: 'species', title: 'Input species'},
-        {data: 'result', title: 'Match issue'},
-        {data: 'txid1', title: 'NCBI genus ID'},
-        {data: 'txid2', title: 'NCBI species',
-          render: function(data, type) {
-            return data.split('|').join('<br>');
-          }
-        }
-      ]
-    });
-    t.draw();
-  }
-  // 
-  else if (data.message == 'completed save manual align') {
-    $('#align-alert-manual').css('display', '');
-    $('#align-alert-manual').text('Alignment updated!');
-    $('#manual-align-preview')[0].disabled = false;
-    //~ $('#manual-align-import')[0].disabled = false;
-    $('#manual1')[0].disabled = false;
-    $('#manual2')[0].disabled = false;
-    $('#manual3')[0].disabled = false;
-  }
-}
-socket.onclose = function(e){
-  //console.log(e);
-}
-function saveAlignSelected(rows) {
-  socket.send(JSON.stringify({
-    type: 'save align',
-    library: {{ library.id }},
-    alignments: rows
-  }));
-}
-function alignImport() {
-  $('#align-load')[0].disabled = true;
-  $('#align-prefix')[0].disabled = true;
-  $('#align-import')[0].disabled = true;
-  $('#align-alert').text('Saving alignment...');
-  socket.send(JSON.stringify({
-    type: 'save align',
-    library: {{ library.id }},
-    alignments: alignments
-  }));
-}
-function alignImportManual() {
-  $('#manual-align-preview')[0].disabled = true;
-  $('#manual-align-import')[0].disabled = true;
-  $('#manual1')[0].disabled = true;
-  $('#manual2')[0].disabled = true;
-  $('#manual3')[0].disabled = true;
-  $('#align-alert-manual').css('display', '');
-  $('#align-alert-manual').text('Saving alignment...');
-  socket.send(JSON.stringify({
-    type: 'save manual align',
-    library: {{ library.id }},
-    alignments: alignments2
-  }));
-}
-function manualAlign(btn) {
-  btn.disabled = true;
-  $('#manual1')[0].disabled = true;
-  $('#manual2')[0].disabled = true;
-  $('#manual3')[0].disabled = true;
-  $('#align-alert-manual').css('display', '');
-  $('#align-alert-manual').text('Loading alignment...');
-  socket.send(JSON.stringify({
-    type: 'manual_align',
-    library: {{ library.id }},
-    data: {
-      strain_ids: $('#manual1')[0].value.trim(),
-      genus: $('#manual2')[0].value.trim(),
-      species: $('#manual3')[0].value.trim()
-    }
-  }));
-}
-function align(btn) {
-  //~ btn.onclick = function() {}; // Disable
-  btn.disabled = true;
-  $('#align-prefix')[0].disabled = true;
-  $('#align').css('display', 'none');
-  $('#align-alert').css('display', '');
-  $('#align-alert').text('Loading alignment...');
-  $('#align-import').css('display', 'none');
-  $('#align-prefix')[0].value = $('#align-prefix')[0].value.trim();
-  socket.send(JSON.stringify({
-    type: 'align',
-    library: {{ library.id }},
-    prefix: $('#align-prefix')[0].value
-  }));
-}
+var library_id = {{library.id}}
 </script>
-{% endif %}
 
-<!--End row-->
-</div>
+<script src="{% static 'js/library_profile.js' %}"></script>
+
+{% endif %}
 
 {% endblock %}
