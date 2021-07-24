@@ -144,7 +144,8 @@ class AddLibraryForm(forms.ModelForm):
     user = self.user
     if request.user.is_authenticated:
       user_labs = LabGroup.objects \
-        .filter(Q(owners__in = [user]) | Q(members__in = [user]))
+        .filter(Q(owners__in = [user]) | Q(members__in = [user]))\
+        .exclude(lab_type = 'user-uploads')
       # ~ q = Library.objects.filter( \
         # ~ Q(lab__in = user_labs) | \
         # ~ Q(created_by__exact = user)
