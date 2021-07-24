@@ -142,8 +142,8 @@ def library_profile(request, library_id = False):
     request,
     'chat/library_profile.html',
     {'library': lib, 'lab': lab,
-      'spectra': list(s.values('id', 'strain_id', 'min_mass', 'max_mass')),
-      'collapsed_spectra': list(s2.values('id', 'strain_id', 'min_mass', 'max_mass', 'spectra_content', 'num_spectra', 'min_snr', 'peak_percent_presence', 'tolerance', 'generated_date')),
+      'spectra': list(s.values('id', 'strain_id__strain_id', 'min_mass', 'max_mass')),
+      'collapsed_spectra': list(s2.values('id', 'strain_id__strain_id', 'min_mass', 'max_mass', 'spectra_content', 'num_spectra', 'min_snr', 'peak_percent_presence', 'tolerance', 'generated_date')),
       'metadata': list(m.values('id', 'strain_id', 'genbank_accession', 'ncbi_taxid', 'cKingdom', 'cPhylum', 'cClass', 'cOrder', 'cFamily', 'cGenus', 'cSpecies', 'cSubspecies', 'created_by__username')),
       'lengths': {
         'spectra': len(s),

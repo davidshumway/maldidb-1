@@ -23,12 +23,13 @@ def add_sqlite(request):
     form = LoadSqliteForm()
     u = request.user
     # own libraries
-    user_libs = Library.objects.filter(created_by__exact = u)
+    user_libs = Library.objects.filter(created_by__exact = u)\
+      .exclude(lab__lab_type = 'user-uploads')
     form.fields['library'].queryset = user_libs
     # own labs
     user_labs = LabGroup.objects.filter(
       Q(owners__in = [u]) | Q(members__in = [u])
-    )
+    ).exclude(lab_type = 'user-uploads')
     form.fields['lab'].queryset = user_labs
   return render(request, 'importer/add_sqlite.html', {'form': form})
 

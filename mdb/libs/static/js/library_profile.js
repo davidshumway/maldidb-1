@@ -13,7 +13,7 @@ var t = $('#table-spectra').DataTable({
   scrollX: true,
   columns: [
     {data: 'id', title: 'Spectra ID'},
-    {data: 'strain_id', title: 'Strain ID'},
+    {data: 'strain_id__strain_id', title: 'Strain ID'},
     {data: 'min_mass', title: 'Min mass'},
     {data: 'max_mass', title: 'Max mass'}
   ]
@@ -23,7 +23,7 @@ var t = $('#table-cspectra').DataTable({
   scrollX: true,
   columns: [
     {data: 'id', title: 'Collapsed Spectra ID'},
-    {data: 'strain_id', title: 'Strain ID'},
+    {data: 'strain_id__strain_id', title: 'Strain ID'},
     {data: 'min_mass', title: 'Min mass'},
     {data: 'max_mass', title: 'Max mass'},
     {data: 'spectra_content', title: 'Spectra content'},
