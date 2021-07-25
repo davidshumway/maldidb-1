@@ -184,20 +184,15 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False, upload_
   # Uses file_strain_ids for strain_id, if present
   try:
     import re
-    #use_sids = False
     file_sid = None
     if tmpForm.cleaned_data['use_filenames'] is False:
       sids = re.sub('[\r\n]+', '\n', tmpForm.cleaned_data['file_strain_ids'].strip())
       sids = sids.split('\n')
-      # ~ print('sids',sids)
       file_sid = sids[upload_count]
   except:
     pass
-    # ~ use_sids = False
-  # ~ idx = 0
-  # ~ i = 0
+    
   for row in rows:
-    # ~ sid = sids[idx] if use_sids is True else row[0]
     sid = file_sid if file_sid is not None else row[0]
     data = {
       'strain_id': sid, #row[0],
@@ -222,7 +217,6 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False, upload_
       'dna_16s': row[19],
       'created_by': request.user.id,
       'library': tmpForm.cleaned_data['library'].id,
-      # ~ 'lab': tmpForm.cleaned_data['lab'].id,
     }
     m1 = False
     try:
@@ -247,7 +241,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False, upload_
       # ~ created_metadata[row[0]] = entry
     else:
       field_errors = [(field.label, field.errors) for field in form] 
-      raise ValueError('x2' + str(field_errors))
+      raise ValueError('x2' + str(field_errors) + ' | ' + json.dumps(data))
     
   # XML
   if user_task:

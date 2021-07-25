@@ -19,5 +19,6 @@ urlpatterns = [
   path('spectra2/<spectra_id>/', views.spectra2_profile, name='view_spectra2'),
   path('spectra/edit/<spectra_id>/', views.edit_spectra, name='edit_spectra'),
   path('lib-compare/', views.lib_compare, name='lib_compare'),
+  path('lib-compare/<library_ids>/', views.lib_compare2, name='lib_compare2'),
   
 ] + router.urls

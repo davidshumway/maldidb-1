@@ -82,46 +82,11 @@ socket.onmessage = function(e) {
     }
     
     var a = document.createElement('a');
-    //~ a.href = 'data:attachment/text,' + encodeURI(textToSave);
     a.href = 'data:application/json,' +
       encodeURI(JSON.stringify(data.data.result));
     a.target = '_blank';
     a.download = 'results.json';
     a.click();
-    
-    //~ var x = JSON.parse(data.data.result);
-    //~ console.log(x.ids);         // [ [1], [2], ... ]
-    //~ console.log(x.lib_ids);     // [ [1], [2], ... ]
-    //~ console.log(x.similarity);  // [ [1, 0.5, 0.2, ...], [...], ... ]
-    
-    // rx - Array of results
-    // rx[i] - Single node / spectra
-    // rx[i].library - Library id of spectra
-    // rx[i].spectra - Spectra id of spectra
-    // rx[i].edges - Array of edges
-    // rx[i].edges[j] - Edge object
-    // rx[i].edges[j].id - Other spectra id
-    // rx[i].edges[j].lid - Other spectra library id
-    // rx[i].edges[j].s - Similarity score
-    //~ var rx = [];
-    //~ for (var i in x.ids) {
-      //~ var edges = [];
-      //~ for (var j in x.similarity[i]) {
-        //~ //if (j == 0) continue; // Skips edge to itself
-        //~ edges.push({
-          //~ id: x.ids[j][0],
-          //~ lid: x.lib_ids[j][0],
-          //~ s: x.similarity[i][j]
-        //~ })
-      //~ }
-      //~ rx.push({
-        //~ lid: x.lib_ids[i][0],
-        //~ id: x.ids[i][0],
-        //~ edges: edges
-      //~ })
-    //~ }
-    
-    //~ $('#result').text(JSON.stringify(rx));
   }
 }
 function check(btn) {

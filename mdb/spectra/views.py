@@ -23,6 +23,8 @@ from rest_framework.viewsets import ModelViewSet
 from chat.models import LabGroup, Library
 from django.db.models import Q
 
+from .wsviews import _cosine_score_libraries
+
 class CollapsedCosineScoreViewSet(ModelViewSet):
   '''
   Showing latest ten entries.
@@ -61,7 +63,7 @@ def spectra2_profile(request, spectra_id):
   spectra = CollapsedSpectra.objects.get(id = spectra_id)
   return render(request, 'spectra/spectra_profile.html', {'spectra': spectra})
 
-@login_required
+# ~ @login_required
 def lib_compare(request):
   if request.method == "POST":
     form = LibCompareForm(request.POST, request.FILES)
@@ -72,16 +74,67 @@ def lib_compare(request):
   else:
     form = LibCompareForm()
   # shows all available to user
-  u = request.user
-  user_labs = LabGroup.objects.filter(
-    Q(owners__in = [u]) | Q(members__in = [u])
-  )
-  form.fields['library'].queryset = Library.objects.filter(
-    Q(created_by__exact = u) | 
-    Q(lab__in = user_labs) |
-    Q(privacy_level__exact = 'PB')
-  )
+  if request.user.is_authenticated:
+    u = request.user
+    user_labs = LabGroup.objects.filter(
+      Q(owners__in = [u]) | Q(members__in = [u])
+    )
+    form.fields['library'].queryset = Library.objects.filter(
+      Q(created_by__exact = u) | 
+      Q(lab__in = user_labs) |
+      Q(privacy_level__exact = 'PB')
+    )
+  else:
+    form.fields['library'].queryset = Library.objects.filter(
+      Q(privacy_level__exact = 'PB')
+    )
+  # ~ print(f'lib-compare form {form}')
   return render(request, 'spectra/lib_compare.html', {'form': form})
+  
+def lib_compare2(request, library_ids):
+  '''
+  Returns json response of library comparison
+  '''
+  # all available to user
+  if request.user.is_authenticated:
+    u = request.user
+    user_labs = LabGroup.objects.filter(
+      Q(owners__in = [u]) | Q(members__in = [u])
+    )
+    qs = Library.objects.filter(
+      Q(created_by__exact = u) | 
+      Q(lab__in = user_labs) |
+      Q(privacy_level__exact = 'PB')
+    ).filter(id__in = [ int(i) for i in library_ids.split(',')])
+  else:
+    qs = Library.objects.filter(
+      Q(privacy_level__exact = 'PB')
+    ).filter(id__in = [ int(i) for i in library_ids.split(',')])
+  
+  r = _cosine_score_libraries(list(qs.values_list('id', flat = True)))
+  print(f'r{r}')
+  
+  # ~ print(f'form.is_valid()2{form.is_valid()}')
+  # ~ ws = websocket.WebSocket()
+  # ~ ws.connect('ws://localhost:8000/ws/pollData')
+  # ~ ws.send(json.dumps({
+    # ~ 'type': 'library comparison',
+    # ~ 'data': {
+      # ~ 'client': client,
+      # ~ 'result': lib_score_parseresult(q[0].result)
+    # ~ }
+  # ~ }))
+  # ~ ws.close()
+  
+  # ~ socket.send(JSON.stringify({
+    # ~ type: 'library comparison',
+    # ~ libraries: selected,
+  # ~ }));
+  
+  # "TypeError: In order to allow non-dict objects to be serialized set
+  # the safe parameter to False."
+  return JsonResponse(r, safe = False)
+  # ~ return render(request, 'spectra/lib_compare.html', {'form': form})
   
 @login_required
 def edit_spectra(request, spectra_id):

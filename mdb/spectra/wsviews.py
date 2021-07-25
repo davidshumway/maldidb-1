@@ -9,70 +9,102 @@ import json
 import requests
 from mdb.utils import *
 
-@start_new_thread
-def cosine_score_libraries(self, val, client):
+def _cosine_score_libraries(libraries):
   '''
-  
   '''
-  # ~ LibrariesCosineScore.objects.all().delete()
-  
-  # check db
-  # https://stackoverflow.com/questions/16324362/django-queryset-get-exact-manytomany-lookup
-  
-  #LibrariesCosineScore.objects.filter(
+  # Checks if manytomany scoring already exists
+  # e.g. https://stackoverflow.com/questions/16324362/
+  # django-queryset-get-exact-manytomany-lookup
   q = LibrariesCosineScore.objects.annotate(count = Count('libraries'))\
-    .filter(count = len(val['libraries']))
-  for lid in val['libraries']:
+    .filter(count = len(libraries))
+  for lid in libraries:
     q = q.filter(libraries = lid)
   if len(q) > 0:
-    ws = websocket.WebSocket()
-    ws.connect('ws://localhost:8000/ws/pollData')
-    ws.send(json.dumps({
-      'type': 'library comparison result',
-      'data': {
-        'client': client,
-        'result': lib_score_parseresult(q[0].result)
-      }
-    }))
-    ws.close()
-    return 
+    return lib_score_parseresult(q[0].result)
   
   # Checks libraries exist
   try:
     lib_cos_score = LibrariesCosineScore.objects.create(
       result = '' 
     )
-    for lid in val['libraries']:
+    for lid in libraries:
       lib_cos_score.libraries.add(Library.objects.get(id = lid))
     lib_cos_score.save()
   except Exception as e:
     # e.g. if a Library id doesn't exist
     print('e:', e)
     return
-
+  
   # Creates a new score
   data = {
-    'ids': val['libraries']
+    'ids': libraries
   }
   r = requests.post(
     'http://plumber:8000/cosineLibCompare',
     params = data
   )
-  # Writes result to db and sends response
+  # Writes result to db
   if r.status_code == 200:
     lib_cos_score.result = r.text
     lib_cos_score.save()
+    return lib_score_parseresult(r.text)
     
+@start_new_thread
+def cosine_score_libraries(self, val, client):
+  '''
+  '''
+  try:
+    r = _cosine_score_libraries(val['libraries'])
     ws = websocket.WebSocket()
     ws.connect('ws://localhost:8000/ws/pollData')
     ws.send(json.dumps({
       'type': 'library comparison result',
       'data': {
         'client': client,
-        'result': lib_score_parseresult(r.text)
+        'result': r
       }
     }))
     ws.close()
+  except Exception as e:
+    print(e)
+    pass
+  
+  # ~ # Checks libraries exist
+  # ~ try:
+    # ~ lib_cos_score = LibrariesCosineScore.objects.create(
+      # ~ result = '' 
+    # ~ )
+    # ~ for lid in val['libraries']:
+      # ~ lib_cos_score.libraries.add(Library.objects.get(id = lid))
+    # ~ lib_cos_score.save()
+  # ~ except Exception as e:
+    # ~ # e.g. if a Library id doesn't exist
+    # ~ print('e:', e)
+    # ~ return
+
+  # ~ # Creates a new score
+  # ~ data = {
+    # ~ 'ids': val['libraries']
+  # ~ }
+  # ~ r = requests.post(
+    # ~ 'http://plumber:8000/cosineLibCompare',
+    # ~ params = data
+  # ~ )
+  # ~ # Writes result to db and sends response
+  # ~ if r.status_code == 200:
+    # ~ lib_cos_score.result = r.text
+    # ~ lib_cos_score.save()
+    
+    # ~ ws = websocket.WebSocket()
+    # ~ ws.connect('ws://localhost:8000/ws/pollData')
+    # ~ ws.send(json.dumps({
+      # ~ 'type': 'library comparison result',
+      # ~ 'data': {
+        # ~ 'client': client,
+        # ~ 'result': lib_score_parseresult(r.text)
+      # ~ }
+    # ~ }))
+    # ~ ws.close()
 
 def lib_score_parseresult(result):
   r = json.loads(result)
