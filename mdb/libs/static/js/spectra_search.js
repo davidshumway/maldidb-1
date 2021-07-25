@@ -1,4 +1,3 @@
-
 function showUploadControls() {
   $('#upload-more-opts').css('display', '');
   $('#upload-button').css('display', '');
@@ -523,7 +522,10 @@ var preprocessed = {
   table1: null,
   table2: null,
   table2_progressbars: {}, // holds {"row-index": td-element}
-  table2_status_cells: {}
+  table2_status_cells: {},
+  table3_score_cells: {},
+  batched_upload_files: [],
+  batched_upload_count: 0
 }
 function sp(el) {
   //makeChartBtm
@@ -773,10 +775,9 @@ socket.onmessage = function(e) {
     var c = data.count;
     preprocessed.count++;
     $(preprocessed.table2_status_cells[c]).text('done');
-    
-    //~ $('#filetable-preprocess' + c).text('done');
     $('#stat-complete').text(
       preprocessed.count + '/' + preprocessed.total + ' completed');
+    
     // Collapses library if all are preprocessed
     if (preprocessed.count == preprocessed.total) {
       $('#stat-title').text('Collapsing library entries...');
@@ -808,15 +809,22 @@ socket.onmessage = function(e) {
     
     var t = $('#file-listing2').DataTable({
       data: data.data.results,
+      columnDefs: [{ // progress bar, 3rd column (2)
+        targets: 1,
+        createdCell: function(td, cellData, rowData, row, col) {
+          // td: html td element
+          // cellData: compared spectra id
+          preprocessed.table3_score_cells[cellData] = td;
+        }
+      }],
       columns: [
-        //~ {data: 'id', title: 'Spectra ID'},
-        //~ {data: 'strain_id', title: 'Strain ID'},
         {data: 'strain_id__strain_id', title: 'Unknown Strain ID'},
         {data: 'id', title: 'Top scores (Strain ID, Genus / Species)',
           render: function(data, type) {
-            // e.g. top-scores-8373
-            return '<table id="top-scores-' + data + '"'+
-              'class="table table-sm" style="width:100% !important;"></table>';
+            return '';
+            //~ // e.g. top-scores-8373
+            //~ return '<table id="top-scores-' + data + '"'+
+              //~ 'class="table table-sm" style="width:100% !important;"></table>';
           }
         },
         {data: 'id', title: '',
@@ -855,10 +863,14 @@ socket.onmessage = function(e) {
     var x = data.data.result.scores;
     var output = [];
     for (var i=0; i<5; i++) {
-      if (x[i])
-        output.push(x[i]);
+      if (x[i]) output.push(x[i]);
     }
-    var t = $('#top-scores-'+data.data.spectra1).DataTable({
+    
+    var x = document.createElement('table');
+    //~ x.id = 'top-scores-' + data.data.spectra1
+    preprocessed.table3_score_cells[data.data.spectra1].appendChild(x);
+    var t = $(x).DataTable({
+    //~ var t = $('#top-scores-' + data.data.spectra1).DataTable({
       data: output,
       paging: false,
       searching: false,
@@ -1389,7 +1401,9 @@ function upload(event) {
   return false;
 }
 function ajaxLibrary() {
-  // Creates or validates library before upload
+  /**
+   * Creates or validates library before upload
+   */
   var form = new FormData($('#upload_form')[0]);
   form.set('number_files', $('#customFile')[0].files.length);
   form.set('file', '');
@@ -1428,8 +1442,12 @@ function ajaxLibrary() {
         f.set('library_id', preprocessed.library_id);
         f.set('upload_count', i);
         f.set('client', preprocessed.client);
-        uploadHelper(f);
+        //~ uploadHelper(f);
+        preprocessed.batched_upload_files.push(f);
       }
+      
+      // Init uploads
+      batchUpload();
     },
     // on error
     error: function(response) {
@@ -1457,13 +1475,27 @@ function ajaxLibrary() {
     }
   });
 }
-
+function batchUpload() {
+  /**
+   * Starts 20 from batched_upload_files
+   */
+  //~ console.log('batchupload')
+  //~ console.log('preprocessed.batched_upload_files',preprocessed.batched_upload_files)
+  var f = preprocessed.batched_upload_files.slice(0,20); // 0-19
+  //~ console.log('f', f)
+  for (var i in f) {
+    uploadHelper(f[i]);
+  }
+  preprocessed.batched_upload_files = preprocessed
+    .batched_upload_files.slice(20,); // 20-
+  //~ console.log('preprocessed.batched_upload_files',preprocessed.batched_upload_files)
+}
 function uploadHelper(formData) {
   var template = '\
-    <div class="row" style="width:100%;">\
-      <div class="col-sm-3 progress-bar-txt"\
+    <div class="row m-0 p-0" style="width:100%;">\
+      <div class="col-sm-8 col-md-5 progress-bar-txt text-center m-0 p-0"\
         aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>\
-      <div class="col-sm-9" class="progress-bar-status">\
+      <div class="col-sm-4 col-md-7 m-0 p-0" class="progress-bar-status">\
         <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0"\
           aria-valuemax="100" style="width: 0%;min-width: 2em;">\
           \
@@ -1476,8 +1508,8 @@ function uploadHelper(formData) {
   n.append(t);
   t.progress_txt = n.find('.progress-bar-txt');
   t.progress = n.find('.progress-bar');
-  console.log(t);
-  console.log(n);
+  //~ console.log(t);
+  //~ console.log(n);
   
   $.ajax({
     xhr: function() {
@@ -1507,14 +1539,20 @@ function uploadHelper(formData) {
     contentType: false,
     // on success
     success: function(response) {
-      //~ console.log(response);
-      //~ if (response.status == 'preprocessing') {}
+      preprocessed.batched_upload_count++;
+      // starts another batch of uploads
+      if (preprocessed.batched_upload_count % 20 == 0)
+        batchUpload();
     },
     
     // on error
     error: function(response) {
       console.log(response);
-      $('#upload-button')[0].disabled = false;
+      preprocessed.batched_upload_count++;
+      // starts another batch of uploads
+      if (preprocessed.batched_upload_count % 20 == 0)
+        batchUpload();
+      //~ $('#upload-button')[0].disabled = false;
       try {
         var r = JSON.parse(response.responseJSON.errors);
         console.log(r);
@@ -1526,14 +1564,6 @@ function uploadHelper(formData) {
           var msgs = [];
           r.file.forEach(e => msgs.push(e.message));
           $('#file-error').text(msgs.join('<br>'));
-        } else if (r.__all__.length > 0) {
-          for (var i in r.__all__) {
-            if (r.__all__[i].message == 'Library title already exists!') {
-              $('#id_library_create_new').removeClass('is-valid').addClass('is-invalid');
-              $('#new-library-error').removeClass('toggle-display')
-                .text('Library title already exists!')
-            }
-          }
         }
       } catch(e) {
         console.log(e);

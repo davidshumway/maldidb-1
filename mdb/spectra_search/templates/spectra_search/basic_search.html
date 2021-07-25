@@ -47,12 +47,9 @@ function show_filter(e) {
   <!-- begin row -->
   <div class="row">
   <!-- begin col left -->
-  <div class="col-10 mx-auto" id="col-left">
+  <div class="col-sm-12 col-md-10 mx-auto" id="col-left">
       
     <div class="card" style="">
-      <!--Height: All tabs same height to keep card body height
-        from always changing upon tab selection.
-        height:450px !important;-->
       <div class="card-header">
         <ul class="nav nav-tabs card-header-tabs" id="nav-search-source">
           <li class="nav-item">
@@ -124,10 +121,10 @@ function show_filter(e) {
             </div>
           </div>
           
-          <table class="table table-sm card-text table-bordered table-striped"
+          <table class="table table-sm card-text table-bordered table-striped nowrap"
             id="file-listing" style="width: 100% !important;">
           </table>
-          <table class="table table-sm card-text table-bordered table-striped"
+          <table class="table table-sm card-text table-bordered table-striped nowrap"
             id="file-listing-preprocessing"
             style="width: 100% !important; display:none;"></table>
             
@@ -394,13 +391,15 @@ function show_filter(e) {
           <span id="stat2-title">Task: Generating cosine similarity measure...</span><br />
           <span id="stat2-complete"></span>
         </div>
-        <table class="table table-sm card-text table-bordered" id="file-listing2" style="width: 100% !important;">
+        <table class="table table-sm card-text table-bordered nowrap"
+          id="file-listing2" style="width: 100% !important;">
         </table>
       </div>
       
       <div class="card-body" id="nss-card-3" style="display:none;">
         <div class="alert alert-info">Comparing spectra from 3k-15k only</div>
-        <table class="table table-responsive-sm table-bordered table-striped" id="data-table" style="width: 100% !important;"></table>
+        <table class="table table-responsive-sm table-bordered table-striped nowrap"
+          id="data-table" style="width: 100% !important;"></table>
       </div>
       
     </div>
