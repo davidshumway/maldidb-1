@@ -104,17 +104,16 @@ def process_file(request, file, form, owner, upload_count, client):
   '''
   Runs R methods to process a mzml or mzxml file
   '''
+  import os
   try:
     ws = websocket.WebSocket()
     ws.connect('ws://localhost:8000/ws/pollData')
     
-    # ~ print(f'preprocess file{file}')
     f1 = file.replace('uploads/', 'uploads/sync/')
     current_loc = '/home/app/web/media/' + file
     new_loc = '/' + file.replace('uploads/', 'uploads/sync/')
     os.system('cp ' + current_loc + ' ' + new_loc)
     data = {'file': f1}
-    # ~ print(f'send{data}')
     r = requests.get('http://plumber:8000/preprocess', params = data)
     
     if r.text == '':
@@ -129,16 +128,18 @@ def process_file(request, file, form, owner, upload_count, client):
       }))    
       ws.close()
       return
-    # ~ t = UserTask.objects.create( # ok
-      # ~ owner = request.user,
-      # ~ task_description = 'idbac_sql'
-    # ~ )
+    t = UserTask.objects.create( # ok
+      owner = request.user,
+      task_description = 'idbac_sql'
+    )
     # Adds sqlite spectra to db
     info = idbac_sqlite_insert(request, form,
       '/uploads/sync/' + str(r.json()[0]) + '.sqlite',
-      user_task = False,
+      user_task = t,
       upload_count = upload_count
     )
+    # Removes sqlite file
+    os.remove('/uploads/sync/' + str(r.json()[0]) + '.sqlite')
   except Exception as e:
     print('pf2', e)
   

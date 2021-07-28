@@ -868,6 +868,7 @@ socket.onmessage = function(e) {
     
     var x = document.createElement('table');
     //~ x.id = 'top-scores-' + data.data.spectra1
+    x.style.width = '100%';
     preprocessed.table3_score_cells[data.data.spectra1].appendChild(x);
     var t = $(x).DataTable({
     //~ var t = $('#top-scores-' + data.data.spectra1).DataTable({
@@ -1479,16 +1480,12 @@ function batchUpload() {
   /**
    * Starts 20 from batched_upload_files
    */
-  //~ console.log('batchupload')
-  //~ console.log('preprocessed.batched_upload_files',preprocessed.batched_upload_files)
   var f = preprocessed.batched_upload_files.slice(0,20); // 0-19
-  //~ console.log('f', f)
   for (var i in f) {
     uploadHelper(f[i]);
   }
   preprocessed.batched_upload_files = preprocessed
     .batched_upload_files.slice(20,); // 20-
-  //~ console.log('preprocessed.batched_upload_files',preprocessed.batched_upload_files)
 }
 function uploadHelper(formData) {
   var template = '\
@@ -1503,13 +1500,10 @@ function uploadHelper(formData) {
     </div></div>';
           
   var t = $(template);
-  //~ var n = $('#filetable-upload' + formData.get('upload_count'));
   var n = $(preprocessed.table2_progressbars[formData.get('upload_count')]);
   n.append(t);
   t.progress_txt = n.find('.progress-bar-txt');
   t.progress = n.find('.progress-bar');
-  //~ console.log(t);
-  //~ console.log(n);
   
   $.ajax({
     xhr: function() {
@@ -1519,10 +1513,7 @@ function uploadHelper(formData) {
           var pct = Math.round(100 * evt.loaded / evt.total);
           t.progress.attr('aria-valuenow', pct);
           t.progress.html('&nbsp;');
-          //~ t.progress.text(' ');
-          //~ t.progress.text(pct + '%');
           t.progress.css('width', pct + '%');
-          
           t.progress_txt.attr('aria-valuenow', pct);
           t.progress_txt.text(pct + '%');
         }

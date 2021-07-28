@@ -529,20 +529,26 @@ preprocess <- function(file) {
     IDBacApp:::spectraProcessingFunction(
       rawDataFilePath = file.path(paste0('/app/', file)),
       sampleID = sID,
-      pool = idbacPool, 
+      pool = idbacPool,
       acquisitionInfo = NULL,
     )
   },
   warning = function(warn) {
     print(paste("preprocess WARN:", warn))
-    return('')
+    #return('')
   },
   error = function(err) {
-    return('')
     print(paste("preprocess ERROR: ", err))
+    return('')
   },
   finally = function(f) {
     #print(paste("e: ", e))
+  })
+  
+  tryCatch({
+    if (file.exists(paste0('/app/', file))) {
+      file.remove(paste0('/app/', file))
+    }
   })
   
   # returns location of the idbac sqlite file.
