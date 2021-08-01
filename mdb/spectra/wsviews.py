@@ -108,7 +108,6 @@ def cosine_score_libraries(self, val, client):
 
 def lib_score_parseresult(result):
   r = json.loads(result)
-  # ~ print(f'r{r}')
   x = []
   c1 = 0
   for i in r['ids']:

@@ -27,14 +27,14 @@ class LoadSqliteForm(forms.Form):
       files.append((filename, filename))
   r01data = forms.MultipleChoiceField(choices = files, required = False)
 
-  privacy_level = forms.CharField(
-    label = 'Privacy level',
-    widget = forms.RadioSelect(choices = [
-      ('PB', 'Public'),
-      ('PR', 'Private'),
-    ]),
-    required = True,
-    initial = 'PB')
+  # ~ privacy_level = forms.CharField(
+    # ~ label = 'Privacy level',
+    # ~ widget = forms.RadioSelect(choices = [
+      # ~ ('PB', 'Public'),
+      # ~ ('PR', 'Private'),
+    # ~ ]),
+    # ~ required = True,
+    # ~ initial = 'PB')
   
   def clean(self):
     data = self.cleaned_data

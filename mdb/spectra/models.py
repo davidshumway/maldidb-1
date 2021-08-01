@@ -6,19 +6,6 @@ class AbstractSpectra(models.Model):
   '''
   '''
   
-  # Privacy level is library-wide
-  # ~ privacyChoices = [
-    # ~ ('PB', 'Public'),
-    # ~ ('PR', 'Private'),
-  # ~ ]
-  # ~ privacy_level = models.CharField(
-    # ~ max_length = 2,
-    # ~ choices = privacyChoices,
-    # ~ default = 'PB',
-    # ~ blank = True,
-    # ~ null = True
-  # ~ )
-  
   library = models.ForeignKey(
     'chat.Library',
     on_delete = models.CASCADE,
@@ -139,31 +126,6 @@ class SearchSpectra(AbstractSpectra):
     blank = True,
     null = True)
   
-# ~ class Replicates(models.Model):
-  # ~ '''
-  # ~ Each entry corresponds to a list of 1-N spectra for a given strain_id.
-  
-  # ~ E.g., strain_id = 'B009', replicates = [spectra.1, spectra.2, ...].
-  # ~ '''
-  # ~ strain_id = models.ForeignKey(
-    # ~ 'Metadata',
-    # ~ db_column = 'strain_id',
-    # ~ on_delete = models.CASCADE,
-    # ~ blank = False,
-    # ~ null = False
-  # ~ )
-  # ~ replicates = models.ManyToManyField('Spectra') # points to 1-N replicates
-  # ~ spectraChoices = [
-    # ~ ('PR', 'Protein'),
-    # ~ ('SM', 'Small Molecule'),
-  # ~ ]
-  # ~ spectra_content = models.CharField(
-    # ~ max_length = 2,
-    # ~ choices = spectraChoices,
-    # ~ blank = False,
-    # ~ null = False
-  # ~ )
-  
 class Spectra(AbstractSpectra):
   ''' Spectra Model
   
@@ -256,9 +218,7 @@ class BinnedPeaks(models.Model):
 
 class LibrariesCosineScore(models.Model):
   '''
-  
-  XXX:param library_ids: A "hash" of libraries scored in the format ("l1id|l2id|l3id")
-    where library id is ascending
+  Used with the /lib-compare endpoint for comparing libraries
   '''
   libraries = models.ManyToManyField('chat.Library')
   result = models.TextField()
@@ -274,24 +234,6 @@ class CollapsedCosineScore(models.Model):
     'chat.Library',
     on_delete = models.CASCADE)
   result = models.TextField()
-  # ~ scores = models.TextField()
-  # ~ spectra_ids = models.TextField()
-  #intensities = models.TextField()
-  #binned_peaks = models.ManyToManyField('BinnedPeaks')
-  
-  # ~ class Meta:
-    # ~ indexes = [
-      # ~ models.Index(fields = ['spectra', 'library']),
-    # ~ ]
-# ~ class CollapsedCosineScore(AbstractCosineScore):
-  # ~ spectra1 = models.ForeignKey(
-    # ~ 'CollapsedSpectra',
-    # ~ related_name = 'spectra1',
-    # ~ on_delete = models.CASCADE)
-  # ~ spectra2 = models.ForeignKey(
-    # ~ 'CollapsedSpectra',
-    # ~ related_name = 'spectra2',
-    # ~ on_delete = models.CASCADE)
       
 class SpectraCosineScore(AbstractCosineScore):
   spectra1 = models.ForeignKey(

@@ -112,29 +112,10 @@ def lib_compare2(request, library_ids):
     ).filter(id__in = [ int(i) for i in library_ids.split(',')])
   
   r = _cosine_score_libraries(list(qs.values_list('id', flat = True)))
-  print(f'r{r}')
-  
-  # ~ print(f'form.is_valid()2{form.is_valid()}')
-  # ~ ws = websocket.WebSocket()
-  # ~ ws.connect('ws://localhost:8000/ws/pollData')
-  # ~ ws.send(json.dumps({
-    # ~ 'type': 'library comparison',
-    # ~ 'data': {
-      # ~ 'client': client,
-      # ~ 'result': lib_score_parseresult(q[0].result)
-    # ~ }
-  # ~ }))
-  # ~ ws.close()
-  
-  # ~ socket.send(JSON.stringify({
-    # ~ type: 'library comparison',
-    # ~ libraries: selected,
-  # ~ }));
   
   # "TypeError: In order to allow non-dict objects to be serialized set
   # the safe parameter to False."
   return JsonResponse(r, safe = False)
-  # ~ return render(request, 'spectra/lib_compare.html', {'form': form})
   
 @login_required
 def edit_spectra(request, spectra_id):

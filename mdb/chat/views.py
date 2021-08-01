@@ -462,7 +462,7 @@ class LibrariesListView(SingleTableView):
     return Library.objects.filter( \
         Q(lab__in = user_labs) | Q(privacy_level__exact = 'PB') | \
         Q(created_by__exact = u)
-      ).order_by('-id')
+      ).exclude(lab__lab_type = 'user-uploads').order_by('-id')
 
 class MetadataFilter(django_filters.FilterSet):
   library = django_filters.ModelMultipleChoiceFilter(

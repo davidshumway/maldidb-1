@@ -4,10 +4,7 @@
 }
 */
 body {
-	background: #fdfdfd;
-/*
-	background: #fafafa;
-*/
+	background: #fdfdfd url("/static/images/ckan-bg.png");
 }
 /*nav*/
 #mainNav {
