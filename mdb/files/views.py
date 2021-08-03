@@ -22,7 +22,7 @@ class FileUpload(ListView):
   
   def get_context_data(self, **kwargs):
     context = super().get_context_data(**kwargs)
-    context['upload_form'] = FileLibraryForm(request = self.request) #FileUploadForm()
+    context['upload_form'] = FileLibraryForm(request = self.request)
     u = self.request.user
     
     # own libraries (library_select shares this qs)

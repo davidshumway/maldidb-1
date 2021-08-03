@@ -27,15 +27,6 @@ class LoadSqliteForm(forms.Form):
       files.append((filename, filename))
   r01data = forms.MultipleChoiceField(choices = files, required = False)
 
-  # ~ privacy_level = forms.CharField(
-    # ~ label = 'Privacy level',
-    # ~ widget = forms.RadioSelect(choices = [
-      # ~ ('PB', 'Public'),
-      # ~ ('PR', 'Private'),
-    # ~ ]),
-    # ~ required = True,
-    # ~ initial = 'PB')
-  
   def clean(self):
     data = self.cleaned_data
     if data.get('file') == None and data.get('upload_type') == 'single':

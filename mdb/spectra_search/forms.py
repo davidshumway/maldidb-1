@@ -141,36 +141,36 @@ class FileLibraryForm(forms.Form):
     self.user = request.user
     super(FileLibraryForm, self).__init__(*args, **kwargs)
     
-  def clean_file_strain_ids(self):
-    d = self.cleaned_data['file_strain_ids']
-    if self.cleaned_data['use_filenames'] is False:
-      try:
-        if self.cleaned_data['number_files'] is False:
-          raise forms.ValidationError('Field "number_files" missing!')
-      except:
-        raise forms.ValidationError('Field "number_files" missing!')
-      if d.strip() == '':
-        raise forms.ValidationError(
-          'List of filenames must not be empty!'
-        )
-      import re
-      x = re.sub('[\r\n]+', '\n', d.strip())
-      x = x.split('\n')
-      # Entries == form entries
-      if len(x) != self.cleaned_data['number_files']:
-        raise forms.ValidationError(
-          'Number of filenames ({}) does not match number of files ({})!'
-          .format(len(x), self.cleaned_data['number_files']))
-      # < 255
-      for tmpmd in x:
-        if len(tmpmd.strip()) > 255:
-          raise forms.ValidationError(
-            'Filenames contains an entry > 255 characters!')
-      # Unique, e.g. [1,1] != {1}
-      if len(set(x)) != len(x):
-        raise forms.ValidationError(
-            'Filenames are not unique!')
-    return d
+  # ~ def clean_file_strain_ids(self):
+    # ~ d = self.cleaned_data['file_strain_ids']
+    # ~ if self.cleaned_data['use_filenames'] is False:
+      # ~ try:
+        # ~ if self.cleaned_data['number_files'] is False:
+          # ~ raise forms.ValidationError('Field "number_files" missing!')
+      # ~ except:
+        # ~ raise forms.ValidationError('Field "number_files" missing!')
+      # ~ if d.strip() == '':
+        # ~ raise forms.ValidationError(
+          # ~ 'List of filenames must not be empty!'
+        # ~ )
+      # ~ import re
+      # ~ x = re.sub('[\r\n]+', '\n', d.strip())
+      # ~ x = x.split('\n')
+      # ~ # Entries == form entries
+      # ~ if len(x) != self.cleaned_data['number_files']:
+        # ~ raise forms.ValidationError(
+          # ~ 'Number of filenames ({}) does not match number of files ({})!'
+          # ~ .format(len(x), self.cleaned_data['number_files']))
+      # ~ # < 255
+      # ~ for tmpmd in x:
+        # ~ if len(tmpmd.strip()) > 255:
+          # ~ raise forms.ValidationError(
+            # ~ 'Filenames contains an entry > 255 characters!')
+      # ~ # Unique, e.g. [1,1] != {1}
+      # ~ if len(set(x)) != len(x):
+        # ~ raise forms.ValidationError(
+            # ~ 'Filenames are not unique!')
+    # ~ return d
   
   def clean(self):
     '''
@@ -333,30 +333,6 @@ class SpectraLibraryForm(FileLibraryForm):
     widget = autocomplete.ModelSelect2Multiple(
       url = 'spectra_search:metadata_autocomplete_species',
       forward=['cKingdom','cPhylum','cClass','cOrder','cGenus']))
-      
-  # ~ class Meta:
-    # ~ model = UserFile
-    # ~ exclude = ('id', 'owner', 'upload_date', 'extension')
-    #custom-select
-    # ~ widgets = {
-      # ~ 'lab': forms.Select(
-        # ~ attrs = {'class': 'custom-select'}
-      # ~ ),
-    # ~ }
-  
-  # ~ def __init__(self, *args, **kwargs):
-    # ~ request = kwargs.pop('request')
-    # ~ self.user = request.user
-    # ~ super(SpectraLibraryForm, self).__init__(*args, **kwargs)
-    # ~ user = self.user
-    # ~ if request.user.is_authenticated:
-      # ~ user_labs = LabGroup.objects \
-        # ~ .filter(Q(owners__in = [user]) | Q(members__in = [user]))
-      # ~ q = Library.objects.filter( \
-        # ~ Q(lab__in = user_labs) | \
-        # ~ Q(created_by__exact = user)
-      # ~ ).order_by('-id')
-      # ~ self.fields['library_select'].queryset = q
   
   def clean(self):
     '''
@@ -390,16 +366,11 @@ class SpectraUploadForm(forms.ModelForm):
   client = forms.CharField(label = '', required = False)
    
   library_id = forms.IntegerField(required = True)
-  # ~ library = forms.ModelChoiceField(
-    # ~ queryset = Library.objects.all(),
-    # ~ to_field_name = 'id',
-    # ~ required = True
-  # ~ )
   
-  use_filenames = forms.BooleanField(required = False,
-    initial = True)
-  
-  file_strain_ids = forms.CharField(required = False)
+#  use_filenames = forms.BooleanField(required = False,
+#    initial = True)
+#  
+#  file_strain_ids = forms.CharField(required = False)
   
   class Meta:
     model = UserFile
@@ -421,9 +392,6 @@ class SpectraUploadForm(forms.ModelForm):
   def __init__(self, *args, **kwargs):
     request = kwargs.pop('request')
     self.user = request.user
-    # ~ l = False
-    # ~ if 'library' in kwargs:
-      # ~ l = kwargs.pop('library')
     super(SpectraUploadForm, self).__init__(*args, **kwargs)
     user = self.user
   
@@ -438,9 +406,8 @@ class SpectraUploadForm(forms.ModelForm):
 class SpectraSearchForm(forms.ModelForm):
   '''Replicated, Collapsed, all
   Small molecule, Protein, all [or range, e.g., 3k-8k]
-  Processed spectra, raw spectra (run pipeline?)'''
-  
-  # ~ prefix = 'fm'
+  Processed spectra, raw spectra (run pipeline?)
+  '''
   
   choices = [
     ('collapsed', 'Collapsed Spectra'),
@@ -458,7 +425,6 @@ class SpectraSearchForm(forms.ModelForm):
     ('protein', 'Protein'),
     ('small', 'Small Molecule'),
     ('all', 'All'),
-    # ~ ('custom', 'Custom'),
   ]
   spectrum_cutoff = forms.ChoiceField(
     label = 'Spectrum cutoff', 
@@ -466,15 +432,6 @@ class SpectraSearchForm(forms.ModelForm):
     choices = choices,
     required = True,
     initial = 'protein')
-  # on custom, then allow for a range
-  # ~ spectrum_cutoff_low = forms.IntegerField(
-    # ~ label = 'Minimum M/Z',
-    # ~ min_value = 0, disabled = True,
-    # ~ required = False)
-  # ~ spectrum_cutoff_high = forms.IntegerField(
-    # ~ label = 'Maximum M/Z',
-    # ~ min_value = 0, disabled = True,
-    # ~ required = False)
   
   choices = [
     ('processed', 'Processed Spectrum'),
@@ -485,8 +442,6 @@ class SpectraSearchForm(forms.ModelForm):
     widget = forms.RadioSelect(choices = choices),
     choices = choices,
     initial = 'processed')
-  # on raw, include preprocessing options
-  # (todo?)
   
   labXX = forms.ModelMultipleChoiceField(
     queryset = LabGroup.objects.all(),
@@ -514,11 +469,6 @@ class SpectraSearchForm(forms.ModelForm):
     queryset = XML.objects.order_by('xml_hash').distinct('xml_hash'),
     required = False
   )
-  
-  # ~ def __init__(self, *args, **kwargs):
-    # ~ print(f'_init_-args: {args}') # 
-    # ~ print(f'_init_-kw:   {kwargs}') # 
-    # ~ super(SpectraSearchForm, self).__init__(*args, **kwargs)
   
   def clean(self):
     data = self.cleaned_data
@@ -575,5 +525,4 @@ class SpectraSearchForm(forms.ModelForm):
       'v1_tof_calibration': forms.Textarea(
         attrs={'rows': 1, 'cols': 10, 'placeholder': ''}
       ),
-      # ~ 'library': forms.SelectMultiple(),
     }

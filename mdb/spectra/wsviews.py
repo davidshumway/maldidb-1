@@ -203,6 +203,9 @@ def cosine_scores_existing(self, library, client, search_library):
 @start_new_thread
 def single_score(self, client, msg):
   '''
+  Returns a full score (dendrogram + scores).
+  
+  Assumes that the score exists.
   
   :param msg['spectra1']: Collapsed spectra ID of unknown sample
   :param msg['searchLibrary']: Library ID of known entries
@@ -323,7 +326,7 @@ def cosine_scores(self, library, client, search_library):
   ws = websocket.WebSocket()
   ws.connect('ws://localhost:8000/ws/pollData')
   
-  print(f'lib {library} sl {search_library}')
+  # ~ print(f'lib {library} sl {search_library}')
   try:
     search_library_obj = Library.objects.get(id = search_library)
   except Library.DoesNotExist:

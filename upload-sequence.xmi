@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<XMI verified="false" xmi.version="1.2" timestamp="2021-08-01T19:53:23" xmlns:UML="http://schema.omg.org/spec/UML/1.4">
+ <XMI.header>
+  <XMI.documentation>
+   <XMI.exporter>umbrello uml modeller http://umbrello.kde.org</XMI.exporter>
+   <XMI.exporterVersion>1.6.18</XMI.exporterVersion>
+   <XMI.exporterEncoding>UnicodeUTF8</XMI.exporterEncoding>
+  </XMI.documentation>
+  <XMI.metamodel xmi.version="1.4" xmi.name="UML" href="UML.xml"/>
+ </XMI.header>
+ <XMI.content>
+  <UML:Model xmi.id="m1" isAbstract="false" isSpecification="false" name="UML Model" isRoot="false" isLeaf="false">
+   <UML:Namespace.ownedElement>
+    <UML:Stereotype xmi.id="folder" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="folder" namespace="m1" isLeaf="false"/>
+    <UML:Model xmi.id="Logical_View" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="Logical View" namespace="m1" isLeaf="false">
+     <UML:Namespace.ownedElement>
+      <UML:Package xmi.id="Datatypes" isAbstract="false" visibility="public" isSpecification="false" stereotype="folder" isRoot="false" name="Datatypes" namespace="Logical_View" isLeaf="false">
+       <UML:Namespace.ownedElement>
+        <UML:DataType xmi.id="u40FXrIAnz08T" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="char" namespace="Datatypes" isLeaf="false"/>
+        <UML:DataType xmi.id="uzlLaEeEsmxVY" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="int" namespace="Datatypes" isLeaf="false"/>
+        <UML:DataType xmi.id="u0P2i3spvxtrr" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="float" namespace="Datatypes" isLeaf="false"/>
+        <UML:DataType xmi.id="uXq6Rg37m0iOD" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="double" namespace="Datatypes" isLeaf="false"/>
+        <UML:DataType xmi.id="uJiK9ALiJIZFi" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="bool" namespace="Datatypes" isLeaf="false"/>
+        <UML:DataType xmi.id="uLbrbWx0xxhCb" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="string" namespace="Datatypes" isLeaf="false"/>
+        <UML:DataType xmi.id="uw720kqkSnYiX" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="unsigned char" namespace="Datatypes" isLeaf="false"/>
+        <UML:DataType xmi.id="u1XxDHToElZed" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="signed char" namespace="Datatypes" isLeaf="false"/>
+        <UML:DataType xmi.id="uincrRtFRMp1T" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="unsigned int" namespace="Datatypes" isLeaf="false"/>
+        <UML:DataType xmi.id="uIWeI917K2Q9E" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="signed int" namespace="Datatypes" isLeaf="false"/>
+        <UML:DataType xmi.id="uFKfBwsyFNXUd" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="short int" namespace="Datatypes" isLeaf="false"/>
+        <UML:DataType xmi.id="uaVfwlxeUfZtl" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="unsigned short int" namespace="Datatypes" isLeaf="false"/>
+        <UML:DataType xmi.id="usF4JwdRbHTjT" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="signed short int" namespace="Datatypes" isLeaf="false"/>
+        <UML:DataType xmi.id="uhk7TpNSPYP1r" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="long int" namespace="Datatypes" isLeaf="false"/>
+        <UML:DataType xmi.id="um6MFGQw2HoEJ" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="signed long int" namespace="Datatypes" isLeaf="false"/>
+        <UML:DataType xmi.id="u6WvWBGkFXJq3" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="unsigned long int" namespace="Datatypes" isLeaf="false"/>
+        <UML:DataType xmi.id="uxXfmhFS3BTrJ" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="long double" namespace="Datatypes" isLeaf="false"/>
+        <UML:DataType xmi.id="upYhdYvN3dBig" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="wchar_t" namespace="Datatypes" isLeaf="false"/>
+       </UML:Namespace.ownedElement>
+      </UML:Package>
+      <UML:Class xmi.id="u8kaJjZD9LUyd" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="window : UI" namespace="Logical_View" isLeaf="false"/>
+      <UML:Class xmi.id="uE4u7ifthgBXn" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="ajax : upload-csv" namespace="Logical_View" isLeaf="false"/>
+      <UML:Class xmi.id="uXRTrHiC0IU8v" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="ajax : upload-mz" namespace="Logical_View" isLeaf="false"/>
+      <UML:Class xmi.id="uMURhyHQ0oE86" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="python : upload-library" namespace="Logical_View" isLeaf="false"/>
+      <UML:Class xmi.id="u4zNEHba3e6LL" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="ajax : check-library" namespace="Logical_View" isLeaf="false"/>
+      <UML:Class xmi.id="u1cJPFa9LVIyx" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="Django : &lt;all visible libraries> / &lt;all user libraries>" namespace="Logical_View" isLeaf="false"/>
+      <UML:Class xmi.id="uFBd5TxbLrNSS" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="python : upload-csv" namespace="Logical_View" isLeaf="false"/>
+      <UML:Class xmi.id="uU74VVltZUhEZ" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="python : upload mz" namespace="Logical_View" isLeaf="false"/>
+      <UML:Class xmi.id="uBHdMAJMcMN81" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="R : preprocess-mz" namespace="Logical_View" isLeaf="false"/>
+      <UML:Class xmi.id="uKP0WQs3vTLtA" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="python : sqlite importer" namespace="Logical_View" isLeaf="false"/>
+      <UML:Class xmi.id="uIH8oYeWWxZEN" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="socket : collapse-library" namespace="Logical_View" isLeaf="false"/>
+      <UML:Class xmi.id="unzt3HptzU6mn" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="python : collapse-library" namespace="Logical_View" isLeaf="false"/>
+      <UML:Class xmi.id="u5kXsgyJOArI7" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="R : collapse-library" namespace="Logical_View" isLeaf="false"/>
+      <UML:Class xmi.id="uQuYl0uSeOQRC" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="python : cosine-scores" namespace="Logical_View" isLeaf="false"/>
+      <UML:Class xmi.id="uvpTJ46YWfW4P" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="R : cosine-score" namespace="Logical_View" isLeaf="false"/>
+      <UML:Class xmi.id="uCIev9vMZ7URG" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="python : single-cosine-score" namespace="Logical_View" isLeaf="false"/>
+      <UML:Class xmi.id="udmOq4cXRFeLL" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="User" namespace="Logical_View" isLeaf="false"/>
+     </UML:Namespace.ownedElement>
+     <XMI.extension xmi.extender="umbrello">
+      <diagrams resolution="96">
+       <diagram showattsig="1" documentation="" localid="-1" showopsig="1" usefillcolor="1" canvaswidth="0" snapx="25" linecolor="#ff0000" isopen="1" snapcsgrid="0" showgrid="0" snapgrid="0" textcolor="#000000" showpackage="1" type="1" linewidth="0" showstereotype="1" font="Cantarell,11,-1,5,50,0,0,0,0,0" zoom="100" fillcolor="#ffff00" griddotcolor="#d3d3d3" xmi.id="uadDWMbpuho4k" showops="1" canvasheight="0" showpubliconly="0" name="class diagram" backgroundcolor="#ffffff" showatts="1" showscope="1" snapy="25" showattribassocs="1">
+        <widgets/>
+        <messages/>
+        <associations/>
+       </diagram>
+       <diagram showattsig="1" documentation="" localid="-1" showopsig="1" usefillcolor="1" canvaswidth="2669.25" snapx="25" linecolor="#ff0000" isopen="1" snapcsgrid="0" showgrid="0" snapgrid="0" textcolor="#000000" showpackage="1" type="3" linewidth="0" showstereotype="1" autoincrementsequence="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" zoom="53.502501054737095" fillcolor="#ffff00" griddotcolor="#d3d3d3" xmi.id="uMWHiD7C5kvSl" showops="1" canvasheight="1148" showpubliconly="0" name="sequence diagram" backgroundcolor="#ffffff" showatts="1" showscope="1" snapy="25" showattribassocs="1">
+        <widgets>
+         <objectwidget usesdiagramfillcolor="1" localid="uLXWGh3EaLRvZ" usefillcolor="1" linecolor="#ff0000" x="-410.542" drawasactor="0" height="28" textcolor="#000000" width="140" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="80" xmi.id="uBHdMAJMcMN81" autoresize="1" multipleinstance="0" decon="0" usesdiagramusefillcolor="1"/>
+         <objectwidget usesdiagramfillcolor="1" localid="u2DTzdm6YEbpL" usefillcolor="1" linecolor="#ff0000" x="-172.325" drawasactor="0" height="28" textcolor="#000000" width="176" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="80" xmi.id="uKP0WQs3vTLtA" autoresize="1" multipleinstance="0" decon="0" usesdiagramusefillcolor="1"/>
+         <objectwidget usesdiagramfillcolor="1" localid="ucrxx8rYtO06y" usefillcolor="1" linecolor="#ff0000" x="-1528.01" drawasactor="1" height="63" textcolor="#000000" width="51" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="17" xmi.id="udmOq4cXRFeLL" autoresize="1" multipleinstance="0" decon="0" usesdiagramusefillcolor="1"/>
+         <objectwidget usesdiagramfillcolor="1" localid="uQPKymvfEr1nC" usefillcolor="1" linecolor="#ff0000" x="-613.791" drawasactor="0" height="28" textcolor="#000000" width="147" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="80" xmi.id="uU74VVltZUhEZ" autoresize="1" multipleinstance="0" decon="0" usesdiagramusefillcolor="1"/>
+         <objectwidget usesdiagramfillcolor="1" localid="u3BybFQw59oe0" usefillcolor="1" linecolor="#ff0000" x="823.686" drawasactor="0" height="28" textcolor="#000000" width="125" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="80" xmi.id="uvpTJ46YWfW4P" autoresize="1" multipleinstance="0" decon="0" usesdiagramusefillcolor="1"/>
+         <notewidget usesdiagramfillcolor="0" localid="uLRDlOlaoIDWA" usefillcolor="1" linecolor="#ff0000" x="-1492.36" height="38" textcolor="#000000" width="328.236" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="#ffff00" y="787.42" text="If file upload, redirect to /library/&lt;library id>/" xmi.id="u47tYvLLU7tDs" autoresize="0" noteType="0" usesdiagramusefillcolor="0"/>
+         <objectwidget usesdiagramfillcolor="1" localid="uLTIfgXVBLMfW" usefillcolor="1" linecolor="#ff0000" x="-941.316" drawasactor="0" height="28" textcolor="#000000" width="172" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="136" xmi.id="uMURhyHQ0oE86" autoresize="1" multipleinstance="0" decon="0" usesdiagramusefillcolor="1"/>
+         <objectwidget usesdiagramfillcolor="1" localid="utTLXBUmKqD43" usefillcolor="1" linecolor="#ff0000" x="911.252" drawasactor="0" height="28" textcolor="#000000" width="209" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="136" xmi.id="uCIev9vMZ7URG" autoresize="1" multipleinstance="0" decon="0" usesdiagramusefillcolor="1"/>
+         <objectwidget usesdiagramfillcolor="1" localid="ujMtQPMKbKuuj" usefillcolor="1" linecolor="#ff0000" x="-1450.87" drawasactor="0" height="28" textcolor="#000000" width="352" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="80" xmi.id="u1cJPFa9LVIyx" autoresize="1" multipleinstance="0" decon="0" usesdiagramusefillcolor="1"/>
+         <objectwidget usesdiagramfillcolor="1" localid="uHwXSYiXFa8s4" usefillcolor="1" linecolor="#ff0000" x="422.457" drawasactor="0" height="28" textcolor="#000000" width="169" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="136" xmi.id="uQuYl0uSeOQRC" autoresize="1" multipleinstance="0" decon="0" usesdiagramusefillcolor="1"/>
+         <objectwidget usesdiagramfillcolor="1" localid="utlsxwQk6IHgh" usefillcolor="1" linecolor="#ff0000" x="-835.419" drawasactor="0" height="28" textcolor="#000000" width="151" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="80" xmi.id="uFBd5TxbLrNSS" autoresize="1" multipleinstance="0" decon="0" usesdiagramusefillcolor="1"/>
+         <objectwidget usesdiagramfillcolor="1" localid="uWMy0gO1yDI0v" usefillcolor="1" linecolor="#ff0000" x="-35.7701" drawasactor="0" height="28" textcolor="#000000" width="181" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="136" xmi.id="unzt3HptzU6mn" autoresize="1" multipleinstance="0" decon="0" usesdiagramusefillcolor="1"/>
+         <objectwidget usesdiagramfillcolor="1" localid="uxw6CAVIKmJyr" usefillcolor="1" linecolor="#ff0000" x="-1164" drawasactor="0" height="28" textcolor="#000000" width="98" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="136" xmi.id="u8kaJjZD9LUyd" autoresize="1" multipleinstance="0" decon="0" usesdiagramusefillcolor="1"/>
+         <objectwidget usesdiagramfillcolor="1" localid="ugczHtbmPtHSs" usefillcolor="1" linecolor="#ff0000" x="213.184" drawasactor="0" height="28" textcolor="#000000" width="144" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="80" xmi.id="u5kXsgyJOArI7" autoresize="1" multipleinstance="0" decon="0" usesdiagramusefillcolor="1"/>
+        </widgets>
+        <messages>
+         <messagewidget usesdiagramfillcolor="1" localid="uNGvaj4twxQXB" usefillcolor="1" widgetbid="uxw6CAVIKmJyr" linecolor="#ff0000" x="-1114" operation="Render search results panel (by CS id)" height="20" seqnum="" textcolor="none" widgetaid="uxw6CAVIKmJyr" width="48" linewidth="0" showstereotype="1" textid="uQe7BKa947oZX" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="887.724" xmi.id="uqlqjdzuOHW7A" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="u5EuNfOOV6qDE" usefillcolor="1" linecolor="#ff0000" x="-1109" role="705" height="22" textcolor="none" width="256" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="865" text="Render search results panel (by CS id)" xmi.id="uQe7BKa947oZX" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="u9swRPUJpTPQg" usefillcolor="1" widgetbid="uxw6CAVIKmJyr" linecolor="#ff0000" x="-1114" operation="Socket: List of collapsed spectra (id/strain_id/strain_name)" height="8" seqnum="" textcolor="none" widgetaid="uWMy0gO1yDI0v" width="1000" linewidth="0" showstereotype="1" textid="uTcEhO7ThVgaH" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="823.874" xmi.id="uojgplyKU8dwD" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="u2BzsSvMO3VjP" usefillcolor="1" linecolor="#ff0000" x="-1105" role="704" height="22" textcolor="none" width="394" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="801" text="Socket: List of collapsed spectra (id/strain_id/strain_name)" xmi.id="uTcEhO7ThVgaH" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uk4LEkYDjBdip" usefillcolor="1" widgetbid="uLXWGh3EaLRvZ" linecolor="#ff0000" x="-339" operation="IDBac: Preprocess (generate sqlite)" height="20" seqnum="" textcolor="none" widgetaid="uLXWGh3EaLRvZ" width="48" linewidth="0" showstereotype="1" textid="u0mecaQ0BRMDy" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="544.287" xmi.id="u9a7ZyjqzbbNi" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uhkxl8achbGWc" usefillcolor="1" linecolor="#ff0000" x="-334" role="705" height="22" textcolor="none" width="240" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="522" text="IDBac: Preprocess (generate sqlite)" xmi.id="u0mecaQ0BRMDy" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uBxET7vgPMxpt" usefillcolor="1" widgetbid="uxw6CAVIKmJyr" linecolor="#ff0000" x="-1273" operation="Render search page" height="8" seqnum="" textcolor="none" widgetaid="ujMtQPMKbKuuj" width="157" linewidth="0" showstereotype="1" textid="uQhNvic4U7rPv" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="186" xmi.id="uac978DwyNuQu" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="u2nuAoKYkXsOO" usefillcolor="1" linecolor="#ff0000" x="-1259" role="704" height="22" textcolor="none" width="139" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="164" text="Render search page" xmi.id="uQhNvic4U7rPv" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uoBQtzTsKbNQL" usefillcolor="1" widgetbid="uxw6CAVIKmJyr" linecolor="#ff0000" x="-1114" operation="CSVs OK" height="8" seqnum="" textcolor="none" widgetaid="utlsxwQk6IHgh" width="354" linewidth="0" showstereotype="1" textid="uHUZBL1G2ruRa" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="463.67" xmi.id="u1uFpea63H0AB" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uS6dM1udlCAYg" usefillcolor="1" linecolor="#ff0000" x="-1109" role="704" height="22" textcolor="none" width="66" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="441" text="CSVs OK" xmi.id="uHUZBL1G2ruRa" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uEKw3Xn3rBRc2" usefillcolor="1" widgetbid="uxw6CAVIKmJyr" linecolor="#ff0000" x="-1549" operation="Click &quot;Explore more&quot;" height="10" seqnum="" textcolor="none" widgetaid="uxw6CAVIKmJyr" width="434" linewidth="0" showstereotype="1" textid="u3z94aekeB10L" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" yclicked="1152" y="1135.75" xmi.id="umptxSnMQh9Cj" autoresize="1" xclicked="-1544" sequencemessagetype="1004" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="u3uUyisAWQmRm" usefillcolor="1" linecolor="#ff0000" x="-1544" role="705" height="22" textcolor="none" width="145" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="1113" text="Click &quot;Explore more&quot;" xmi.id="u3z94aekeB10L" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="ulzv47oXrhbyu" usefillcolor="1" widgetbid="uHwXSYiXFa8s4" linecolor="#ff0000" x="507" operation="Write result to DB" height="20" seqnum="" textcolor="none" widgetaid="uHwXSYiXFa8s4" width="48" linewidth="0" showstereotype="1" textid="ujee7rtFJhWBg" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="1023.27" xmi.id="uOW5PShJm9wCp" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="ucBgHH1q7gipU" usefillcolor="1" linecolor="#ff0000" x="512" role="705" height="22" textcolor="none" width="128" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="1001" text="Write result to DB" xmi.id="ujee7rtFJhWBg" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uryCoKogb7GDL" usefillcolor="1" widgetbid="u3BybFQw59oe0" linecolor="#ff0000" x="507" operation="HTTP: New cosine score (cs, lib2)" height="8" seqnum="" textcolor="none" widgetaid="uHwXSYiXFa8s4" width="378" linewidth="0" showstereotype="1" textid="ulsyEZudE7sJ4" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="941" xmi.id="uz5yY7m9T7tsK" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uhdLKUcrR3aCy" usefillcolor="1" linecolor="#ff0000" x="656" role="704" height="22" textcolor="none" width="225" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="919" text="HTTP: New cosine score (cs, lib2)" xmi.id="ulsyEZudE7sJ4" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uaFP0ntW8EfQm" usefillcolor="1" widgetbid="uHwXSYiXFa8s4" linecolor="#ff0000" x="507" operation="HTTP: Response (text result)" height="8" seqnum="" textcolor="none" widgetaid="u3BybFQw59oe0" width="378" linewidth="0" showstereotype="1" textid="u0V9959l8jrWv" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="982.869" xmi.id="uCMzP31JWm74Z" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="ucP88eGBk67NR" usefillcolor="1" linecolor="#ff0000" x="685" role="704" height="22" textcolor="none" width="196" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="960" text="HTTP: Response (text result)" xmi.id="u0V9959l8jrWv" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uriC0fEaZvN1R" usefillcolor="1" widgetbid="uxw6CAVIKmJyr" linecolor="#ff0000" x="-1114" operation="Socket: Cosine score (cs, lib2)" height="8" seqnum="" textcolor="none" widgetaid="uHwXSYiXFa8s4" width="1000" linewidth="0" showstereotype="1" textid="ujqWuDT7zLGCY" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="1054.63" xmi.id="uYin0ZNqLtQWh" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="ud0d1txkMZ7Bt" usefillcolor="1" linecolor="#ff0000" x="-753" role="704" height="22" textcolor="none" width="202" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="1032" text="Socket: Cosine score (cs, lib2)" xmi.id="ujqWuDT7zLGCY" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="umgzG6mIrlQRd" usefillcolor="1" widgetbid="uLTIfgXVBLMfW" linecolor="#ff0000" x="-1114" operation="AJAX: Check library" height="8" seqnum="" textcolor="none" widgetaid="uxw6CAVIKmJyr" width="258" linewidth="0" showstereotype="1" textid="uE7uNlE8RgduG" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="316" xmi.id="upk7CmGiMquCD" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="urjb3OeroLIcx" usefillcolor="1" linecolor="#ff0000" x="-995" role="704" height="22" textcolor="none" width="135" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="294" text="AJAX: Check library" xmi.id="uE7uNlE8RgduG" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uuNjbsixfIBuM" usefillcolor="1" widgetbid="uHwXSYiXFa8s4" linecolor="#ff0000" x="507" operation="For each cs in lib1: cosine-score(cs, lib2)" height="20" seqnum="" textcolor="none" widgetaid="uHwXSYiXFa8s4" width="48" linewidth="0" showstereotype="1" textid="uIR6UvYLS06rZ" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="886.277" xmi.id="ucW1gUfKtvhIt" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uVWZEoz8tdIcl" usefillcolor="1" linecolor="#ff0000" x="512" role="705" height="22" textcolor="none" width="270" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="864" text="For each cs in lib1: cosine-score(cs, lib2)" xmi.id="uIR6UvYLS06rZ" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uhw05OYZQGeSY" usefillcolor="1" widgetbid="uQPKymvfEr1nC" linecolor="#ff0000" x="-1114" operation="AJAX: For each mz file, upload mz" height="8" seqnum="" textcolor="none" widgetaid="uxw6CAVIKmJyr" width="573" linewidth="0" showstereotype="1" textid="uSlDaSDOd8di2" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="509.002" xmi.id="uhziazCqZ0RqI" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uQLQr9IvVegYm" usefillcolor="1" linecolor="#ff0000" x="-775" role="704" height="22" textcolor="none" width="230" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="487" text="AJAX: For each mz file, upload mz" xmi.id="uSlDaSDOd8di2" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uNYKm282LB2hj" usefillcolor="1" widgetbid="uLXWGh3EaLRvZ" linecolor="#ff0000" x="-539" operation="HTTP: Preprocess" height="8" seqnum="" textcolor="none" widgetaid="uQPKymvfEr1nC" width="198" linewidth="0" showstereotype="1" textid="udGfxTkGnFvtG" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="533.287" xmi.id="ueQFWg7ajdISf" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uapa18FVOWATl" usefillcolor="1" linecolor="#ff0000" x="-471" role="704" height="22" textcolor="none" width="126" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="511" text="HTTP: Preprocess" xmi.id="udGfxTkGnFvtG" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="up72xPLz3Gzk8" usefillcolor="1" widgetbid="utlsxwQk6IHgh" linecolor="#ff0000" x="-758" operation="Write library metadata to DB" height="20" seqnum="" textcolor="none" widgetaid="utlsxwQk6IHgh" width="48" linewidth="0" showstereotype="1" textid="uwqtNaewp3QuT" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="438.708" xmi.id="uTUGyhgkQZ9Gd" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uTm6WEaQFDps9" usefillcolor="1" linecolor="#ff0000" x="-753" role="705" height="22" textcolor="none" width="199" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="416" text="Write library metadata to DB" xmi.id="uwqtNaewp3QuT" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uWHM2SMjaItxl" usefillcolor="1" widgetbid="uWMy0gO1yDI0v" linecolor="#ff0000" x="55" operation="HTTP: Reponse (&quot;done&quot;)" height="8" seqnum="" textcolor="none" widgetaid="ugczHtbmPtHSs" width="229" linewidth="0" showstereotype="1" textid="uOzNhTkHhs9PP" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="792.121" xmi.id="uw5LY0bpZY8IB" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uGsdWnYzVBRth" usefillcolor="1" linecolor="#ff0000" x="112" role="704" height="22" textcolor="none" width="168" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="770" text="HTTP: Reponse (&quot;done&quot;)" xmi.id="uOzNhTkHhs9PP" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="upWwJvOGkr1vu" usefillcolor="1" widgetbid="uxw6CAVIKmJyr" linecolor="#ff0000" x="-1114" operation="Socket: Cached cosine score exists (cs, lib2)" height="8" seqnum="" textcolor="none" widgetaid="uHwXSYiXFa8s4" width="1000" linewidth="0" showstereotype="1" textid="uCP40D0m5Nzp0" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="917.625" xmi.id="uJYphSAyJ9468" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="urEIcJw2MYTyp" usefillcolor="1" linecolor="#ff0000" x="-752" role="704" height="22" textcolor="none" width="293" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="895" text="Socket: Cached cosine score exists (cs, lib2)" xmi.id="uCP40D0m5Nzp0" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uvlFpLKFm9bKY" usefillcolor="1" widgetbid="uxw6CAVIKmJyr" linecolor="#ff0000" x="-1114" operation="Error: Library title exists!" height="8" seqnum="" textcolor="none" widgetaid="uLTIfgXVBLMfW" width="258" linewidth="0" showstereotype="1" textid="ubQAOnBlMEbjB" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="353.611" xmi.id="uYTHmrBajDDUz" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uz7tX1DG6AJ7M" usefillcolor="1" linecolor="#ff0000" x="-1109" role="704" height="22" textcolor="none" width="170" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="331" text="Error: Library title exists!" xmi.id="ubQAOnBlMEbjB" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uatKupX5Ex1FJ" usefillcolor="1" widgetbid="utlsxwQk6IHgh" linecolor="#ff0000" x="-1114" operation="AJAX: For each CSV, upload CSV" height="8" seqnum="" textcolor="none" widgetaid="uxw6CAVIKmJyr" width="354" linewidth="0" showstereotype="1" textid="uujSzlxeK0dJg" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="412" xmi.id="uHQdsPll8xKKm" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uETbunBdBu926" usefillcolor="1" linecolor="#ff0000" x="-983" role="704" height="22" textcolor="none" width="219" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="390" text="AJAX: For each CSV, upload CSV" xmi.id="uujSzlxeK0dJg" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uQuCNNa5SRyLs" usefillcolor="1" widgetbid="ugczHtbmPtHSs" linecolor="#ff0000" x="55" operation="HTTP: Collapse library (id)" height="8" seqnum="" textcolor="none" widgetaid="uWMy0gO1yDI0v" width="229" linewidth="0" showstereotype="1" textid="uOG9pqhUUGO0y" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="750" xmi.id="u2XK8UcDw97Go" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="utYyALstYoGNo" usefillcolor="1" linecolor="#ff0000" x="100" role="704" height="22" textcolor="none" width="180" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="728" text="HTTP: Collapse library (id)" xmi.id="uOG9pqhUUGO0y" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="ueCYdYyHniKpu" usefillcolor="1" widgetbid="uxw6CAVIKmJyr" linecolor="#ff0000" x="-1114" operation="Select library (random/new/existing)" height="20" seqnum="" textcolor="none" widgetaid="uxw6CAVIKmJyr" width="48" linewidth="0" showstereotype="1" textid="uIr8F7OHPT3cO" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="274.91" xmi.id="u3NtgT0UYd3wU" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uNqGxlS4ZjxU0" usefillcolor="1" linecolor="#ff0000" x="-1109" role="705" height="22" textcolor="none" width="249" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="252" text="Select library (random/new/existing)" xmi.id="uIr8F7OHPT3cO" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uL9XLXOABzjqI" usefillcolor="1" widgetbid="uQPKymvfEr1nC" linecolor="#ff0000" x="-539" operation="HTTP: Response (sqlite file)" height="8" seqnum="" textcolor="none" widgetaid="uLXWGh3EaLRvZ" width="198" linewidth="0" showstereotype="1" textid="uZtwssaHMV8te" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="574.287" xmi.id="uQcCgq8IiEFq2" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uviM5beZbMtzt" usefillcolor="1" linecolor="#ff0000" x="-534" role="704" height="22" textcolor="none" width="189" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="552" text="HTTP: Response (sqlite file)" xmi.id="uZtwssaHMV8te" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="ukkXtxH5Pd73i" usefillcolor="1" widgetbid="ujMtQPMKbKuuj" linecolor="#ff0000" x="-1525" operation="Open search" height="10" seqnum="" textcolor="none" widgetaid="ujMtQPMKbKuuj" width="251" linewidth="0" showstereotype="1" textid="uTjTDg208mz3r" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" yclicked="161" y="161" xmi.id="uKINjfLztZOnm" autoresize="1" xclicked="-1520" sequencemessagetype="1004" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uSKWZyrpCj4i3" usefillcolor="1" linecolor="#ff0000" x="-1520" role="705" height="22" textcolor="none" width="91" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="139" text="Open search" xmi.id="uTjTDg208mz3r" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uIqGwuOSS6ho7" usefillcolor="1" widgetbid="uxw6CAVIKmJyr" linecolor="#ff0000" x="-1114" operation="Select files (mzml/mzxml/csv)" height="20" seqnum="" textcolor="none" widgetaid="uxw6CAVIKmJyr" width="48" linewidth="0" showstereotype="1" textid="uHUdFrKUQqseP" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="224.023" xmi.id="ukGMN9krSqA70" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="u4RLvAeq9ShKU" usefillcolor="1" linecolor="#ff0000" x="-1109" role="705" height="22" textcolor="none" width="206" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="202" text="Select files (mzml/mzxml/csv)" xmi.id="uHUdFrKUQqseP" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uQdQBBn92w3f8" usefillcolor="1" widgetbid="ugczHtbmPtHSs" linecolor="#ff0000" x="286" operation="Write collapsed spectra to DB" height="20" seqnum="" textcolor="none" widgetaid="ugczHtbmPtHSs" width="48" linewidth="0" showstereotype="1" textid="uyi0RSByHgAX9" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="767.832" xmi.id="ubpT95TCA6yhR" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="u2jX9G0NfeY3v" usefillcolor="1" linecolor="#ff0000" x="291" role="705" height="22" textcolor="none" width="205" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="745" text="Write collapsed spectra to DB" xmi.id="uyi0RSByHgAX9" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uGrSgdigdVLE0" usefillcolor="1" widgetbid="uxw6CAVIKmJyr" linecolor="#ff0000" x="-1114" operation="Socket: Preprocess mz file complete" height="8" seqnum="" textcolor="none" widgetaid="u2DTzdm6YEbpL" width="1029" linewidth="0" showstereotype="1" textid="ua6VsSHIa9SGN" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="663.855" xmi.id="uaa2f8NuNePvR" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="ue9RBT0xgkmDl" usefillcolor="1" linecolor="#ff0000" x="-1109" role="704" height="22" textcolor="none" width="247" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="641" text="Socket: Preprocess mz file complete" xmi.id="ua6VsSHIa9SGN" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="up5Ax8RpiY2uA" usefillcolor="1" widgetbid="u2DTzdm6YEbpL" linecolor="#ff0000" x="-83" operation="Write data to DB" height="20" seqnum="" textcolor="none" widgetaid="u2DTzdm6YEbpL" width="48" linewidth="0" showstereotype="1" textid="uOIyK4MEdQZ2H" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="635" xmi.id="upLuMwYBW2s7f" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uqMe2CNkRaLMD" usefillcolor="1" linecolor="#ff0000" x="-78" role="705" height="22" textcolor="none" width="119" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="613" text="Write data to DB" xmi.id="uOIyK4MEdQZ2H" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="ua5aGiyHsy7M7" usefillcolor="1" widgetbid="uxw6CAVIKmJyr" linecolor="#ff0000" x="-1247" operation="redirect" height="10" seqnum="" textcolor="none" widgetaid="uxw6CAVIKmJyr" width="132" linewidth="0" showstereotype="1" textid="ufZv6jv6Cwvxk" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" yclicked="850" y="846.911" xmi.id="ugAbrREu4S4Of" autoresize="1" xclicked="-1242" sequencemessagetype="1003" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="urwqWroFmrXrr" usefillcolor="1" linecolor="#ff0000" x="-1242" role="705" height="22" textcolor="none" width="60" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="824" text="redirect" xmi.id="ufZv6jv6Cwvxk" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="u84McmIGVdaQR" usefillcolor="1" widgetbid="uWMy0gO1yDI0v" linecolor="#ff0000" x="-1114" operation="Socket: If all preprocessed , collapse library" height="8" seqnum="" textcolor="none" widgetaid="uxw6CAVIKmJyr" width="1167" linewidth="0" showstereotype="1" textid="uRtp85VFXejme" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="718" xmi.id="ui7yfvj0X96Gl" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uk3fU6nh3lS9I" usefillcolor="1" linecolor="#ff0000" x="-244" role="704" height="22" textcolor="none" width="293" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="696" text="Socket: If all preprocessed , collapse library" xmi.id="uRtp85VFXejme" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="ucNCB1OC1UOVP" usefillcolor="1" widgetbid="u2DTzdm6YEbpL" linecolor="#ff0000" x="-539" operation="Import sqlite (xml/spectra/metadata), checks existing metadata" height="8" seqnum="" textcolor="none" widgetaid="uQPKymvfEr1nC" width="454" linewidth="0" showstereotype="1" textid="uzIKRAfRVh4A4" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="622.066" xmi.id="udMkS5jA8gJVd" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uak6XdWUV4BMi" usefillcolor="1" linecolor="#ff0000" x="-516" role="704" height="22" textcolor="none" width="427" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="600" text="Import sqlite (xml/spectra/metadata), checks existing metadata" xmi.id="uzIKRAfRVh4A4" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uU3IVshsLjlkk" usefillcolor="1" widgetbid="uHwXSYiXFa8s4" linecolor="#ff0000" x="55" operation="Generate cosine scores (library 1 vs. library 2)" height="8" seqnum="" textcolor="none" widgetaid="uWMy0gO1yDI0v" width="450" linewidth="0" showstereotype="1" textid="uwYJsKfEQ7ILt" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="872.503" xmi.id="uhoUse9ibxoWJ" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uIB6nCRdLnLGD" usefillcolor="1" linecolor="#ff0000" x="196" role="704" height="22" textcolor="none" width="305" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="850" text="Generate cosine scores (library 1 vs. library 2)" xmi.id="uwYJsKfEQ7ILt" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="ummoxjiAZgHap" usefillcolor="1" widgetbid="uxw6CAVIKmJyr" linecolor="#ff0000" x="-1114" operation="Library OK" height="8" seqnum="" textcolor="none" widgetaid="uLTIfgXVBLMfW" width="258" linewidth="0" showstereotype="1" textid="u6yBP3834EGMs" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="384.588" xmi.id="u8AXAWpLKmWFi" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uws9EjEPXmKyO" usefillcolor="1" linecolor="#ff0000" x="-1109" role="704" height="22" textcolor="none" width="78" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="362" text="Library OK" xmi.id="u6yBP3834EGMs" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="ulORCbBeiFqQG" usefillcolor="1" widgetbid="uxw6CAVIKmJyr" linecolor="#ff0000" x="-1114" operation="Render single score" height="20" seqnum="" textcolor="none" widgetaid="uxw6CAVIKmJyr" width="48" linewidth="0" showstereotype="1" textid="u9mC3qUfiOPpY" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="951.51" xmi.id="u3Oxq09NAqR4B" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uPOqHgXkLYqR3" usefillcolor="1" linecolor="#ff0000" x="-1109" role="705" height="22" textcolor="none" width="138" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="929" text="Render single score" xmi.id="u9mC3qUfiOPpY" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uIRMcRWtUWx3M" usefillcolor="1" widgetbid="uxw6CAVIKmJyr" linecolor="#ff0000" x="-1114" operation="Render single score" height="20" seqnum="" textcolor="none" widgetaid="uxw6CAVIKmJyr" width="48" linewidth="0" showstereotype="1" textid="uZ2rWIx5qgZbW" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" y="1093.36" xmi.id="u3Oxq09NAqR4B" autoresize="1" sequencemessagetype="1001" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uafYrMD7PCzVE" usefillcolor="1" linecolor="#ff0000" x="-1109" role="705" height="22" textcolor="none" width="138" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="1071" text="Render single score" xmi.id="uZ2rWIx5qgZbW" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+         <messagewidget usesdiagramfillcolor="1" localid="uFSvw48QggEnn" usefillcolor="1" widgetbid="uxw6CAVIKmJyr" linecolor="#ff0000" x="-1529" operation="Click &quot;Upload&quot;" height="10" seqnum="" textcolor="none" widgetaid="uxw6CAVIKmJyr" width="414" linewidth="0" showstereotype="1" textid="uwrirbsmBlSpP" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" yclicked="237" y="302.011" xmi.id="u2gVfK21os1H8" autoresize="1" xclicked="-1524" sequencemessagetype="1004" usesdiagramusefillcolor="1">
+          <floatingtext usesdiagramfillcolor="1" localid="uhKpBnwCKWQib" usefillcolor="1" linecolor="#ff0000" x="-1524" role="705" height="22" textcolor="none" width="104" linewidth="0" showstereotype="1" isinstance="0" font="Cantarell,11,-1,5,50,0,0,0,0,0" fillcolor="none" posttext="" y="280" text="Click &quot;Upload&quot;" xmi.id="uwrirbsmBlSpP" autoresize="1" pretext="" usesdiagramusefillcolor="1"/>
+         </messagewidget>
+        </messages>
+        <associations/>
+       </diagram>
+      </diagrams>
+     </XMI.extension>
+    </UML:Model>
+    <UML:Model xmi.id="Use_Case_View" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="Use Case View" namespace="m1" isLeaf="false">
+     <UML:Namespace.ownedElement/>
+    </UML:Model>
+    <UML:Model xmi.id="Component_View" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="Component View" namespace="m1" isLeaf="false">
+     <UML:Namespace.ownedElement/>
+    </UML:Model>
+    <UML:Model xmi.id="Deployment_View" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="Deployment View" namespace="m1" isLeaf="false">
+     <UML:Namespace.ownedElement/>
+    </UML:Model>
+    <UML:Model xmi.id="Entity_Relationship_Model" isAbstract="false" visibility="public" isSpecification="false" isRoot="false" name="Entity Relationship Model" namespace="m1" isLeaf="false">
+     <UML:Namespace.ownedElement/>
+    </UML:Model>
+   </UML:Namespace.ownedElement>
+  </UML:Model>
+ </XMI.content>
+ <XMI.extensions xmi.extender="umbrello">
+  <docsettings viewid="uMWHiD7C5kvSl" uniqueid="u3uUyisAWQmRm" documentation=""/>
+  <listview>
+   <listitem open="1" type="800" id="Views">
+    <listitem open="1" type="821" id="Component_View"/>
+    <listitem open="1" type="827" id="Deployment_View"/>
+    <listitem open="1" type="836" id="Entity_Relationship_Model"/>
+    <listitem open="1" type="801" id="Logical_View">
+     <listitem open="1" type="813" id="u4zNEHba3e6LL"/>
+     <listitem open="1" type="813" id="uE4u7ifthgBXn"/>
+     <listitem open="1" type="813" id="uXRTrHiC0IU8v"/>
+     <listitem label="class diagram" open="0" type="807" id="uadDWMbpuho4k"/>
+     <listitem open="0" type="830" id="Datatypes">
+      <listitem open="0" type="829" id="uJiK9ALiJIZFi"/>
+      <listitem open="0" type="829" id="u40FXrIAnz08T"/>
+      <listitem open="0" type="829" id="uXq6Rg37m0iOD"/>
+      <listitem open="0" type="829" id="u0P2i3spvxtrr"/>
+      <listitem open="0" type="829" id="uzlLaEeEsmxVY"/>
+      <listitem open="0" type="829" id="uxXfmhFS3BTrJ"/>
+      <listitem open="0" type="829" id="uhk7TpNSPYP1r"/>
+      <listitem open="0" type="829" id="uFKfBwsyFNXUd"/>
+      <listitem open="0" type="829" id="u1XxDHToElZed"/>
+      <listitem open="0" type="829" id="uIWeI917K2Q9E"/>
+      <listitem open="0" type="829" id="um6MFGQw2HoEJ"/>
+      <listitem open="0" type="829" id="usF4JwdRbHTjT"/>
+      <listitem open="0" type="829" id="uLbrbWx0xxhCb"/>
+      <listitem open="0" type="829" id="uw720kqkSnYiX"/>
+      <listitem open="0" type="829" id="uincrRtFRMp1T"/>
+      <listitem open="0" type="829" id="u6WvWBGkFXJq3"/>
+      <listitem open="0" type="829" id="uaVfwlxeUfZtl"/>
+      <listitem open="0" type="829" id="upYhdYvN3dBig"/>
+     </listitem>
+     <listitem open="1" type="813" id="u1cJPFa9LVIyx"/>
+     <listitem open="1" type="813" id="unzt3HptzU6mn"/>
+     <listitem open="1" type="813" id="uQuYl0uSeOQRC"/>
+     <listitem open="1" type="813" id="uCIev9vMZ7URG"/>
+     <listitem open="1" type="813" id="uKP0WQs3vTLtA"/>
+     <listitem open="1" type="813" id="uU74VVltZUhEZ"/>
+     <listitem open="1" type="813" id="uFBd5TxbLrNSS"/>
+     <listitem open="1" type="813" id="uMURhyHQ0oE86"/>
+     <listitem open="1" type="813" id="u5kXsgyJOArI7"/>
+     <listitem open="1" type="813" id="uvpTJ46YWfW4P"/>
+     <listitem open="1" type="813" id="uBHdMAJMcMN81"/>
+     <listitem label="sequence diagram" open="0" type="810" id="uMWHiD7C5kvSl"/>
+     <listitem open="1" type="813" id="uIH8oYeWWxZEN"/>
+     <listitem open="1" type="813" id="udmOq4cXRFeLL"/>
+     <listitem open="1" type="813" id="u8kaJjZD9LUyd"/>
+    </listitem>
+    <listitem open="1" type="802" id="Use_Case_View"/>
+   </listitem>
+  </listview>
+  <codegeneration>
+   <codegenerator language="C++"/>
+  </codegeneration>
+ </XMI.extensions>
+</XMI>

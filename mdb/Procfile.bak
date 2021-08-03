@@ -1,1 +1,0 @@
-web: gunicorn mdb.wsgi --log-file -

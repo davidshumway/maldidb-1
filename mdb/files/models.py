@@ -19,10 +19,9 @@ class UserFile(models.Model):
   file = models.FileField(
     upload_to = 'uploads/',
     validators = [
-      FileExtensionValidator(allowed_extensions = ['mzml', 'mzxml', 'fid'])
+      FileExtensionValidator(
+        allowed_extensions = ['mzml', 'mzxml', 'fid', 'csv'])
     ]
   )
   upload_date = models.DateTimeField(auto_now_add = True, blank = False)
-  #extension = models.CharField(max_length = 255, blank = True, null = True)
   spectra = models.ManyToManyField('spectra.Spectra', blank = True)
-  # ~ spectra = models.ManyToManyField('Spectra', blank = True)

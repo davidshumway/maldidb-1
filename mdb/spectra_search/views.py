@@ -106,9 +106,6 @@ def process_file(request, file, form, owner, upload_count, client):
   '''
   import os
   try:
-    ws = websocket.WebSocket()
-    ws.connect('ws://localhost:8000/ws/pollData')
-    
     f1 = file.replace('uploads/', 'uploads/sync/')
     current_loc = '/home/app/web/media/' + file
     new_loc = '/' + file.replace('uploads/', 'uploads/sync/')
@@ -119,6 +116,8 @@ def process_file(request, file, form, owner, upload_count, client):
     if r.text == '':
       # ex: "simpleWarning in if (class(input) == \"list\") {: the condition
       # has length > 1 and only the first element will be used\n"
+      ws = websocket.WebSocket()
+      ws.connect('ws://localhost:8000/ws/pollData')
       ws.send(json.dumps({
         'type': 'completed preprocessing',
         'data': {
@@ -145,6 +144,8 @@ def process_file(request, file, form, owner, upload_count, client):
   
   # Communicates completion back to upload
   try:
+    ws = websocket.WebSocket()
+    ws.connect('ws://localhost:8000/ws/pollData')
     ws.send(json.dumps({
       'type': 'completed preprocessing',
       'data': {
@@ -155,20 +156,6 @@ def process_file(request, file, form, owner, upload_count, client):
     ws.close()
   except:
     print('pf1')
-    try:
-      ws = websocket.WebSocket()
-      ws.connect('ws://localhost:8000/ws/pollData')
-      ws.send(json.dumps({
-        'type': 'completed preprocessing',
-        'data': {
-          'count': upload_count,
-          'client': client,
-        }
-      }))    
-      ws.close()
-    except:
-      print('pf3')
-  return
   
 def upload_status(request):
 	pass 
@@ -176,7 +163,7 @@ def upload_status(request):
 @login_required
 def ajax_upload_library(request):
   '''
-  Validates form before upload
+  Validates form before file upload
   '''
   if request.method == 'POST':
     form = SpectraLibraryForm(data = request.POST, files = request.FILES,
@@ -191,7 +178,7 @@ def ajax_upload_library(request):
               'search_library': form.cleaned_data['search_library'].id
             }
           }, 
-          status=200)
+          status = 200)
       else:
         return JsonResponse({ # upload only
             'status': 'success', 
@@ -201,7 +188,7 @@ def ajax_upload_library(request):
               'search_library': False
             }
           }, 
-          status=200)
+          status = 200)
     else:
       e = form.errors.as_json()
       return JsonResponse({'errors': e}, status=400)
@@ -211,7 +198,7 @@ def ajax_upload_library(request):
 @login_required
 def ajax_upload(request):
   '''
-  Uploads one or more files.
+  Uploads one or more files, and starts preprocessing if mzml/mzxml.
   
   Preprocessing (optional) - Once uploaded, spawn new thread to preprocess.
   UserFile has file location, e.g., "uploads/Bacillus_ByZQI1O.mzXML".
@@ -226,10 +213,6 @@ def ajax_upload(request):
       form.request = request # pass request to save() method
       form.save() # Django saves the file
       owner = request.user.id #if request.user.is_authenticated else None
-      # ~ lab, created = LabGroup.objects.get_or_create(
-        # ~ lab_name = 'FileUploads' # initializes file uploads group
-      # ~ )
-      # ~ form.cleaned_data['lab'] = lab
       form.cleaned_data['library'] = Library.objects.get(
         id = form.cleaned_data['library_id'])
         
@@ -242,30 +225,7 @@ def ajax_upload(request):
     else:
       e = form.errors.as_json()
       return JsonResponse({'errors': e}, status=400)
-        
-    
-    # ~ if form.is_valid():
-      # ~ form.request = request # pass request to save() method
-      # ~ form.save()
-      
-      #print(f'form.cleaned_data {form.cleaned_data}')
-      # ~ return JsonResponse({'status': form.cleaned_data}, status=200)
-      
-      # ~ count = 0
-      # ~ for field in request.FILES.keys():
-        # ~ for file in request.FILES.getlist(field):
-          #save_uploaded_file_to_media_root(formfile)
-          
-      # ~ return JsonResponse(
-        # ~ {'status': 'preprocessing'},
-        # ~ {'status': 'preprocessing', 'task': t.id},
-        # ~ status=200)
-      # ~ return JsonResponse({'status': 'ready'}, status=200)
-    # ~ else:
-      # ~ print('invalid form')
-      # ~ e = form.errors.as_json()
-      # ~ return JsonResponse({'errors': e}, status=400)
-  return JsonResponse({'errors': 'Empty request.'}, status=400)
+  return JsonResponse({'errors': 'Empty request.'}, status = 400)
   
 class SpectraFilter(django_filters.FilterSet):
   library = django_filters.ModelMultipleChoiceFilter(
@@ -303,9 +263,6 @@ class FilteredCollapsedSpectraListView(SingleTableMixin, FilterView):
   filterset_class = CollapsedSpectraFilter
   
   def get_queryset(self):
-    # self.queryset
-    #pass
-    #self.queryset
     from django.db.models import Count
     qs = super().get_queryset()
     qs = qs.annotate(num_spectra = Count('collapsed_spectra'))
