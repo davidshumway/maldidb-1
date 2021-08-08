@@ -127,17 +127,116 @@ def lib_score_parseresult(result):
     c1 += 1
   return x
 
+def apply_csv_metadata(self, library_id):
+  '''
+  
+  Cols: Filenames,Strain name,Genbank accession,Ncbi taxid,Kingdom,Phylum,
+    Class,Order,Family,Genus,Species,Subspecies,Maldi matrix,
+    Dsm cultivation media,Cultivation temp celsius,Cultivation time days,
+    Cultivation other,User firstname lastname,User orcid,
+    Pi firstname lastname,Pi orcid,Dna 16s
+  '''
+  files = UserFile.objects.filter(library_id = library_id, extension = 'csv')
+  for uf in files:
+    #lines = uf.file.open('r').readlines()
+    #for line in lines:
+    t = UserTask.objects.create(
+      owner = self.scope['user'],
+      task_description = 'metadata'
+    )
+    t.statuses.add(UserTaskStatus.objects.create(status = 'start'))
+    import csv
+    with open(uf.file.path, newline = '') as csvfile:
+      reader = csv.DictReader(csvfile)
+      row0 = True
+      for row in reader:
+        if row0 == True:
+          row0 = False
+          continue
+        try:
+          data = {
+            # ~ 'filenames': row['Filenames'],
+            'strain_id': row['Strain name'],
+            'genbank_accession': row['Genbank accession'],
+            'ncbi_taxid': row['Ncbi taxid'],
+            'cKingdom': row['Kingdom'],
+            'cPhylum': row['Phylum'],
+            'cClass': row['Class'],
+            'cOrder': row['Order'],
+            'cFamily': row['Family'],
+            'cGenus': row['Genus'],
+            'cSpecies': row['Species'],
+            'maldi_matrix': row['Maldi matrix'],
+            'dsm_cultivation_media': row['Dsm cultivation media'],
+            'cultivation_temp_celsius': row['Cultivation temp celsius'],
+            'cultivation_time_days': row['Cultivation time days'],
+            'cultivation_other': row['Cultivation other'],
+            'user_firstname_lastname': row['User firstname lastname'],
+            'user_orcid': row['User orcid'],
+            'pi_firstname_lastname': row['Pi firstname lastname'],
+            'pi_orcid': row['Pi orcid'],
+            'dna_16s': row['Dna 16s'],
+            'created_by': self.scope['user'].id,# request.user.id,
+            'library': library_id,
+          }
+        except Exception as e:
+          t.statuses.add(
+            UserTaskStatus.objects.create(
+              status = 'error',
+              extra = 'Unexpected exception\n{}: {}'.format(type(e).__name__, e),
+              user_task = t
+          ))
+          continue
+        m1 = False
+        try:
+          m1 = Metadata.objects.get(strain_id__exact = row['Strain name'],
+            library_id = library_id
+          )
+          # overwrites existing metadata
+          form = MetadataForm(data, instance = m1)
+        except Metadata.DoesNotExist:
+          form = MetadataForm(data)
+        except Metadata.MultipleObjectsReturned:
+          t.statuses.add(
+            UserTaskStatus.objects.create(
+              status = 'error',
+              extra = 'Metadata.MultipleObjectsReturned',
+              user_task = t
+          ))
+          continue
+        if form.is_valid():
+          m1 = form.save(commit = False)
+          m1.save()
+        else:
+          field_errors = [(field.label, field.errors) for field in form] 
+          t.statuses.add(
+            UserTaskStatus.objects.create(
+              status = 'error',
+              extra = 'Unexpected exception: {} {}'.format(
+                str(field_errors), json.dumps(data)),
+              user_task = t
+          ))
+        # updates Spectra
+        spectra_filenames = row['Filenames'].split('|')
+        for spectra_file in spectra_filenames:
+          
+        
 @start_new_thread
 def collapse_lib(self, library, client, search_library):
   '''
-  :param str title: Unknown library's title
-  :param int search_library: optional lib. ID from upload+search, or
-    False if via simple file upload
+  Collapses a library and optionally starts cosine scoring during file upload
+  
+  In the case that metadata was added to the library, the metadata is
+  applied at this point.
+  
+  :param int library: User's library
+  :param search_library: Optional library ID (int) from upload+search, or
+    False (bool) if upload
+  :return: No return value but communicates status to client through a
+    ws connection
   '''
-  # TODO: Library.objects.filter should account for lab
-  # ~ l = Library.objects.filter(title__exact = title,
-    # ~ created_by = self.scope['user']).first()
-  # ~ if l:
+  apply_csv_metadata(self, library)
+  
   data = {
     'id': library,
     'owner': self.scope['user'].id
@@ -169,7 +268,7 @@ def collapse_lib(self, library, client, search_library):
   }))
   ws.close()
   
-  # Does cosine scores
+  # Performs cosine scoring
   if search_library is not False:
     cosine_scores(self, library, client, search_library)
 

@@ -3,90 +3,7 @@ from django.conf import settings
 import uuid
 from django.urls import reverse
 from spectra.models import *
-
-# For model triggers
-# ~ from django.db.models.signals import post_save, m2m_changed
-# ~ from django.dispatch import receiver
-# ~ from django.utils import timezone
-
-# ~ class UserLogs(models.Model):
-  # ~ '''
-  # ~ -- Capture errors in SQLite and file imports
-  # ~ '''
-  # ~ owner = models.ForeignKey(
-    # ~ settings.AUTH_USER_MODEL,
-    # ~ on_delete = models.CASCADE,
-    # ~ blank = False,
-    # ~ null = False)
-  # ~ log_date = models.DateTimeField(auto_now_add = True, blank = False)
-  # ~ title = models.CharField(max_length = 255, blank = False)
-  # ~ description = models.TextField(blank = False)
-
-class UserTask(models.Model):
-  '''
-  '''
-  owner = models.ForeignKey( # Empty owner implies anonymous user
-    settings.AUTH_USER_MODEL,
-    on_delete = models.CASCADE,
-    blank = True,
-    null = True)
-  # ~ task_complete = models.BooleanField(blank = False, null = False,
-    # ~ default = False)
-  task_choices = [
-    ('idbac_sql', 'Insert IDBac SQLite data to database'),
-    ('spectra', 'Add spectra files to database'),
-    ('preprocess', 'Preprocess spectra'),
-    ('collapse', 'Collapse replicates'),
-    ('cos_search', 'Cosine score search'),
-  ]
-  task_description = models.CharField(
-    max_length = 255,
-    choices = task_choices,
-    blank = True,
-    null = True
-  )
-  statuses = models.ManyToManyField('UserTaskStatus')
-  last_modified = models.DateTimeField(auto_now_add = True, blank = False)
-  
-#@receiver(m2m_changed, sender = UserTask, dispatch_uid = None)
-# ~ @receiver(m2m_changed, sender = UserTask.statuses.through)
-# ~ def update_user_task(sender, instance, action, **kwargs):
-  # ~ '''Update last_modified on UserTask when m2m (statuses) field is updated.'''
-  # ~ if action in ['post_add', 'post_remove', 'post_clear']:
-    # ~ instance.last_modified = timezone.now()
-    # ~ m2m_changed.disconnect(update_user_task, sender = UserTask)
-    # ~ instance.save()
-    # ~ m2m_changed.connect(update_user_task, sender = UserTask)
-  
-# Another model to 
-class UserTaskStatus(models.Model):
-  '''Describe lifecycle events of user tasks.
-  
-  -- An extra field to optionally further explain the status.
-  -- Each time a new status is created, trigger last_modified on UserTask
-     to update.
-  -- @user_task: FK, Link back to UserTask containing this status (m2m)
-  '''
-  status_choices = [
-    ('start', 'Started'),
-    ('run', 'Running'),
-    ('complete', 'Completed'),
-    ('error', 'Completed - Error'),
-    ('info', 'Info') # a status to report task progress
-  ]
-  status = models.CharField(
-    max_length = 255,
-    choices = status_choices,
-    blank = False,
-    null = False
-  )
-  status_date = models.DateTimeField(auto_now_add = True, blank = False)
-  extra = models.TextField(blank = True, null = True)
-  user_task = models.ForeignKey(
-    'UserTask',
-    # ~ related_name = '',
-    on_delete = models.CASCADE,
-    blank = True, null = True)
+from files.models import *
 
 class PrivacyLevel(models.Model):
   ''' Privacy level for library, spectra, etc.
@@ -116,6 +33,9 @@ class Library(models.Model):
     'LabGroup', on_delete = models.CASCADE,
     blank = False, null = False)
   
+  user_files = models.ManyToManyField(UserFile,
+    blank = True)
+    
   title = models.CharField(max_length = 200)
   description = models.TextField(blank = True)
   
@@ -207,9 +127,9 @@ class LabGroup(models.Model):
   # ~ post_save.connect(update_stock, sender = LabGroup)
   
 class Metadata(models.Model):
-  ''' UNIQUE(strain_id).
-  -- Removing unique from strain_id ???
-  -- Todo: Add unique(strain_id, library)
+  '''
+  -- files: Associates with one or more user files
+  -- filenames: "|" separated raw filenames from a csv file
   '''
   # ~ strain_id = models.TextField(blank = True)
   strain_id = models.CharField(max_length = 255, blank = True) #, unique = True)
@@ -249,11 +169,16 @@ class Metadata(models.Model):
     # ~ blank = True,
     # ~ null = True)
     
-  library = models.ForeignKey(
-    'Library',
+  library = models.ForeignKey('Library',
     on_delete = models.CASCADE,
     blank = True,
     null = True)
+  
+  files = models.ManyToManyField(UserFile,
+    blank = True,
+    related_name = 'user_files')
+  
+  filenames = models.TextField(blank = True)
   
   class Meta:
     unique_together= (('strain_id', 'library'),)

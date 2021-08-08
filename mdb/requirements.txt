@@ -24,3 +24,4 @@ uvloop
 daphne
 websockets
 django-markdown
+django-markdownx

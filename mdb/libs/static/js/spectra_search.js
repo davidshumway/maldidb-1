@@ -2,9 +2,99 @@ function showUploadControls() {
   $('#upload-more-opts').css('display', '');
   $('#upload-button').css('display', '');
 }
+//~ function updateFileListCsv(input, showStatusCols) {
+  //~ // file-listing
+  //~ if (!input)
+    //~ var input = document.getElementById('customFileCsv');
+  //~ $('#file-selector-csv').css('display', 'none');
+  //~ for (var i in input.files) {
+    //~ input.files[i].upload = i;
+    //~ input.files[i].preprocess = i;
+  //~ }
+  //~ if (!showStatusCols) {
+    //~ preprocessed.table_csv1 = $('#file-listing-csv').DataTable({
+      //~ data: input.files,
+      //~ destroy: true,
+      //~ columns: [
+        //~ {data: 'name', title: 'Name'},
+        //~ {data: 'size', title: 'Size',
+          //~ render: function(data, type) {
+            //~ if (data < 1024)
+              //~ return data + ' bytes';
+            //~ else if (data < 1024*1000)
+              //~ return Math.round(data/1024) + 'KB';
+            //~ else if (data < 1024*1000000)
+              //~ return Math.round(data/(1024*1000)) + 'MB';
+            //~ else if (data < 1024*1000000000)
+              //~ return Math.round(data/(1024*1000000)) + 'GB';
+            //~ else 
+              //~ return data + ' bytes';
+          //~ }
+        //~ }
+      //~ ]
+    //~ });
+    //~ preprocessed.table_csv1.draw();
+  //~ } else {
+    //~ $('#file-listing-csv').css('display', 'none');
+    //~ $('#file-listing-csv-preprocessing').css('display', '');
+    //~ if (preprocessed.table_csv1) {
+      //~ preprocessed.table_csv1.destroy();
+    //~ }
+    //~ preprocessed.table_csv2 = $('#file-listing-csv-preprocessing').DataTable({
+      //~ data: input.files,
+      //~ destroy: true,
+      //~ columnDefs: [{ // progress bar, 3rd column (2)
+        //~ targets: 2,
+        //~ createdCell: function(td, cellData, rowData, row, col) {
+          //~ // td: html td element
+          //~ // cellData: the row number, e.g. row0 = "0"
+          //~ preprocessed.table_csv2_progressbars[cellData] = td;
+        //~ }
+      //~ }, { // status, 3rd column (2)
+        //~ targets: 3,
+        //~ createdCell: function(td, cellData, rowData, row, col) {
+          //~ // td: html td element
+          //~ // cellData: the row number, e.g. row0 = "0"
+          //~ preprocessed.table_csv2_status_cells[cellData] = td;
+        //~ }
+      //~ }],
+      //~ columns: [
+        //~ {data: 'name', title: 'Name'},
+        //~ {data: 'size', title: 'Size',
+          //~ render: function(data, type) {
+            //~ if (data < 1024)
+              //~ return data + ' bytes';
+            //~ else if (data < 1024*1000)
+              //~ return Math.round(data/1024) + 'KB';
+            //~ else if (data < 1024*1000000)
+              //~ return Math.round(data/(1024*1000)) + 'MB';
+            //~ else if (data < 1024*1000000000)
+              //~ return Math.round(data/(1024*1000000)) + 'GB';
+            //~ else 
+              //~ return data + ' bytes';
+          //~ }
+        //~ },
+        //~ {data: 'upload', title: 'Upload status',
+          //~ render: function(data, type) {
+            //~ return '';
+          //~ }
+        //~ },
+        //~ {data: 'preprocess', title: 'Preprocess status',
+          //~ render: function(data, type) {
+            //~ return '';
+          //~ }
+        //~ }
+      //~ ]
+    //~ });
+    //~ preprocessed.table_csv2.draw();
+  //~ }
+//~ }
 function updateFileList(input, showStatusCols) {
-  // Updates file list table (after customFile changed)
-  // @param showStatusCols(Boolean): False initially, then true thereafter
+  /** Updates file list table (after customFile changed)
+   * 
+   * @param showStatusCols(Boolean): False initially shows initial table
+   *  of selected files, then true thereafter to show preprocessing table
+   */
   showUploadControls();
   
   if (!showStatusCols)
@@ -84,14 +174,11 @@ function updateFileList(input, showStatusCols) {
         {data: 'upload', title: 'Upload status',
           render: function(data, type) {
             return '';
-            //~ return '<span id="filetable-upload' + data + '"></span>';
-            //~ return table2_progressbars[data];
           }
         },
         {data: 'preprocess', title: 'Preprocess status',
           render: function(data, type) {
             return '';
-            //return '<div id="filetable-preprocess' + data + '" style="text-align:center;width:100%;">pending</div>';
           }
         }
       ]
@@ -350,10 +437,163 @@ window.addEventListener('DOMContentLoaded', (event) => {
 
 // works locally & remotely
 var socket = new WebSocket('ws://' + location.host + '/ws/pollData');
-socket.onopen = function(e){
+socket.onopen = function(e){ console.log(e); }
+socket.onclose = function(e){ console.log(e); }
+socket.onmessage = function(e) {
   console.log(e);
+  var data = JSON.parse(e.data).data;
+  console.log(data);
+  
+  try {
+    if (data.client) {
+      preprocessed.client = data.client;
+    }
+  } catch (e) { console.log(e); }
+  
+  //~ if (data.message == 'completed mz processing') {
+    //~ preprocessed.batched_upload_count = 0;
+    //~ batchUploadCsv();
+  //~ } else if (data.message == 'completed csv processing') {
+    //~ // Continues to mz uploads
+    //~ //preprocessed.batched_upload_count = 0;
+    //~ //batchUpload();
+  //~ } else 
+  if (data.message == 'completed preprocessing') {
+    updatePreprocessedCount(data.count);
+  } else if (data.message == 'completed collapsing') {
+    // if search: show next tab (search type)
+    // if basic file upload: redirect to library
+    if (!preprocessed.search_library) {
+      document.location.href = '/library/' + preprocessed.library_id;
+      return;
+    }
+    
+    // choose 
+    //$nss-card-2
+    $('#nss-1').removeClass('active');
+    $('#nss-2').addClass('active');
+    $('#nss-2').css('display', 'block');
+    
+    $('#nss-card-1').css('display', 'none');
+    $('#nss-card-2').css('display', 'block');
+    
+    var t = $('#file-listing2').DataTable({
+      data: data.data.results,
+      columnDefs: [{ // progress bar, 3rd column (2)
+        targets: 1,
+        createdCell: function(td, cellData, rowData, row, col) {
+          // td: html td element
+          // cellData: compared spectra id
+          preprocessed.table3_score_cells[cellData] = td;
+        }
+      }],
+      columns: [
+        {data: 'strain_id__strain_id', title: 'Unknown Strain ID'},
+        {data: 'id', title: 'Top scores (Strain ID, Genus / Species)',
+          render: function(data, type) {
+            return '';
+            //~ // e.g. top-scores-8373
+            //~ return '<table id="top-scores-' + data + '"'+
+              //~ 'class="table table-sm" style="width:100% !important;"></table>';
+          }
+        },
+        {data: 'id', title: '',
+          render: function(data, type) {
+            return '<button href="#" id="open-result-' + data + '" ' +
+              //'data-id="' + data + '" ' +
+              'class="btn btn-secondary" ' +
+              'onclick="javascript:loadSingleScore(this, ' + data + ')">' +
+              'Explore more</button>';
+          }
+        }
+      ]
+    });
+    t.draw();
+    // Update total count
+    preprocessed.cosine_total = data.data.results.length;
+    $('#stat2-complete').text(
+      '0 / ' + preprocessed.cosine_total + ' completed'
+    );
+    
+  } else if (data.message == 'completed cosine') {
+    // Shows an individual collapsed spectra cosine similarity result
+    
+    preprocessed.cosine_count++;
+    $('#stat2-complete').text(
+      preprocessed.cosine_count + ' / ' + preprocessed.cosine_total +
+      ' completed'
+    );
+    if (preprocessed.cosine_count == preprocessed.cosine_total) {
+      $('#cosine-status').css('display', 'none');
+    }
+    
+    // Stores by collapsed spectra id
+    preprocessed.collapsed_data[data.data.spectra1] = data.data.result;
+    
+    var x = data.data.result.scores;
+    var output = [];
+    for (var i=0; i<5; i++) {
+      if (x[i]) output.push(x[i]);
+    }
+    
+    var x = document.createElement('table');
+    //~ x.id = 'top-scores-' + data.data.spectra1
+    x.style.width = '100%';
+    preprocessed.table3_score_cells[data.data.spectra1].appendChild(x);
+    var t = $(x).DataTable({
+    //~ var t = $('#top-scores-' + data.data.spectra1).DataTable({
+      data: output,
+      paging: false,
+      searching: false,
+      ordering: false,
+      info: false,
+      columns: [
+        {data: 'score', title: ''},
+        {data: 'strain', title: ''},
+        {data: 'genus', title: ''},
+        {data: 'species', title: ''},
+      ],
+      'headerCallback': function(thead, data, start, end, display) {
+        // Removing thead (thead.remove()) causes errors in table, so...
+        $(thead).css('display', 'none');
+      }
+    });
+    t.order([0, 'desc']) // reorders in correct direction
+      .draw();
+  } else if (data.message == 'single score result') {
+    // Updates scores, dendro, original, keeping 'ids'
+    preprocessed.collapsed_data[data.data.spectra1].scores = data.data.result.scores;
+    preprocessed.collapsed_data[data.data.spectra1].dendro = data.data.result.dendro;
+    preprocessed.collapsed_data[data.data.spectra1].original = data.data.result.original;
+     //~ = data.data.result;
+    singleScore(data.data.spectra1);
+    
+    $('#open-result-' + data.data.spectra1)[0].disabled = false;
+  }
 }
-
+function updatePreprocessedCount(rowId) {
+  preprocessed.count++;
+  $(preprocessed.table2_status_cells[rowId]).text('done');
+  $('#stat-complete').text(
+    preprocessed.count + '/' + preprocessed.total + ' completed');
+  
+  // Starts CSV uploads if mz uploads are completed
+  if (preprocessed.batched_upload_files.length == 0) {
+    batchUploadCsv();
+  }
+  
+  // Collapses library if all are preprocessed
+  if (preprocessed.count == preprocessed.total) {
+    $('#stat-title').text('Collapsing library entries...');
+    $('#stat-complete').text('');
+    
+    socket.send(JSON.stringify({
+      type: 'collapse library',
+      collapseLibrary: preprocessed.library_id,
+      searchLibrary: preprocessed.search_library
+    }));
+  }
+}
 function getSubgroups(data) {
 
   // Selected taxonomy e.g. "kingdom"
@@ -505,9 +745,7 @@ function drawHisto() {
     .style("text-anchor", "middle")
     .text("Number of samples");
 }
-var mirror = {
-  svg: null
-}
+var mirror = { svg: null }
 var allStrains = {};
 var preprocessed = {
   count: 0,
@@ -521,11 +759,16 @@ var preprocessed = {
   collapsed_data: {},
   table1: null,
   table2: null,
+  table_csv1: null,
+  table_csv2: null,
   table2_progressbars: {}, // holds {"row-index": td-element}
   table2_status_cells: {},
+  table_csv2_progressbars: {}, // holds {"row-index": td-element}
+  table_csv2_status_cells: {},
   table3_score_cells: {},
   batched_upload_files: [],
-  batched_upload_count: 0
+  batched_upload_count: 0,
+  batched_upload_csv_files: []
 }
 function sp(el) {
   //makeChartBtm
@@ -756,157 +999,6 @@ function dendro(data) {
   x.update(true);
   $('#dendro-viz-toggle input')[0].chart = x;
 }
-socket.onmessage = function(e) {
-  console.log(e);
-  var data = JSON.parse(e.data).data;
-  console.log(data);
-  
-  try {
-    if (data.client) {
-      preprocessed.client = data.client;
-    }
-  } catch (e) {
-    console.log(e);
-  }
-  //~ var data = JSON.parse(JSON.parse(e.data));
-  //~ console.log(data);
-  
-  if (data.message == 'completed preprocessing') {
-    var c = data.count;
-    preprocessed.count++;
-    $(preprocessed.table2_status_cells[c]).text('done');
-    $('#stat-complete').text(
-      preprocessed.count + '/' + preprocessed.total + ' completed');
-    
-    // Collapses library if all are preprocessed
-    if (preprocessed.count == preprocessed.total) {
-      $('#stat-title').text('Collapsing library entries...');
-      $('#stat-complete').text('');
-      
-      socket.send(JSON.stringify({
-        type: 'collapse library',
-        collapseLibrary: preprocessed.library_id,
-        searchLibrary: preprocessed.search_library
-      }));
-    }
-    
-  } else if (data.message == 'completed collapsing') {
-    // if search: show next tab (search type)
-    // if basic file upload: redirect to library
-    if (!preprocessed.search_library) {
-      document.location.href = '/library/' + preprocessed.library_id;
-      return;
-    }
-    
-    // choose 
-    //$nss-card-2
-    $('#nss-1').removeClass('active');
-    $('#nss-2').addClass('active');
-    $('#nss-2').css('display', 'block');
-    
-    $('#nss-card-1').css('display', 'none');
-    $('#nss-card-2').css('display', 'block');
-    
-    var t = $('#file-listing2').DataTable({
-      data: data.data.results,
-      columnDefs: [{ // progress bar, 3rd column (2)
-        targets: 1,
-        createdCell: function(td, cellData, rowData, row, col) {
-          // td: html td element
-          // cellData: compared spectra id
-          preprocessed.table3_score_cells[cellData] = td;
-        }
-      }],
-      columns: [
-        {data: 'strain_id__strain_id', title: 'Unknown Strain ID'},
-        {data: 'id', title: 'Top scores (Strain ID, Genus / Species)',
-          render: function(data, type) {
-            return '';
-            //~ // e.g. top-scores-8373
-            //~ return '<table id="top-scores-' + data + '"'+
-              //~ 'class="table table-sm" style="width:100% !important;"></table>';
-          }
-        },
-        {data: 'id', title: '',
-          render: function(data, type) {
-            return '<button href="#" id="open-result-' + data + '" ' +
-              //'data-id="' + data + '" ' +
-              'class="btn btn-secondary" ' +
-              'onclick="javascript:loadSingleScore(this, ' + data + ')">' +
-              'Explore more</button>';
-          }
-        }
-      ]
-    });
-    t.draw();
-    // Update total count
-    preprocessed.cosine_total = data.data.results.length;
-    $('#stat2-complete').text(
-      '0 / ' + preprocessed.cosine_total + ' completed'
-    );
-    
-  } else if (data.message == 'completed cosine') {
-    // Shows an individual collapsed spectra cosine similarity result
-    
-    preprocessed.cosine_count++;
-    $('#stat2-complete').text(
-      preprocessed.cosine_count + ' / ' + preprocessed.cosine_total +
-      ' completed'
-    );
-    if (preprocessed.cosine_count == preprocessed.cosine_total) {
-      $('#cosine-status').css('display', 'none');
-    }
-    
-    // Stores by collapsed spectra id
-    preprocessed.collapsed_data[data.data.spectra1] = data.data.result;
-    
-    var x = data.data.result.scores;
-    var output = [];
-    for (var i=0; i<5; i++) {
-      if (x[i]) output.push(x[i]);
-    }
-    
-    var x = document.createElement('table');
-    //~ x.id = 'top-scores-' + data.data.spectra1
-    x.style.width = '100%';
-    preprocessed.table3_score_cells[data.data.spectra1].appendChild(x);
-    var t = $(x).DataTable({
-    //~ var t = $('#top-scores-' + data.data.spectra1).DataTable({
-      data: output,
-      paging: false,
-      searching: false,
-      ordering: false,
-      info: false,
-      columns: [
-        {data: 'score', title: ''},
-        {data: 'strain', title: ''},
-        {data: 'genus', title: ''},
-        {data: 'species', title: ''},
-      ],
-      'headerCallback': function(thead, data, start, end, display) {
-        // Removing thead (thead.remove()) causes errors in table, so...
-        $(thead).css('display', 'none');
-      }
-    });
-    t.order([0, 'desc']) // reorders in correct direction
-      .draw();
-  }
-  else if (data.message == 'single score result') {
-    // Updates scores, dendro, original, keeping 'ids'
-    preprocessed.collapsed_data[data.data.spectra1].scores = data.data.result.scores;
-    preprocessed.collapsed_data[data.data.spectra1].dendro = data.data.result.dendro;
-    preprocessed.collapsed_data[data.data.spectra1].original = data.data.result.original;
-     //~ = data.data.result;
-    singleScore(data.data.spectra1);
-    
-    $('#open-result-' + data.data.spectra1)[0].disabled = false;
-  }
-  
-  return;
-}
-socket.onclose = function(e){
-  console.log(e);
-}
 
 function loadSingleScore(btn, id) {
   //~ this.onclick = function() {};
@@ -928,13 +1020,6 @@ function loadSingleScore(btn, id) {
 function singleScore(id) {
   var data = preprocessed.collapsed_data[id];
   
-  // Unique selected grouping (species/genus/...)
-  //~ var x = d3.map(data.scores, function(d) {
-    //~ return d[selected];
-    //~ return (d[selected])
-  //~ });
-  //~ data.subgroups = [...new Set(x)]; // spread operator
-  
   $('#nss-1').removeClass('active');
   $('#nss-2').removeClass('active');
   $('#nss-3').addClass('active');
@@ -945,7 +1030,6 @@ function singleScore(id) {
   $('#nss-card-3').css('display', 'block');
   
   $('#col-right').css('display', '');
-  
   $('#col-left')[0].className = 'col-sm-6 mx-auto'
   
   var t = $('#data-table').DataTable({
@@ -1338,9 +1422,8 @@ function setFormReadOnly() {
       return false;
     }
   }
-    
-  
 }
+
 // Search only, no upload
 function search(event) {
   event.preventDefault();
@@ -1390,10 +1473,10 @@ function upload(event) {
   updateFileList(false, true);
   
   if (form.get('library_search_type')) {
-    // Menu: Basic search
+    // Basic search
     preprocessed.search_library = form.get('search_library');
   } else {
-    // Menu: Add files
+    // Add files
     preprocessed.search_library = false;
   }
   
@@ -1406,14 +1489,13 @@ function ajaxLibrary() {
    * Creates or validates library before upload
    */
   var form = new FormData($('#upload_form')[0]);
-  form.set('number_files', $('#customFile')[0].files.length);
+  //~ form.set('number_files', $('#customFile')[0].files.length);
   form.set('file', '');
   $.ajax({
     xhr: function() {
      var xhr = new window.XMLHttpRequest();
      return xhr;
     },
-    
     dataType: 'JSON',
     data: form,
     url: formURLs.library,
@@ -1429,39 +1511,49 @@ function ajaxLibrary() {
       $('#stat-complete').text('0/' + preprocessed.total + ' completed');
       $('#preprocess-upload-status').css('display', 'block');
       
-      //~ var r = JSON.parse(response.responseJSON);
       var library = response.data.library;
       preprocessed.library = library;
       preprocessed.library_id = response.data.library_id;
       preprocessed.search_library = response.data.search_library;
       
-      // Loop through upload files and start each one
+      // Loops through upload csv files and add to batch
+      //~ for (var i=0; i<$('#customFileCsv')[0].files.length; i++) {
+        //~ var f = new FormData($('#upload_form')[0]);
+        //~ f.set('file', $('#customFileCsv')[0].files[i]);
+        //~ f.set('tmp_library', library);
+        //~ f.set('library_id', preprocessed.library_id);
+        //~ f.set('upload_count', i);
+        //~ f.set('client', preprocessed.client);
+        //~ preprocessed.batched_upload_csv_files.push(f);
+      //~ }
+      
+      // Loops through upload files and add to batch
       for (var i=0; i<$('#customFile')[0].files.length; i++) {
+        var file = $('#customFile')[0].files[i];
         var f = new FormData($('#upload_form')[0]);
         f.set('file', $('#customFile')[0].files[i]);
         f.set('tmp_library', library);
         f.set('library_id', preprocessed.library_id);
         f.set('upload_count', i);
         f.set('client', preprocessed.client);
-        //~ uploadHelper(f);
-        preprocessed.batched_upload_files.push(f);
+        if (/\.csv$/i.exec(file.name)
+          preprocessed.batched_upload_csv_files.push(f);
+        else
+          preprocessed.batched_upload_files.push(f);
       }
       
-      // Init uploads
-      batchUpload();
+      // Inits uploads
+      //~ batchUpload();
+      if (preprocessed.batched_upload_files.length > 0)
+        batchUpload();
+      else
+        batchUploadCsv();
     },
     // on error
     error: function(response) {
       //console.log(response);
       var r = JSON.parse(response.responseJSON.errors);
       console.log(r);
-      try {
-        if (r.file_strain_ids.length) {
-          $('#file_strain_ids_error').removeClass('toggle-display');
-          $('#file_strain_ids_error').text(r.file_strain_ids[0].message);
-          $('#upload-button')[0].disabled = false;
-        }
-      } catch(e) {}
       try {
         if (r.__all__.length > 0) {
           for (var i in r.__all__) {
@@ -1476,18 +1568,31 @@ function ajaxLibrary() {
     }
   });
 }
+function batchUploadCsv() {
+  /**
+   * Starts up to 20 CSV files
+   */
+  var f = preprocessed.batched_upload_csv_files.slice(0,20); // 0-19
+  for (var i in f) {
+    uploadHelper(f[i], batchUploadCsv, preprocessed.table_csv2_progressbars,
+      formURLs.metadata);
+  }
+  preprocessed.batched_upload_csv_files = preprocessed
+    .batched_upload_csv_files.slice(20,); // 20-, or empty
+}
 function batchUpload() {
   /**
-   * Starts 20 from batched_upload_files
+   * Starts up to 20 mz files
    */
   var f = preprocessed.batched_upload_files.slice(0,20); // 0-19
   for (var i in f) {
-    uploadHelper(f[i]);
+    uploadHelper(f[i], batchUpload, preprocessed.table2_progressbars,
+      formURLs.files);
   }
   preprocessed.batched_upload_files = preprocessed
-    .batched_upload_files.slice(20,); // 20-
+    .batched_upload_files.slice(20,); // 20-, or empty
 }
-function uploadHelper(formData) {
+function uploadHelper(formData, callback, progress, url) {
   var template = '\
     <div class="row m-0 p-0" style="width:100%;">\
       <div class="col-sm-8 col-md-5 progress-bar-txt text-center m-0 p-0"\
@@ -1500,7 +1605,7 @@ function uploadHelper(formData) {
     </div></div>';
           
   var t = $(template);
-  var n = $(preprocessed.table2_progressbars[formData.get('upload_count')]);
+  var n = $(progress[formData.get('upload_count')]);
   n.append(t);
   t.progress_txt = n.find('.progress-bar-txt');
   t.progress = n.find('.progress-bar');
@@ -1520,29 +1625,32 @@ function uploadHelper(formData) {
       }, false);
       return xhr;
     },
-    
     dataType: 'JSON',
     data: formData,
     sequentialUploads: true,
-    url: formURLs.files,
+    url: url,
     type: 'POST',
     processData: false,
     contentType: false,
     // on success
     success: function(response) {
-      preprocessed.batched_upload_count++;
+      var r = JSON.parse(response.responseJSON);
+      if (r.status == 'csv-success') {
+        updatePreprocessedCount(r.upload_count);
+      }
+      
       // starts another batch of uploads
+      preprocessed.batched_upload_count++;
       if (preprocessed.batched_upload_count % 20 == 0)
-        batchUpload();
+        callback();
     },
-    
     // on error
     error: function(response) {
       console.log(response);
       preprocessed.batched_upload_count++;
       // starts another batch of uploads
       if (preprocessed.batched_upload_count % 20 == 0)
-        batchUpload();
+        callback();
       //~ $('#upload-button')[0].disabled = false;
       try {
         var r = JSON.parse(response.responseJSON.errors);
@@ -1556,9 +1664,7 @@ function uploadHelper(formData) {
           r.file.forEach(e => msgs.push(e.message));
           $('#file-error').text(msgs.join('<br>'));
         }
-      } catch(e) {
-        console.log(e);
-      }
+      } catch(e) { console.log(e); }
     }
   });
   return false;

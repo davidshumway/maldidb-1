@@ -96,15 +96,6 @@ def site_metrics(request):
       'spectra_total': s1,
     }
   )
-
-@login_required
-def user_task_status_profile(request, status_id):
-  uts = UserTaskStatus.objects.get(id = status_id)
-  return render(
-    request,
-    'chat/user_task_status_profile.html',
-    {'user_task_status': uts}
-  )
   
 def metadata_profile(request, strain_id):
   md = Metadata.objects.get(strain_id = strain_id)
@@ -300,9 +291,9 @@ def collapse_library(request, lib_id):
     if lib not in Library.objects.filter(created_by = request.user):
       return redirect(reverse('chat:libraries_results'))
       # ~ You are not the owner of that library
-    # Valid. Collapse and redirect.
+    # Collapses and redirects
     BgProcess.collapse_lib(id = lib_id, owner = request.user)
-    return redirect(reverse('chat:user_tasks'))
+    return redirect(reverse('tasks:user_tasks'))
   else:
     return render(request, 'chat/libraries.html')
   
@@ -426,16 +417,6 @@ class SearchResultsView(ListView):
     )
     return object_list
 
-@method_decorator(login_required, name = 'dispatch')
-class UserTaskListView(SingleTableView):
-  model = UserTask
-  table_class = UserTaskTable
-  template_name = 'chat/user_tasks.html'
-  
-  def get_queryset(self, *args, **kwargs):
-    return UserTask.objects.filter(owner = self.request.user) \
-      .order_by('-last_modified') #statuses__status_date
-    
 class XmlListView(SingleTableView):
   model = XML
   table_class = XmlTable

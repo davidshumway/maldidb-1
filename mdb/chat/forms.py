@@ -1,6 +1,7 @@
 from django import forms
 from .models import *
 from spectra.models import *
+from files.models import *
 from django.contrib.auth import get_user_model
 User = get_user_model()
 from django.db.models import Q
@@ -118,7 +119,7 @@ class LabProfileForm(forms.ModelForm):
     exclude = ('id', 'lab_type')
   
 # ~ class SearchForm(forms.ModelForm):
-  # ~ """Search by peaks/intensities, or upload mzXML or mzML file."""
+  # ~ '''Search by peaks/intensities, or upload mzXML or mzML file.'''
   # ~ class Meta:
     # ~ model = Spectra
     # ~ exclude = ('id',)
@@ -170,13 +171,12 @@ class XmlForm(forms.ModelForm):
     # ~ fields = ('xml_hash','xml','manufacturer','model','ionization','analyzer','detector','instrument_metafile')
     
 class MetadataForm(forms.ModelForm):
-  """
+  '''
   Form for handling addition of metadata
-  """
+  '''
   
   class Meta:
     model = Metadata
-    # ~ exclude = ('created_by',)
     exclude = ('id',)
     widgets = {
       'cKingdom': forms.Textarea(
@@ -202,14 +202,19 @@ class MetadataForm(forms.ModelForm):
       ),
     }
   
-  def clean(self):
-    cleaned_data = super().clean()
-
-    # if this Item already exists
-    ###if self.instance:
-       #### add the old quantity to the new quantity
-       ####cleaned_data['quantity'] += self.instance.quantity
-    return cleaned_data
+  # ~ def clean(self):
+    # ~ cleaned_data = super().clean()
+    
+    # ~ # Adds files. If files don't exist, adds blank files.
+    # ~ filenames = cleaned_data['filenames'].split('|')
+    # ~ for file in filenames:
+      # ~ uf, bool_created = UserFile.objects.get_or_create(
+        # ~ filename = file,
+        # ~ library = cleaned_data['library'])
+      # ~ cleaned_data['files'].add(uf)
+    # ~ #if self.instance:
+    # ~ #  # ~ ####cleaned_data['quantity'] += self.instance.quantity
+    # ~ return cleaned_data
 
 class LocaleForm(forms.ModelForm):
   class Meta:
@@ -222,9 +227,9 @@ class VersionForm(forms.ModelForm):
     exclude = ()
     
 class CommentForm(forms.Form):
-  """
+  '''
   Form for adding comments
-  """
+  '''
 
   text = forms.CharField(
     label = "Comment",
@@ -232,9 +237,9 @@ class CommentForm(forms.Form):
   )
 
   def save(self, spectra, user):
-    """
+    '''
     custom save method to create comment
-    """
+    '''
     comment = Comment.objects.create(
       text = self.cleaned_data.get('text', None),
       post = spectra,

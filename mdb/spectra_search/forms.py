@@ -67,17 +67,17 @@ class FileLibraryForm(forms.Form):
   '''
   Processes the library portion of an upload form.
   
-  File is just a placeholder, i.e. no files uploaded via this form,
-  whereas number_files represents the number of files in the File
-  field.
+  File is just a placeholder, i.e. no files uploaded via this form.
+  ---whereas number_files represents the number of files in the File
+  ---field.
   '''
   file = forms.FileField(
     label = 'Upload one or more files',
     required = False,
     widget = forms.ClearableFileInput(attrs={'multiple': True})
   )
-  number_files = forms.IntegerField(widget = forms.HiddenInput(),
-    initial = 0)
+  # ~ number_files = forms.IntegerField(widget = forms.HiddenInput(),
+    # ~ initial = 0)
   
   search_from_existing = LibraryModelChoiceField(
     queryset = Library.objects.all(),
@@ -118,17 +118,15 @@ class FileLibraryForm(forms.Form):
     ])
   )
   
-  use_filenames = forms.BooleanField(
-    required = False,
-    initial = True,
-    label = 'Use filenames for strain IDs?')
+  # ~ use_filenames = forms.BooleanField(
+    # ~ required = False,
+    # ~ initial = True,
+    # ~ label = 'Use filenames for strain IDs?')
   
-  file_strain_ids = forms.CharField(
-    required = False,
-    widget = forms.Textarea(attrs = {'rows': 6, 'style': 'width:100%;'}),
-    # Bug? Setting disabled causes the form to ignore any input here.
-    # ~ disabled = True
-    )
+  # ~ file_strain_ids = forms.CharField(
+    # ~ required = False,
+    # ~ widget = forms.Textarea(attrs = {'rows': 6, 'style': 'width:100%;'}),
+    # ~ )
   
   preprocess = forms.BooleanField(
     required = True,
@@ -353,29 +351,52 @@ class SpectraLibraryForm(FileLibraryForm):
     
     return d
   
+class MetadataUploadForm(forms.ModelForm):
+  file = forms.FileField(
+    label = 'Upload one or more files',
+    required = True,
+    widget = forms.ClearableFileInput(attrs={'multiple': True})
+  )
+  upload_count = forms.IntegerField(required = True)
+  library_id = forms.IntegerField(required = True)
+  client = forms.CharField(required = True)
+  
+  class Meta:
+    model = UserFile
+    exclude = ('id', 'owner', 'upload_date', 'extension')
+    widgets = {
+      'lab': forms.Select(
+        attrs = {'class': 'custom-select'}
+      ),
+    }
+  
+  def save(self, commit = True):
+    instance = super().save(commit=False)
+    if self.request.user.is_authenticated:
+      instance.owner = self.request.user
+    instance.extension = 'csv'
+    instance.save(commit)
+    return instance
+  
+  def __init__(self, *args, **kwargs):
+    request = kwargs.pop('request')
+    self.user = request.user
+    super(MetadataUploadForm, self).__init__(*args, **kwargs)
+    user = self.user
+    
 class SpectraUploadForm(forms.ModelForm):
   file = forms.FileField(
     label = 'Upload one or more files',
     required = True,
     widget = forms.ClearableFileInput(attrs={'multiple': True})
   )
-  
-  upload_count = forms.IntegerField()
-  
-  # For use with websockets 
-  client = forms.CharField(label = '', required = False)
-   
+  upload_count = forms.IntegerField(require = True)
   library_id = forms.IntegerField(required = True)
-  
-#  use_filenames = forms.BooleanField(required = False,
-#    initial = True)
-#  
-#  file_strain_ids = forms.CharField(required = False)
+  client = forms.CharField(required = True)
   
   class Meta:
     model = UserFile
     exclude = ('id', 'owner', 'upload_date', 'extension')
-    #custom-select
     widgets = {
       'lab': forms.Select(
         attrs = {'class': 'custom-select'}

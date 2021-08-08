@@ -12,6 +12,7 @@ urlpatterns = [
     path('import/', include('importer.urls')),
     path('search/', include('spectra_search.urls')),
     path('files/', include('files.urls')),
+    path('tasks/', include('tasks.urls')),
     path('markdownx/', include( 'markdownx.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

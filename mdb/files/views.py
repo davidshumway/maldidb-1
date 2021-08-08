@@ -24,6 +24,8 @@ class FileUpload(ListView):
     context = super().get_context_data(**kwargs)
     context['upload_form'] = FileLibraryForm(request = self.request)
     u = self.request.user
+    print(f'self.request{self.request}')
+    print(f'u{u}')
     
     # own libraries (library_select shares this qs)
     q = Library.objects.filter(created_by__exact = u)\

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block navtitle %}
+Task Status
+{% endblock %}
+{% block title %}
+Task Status: {{ user_task_status.id }}
+{% endblock %}
+
+{% block content %}
+
+
+<div class="card">
+	<ul class="list-group list-group-flush">
+		<li class="list-group-item"><strong>Status ID:</strong> {{ user_task_status.id }}</li>
+		<li class="list-group-item"><strong>Status:</strong> {{ user_task_status.status }}</li>
+		<li class="list-group-item"><strong>Date:</strong> {{ user_task_status.status_date }}</li>
+		<li class="list-group-item"><strong>Additional Details:</strong> {{ user_task_status.extra }}</li>
+	</ul>
+</div>
+{% endblock %}

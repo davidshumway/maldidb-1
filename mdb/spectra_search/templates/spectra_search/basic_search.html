@@ -27,7 +27,8 @@ Basic Search
 // global variable for spectra_search.js
 var formURLs = {
   library: "{% url 'spectra_search:ajax_upload_library' %}",
-  files: "{% url 'spectra_search:ajax_upload' %}"
+  files: "{% url 'spectra_search:ajax_upload' %}",
+  metadata: "{% url 'spectra_search:ajax_upload_metadata' %}"
 }
   
 function show_filter(e) {
@@ -78,6 +79,10 @@ function show_filter(e) {
         <!-- File upload form -->
         <form action="" class="" method="" style="" id="upload_form">
           {% csrf_token %}
+          <!-- hidden -->
+          {% with f=upload_form.number_files %}
+          {{ f }}
+          {% endwith %}
           
           <div class="form-group row" id="file-selector">
             
@@ -93,7 +98,8 @@ function show_filter(e) {
             </div>
             
             <div class="col-sm-2" id="file-selector-col2">
-              <div class="text-center" style="padding-top:40px;min-height:140px;overflow:hidden;"
+              <div class="text-center"
+                style="padding-top:40px;min-height:140px;overflow:hidden;"
                 >OR</div>
             </div>
             
@@ -177,42 +183,6 @@ function show_filter(e) {
                   {% endwith %}
                 </div>
               </div>
-              
-              <div class="form-group col-sm-12">
-              {% with f=upload_form.use_filenames %}
-                {{ f }}
-                <label class="form-check-label" for="{{ f.auto_id }}"
-                  style="margin-left: 10px;">{{ f.label }}</label>
-              {% endwith %}
-              </div>
-                
-              <div class="col-sm-5 col-form-label">
-                <label class="form-check-label" for="id_file_strain_ids">
-                  List of strain IDs corresponding to uploaded files
-                </label><br/>
-                <small class="text-muted">Notes:</small>
-                <div class="ml-2"><small class="text-muted">Separate
-                  each strain ID by a newline<br/>
-                  Leave blank if using filenames
-                  for strain IDs<br/>
-                  Each strain ID must be between 1-255 characters<br/>
-                  Each strain ID must be unique<br/>
-                  Uploads to an existing library will overwrite
-                    any metadata or spectra using the same strain ID
-                </small></div>
-              </div>
-              <div class="col-sm-7">
-                {% with f=upload_form.file_strain_ids %}
-                {{ f }}
-                {% endwith %}
-                <div class="alert alert-danger toggle-display" id="file_strain_ids_error">
-                </div>
-              </div>
-              
-              <!-- hidden -->
-              {% with f=upload_form.number_files %}
-              {{ f }}
-              {% endwith %}
             </div>
             
             <div class="form-group row mt-2">
@@ -228,9 +198,6 @@ function show_filter(e) {
               (select spectra library against which unknown will be queried)
               </label>
               <div class="col-sm-9">
-<!--
-                <input type="email" class="form-control" id="inputEmail3" placeholder="Email">
--->
                 <div id="search-library" class="sl_" >
                   {% with f=upload_form.search_library %}
                     {{ f }}

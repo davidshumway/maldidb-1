@@ -12,6 +12,7 @@ urlpatterns = [
   path('', views.FilteredSpectraSearchListView.as_view(), name='basic_search'),
   path('ajax_upload_library/', views.ajax_upload_library, name='ajax_upload_library'),
   path('ajax_upload/', views.ajax_upload, name='ajax_upload'),
+  path('ajax_upload_metadata/', views.ajax_upload_metadata, name='ajax_upload_metadata'),
   # Search result
   path('spectra/', views.FilteredSpectraListView.as_view(), name='spectra_results'),
   path('spectra2/', views.FilteredCollapsedSpectraListView.as_view(), name='spectra_results2'),

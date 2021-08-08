@@ -2,10 +2,9 @@ from django.shortcuts import redirect, render
 from .forms import LoadSqliteForm
 from chat.forms import *
 from spectra.forms import SpectraForm
-from chat.models import Spectra, SearchSpectra, SpectraCosineScore, \
-  SearchSpectraCosineScore, Metadata, XML, Locale, Version, Library, \
-  LabGroup, UserTask, UserTaskStatus
+from chat.models import *
 from files.models import UserFile
+from tasks.models import *
 import json
 import sqlite3
 from django.contrib.auth.decorators import login_required
@@ -18,7 +17,7 @@ def add_sqlite(request):
     form = LoadSqliteForm(request.POST, request.FILES)
     if form.is_valid():
       result = handle_uploaded_file(request, form)
-      return redirect('chat:user_tasks')
+      return redirect('tasks:user_tasks')
   else:
     form = LoadSqliteForm()
     u = request.user
@@ -78,37 +77,6 @@ def handle_uploaded_file(request, tmpForm):
         user_task = t
       ))
       _insert(request, tmpForm, '/home/app/web/r01data/' + f, t)
-  # ~ elif tmpForm.cleaned_data['upload_type'] == 'all': # hosted on server
-    # ~ hc = [
-      # ~ '2019_04_15_10745_db-2_0_0.sqlite',
-      # ~ '2019_06_06_22910_db-2_0_0.sqlite',
-      # ~ '2019_06_12_10745_db-2_0_0.sqlite',
-      # ~ '2019_07_02_22910_db-2_0_0.sqlite',
-      # ~ '2019_07_10_10745_db-2_0_0.sqlite',
-      # ~ '2019_07_17_1003534_db-2_0_0.sqlite',
-      # ~ '2019_09_04_10745_db-2_0_0.sqlite',
-      # ~ '2019_09_11_1003534_db-2_0_0.sqlite',
-      # ~ '2019_09_18_22910_db-2_0_0.sqlite',
-      # ~ '2019_09_25_10745_db-2_0_0.sqlite',
-      # ~ '2019_10_10_1003534_db-2_0_0.sqlite',
-      # ~ '2019_11_13_1003534_db-2_0_0.sqlite',
-      # ~ '2019_11_20_1003534_db-2_0_0.sqlite',
-    # ~ ]
-    # ~ for f in hc:
-      # ~ t = UserTask.objects.create(
-        # ~ owner = request.user,
-        # ~ task_description = 'idbac_sql'
-      # ~ )
-      # ~ t.statuses.add(UserTaskStatus.objects.create(
-        # ~ status = 'start',
-        # ~ user_task = t
-      # ~ ))
-      # ~ t.statuses.add(UserTaskStatus.objects.create(
-        # ~ status = 'info',
-        # ~ extra = 'Loading SQLite file ' + f,
-        # ~ user_task = t
-      # ~ ))
-      # ~ _insert(request, tmpForm, '/home/app/web/r01data/' + f, t)
     
 @start_new_thread
 def _insert(request, tmpForm, uploadFile, user_task):
@@ -157,7 +125,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False, upload_
   }
   
   # Version
-  rows = cursor.execute("SELECT * FROM version").fetchall()
+  rows = cursor.execute('SELECT * FROM version').fetchall()
   for row in rows:
     idbac_version = row[2] if len(row) == 3 else '1.0.0'
     data = {
@@ -179,30 +147,20 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False, upload_
         status = 'info', extra = 'Inserting metadata',
         user_task = user_task
     ))
-  rows = cursor.execute("SELECT * FROM metaData").fetchall()
+  rows = cursor.execute('SELECT * FROM metaData').fetchall()
   created_metadata = {} # keeps object store keyed by strain_id
-  # Uses file_strain_ids for strain_id, if present
-  try:
-    import re
-    file_sid = None
-    if tmpForm.cleaned_data['use_filenames'] is False:
-      sids = re.sub('[\r\n]+', '\n', tmpForm.cleaned_data['file_strain_ids'].strip())
-      sids = sids.split('\n')
-      file_sid = sids[upload_count]
-  except:
-    pass
     
   for row in rows:
-    sid = file_sid if file_sid is not None else row[0]
+    #sid = file_sid if file_sid is not None else row[0]
     data = {
-      'strain_id': sid, #row[0],
+      'strain_id': row[0], #sid, #
       'genbank_accession': row[1],
       'ncbi_taxid': row[2],
       'cKingdom': row[3],
       'cPhylum': row[4],
       'cClass': row[5],
       'cOrder': row[6],
-      'cGenus': row[7],
+      'cFamily': row[7],
       'cGenus': row[8],
       'cSpecies': row[9],
       'maldi_matrix': row[10],
@@ -217,10 +175,11 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False, upload_
       'dna_16s': row[19],
       'created_by': request.user.id,
       'library': tmpForm.cleaned_data['library'].id,
+      'filenames': '', # adds empty placeholder
     }
     m1 = False
     try:
-      m1 = Metadata.objects.get(strain_id__exact = sid,
+      m1 = Metadata.objects.get(strain_id__exact = row[0],
         library = tmpForm.cleaned_data['library']
       )
       form = MetadataForm(data, instance = m1)
@@ -228,17 +187,12 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False, upload_
       form = MetadataForm(data)
     except Metadata.MultipleObjectsReturned: # should not occur
       raise ValueError('unique constraint failed on metadata!')
-    except:
-      pass
     
     if form.is_valid():
       entry = form.save(commit = False)
       entry.save()
-      # Adds to object stores
-      created_metadata[sid] = entry
-      # ~ if use_sids:
-        # ~ old_sids[row[0]] = entry
-      # ~ created_metadata[row[0]] = entry
+      # Adds to object store
+      created_metadata[row[0]] = entry
     else:
       field_errors = [(field.label, field.errors) for field in form] 
       raise ValueError('x2' + str(field_errors) + ' | ' + json.dumps(data))
@@ -249,7 +203,7 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False, upload_
       UserTaskStatus.objects.create(
         status = 'info', extra = 'Inserting XML', user_task = user_task
     ))
-  rows = cursor.execute("SELECT * FROM XML").fetchall()
+  rows = cursor.execute('SELECT * FROM XML').fetchall()
   created_xml = {} # key is xml_hash
   for row in rows:
     data = {

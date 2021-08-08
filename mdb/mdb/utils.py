@@ -1,5 +1,5 @@
 from threading import Thread
-from chat.models import UserTask, UserTaskStatus
+from tasks.models import UserTask, UserTaskStatus
 import requests
 
 def start_new_thread(function):

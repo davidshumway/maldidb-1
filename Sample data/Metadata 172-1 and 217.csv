@@ -1,0 +1,3 @@
+Filenames,Strain name,Genbank accession,Ncbi taxid,Kingdom,Phylum,Class,Order,Family,Genus,Species,Subspecies,Maldi matrix,Dsm cultivation media,Cultivation temp celsius,Cultivation time days,Cultivation other,User firstname lastname,User orcid,Pi firstname lastname,Pi orcid,Dna 16s
+172-1.mzXML,172-1,,,Bacteria,Terrabacteria_group,Actinobacteria,Actinobacteria,,Nocardiaceae,,,CHCA,,27,,,Chase Clark ,0000-0001-6439-9397,Brian Murphy ,0000-0002-1372-3887,
+217.mzML,,,,,,,,,,,,CHCA,,27,,,Chase Clark,0000-0001-6439-9397,Brian Murphy,0000-0002-1372-3887,

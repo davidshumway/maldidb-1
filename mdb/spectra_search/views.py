@@ -1,8 +1,10 @@
 from django.shortcuts import render
 from mdb.utils import *
 from chat.models import *
+from chat.forms import MetadataForm
 from spectra.models import *
 from accounts.models import *
+from tasks.models import *
 from .forms import *
 from .tables import *
 from .serializers import *
@@ -99,13 +101,38 @@ class MetadataAutocomplete(autocomplete.Select2QuerySetView):
 # end autocomplete views
 #-----------------------------------------------------------------------
 
+# ~ @start_new_thread
+# ~ def process_metadata(request, form, owner):
+  # ~ '''
+  # ~ Adds metadata from a single CSV file to the library.
+  
+  # ~ 
+
+  # ~ response: "completed csv processing"
+  # ~ '''
+  
+  # ~ try:
+    # ~ ws = websocket.WebSocket()
+    # ~ ws.connect('ws://localhost:8000/ws/pollData')
+    # ~ ws.send(json.dumps({
+      # ~ 'type': 'completed mz upload',
+      # ~ 'data': {
+        # ~ 'count': form.cleaned_data['upload_count'],
+        # ~ 'client': form.cleaned_data['client'],
+      # ~ }
+    # ~ }))    
+    # ~ ws.close()
+  # ~ except Exception as e:
+    # ~ print('pf1', e)
+  
 @start_new_thread
-def process_file(request, file, form, owner, upload_count, client):
+def process_file(request, form, owner):
   '''
   Runs R methods to process a mzml or mzxml file
   '''
-  import os
   try:
+    file = str(form.instance.file)
+    import os
     f1 = file.replace('uploads/', 'uploads/sync/')
     current_loc = '/home/app/web/media/' + file
     new_loc = '/' + file.replace('uploads/', 'uploads/sync/')
@@ -121,8 +148,8 @@ def process_file(request, file, form, owner, upload_count, client):
       ws.send(json.dumps({
         'type': 'completed preprocessing',
         'data': {
-          'count': upload_count,
-          'client': client,
+          'count': form.cleaned_data['upload_count'],
+          'client': form.cleaned_data['client'],
         }
       }))    
       ws.close()
@@ -135,7 +162,7 @@ def process_file(request, file, form, owner, upload_count, client):
     info = idbac_sqlite_insert(request, form,
       '/uploads/sync/' + str(r.json()[0]) + '.sqlite',
       user_task = t,
-      upload_count = upload_count
+      upload_count = form.cleaned_data['upload_count']
     )
     # Removes sqlite file
     os.remove('/uploads/sync/' + str(r.json()[0]) + '.sqlite')
@@ -149,17 +176,14 @@ def process_file(request, file, form, owner, upload_count, client):
     ws.send(json.dumps({
       'type': 'completed preprocessing',
       'data': {
-        'count': upload_count,
-        'client': client,
+        'count': form.cleaned_data['upload_count'],
+        'client': form.cleaned_data['client'],
       }
     }))    
     ws.close()
-  except:
-    print('pf1')
+  except Exception as e:
+    print('pf1', e)
   
-def upload_status(request):
-	pass 
-
 @login_required
 def ajax_upload_library(request):
   '''
@@ -191,19 +215,17 @@ def ajax_upload_library(request):
           status = 200)
     else:
       e = form.errors.as_json()
-      return JsonResponse({'errors': e}, status=400)
+      return JsonResponse({'errors': e}, status = 400)
   else:
-    return JsonResponse({'errors': 'Empty request.'}, status=400)
+    return JsonResponse({'errors': 'Empty request.'}, status = 400)
 
 @login_required
 def ajax_upload(request):
   '''
-  Uploads one or more files, and starts preprocessing if mzml/mzxml.
+  Uploads one or more mz files, and starts preprocessing.
   
-  Preprocessing (optional) - Once uploaded, spawn new thread to preprocess.
+  Once uploaded, spawn new thread to preprocess.
   UserFile has file location, e.g., "uploads/Bacillus_ByZQI1O.mzXML".
-  If owner=None, then CollapsedSpectra.create(created_by=None) still works.
-  Todo: Anonymous session to access anon. upload.
   '''
   if request.method == 'POST':
     form = SpectraUploadForm(data = request.POST, files = request.FILES,
@@ -215,16 +237,34 @@ def ajax_upload(request):
       owner = request.user.id #if request.user.is_authenticated else None
       form.cleaned_data['library'] = Library.objects.get(
         id = form.cleaned_data['library_id'])
-        
-      file = str(form.instance.file)
-      
-      form.cleaned_data['privacy_level'] = ['PR']
-      process_file(request, file, form, owner,
-        form.cleaned_data['upload_count'], form.cleaned_data['client'])
-      return JsonResponse({'status': 'preprocessing'}, status=200)
+      process_file(request, form, owner)
+      return JsonResponse({'status': 'preprocessing'}, status = 200)
     else:
       e = form.errors.as_json()
-      return JsonResponse({'errors': e}, status=400)
+      return JsonResponse({'errors': e}, status = 400)
+  return JsonResponse({'errors': 'Empty request.'}, status = 400)
+  
+@login_required
+def ajax_upload_metadata(request):
+  '''
+  Uploads and processes one or more metadata files.
+  '''
+  if request.method == 'POST':
+    form = MetadataUploadForm(data = request.POST, files = request.FILES,
+      request = request
+    )
+    if form.is_valid():
+      form.request = request
+      form.save()
+      # ~ owner = request.user.id
+      #form.cleaned_data['library'] = Library.objects.get(
+      #  id = form.cleaned_data['library_id'])
+      #process_metadata(request, form, owner)
+      return JsonResponse({'status': 'csv-success',
+        'upload_count': form.cleaned_data['upload_count']}, status = 200)
+    else:
+      e = form.errors.as_json()
+      return JsonResponse({'errors': e}, status = 400)
   return JsonResponse({'errors': 'Empty request.'}, status = 400)
   
 class SpectraFilter(django_filters.FilterSet):

@@ -11,7 +11,7 @@ RUN R -e "install.packages('remotes')"
 RUN R -e "remotes::install_github('chasemc/IDBacApp@prioritizer')"
 RUN apt-get install -y libpq-dev # requirement for RPostgreSQL
 RUN R -e "install.packages('RPostgreSQL')"
-RUN R -e "install.packages('data.tree')" # required for dendrogram
+RUN R -e "install.packages('data.tree')" # requirment for dendrogram
 
 # igraph / not used
-RUN apt-get install -y libglpk-dev r-cran-igraph
+#RUN apt-get install -y libglpk-dev r-cran-igraph

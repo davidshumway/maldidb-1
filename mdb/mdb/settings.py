@@ -34,6 +34,7 @@ INSTALLED_APPS = [
   'spectra',
   'ncbitaxonomy',
   'docs',
+  'tasks',
   'django_tables2',
   'django_filters',
   'bootstrap4',

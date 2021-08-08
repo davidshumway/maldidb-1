@@ -37,10 +37,6 @@ urlpatterns = [
   
   path('collapse/<lib_id>/', views.collapse_library, name='collapse_library'),
   
-  path('tasks/', views.UserTaskListView.as_view(), name='user_tasks'),
-  
-  path('statuses/<status_id>/', views.user_task_status_profile, name='user_task_statuses'),
-  
   path('site_metrics/', views.site_metrics, name='site_metrics'),
   path('user_libraries/', views.user_libraries, name='user_libraries'),
   

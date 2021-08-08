@@ -27,7 +27,8 @@ File Upload
 // global variable for spectra_search.js
 var formURLs = {
   library: "{% url 'spectra_search:ajax_upload_library' %}",
-  files: "{% url 'spectra_search:ajax_upload' %}"
+  files: "{% url 'spectra_search:ajax_upload' %}",
+  metadata: "{% url 'spectra_search:ajax_upload_metadata' %}"
 }
 </script>
 
@@ -67,19 +68,17 @@ var formURLs = {
         <!-- File upload form -->
         <form action="" class="" method="" style="" id="upload_form">
           {% csrf_token %}
-<!--
-        <form action="{% url 'spectra_search:ajax_upload' %}"
-          class="" method="POST" style=""
-
-          id="upload_form">-->
-          {% csrf_token %}
+          <!-- hidden -->
+          {% with f=upload_form.number_files %}
+          {{ f }}
+          {% endwith %}
           
-          <div class="" id="file-selector"><!--bs/custom-file-->
+          <div class="" id="file-selector">
             <input type="file" class=""
               id="customFile" name="file" multiple
               onchange="javascript:updateFileList(this, false);"
               onload="javascript:updateFileList(this, false);"
-              style="display:none;"><!--bs/custom-file-input-->
+              style="display:none;">
             <label class="" for="customFile"
               style="border:1px dashed;background-color:#fefefe;padding:30px;width:100%;text-align:center;"
               >Choose file(s) to upload</label>
@@ -155,13 +154,8 @@ var formURLs = {
                 </div>
               </div>
             
-              <!-- hidden -->
-              {% with f=upload_form.number_files %}
-              {{ f }}
-              {% endwith %}
-              
             </div>
-            
+                
             <div class="form-group">
               {% with f=upload_form.preprocess %}
                 {{ f }}
