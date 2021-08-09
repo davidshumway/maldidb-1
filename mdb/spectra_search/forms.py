@@ -333,9 +333,6 @@ class SpectraLibraryForm(FileLibraryForm):
       forward=['cKingdom','cPhylum','cClass','cOrder','cGenus']))
   
   def clean(self):
-    '''
-    
-    '''
     d = super().clean()
     # ~ print(f'clean{d}')
     
@@ -383,6 +380,14 @@ class MetadataUploadForm(forms.ModelForm):
     self.user = request.user
     super(MetadataUploadForm, self).__init__(*args, **kwargs)
     user = self.user
+  
+  def clean(self):
+    d = super().clean()
+    try:
+      d['library'] = Library.objects.get(id = d['library_id'])
+    except:
+      raise forms.ValidationError('Missing library!')
+    return d
     
 class SpectraUploadForm(forms.ModelForm):
   file = forms.FileField(
@@ -390,7 +395,7 @@ class SpectraUploadForm(forms.ModelForm):
     required = True,
     widget = forms.ClearableFileInput(attrs={'multiple': True})
   )
-  upload_count = forms.IntegerField(require = True)
+  upload_count = forms.IntegerField(required = True)
   library_id = forms.IntegerField(required = True)
   client = forms.CharField(required = True)
   
@@ -416,13 +421,13 @@ class SpectraUploadForm(forms.ModelForm):
     super(SpectraUploadForm, self).__init__(*args, **kwargs)
     user = self.user
   
-  # ~ def clean(self):
-    # ~ d = super().clean()
-    # ~ try:
-      # ~ d['library_id'] = Library.objects.get(id = d['library_id'])
-    # ~ except:
-      # ~ raise forms.ValidationError('Missing library!')
-    # ~ return d
+  def clean(self):
+    d = super().clean()
+    try:
+      d['library'] = Library.objects.get(id = d['library_id'])
+    except:
+      raise forms.ValidationError('Missing library!')
+    return d
           
 class SpectraSearchForm(forms.ModelForm):
   '''Replicated, Collapsed, all

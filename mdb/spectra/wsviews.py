@@ -1,13 +1,16 @@
 '''
 Spectra websocket views
 '''
-from chat.models import Library
+from chat.models import Library, Metadata
+from chat.forms import MetadataForm
 from .models import *
+from spectra.models import *
 from django.db.models import Count
 import websocket
 import json
 import requests
 from mdb.utils import *
+from files.models import UserFile
 
 def _cosine_score_libraries(libraries):
   '''
@@ -69,43 +72,6 @@ def cosine_score_libraries(self, val, client):
     print(e)
     pass
   
-  # ~ # Checks libraries exist
-  # ~ try:
-    # ~ lib_cos_score = LibrariesCosineScore.objects.create(
-      # ~ result = '' 
-    # ~ )
-    # ~ for lid in val['libraries']:
-      # ~ lib_cos_score.libraries.add(Library.objects.get(id = lid))
-    # ~ lib_cos_score.save()
-  # ~ except Exception as e:
-    # ~ # e.g. if a Library id doesn't exist
-    # ~ print('e:', e)
-    # ~ return
-
-  # ~ # Creates a new score
-  # ~ data = {
-    # ~ 'ids': val['libraries']
-  # ~ }
-  # ~ r = requests.post(
-    # ~ 'http://plumber:8000/cosineLibCompare',
-    # ~ params = data
-  # ~ )
-  # ~ # Writes result to db and sends response
-  # ~ if r.status_code == 200:
-    # ~ lib_cos_score.result = r.text
-    # ~ lib_cos_score.save()
-    
-    # ~ ws = websocket.WebSocket()
-    # ~ ws.connect('ws://localhost:8000/ws/pollData')
-    # ~ ws.send(json.dumps({
-      # ~ 'type': 'library comparison result',
-      # ~ 'data': {
-        # ~ 'client': client,
-        # ~ 'result': lib_score_parseresult(r.text)
-      # ~ }
-    # ~ }))
-    # ~ ws.close()
-
 def lib_score_parseresult(result):
   r = json.loads(result)
   x = []
@@ -127,16 +93,21 @@ def lib_score_parseresult(result):
     c1 += 1
   return x
 
-def apply_csv_metadata(self, library_id):
+@start_new_thread
+def apply_csv_metadata(self, csv_ids, library_id):
   '''
   
-  Cols: Filenames,Strain name,Genbank accession,Ncbi taxid,Kingdom,Phylum,
-    Class,Order,Family,Genus,Species,Subspecies,Maldi matrix,
+  Cols: New strain name,Old strain name,Genbank accession,Ncbi taxid,Kingdom,
+    Phylum,Class,Order,Family,Genus,Species,Subspecies,Maldi matrix,
     Dsm cultivation media,Cultivation temp celsius,Cultivation time days,
     Cultivation other,User firstname lastname,User orcid,
     Pi firstname lastname,Pi orcid,Dna 16s
   '''
-  files = UserFile.objects.filter(library_id = library_id, extension = 'csv')
+  files = UserFile.objects.filter(id__in = csv_ids) #library_id = library_id, extension = 'csv'
+  print(f'files{files}')
+  # ~ files = UserFile.objects.filter(id__in = Library.objects.filter(library_id = library_id)[0].user_files,
+    # ~ extension = 'csv')
+  
   for uf in files:
     #lines = uf.file.open('r').readlines()
     #for line in lines:
@@ -153,10 +124,10 @@ def apply_csv_metadata(self, library_id):
         if row0 == True:
           row0 = False
           continue
+        # ~ print(f'row{row}')
         try:
           data = {
-            # ~ 'filenames': row['Filenames'],
-            'strain_id': row['Strain name'],
+            'strain_id': row['New strain name'],
             'genbank_accession': row['Genbank accession'],
             'ncbi_taxid': row['Ncbi taxid'],
             'cKingdom': row['Kingdom'],
@@ -187,39 +158,50 @@ def apply_csv_metadata(self, library_id):
               user_task = t
           ))
           continue
-        m1 = False
+        # ~ m1 = False
+        # ~ s1 = False
+        # ~ s2 = False
         try:
-          m1 = Metadata.objects.get(strain_id__exact = row['Strain name'],
-            library_id = library_id
-          )
-          # overwrites existing metadata
-          form = MetadataForm(data, instance = m1)
-        except Metadata.DoesNotExist:
-          form = MetadataForm(data)
-        except Metadata.MultipleObjectsReturned:
+          m1, bool_cr1 = Metadata.objects.get_or_create(
+            strain_id = row['Old strain name'],
+            library_id = library_id)
+        except Exception as e:
           t.statuses.add(
             UserTaskStatus.objects.create(
               status = 'error',
-              extra = 'Metadata.MultipleObjectsReturned',
+              extra = 'Unexpected exception\n{}: {}'.format(type(e).__name__, e),
               user_task = t
           ))
           continue
-        if form.is_valid():
-          m1 = form.save(commit = False)
-          m1.save()
-        else:
-          field_errors = [(field.label, field.errors) for field in form] 
+        try:
+          m2, bool_cr2 = Metadata.objects.get_or_create(
+            strain_id = row['New strain name'],
+            library_id = library_id)
+        except Exception as e:
           t.statuses.add(
             UserTaskStatus.objects.create(
               status = 'error',
-              extra = 'Unexpected exception: {} {}'.format(
-                str(field_errors), json.dumps(data)),
+              extra = 'Unexpected exception\n{}: {}'.format(type(e).__name__, e),
               user_task = t
           ))
-        # updates Spectra
-        spectra_filenames = row['Filenames'].split('|')
-        for spectra_file in spectra_filenames:
-          
+          continue
+        # Updates spectra
+        s1 = Spectra.objects.filter(
+          strain_id__strain_id = row['Old strain name'],
+          library_id = library_id)
+        s2 = CollapsedSpectra.objects.filter(
+          strain_id__strain_id = row['Old strain name'],
+          library_id = library_id)
+        s1.update(strain_id = m2)
+        s2.update(strain_id = m2)
+  # Relays status to ui
+  ws = websocket.WebSocket()
+  ws.connect('ws://localhost:8000/ws/pollData')
+  ws.send(json.dumps({
+    'type': 'completed apply csv metadata',
+    'data': { 'client': self.client_id }
+  }))
+  ws.close()
         
 @start_new_thread
 def collapse_lib(self, library, client, search_library):
@@ -235,12 +217,7 @@ def collapse_lib(self, library, client, search_library):
   :return: No return value but communicates status to client through a
     ws connection
   '''
-  apply_csv_metadata(self, library)
-  
-  data = {
-    'id': library,
-    'owner': self.scope['user'].id
-  }
+  data = { 'id': library, 'owner': self.scope['user'].id }
   r = requests.get(
     'http://plumber:8000/collapseLibrary',
     params = data
@@ -274,10 +251,7 @@ def collapse_lib(self, library, client, search_library):
 
 @start_new_thread
 def cosine_scores_existing(self, library, client, search_library):
-  #l = Library.objects.filter(title__exact = title,
-  #  created_by = self.scope['user']).first()
-  
-  # relays it's "done" and sends back ids
+  # Relays it's "done" and sends back ids
   n1 = CollapsedSpectra.objects.filter( # unknown spectra
     library_id__exact = library,
     spectra_content__exact = 'PR') \
@@ -302,7 +276,7 @@ def cosine_scores_existing(self, library, client, search_library):
 @start_new_thread
 def single_score(self, client, msg):
   '''
-  Returns a full score (dendrogram + scores).
+  Returns a full score (dendrogram + scores)
   
   Assumes that the score exists.
   
@@ -406,9 +380,6 @@ def single_score(self, client, msg):
       'binned_intensity': binned_peaks[id]['intensity'],
       'binned_snr': binned_peaks[id]['snr'],
     })
-    # ~ rowcount += 1
-    # ~ if rowcount >= 10:
-      # ~ break
   ws.send(json.dumps({
     'type': 'single score result',
     'data': {
@@ -425,15 +396,12 @@ def cosine_scores(self, library, client, search_library):
   ws = websocket.WebSocket()
   ws.connect('ws://localhost:8000/ws/pollData')
   
-  # ~ print(f'lib {library} sl {search_library}')
   try:
     search_library_obj = Library.objects.get(id = search_library)
   except Library.DoesNotExist:
     print('Search library does not exist?')
     ws.close()
     return
-  
-  # ~ print(f'search_library_obj {search_library_obj}')
     
   n1 = CollapsedSpectra.objects.filter( # unknown spectra
     library_id__exact = library,

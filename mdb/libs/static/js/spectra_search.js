@@ -569,6 +569,12 @@ socket.onmessage = function(e) {
     singleScore(data.data.spectra1);
     
     $('#open-result-' + data.data.spectra1)[0].disabled = false;
+  } else if (data.message == 'completed apply csv metadata') {
+    socket.send(JSON.stringify({
+      type: 'collapse library',
+      collapseLibrary: preprocessed.library_id,
+      searchLibrary: preprocessed.search_library
+    }));
   }
 }
 function updatePreprocessedCount(rowId) {
@@ -588,9 +594,9 @@ function updatePreprocessedCount(rowId) {
     $('#stat-complete').text('');
     
     socket.send(JSON.stringify({
-      type: 'collapse library',
-      collapseLibrary: preprocessed.library_id,
-      searchLibrary: preprocessed.search_library
+      type: 'apply csv metadata',
+      csv_ids: preprocessed.csv_ids,
+      library_id: preprocessed.library_id
     }));
   }
 }
@@ -768,7 +774,8 @@ var preprocessed = {
   table3_score_cells: {},
   batched_upload_files: [],
   batched_upload_count: 0,
-  batched_upload_csv_files: []
+  batched_upload_csv_files: [],
+  csv_ids: [], // populated after upload
 }
 function sp(el) {
   //makeChartBtm
@@ -1453,6 +1460,7 @@ function search(event) {
 
   // socket send
   socket.send(JSON.stringify({
+    type: 'search existing',
     existingLibrary: f.search_from_existing.value,
     searchLibrary: preprocessed.search_library
   }));
@@ -1536,7 +1544,7 @@ function ajaxLibrary() {
         f.set('library_id', preprocessed.library_id);
         f.set('upload_count', i);
         f.set('client', preprocessed.client);
-        if (/\.csv$/i.exec(file.name)
+        if (/\.csv$/i.exec(file.name))
           preprocessed.batched_upload_csv_files.push(f);
         else
           preprocessed.batched_upload_files.push(f);
@@ -1574,7 +1582,7 @@ function batchUploadCsv() {
    */
   var f = preprocessed.batched_upload_csv_files.slice(0,20); // 0-19
   for (var i in f) {
-    uploadHelper(f[i], batchUploadCsv, preprocessed.table_csv2_progressbars,
+    uploadHelper(f[i], batchUploadCsv, preprocessed.table2_progressbars,
       formURLs.metadata);
   }
   preprocessed.batched_upload_csv_files = preprocessed
@@ -1634,9 +1642,10 @@ function uploadHelper(formData, callback, progress, url) {
     contentType: false,
     // on success
     success: function(response) {
-      var r = JSON.parse(response.responseJSON);
-      if (r.status == 'csv-success') {
-        updatePreprocessedCount(r.upload_count);
+      //~ console.log(response);
+      if (response && response.status == 'csv-success') {
+        updatePreprocessedCount(response.upload_count);
+        preprocessed.csv_ids.push(response.id);
       }
       
       // starts another batch of uploads

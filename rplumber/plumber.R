@@ -517,7 +517,7 @@ preprocess <- function(file) {
   tryCatch({
     mzFilePaths <- list(file.path(paste0('/app/', file)))
     sID <- base::basename(tools::file_path_sans_ext(mzFilePaths))
-    # replaces the Django portion of filename ("_[\w\d]+$")
+    # Replaces the Django portion of filename ("_[\w\d]+$")
     sID <- str_replace(sID, '_[a-zA-Z0-9]+$', '')
     f <- sanitize(sub('uploads/sync', '', file))
     IDBacApp:::idbac_create(
@@ -551,7 +551,7 @@ preprocess <- function(file) {
     }
   })
   
-  # returns location of the idbac sqlite file.
+  # Returns location of idbac sqlite file
   return(f)
 }
 sanitize <- function(filename, replacement = "") {

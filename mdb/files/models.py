@@ -3,6 +3,7 @@ from django.conf import settings
 from django.core.validators import FileExtensionValidator
 from spectra.models import *
 import os
+# ~ from chat.models import *
 
 class UserFile(models.Model):
   '''
@@ -25,7 +26,9 @@ class UserFile(models.Model):
   )
   extension = models.CharField(max_length = 255, blank = True)
   upload_date = models.DateTimeField(auto_now_add = True, blank = False)
-
+  library = models.ForeignKey('chat.Library', on_delete = models.CASCADE,
+    blank = True, null = True)
+  
   #spectra = models.ManyToManyField('spectra.Spectra', blank = True)
   # ~ class Meta:
     # ~ unique_together= (('file', 'library'),)

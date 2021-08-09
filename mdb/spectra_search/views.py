@@ -255,13 +255,15 @@ def ajax_upload_metadata(request):
     )
     if form.is_valid():
       form.request = request
-      form.save()
+      metadata = form.save()
+      
       # ~ owner = request.user.id
       #form.cleaned_data['library'] = Library.objects.get(
       #  id = form.cleaned_data['library_id'])
       #process_metadata(request, form, owner)
       return JsonResponse({'status': 'csv-success',
-        'upload_count': form.cleaned_data['upload_count']}, status = 200)
+        'upload_count': form.cleaned_data['upload_count'],
+        'id': metadata.id}, status = 200)
     else:
       e = form.errors.as_json()
       return JsonResponse({'errors': e}, status = 400)

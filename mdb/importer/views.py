@@ -105,7 +105,6 @@ def _insert(request, tmpForm, uploadFile, user_task):
 
 def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False, upload_count = None):
   '''
-  Unique: Library + Metadata.strain_id, Library + XML.xml_hash
   Beta version: Overwrites unique entries. TODO: User feedback.
   From mzml/mzxml files, metadata will only have a single entry.
   
@@ -174,12 +173,11 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False, upload_
       'pi_orcid': row[18],
       'dna_16s': row[19],
       'created_by': request.user.id,
-      'library': tmpForm.cleaned_data['library'].id,
-      'filenames': '', # adds empty placeholder
+      'library': tmpForm.cleaned_data['library'].id
     }
     m1 = False
     try:
-      m1 = Metadata.objects.get(strain_id__exact = row[0],
+      m1 = Metadata.objects.get(strain_id = row[0],
         library = tmpForm.cleaned_data['library']
       )
       form = MetadataForm(data, instance = m1)
@@ -272,10 +270,10 @@ def idbac_sqlite_insert(request, tmpForm, uploadFile, user_task = False, upload_
     except:
       sxml = ''
     try:
-      if file_sid is not None:
-        smd = created_metadata[file_sid].id
-      else:
-        smd = created_metadata[row[3]].id
+      # ~ if file_sid is not None:
+        # ~ smd = created_metadata[file_sid].id
+      # ~ else:
+      smd = created_metadata[row[3]].id
     except:
       smd = ''
       

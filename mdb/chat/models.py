@@ -33,8 +33,8 @@ class Library(models.Model):
     'LabGroup', on_delete = models.CASCADE,
     blank = False, null = False)
   
-  user_files = models.ManyToManyField(UserFile,
-    blank = True)
+  # ~ user_files = models.ManyToManyField(UserFile,
+    # ~ blank = True)
     
   title = models.CharField(max_length = 200)
   description = models.TextField(blank = True)
@@ -174,11 +174,11 @@ class Metadata(models.Model):
     blank = True,
     null = True)
   
-  files = models.ManyToManyField(UserFile,
-    blank = True,
-    related_name = 'user_files')
+  # ~ files = models.ManyToManyField(UserFile,
+    # ~ blank = True,
+    # ~ related_name = 'user_files')
   
-  filenames = models.TextField(blank = True)
+  #filenames = models.TextField(blank = True)
   
   class Meta:
     unique_together= (('strain_id', 'library'),)
