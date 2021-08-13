@@ -19,99 +19,86 @@ Library Details: {{ library.title }}
 
 <div class="row">
   <div class="col-md-2 col-sm-6">
+    
     <div class="card">
-      <div class="card-header">Actions</div>
-      <div class="nav flex-column nav-pills p-4" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-        <a class="nav-link active" id="navdetail-tab" data-toggle="pill"
-          href="#navdetail" role="tab" aria-controls="navdetail"
-          aria-selected="true">Library details</a>
-        {% if request.user in lab.owners.all %}
-        <a class="nav-link" id="navsearch-tab" data-toggle="pill"
-          href="#navsearch" role="tab" aria-controls="navsearch"
-          aria-selected="false">NCBI taxonomy search</a>
-        <a class="nav-link" id="navmodify-tab" data-toggle="pill"
-          href="#navmodify" role="tab" aria-controls="navmodify"
-          aria-selected="false">NCBI taxonomy bulk modify</a>
-        {% endif %}
+      <div class="card-header">
+        Overview
+      </div>
+      <div class="card-body">
+        <div class="card-title">
+          Title: {{ library.title|safe }}
+        </div>
+        <p><span class="font-weight-light">Description:</span> {{ library.description|safe }}<br/>
+        <span class="font-weight-light">Privacy Setting:</span> {{ library.privacy_level }}<br/>
+        <span class="font-weight-light">Quality:</span> {{ library.quality_rating }}<br/>
+        <span class="font-weight-light">Created by:</span> {{ library.created_by|safe }}<br/>
+        <span class="font-weight-light">Lab:</span> {{ library.lab|safe }}<br/>
+        <span class="font-weight-light">#Spectra:</span> {{ lengths.spectra }}<br/>
+<!--
+          <a href="{% url 'spectra_search:spectra_results' %}?library={{library.id}}" class="card-link">
+            </a>
+-->
+        
+        <span class="font-weight-light">#Collapsed spectra:</span> {{ lengths.collapsed_spectra }}<br/>
+<!--
+          <a href="{% url 'spectra_search:spectra_results2' %}?library={{library.id}}" class="card-link">
+            </a>
+-->
+        <span class="font-weight-light">#Metadata:</span> {{ lengths.metadata }}<br/>
+<!--
+          <a href="{% url 'chat:metadata_results' %}?library={{library.id}}" class="card-link">
+            </a>
+-->
+        <span class="font-weight-light">#CSV files:</span> {{ lengths.csv_files }}<br/>
+        <span class="font-weight-light">#MZ files:</span> {{ lengths.mz_files }}
       </div>
     </div>
+  
+    {% if request.user in lab.owners.all %}
+      <br />
+      <div class="card">
+        <div class="card-header">Actions</div>
+        <div class="nav flex-column nav-pills p-4" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+          <a class="nav-link active" id="navdetail-tab" data-toggle="pill"
+            href="#navdetail" role="tab" aria-controls="navdetail"
+            aria-selected="true">Library details</a>
+          <a class="nav-link" id="navsearch-tab" data-toggle="pill"
+            href="#navsearch" role="tab" aria-controls="navsearch"
+            aria-selected="false">NCBI taxonomy search</a>
+          <a class="nav-link" id="navmodify-tab" data-toggle="pill"
+            href="#navmodify" role="tab" aria-controls="navmodify"
+            aria-selected="false">NCBI taxonomy bulk modify</a>
+        </div>
+      </div>
+    
+      <br />
+      <div class="card">
+        <div class="card-header">Library management</div>
+        <div class="card-body">
+          
+          <a href="{% url 'chat:collapse_library' library.id %}"
+            class="card-link btn btn-secondary">
+            Collapse library replicates</a>
+          
+          <div class="alert alert-info mt-1">
+            Collapsing replicates overwrites any collapsed spectra
+            already in the library.</div>
+          
+          <a href="{% url 'chat:edit_libprofile' library.id %}"
+            class="card-link btn btn-secondary">
+            Edit Library Details</a>
+          
+        </div>
+      </div>
+    {% endif %}
   </div>
   
   <div class="tab-content col-md-10 col-sm-6" id="">
     <!--Begin navdetail-->
     <div class="tab-pane fade show active" id="navdetail" role="tabpanel" aria-labelledby="navdetail-tab">
       <div class="row">
-        <div class="col-sm-6 mx-auto">
-          <div class="card">
-            <div class="card-header">
-              Library overview
-            </div>
-            <div class="card-body">
-              <div class="card-title">
-                Title: {{ library.title|safe }}
-              </div>
-              <div class="card-title">
-                Description: {{ library.description|safe }}
-              </div>
-              <div class="card-title">
-                Privacy Setting: {{ library.privacy_level }}
-              </div>
-              <div class="card-title">
-                Quality: {{ library.quality_rating }}
-              </div>
-              <div class="card-title">
-                Created by: {{ library.created_by|safe }}
-              </div>
-              <div class="card-title">
-                Lab: {{ library.lab|safe }}
-              </div>
-              <div class="card-title">  
-                #Spectra: {{ lengths.spectra }}
-<!--
-                <a href="{% url 'spectra_search:spectra_results' %}?library={{library.id}}" class="card-link">
-                  </a>
--->
-              </div>
-              <div class="card-title">  
-                #Collapsed spectra: {{ lengths.collapsed_spectra }}
-<!--
-                <a href="{% url 'spectra_search:spectra_results2' %}?library={{library.id}}" class="card-link">
-                  </a>
--->
-              </div>
-              <div class="card-title">  
-                #Metadata: {{ lengths.metadata }}
-<!--
-                <a href="{% url 'chat:metadata_results' %}?library={{library.id}}" class="card-link">
-                  </a>
--->
-              </div>
-            </div>
-          </div>
-        </div>
         
-        {% if request.user in lab.owners.all %}
-        <div class="col-sm-6 mx-auto">
-          <div class="card">
-            <div class="card-header">Library management</div>
-            <div class="card-body">
-              
-              <a href="{% url 'chat:collapse_library' library.id %}"
-                class="card-link btn btn-secondary">
-                Collapse library replicates</a>
-              
-              <div class="alert alert-info mt-1">
-                Collapsing replicates overwrites any collapsed spectra
-                already in the library.</div>
-              
-              <a href="{% url 'chat:edit_libprofile' library.id %}"
-                class="card-link btn btn-secondary">
-                Edit Library Details</a>
-              
-            </div>
-          </div>
-        </div>
-        {% endif %}
+        
       </div>
       
       <div class="row">

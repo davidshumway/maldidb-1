@@ -9,6 +9,7 @@ from django.utils.decorators import method_decorator
 
 from .forms import *
 from .models import *
+from files.models import UserFile
 
 from django.db.models import Q
 from django.views.generic import TemplateView, ListView
@@ -123,23 +124,30 @@ def library_profile(request, library_id = False):
   from django.db.models import Count
   lib = Library.objects.get(id = library_id)
   lab = LabGroup.objects.get(id = lib.lab.id)
-  s = Spectra.objects.filter(library__exact = lib)
-  m = Metadata.objects.filter(library__exact = lib)
-  s2 = CollapsedSpectra.objects.filter(library__exact = lib)\
+  s = Spectra.objects.filter(library = lib)
+  m = Metadata.objects.filter(library = lib)
+  s2 = CollapsedSpectra.objects.filter(library = lib)\
     .annotate(num_spectra = Count('collapsed_spectra'))
-  # ~ print(f'm.values(){m.values()}')
-  # ~ print(f's.values_list(id){list(s.values_list())}')
+  u1 = UserFile.objects.filter(library = lib, extension = 'csv')
+  u2 = UserFile.objects.filter(library = lib, extension = '')
   return render(
     request,
     'chat/library_profile.html',
     {'library': lib, 'lab': lab,
-      'spectra': list(s.values('id', 'strain_id__strain_id', 'min_mass', 'max_mass')),
-      'collapsed_spectra': list(s2.values('id', 'strain_id__strain_id', 'min_mass', 'max_mass', 'spectra_content', 'num_spectra', 'min_snr', 'peak_percent_presence', 'tolerance', 'generated_date')),
-      'metadata': list(m.values('id', 'strain_id', 'genbank_accession', 'ncbi_taxid', 'cKingdom', 'cPhylum', 'cClass', 'cOrder', 'cFamily', 'cGenus', 'cSpecies', 'cSubspecies', 'created_by__username')),
+      'spectra': list(s.values('id', 'strain_id__strain_id', 'min_mass',
+        'max_mass')),
+      'collapsed_spectra': list(s2.values('id', 'strain_id__strain_id',
+        'min_mass', 'max_mass', 'spectra_content', 'num_spectra',
+        'min_snr', 'peak_percent_presence', 'tolerance', 'generated_date')),
+      'metadata': list(m.values('id', 'strain_id', 'genbank_accession',
+        'ncbi_taxid', 'cKingdom', 'cPhylum', 'cClass', 'cOrder', 'cFamily',
+        'cGenus', 'cSpecies', 'cSubspecies', 'created_by__username')),
       'lengths': {
         'spectra': len(s),
         'collapsed_spectra': len(s2),
-        'metadata': len(m)
+        'metadata': len(m),
+        'csv_files': len(u1),
+        'mz_files': len(u2)
       }
     }
   )
