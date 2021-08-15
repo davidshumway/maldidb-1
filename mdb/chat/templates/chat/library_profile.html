@@ -22,41 +22,36 @@ Library Details: {{ library.title }}
     
     <div class="card">
       <div class="card-header">
-        Overview
+        Quick overview
       </div>
       <div class="card-body">
-        <div class="card-title">
-          Title: {{ library.title|safe }}
-        </div>
-        <p><span class="font-weight-light">Description:</span> {{ library.description|safe }}<br/>
         <span class="font-weight-light">Privacy Setting:</span> {{ library.privacy_level }}<br/>
         <span class="font-weight-light">Quality:</span> {{ library.quality_rating }}<br/>
         <span class="font-weight-light">Created by:</span> {{ library.created_by|safe }}<br/>
         <span class="font-weight-light">Lab:</span> {{ library.lab|safe }}<br/>
-        <span class="font-weight-light">#Spectra:</span> {{ lengths.spectra }}<br/>
+        <span class="font-weight-light"># spectra:</span> {{ lengths.spectra }}<br/>
 <!--
           <a href="{% url 'spectra_search:spectra_results' %}?library={{library.id}}" class="card-link">
             </a>
 -->
         
-        <span class="font-weight-light">#Collapsed spectra:</span> {{ lengths.collapsed_spectra }}<br/>
+        <span class="font-weight-light"># collapsed spectra:</span> {{ lengths.collapsed_spectra }}<br/>
 <!--
           <a href="{% url 'spectra_search:spectra_results2' %}?library={{library.id}}" class="card-link">
             </a>
 -->
-        <span class="font-weight-light">#Metadata:</span> {{ lengths.metadata }}<br/>
+        <span class="font-weight-light"># metadata:</span> {{ lengths.metadata }}<br/>
 <!--
           <a href="{% url 'chat:metadata_results' %}?library={{library.id}}" class="card-link">
             </a>
 -->
-        <span class="font-weight-light">#CSV files:</span> {{ lengths.csv_files }}<br/>
-        <span class="font-weight-light">#MZ files:</span> {{ lengths.mz_files }}
+        <span class="font-weight-light"># CSV files:</span> {{ lengths.csv_files }}<br/>
+        <span class="font-weight-light"># MZ files:</span> {{ lengths.mz_files }}
       </div>
     </div>
   
     {% if request.user in lab.owners.all %}
-      <br />
-      <div class="card">
+      <div class="card mt-2">
         <div class="card-header">Actions</div>
         <div class="nav flex-column nav-pills p-4" id="v-pills-tab" role="tablist" aria-orientation="vertical">
           <a class="nav-link active" id="navdetail-tab" data-toggle="pill"
@@ -71,8 +66,7 @@ Library Details: {{ library.title }}
         </div>
       </div>
     
-      <br />
-      <div class="card">
+      <div class="card mt-2">
         <div class="card-header">Library management</div>
         <div class="card-body">
           
@@ -96,44 +90,60 @@ Library Details: {{ library.title }}
   <div class="tab-content col-md-10 col-sm-6" id="">
     <!--Begin navdetail-->
     <div class="tab-pane fade show active" id="navdetail" role="tabpanel" aria-labelledby="navdetail-tab">
-      <div class="row">
-        
-        
+      <div class="card">
+<!--
+        <div class="card-header"></div>
+-->
+        <div class="card-body">
+          <h4>Library: {{ library.title|safe }}</h4>
+          <p>{{ library.created_date|date:"M d, Y" }}</p>
+          <p style="font-family: Roboto,sans-serif;font-size: 14px;line-height: 1.4;color: #333;max-width: 800px;">
+            {{ library.description|safe }}</p>
+        </div>
       </div>
       
-      <div class="row">
-        <div class="col-sm-12 col-md-12 col-lg-12 mt-2">
-          <div class="card">
-            <div class="card-header">Spectra</div>
-            <div class="card-body">
-              <table id="table-spectra" style="width:100%;"
-                class="table table-sm table-bordered table-striped nowrap">
-              </table>
-            </div>
-          </div>
-        </div>
-        <div class="col-sm-12 col-md-12 col-lg-12 mt-2">
-          <div class="card">
-            <div class="card-header">Collapsed Spectra</div>
-            <div class="card-body">
-              <table id="table-cspectra" style="width:100%;"
-                class="table table-sm table-bordered table-striped nowrap">
-              </table>
-            </div>
-          </div>
-        </div>
-        <div class="col-sm-12 col-md-12 col-lg-12 mt-2">
-          <div class="card">
-            <div class="card-header">Metadata</div>
-            <div class="card-body">
-              <table id="table-metadata" style="width:100%;"
-                class="table table-sm table-bordered table-striped nowrap">
-              </table>
-            </div>
-          </div>
+      <div class="card mt-2">
+        <div class="card-header">Spectra</div>
+        <div class="card-body">
+          <table id="table-spectra" style="width:100%;"
+            class="table table-sm table-bordered table-striped nowrap">
+          </table>
         </div>
       </div>
-    </div><!--/navdetail-->
+      <div class="card mt-2">
+        <div class="card-header">Collapsed Spectra</div>
+        <div class="card-body">
+          <table id="table-cspectra" style="width:100%;"
+            class="table table-sm table-bordered table-striped nowrap">
+          </table>
+        </div>
+      </div>
+      <div class="card mt-2">
+        <div class="card-header">Metadata</div>
+        <div class="card-body">
+          <table id="table-metadata" style="width:100%;"
+            class="table table-sm table-bordered table-striped nowrap">
+          </table>
+        </div>
+      </div>
+      <div class="card mt-2">
+        <div class="card-header">CSV files</div>
+        <div class="card-body">
+          <table id="table-csv-files" style="width:100%;"
+            class="table table-sm table-bordered table-striped nowrap">
+          </table>
+        </div>
+      </div>
+      <div class="card mt-2">
+        <div class="card-header">mzXML/mzML files</div>
+        <div class="card-body">
+          <table id="table-mz-files" style="width:100%;"
+            class="table table-sm table-bordered table-striped nowrap">
+          </table>
+        </div>
+      </div>
+    </div>
+    <!--/navdetail-->
     
     <!--Begin navsearch-->
     <div class="tab-pane fade" id="navsearch" role="tabpanel" aria-labelledby="navsearch-tab">
@@ -283,7 +293,6 @@ Streptomyces koyangensis</pre>
   
 </div>
 
-{% if request.user in lab.owners.all %}
 <style type="text/css">
 #align2, #align4 {
   cursor: pointer;
@@ -296,13 +305,13 @@ Streptomyces koyangensis</pre>
 {{ spectra|json_script:"data-spectra" }}
 {{ collapsed_spectra|json_script:"data-cspectra" }}
 {{ metadata|json_script:"data-metadata" }}
+{{ csv_files|json_script:"data-csv-files" }}
+{{ mz_files|json_script:"data-mz-files" }}
 
 <script type="text/javascript">
-var library_id = {{library.id}}
+var library_id = {{library.id}};
 </script>
 
 <script src="{% static 'js/library_profile.js' %}"></script>
-
-{% endif %}
 
 {% endblock %}

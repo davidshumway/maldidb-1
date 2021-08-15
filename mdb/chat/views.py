@@ -130,6 +130,9 @@ def library_profile(request, library_id = False):
     .annotate(num_spectra = Count('collapsed_spectra'))
   u1 = UserFile.objects.filter(library = lib, extension = 'csv')
   u2 = UserFile.objects.filter(library = lib, extension = '')
+  # updates desc. if empty
+  if lib.description == '':
+    lib.description = 'No description'
   return render(
     request,
     'chat/library_profile.html',
@@ -142,6 +145,8 @@ def library_profile(request, library_id = False):
       'metadata': list(m.values('id', 'strain_id', 'genbank_accession',
         'ncbi_taxid', 'cKingdom', 'cPhylum', 'cClass', 'cOrder', 'cFamily',
         'cGenus', 'cSpecies', 'cSubspecies', 'created_by__username')),
+      'csv_files': list(u1.values('file', 'upload_date')),
+      'mz_files': list(u2.values('file', 'upload_date')),
       'lengths': {
         'spectra': len(s),
         'collapsed_spectra': len(s2),

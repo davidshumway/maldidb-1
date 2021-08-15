@@ -53,6 +53,34 @@ var t = $('#table-metadata').DataTable({
     {data: 'created_by__username', title: 'Created by'}
   ]
 });
+var t = $('#table-csv-files').DataTable({
+  data: JSON.parse($('#data-csv-files')[0].textContent),
+  scrollX: true,
+  columns: [
+    {data: 'file', title: 'Name', render: function(data, type) {
+      return '<a href="/media/' + data + '">' +
+        data.replace(/^uploads\//, '') + '</a>';
+    }},
+    {data: 'upload_date', title: 'Upload date',
+      render: function(data, type) {
+        return new Date(data).toDateString();
+    }}
+  ]
+});
+var t = $('#table-mz-files').DataTable({
+  data: JSON.parse($('#data-mz-files')[0].textContent),
+  scrollX: true,
+  columns: [
+    {data: 'file', title: 'Name', render: function(data, type) {
+      return '<a href="/media/' + data + '">' +
+        data.replace(/^uploads\//, '') + '</a>';
+    }},
+    {data: 'upload_date', title: 'Upload date',
+      render: function(data, type) {
+        return new Date(data).toDateString();
+    }}
+  ]
+});
 
 function noevent(e) {
   e.stopPropagation();
