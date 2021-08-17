@@ -222,16 +222,24 @@ def ajax_upload_library(request):
 @login_required
 def ajax_upload(request):
   '''
-  Uploads one or more mz files, and starts preprocessing.
+  Uploads one or more mz files and starts preprocessing
   
-  Once uploaded, spawn new thread to preprocess.
-  UserFile has file location, e.g., "uploads/Bacillus_ByZQI1O.mzXML".
+  Once uploaded, spawns new thread to preprocess.
   '''
   if request.method == 'POST':
+    try: # removes existing files
+      uf = UserFile.objects.get(
+        library_id = request.POST['library_id'],
+        file = 'uploads/' + request.FILES['file']._get_name())
+      uf.delete()
+    except Exception as e:
+      # ~ print(f'e{e}')
+      pass
+    
     form = SpectraUploadForm(data = request.POST, files = request.FILES,
       request = request
     )
-    if form.is_valid():
+    if form.is_valid(): # runs .clean
       form.request = request # pass request to save() method
       form.save() # Django saves the file
       owner = request.user.id #if request.user.is_authenticated else None
@@ -250,17 +258,20 @@ def ajax_upload_metadata(request):
   Uploads and processes one or more metadata files.
   '''
   if request.method == 'POST':
+    try: # removes existing files
+      uf = UserFile.objects.get(
+        library_id = request.POST['library_id'],
+        file = 'uploads/' + request.FILES['file']._get_name())
+      uf.delete()
+    except Exception as e:
+      pass
+      
     form = MetadataUploadForm(data = request.POST, files = request.FILES,
       request = request
     )
     if form.is_valid():
       form.request = request
       metadata = form.save()
-      
-      # ~ owner = request.user.id
-      #form.cleaned_data['library'] = Library.objects.get(
-      #  id = form.cleaned_data['library_id'])
-      #process_metadata(request, form, owner)
       return JsonResponse({'status': 'csv-success',
         'upload_count': form.cleaned_data['upload_count'],
         'id': metadata.id}, status = 200)

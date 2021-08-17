@@ -2,93 +2,6 @@ function showUploadControls() {
   $('#upload-more-opts').css('display', '');
   $('#upload-button').css('display', '');
 }
-//~ function updateFileListCsv(input, showStatusCols) {
-  //~ // file-listing
-  //~ if (!input)
-    //~ var input = document.getElementById('customFileCsv');
-  //~ $('#file-selector-csv').css('display', 'none');
-  //~ for (var i in input.files) {
-    //~ input.files[i].upload = i;
-    //~ input.files[i].preprocess = i;
-  //~ }
-  //~ if (!showStatusCols) {
-    //~ preprocessed.table_csv1 = $('#file-listing-csv').DataTable({
-      //~ data: input.files,
-      //~ destroy: true,
-      //~ columns: [
-        //~ {data: 'name', title: 'Name'},
-        //~ {data: 'size', title: 'Size',
-          //~ render: function(data, type) {
-            //~ if (data < 1024)
-              //~ return data + ' bytes';
-            //~ else if (data < 1024*1000)
-              //~ return Math.round(data/1024) + 'KB';
-            //~ else if (data < 1024*1000000)
-              //~ return Math.round(data/(1024*1000)) + 'MB';
-            //~ else if (data < 1024*1000000000)
-              //~ return Math.round(data/(1024*1000000)) + 'GB';
-            //~ else 
-              //~ return data + ' bytes';
-          //~ }
-        //~ }
-      //~ ]
-    //~ });
-    //~ preprocessed.table_csv1.draw();
-  //~ } else {
-    //~ $('#file-listing-csv').css('display', 'none');
-    //~ $('#file-listing-csv-preprocessing').css('display', '');
-    //~ if (preprocessed.table_csv1) {
-      //~ preprocessed.table_csv1.destroy();
-    //~ }
-    //~ preprocessed.table_csv2 = $('#file-listing-csv-preprocessing').DataTable({
-      //~ data: input.files,
-      //~ destroy: true,
-      //~ columnDefs: [{ // progress bar, 3rd column (2)
-        //~ targets: 2,
-        //~ createdCell: function(td, cellData, rowData, row, col) {
-          //~ // td: html td element
-          //~ // cellData: the row number, e.g. row0 = "0"
-          //~ preprocessed.table_csv2_progressbars[cellData] = td;
-        //~ }
-      //~ }, { // status, 3rd column (2)
-        //~ targets: 3,
-        //~ createdCell: function(td, cellData, rowData, row, col) {
-          //~ // td: html td element
-          //~ // cellData: the row number, e.g. row0 = "0"
-          //~ preprocessed.table_csv2_status_cells[cellData] = td;
-        //~ }
-      //~ }],
-      //~ columns: [
-        //~ {data: 'name', title: 'Name'},
-        //~ {data: 'size', title: 'Size',
-          //~ render: function(data, type) {
-            //~ if (data < 1024)
-              //~ return data + ' bytes';
-            //~ else if (data < 1024*1000)
-              //~ return Math.round(data/1024) + 'KB';
-            //~ else if (data < 1024*1000000)
-              //~ return Math.round(data/(1024*1000)) + 'MB';
-            //~ else if (data < 1024*1000000000)
-              //~ return Math.round(data/(1024*1000000)) + 'GB';
-            //~ else 
-              //~ return data + ' bytes';
-          //~ }
-        //~ },
-        //~ {data: 'upload', title: 'Upload status',
-          //~ render: function(data, type) {
-            //~ return '';
-          //~ }
-        //~ },
-        //~ {data: 'preprocess', title: 'Preprocess status',
-          //~ render: function(data, type) {
-            //~ return '';
-          //~ }
-        //~ }
-      //~ ]
-    //~ });
-    //~ preprocessed.table_csv2.draw();
-  //~ }
-//~ }
 function updateFileList(input, showStatusCols) {
   /** Updates file list table (after customFile changed)
    * 
@@ -1497,7 +1410,6 @@ function ajaxLibrary() {
    * Creates or validates library before upload
    */
   var form = new FormData($('#upload_form')[0]);
-  //~ form.set('number_files', $('#customFile')[0].files.length);
   form.set('file', '');
   $.ajax({
     xhr: function() {
@@ -1524,23 +1436,13 @@ function ajaxLibrary() {
       preprocessed.library_id = response.data.library_id;
       preprocessed.search_library = response.data.search_library;
       
-      // Loops through upload csv files and add to batch
-      //~ for (var i=0; i<$('#customFileCsv')[0].files.length; i++) {
-        //~ var f = new FormData($('#upload_form')[0]);
-        //~ f.set('file', $('#customFileCsv')[0].files[i]);
-        //~ f.set('tmp_library', library);
-        //~ f.set('library_id', preprocessed.library_id);
-        //~ f.set('upload_count', i);
-        //~ f.set('client', preprocessed.client);
-        //~ preprocessed.batched_upload_csv_files.push(f);
-      //~ }
-      
       // Loops through upload files and add to batch
       for (var i=0; i<$('#customFile')[0].files.length; i++) {
         var file = $('#customFile')[0].files[i];
         var f = new FormData($('#upload_form')[0]);
         f.set('file', $('#customFile')[0].files[i]);
         f.set('tmp_library', library);
+        //~ f.set('library', preprocessed.library_id);
         f.set('library_id', preprocessed.library_id);
         f.set('upload_count', i);
         f.set('client', preprocessed.client);
@@ -1611,7 +1513,7 @@ function uploadHelper(formData, callback, progress, url) {
           \
         </div>\
     </div></div>';
-          
+  console.log(formData);
   var t = $(template);
   var n = $(progress[formData.get('upload_count')]);
   n.append(t);

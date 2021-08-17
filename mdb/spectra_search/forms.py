@@ -90,7 +90,7 @@ class FileLibraryForm(forms.Form):
     empty_label = 'Choose...'
   )
   
-  # save to existing library
+  # saves to existing library
   library_select = forms.ModelChoiceField(
     queryset = Library.objects.all(),#.none(),
     to_field_name = 'title',
@@ -101,7 +101,6 @@ class FileLibraryForm(forms.Form):
     ),
     empty_label = 'Choose...'
   )
-  
   library_create_new = forms.CharField(
     required = False,
     help_text = 'Enter a name for the new library',
@@ -139,37 +138,6 @@ class FileLibraryForm(forms.Form):
     self.user = request.user
     super(FileLibraryForm, self).__init__(*args, **kwargs)
     
-  # ~ def clean_file_strain_ids(self):
-    # ~ d = self.cleaned_data['file_strain_ids']
-    # ~ if self.cleaned_data['use_filenames'] is False:
-      # ~ try:
-        # ~ if self.cleaned_data['number_files'] is False:
-          # ~ raise forms.ValidationError('Field "number_files" missing!')
-      # ~ except:
-        # ~ raise forms.ValidationError('Field "number_files" missing!')
-      # ~ if d.strip() == '':
-        # ~ raise forms.ValidationError(
-          # ~ 'List of filenames must not be empty!'
-        # ~ )
-      # ~ import re
-      # ~ x = re.sub('[\r\n]+', '\n', d.strip())
-      # ~ x = x.split('\n')
-      # ~ # Entries == form entries
-      # ~ if len(x) != self.cleaned_data['number_files']:
-        # ~ raise forms.ValidationError(
-          # ~ 'Number of filenames ({}) does not match number of files ({})!'
-          # ~ .format(len(x), self.cleaned_data['number_files']))
-      # ~ # < 255
-      # ~ for tmpmd in x:
-        # ~ if len(tmpmd.strip()) > 255:
-          # ~ raise forms.ValidationError(
-            # ~ 'Filenames contains an entry > 255 characters!')
-      # ~ # Unique, e.g. [1,1] != {1}
-      # ~ if len(set(x)) != len(x):
-        # ~ raise forms.ValidationError(
-            # ~ 'Filenames are not unique!')
-    # ~ return d
-  
   def clean(self):
     '''
     Adds "library" key
@@ -247,44 +215,36 @@ class SpectraLibraryForm(FileLibraryForm):
   '''
   search_library = forms.ModelChoiceField(
     queryset = Library.objects.all(),
-    # ~ to_field_name = 'title',
     required = False,
     widget = forms.Select(
       attrs = {
         'class': 'custom-select'}
     ),
     disabled = False,
-    # ~ empty_label = 'Select a library to search against'
   )
   search_library_own = forms.ModelChoiceField(
     queryset = Library.objects.all(),
-    # ~ to_field_name = 'title',
     required = False,
     widget = forms.Select(
       attrs = {
         'class': 'custom-select'}
     ),
-    # ~ empty_label = 'Own library'
   )
   search_library_lab = forms.ModelChoiceField( # where user is a member or owner
     queryset = Library.objects.all(),
-    # ~ to_field_name = 'title',
     required = False,
     widget = forms.Select(
       attrs = {
         'class': 'custom-select'}
     ),
-    # ~ empty_label = 'Lab library'
   )
   search_library_public = forms.ModelChoiceField(
     queryset = Library.objects.all(),
-    # ~ to_field_name = 'title',
     required = False,
     widget = forms.Select(
       attrs = {
         'class': 'custom-select'}
     ),
-    # ~ empty_label = 'Public library'
   )
   library_search_type = forms.CharField(label = '',
     required = False,
@@ -356,6 +316,15 @@ class MetadataUploadForm(forms.ModelForm):
   )
   upload_count = forms.IntegerField(required = True)
   library_id = forms.IntegerField(required = True)
+  library = forms.ModelChoiceField(
+    queryset = Library.objects.all(),
+    required = False,
+    widget = forms.Select(
+      attrs = {
+        'class': 'custom-select'}
+    ),
+    empty_label = ''
+  )
   client = forms.CharField(required = True)
   
   class Meta:
@@ -397,6 +366,15 @@ class SpectraUploadForm(forms.ModelForm):
   )
   upload_count = forms.IntegerField(required = True)
   library_id = forms.IntegerField(required = True)
+  library = forms.ModelChoiceField(
+    queryset = Library.objects.all(),
+    required = False,
+    widget = forms.Select(
+      attrs = {
+        'class': 'custom-select'}
+    ),
+    empty_label = ''
+  )
   client = forms.CharField(required = True)
   
   class Meta:
@@ -408,12 +386,20 @@ class SpectraUploadForm(forms.ModelForm):
       ),
     }
   
-  def save(self, commit = True):
-    instance = super().save(commit=False)
-    if self.request.user.is_authenticated:
-      instance.owner = self.request.user
-    instance.save(commit)
-    return instance
+  # ~ def save(self, commit = True):
+    # ~ instance = super().save(commit=False)
+    # ~ print(f'save instance:{instance}')
+    # ~ if self.request.user.is_authenticated:
+      # ~ instance.owner = self.request.user
+    # ~ try:
+    # ~ except: pass # when new photo then we do nothing, normal case      
+    # ~ if instance.file != self.file:
+      # ~ instance.file.delete(save = False)
+    # ~ instance.save(commit)
+    # ~ try:
+    # ~ except IntegrityError:
+      
+    # ~ return instance
   
   def __init__(self, *args, **kwargs):
     request = kwargs.pop('request')
@@ -423,9 +409,13 @@ class SpectraUploadForm(forms.ModelForm):
   
   def clean(self):
     d = super().clean()
+    print(f'd{d}')
+    print(f'd.file._get_name(){d["file"]._get_name()}')
+    # ~ print(f'self.instance:{self.instance}')
     try:
       d['library'] = Library.objects.get(id = d['library_id'])
-    except:
+    except Exception as e:
+      print(e)
       raise forms.ValidationError('Missing library!')
     return d
           
