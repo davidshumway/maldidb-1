@@ -41,7 +41,7 @@ docker-compose up --build
 PostgreSQL does not need to be installed on the system beforehand unless performing a manual installaion.
 
 Running `docker-compose up --build` the first time may take 15-30 minutes to complete. However, successive
-builds should complete within 15-30 seconds.
+starts should complete within 15-30 seconds.
 
 When the build is finished, the site processes will start, including Django.
 When Django runs for the first time, the first time that NCBI taxonomy data is present there will be additional processing time while the taxonomy data is inserted into the database.
