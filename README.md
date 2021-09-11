@@ -25,11 +25,7 @@ Edit project.env to include the following:
     DATABASE_PORT=5432
     SECRET_KEY=<any key>
 
-Add R01 data files, if present, to a new folder in `./mdb` titled `r01data`:
-
-```bash
-mkdir ./mdb/r01data
-```
+Add R01 SQLite files, if present, to the `./mdb/r01data/` folder.
 
 Add NCBI taxonomy data files (available from https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/) `nodes.dmp` and `names.dmp`, if present, to the same `r01data` folder.
 
