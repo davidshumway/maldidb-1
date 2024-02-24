@@ -24,6 +24,9 @@ Edit project.env to include the following:
     DATABASE_HOST=postgresdb
     DATABASE_PORT=5432
     SECRET_KEY=<any key>
+    DJANGO_SUPERUSER_PASSWORD=<django admin password>
+    DJANGO_SUPERUSER_EMAIL=<django admin email>
+    DJANGO_SUPERUSER_USERNAME=<django admin username>
 
 Add R01 SQLite files, if present, to the `./mdb/r01data/` folder.
 
